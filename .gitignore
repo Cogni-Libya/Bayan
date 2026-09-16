@@ -1,0 +1,32 @@
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets — never commit real API keys; see .env.example for the template.
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# LaTeX build artifacts (report/*.tex are the source of truth)
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.pdf
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz
+
+# Data — large and/or regenerable; see data/README.md for how to refetch
+# data/raw/ and regenerate data/processed/.
+data/raw/
+data/processed/
+
+# Trained model artifacts — large (hundreds of MB to GB), regenerable from scripts/train_*.py
+# and scripts/optimize_*.py; see the level-classifier-benchmark memory note for how each one
+# was produced. Never belongs in git history.
+models/

@@ -1,0 +1,1780 @@
+% !TeX program = xelatex
+% Arabic Dyslexia-Friendly Text Simplification Assistant
+% Pipeline architecture, data flow, and feasibility analysis
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Layout ----------
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{fontspec}
+
+% ---------- Graphics / diagrams (must load before polyglossia/bidi) ----------
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,shapes.geometric,positioning,fit,backgrounds,calc,decorations.pathreplacing,shadows}
+\usepackage{pgfgantt}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ---------- Tables / lists / boxes ----------
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{xcolor}
+
+% ---------- References / misc (hyperref must load before polyglossia/bidi) ----------
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{parskip}
+
+% ---------- Arabic script support (load last: bidi has strict ordering needs) ----------
+\usepackage{polyglossia}
+\setmainlanguage{english}
+\setotherlanguage{arabic}
+\newfontfamily\arabicfont[Script=Arabic]{Amiri}
+
+% ---------- Colors ----------
+\definecolor{stagecolor}{RGB}{255,229,204}
+\definecolor{iocolor}{RGB}{214,240,214}
+\definecolor{blockcolor}{RGB}{214,228,246}
+\definecolor{cloudcolor}{RGB}{240,224,247}
+\definecolor{devicecolor}{RGB}{214,242,240}
+\definecolor{prosgreen}{RGB}{39,116,66}
+\definecolor{consred}{RGB}{160,39,39}
+\definecolor{prosbg}{RGB}{234,247,238}
+\definecolor{consbg}{RGB}{252,235,235}
+\definecolor{headnavy}{RGB}{22,45,74}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=headnavy,
+  citecolor=headnavy,
+  urlcolor=headnavy,
+  pdftitle={Arabic Dyslexia-Friendly Text Simplification Assistant},
+  pdfauthor={Samsung Innovation Campus Capstone Candidate}
+}
+
+% ---------- TikZ styles reused across every diagram ----------
+\tikzset{
+  block/.style={rectangle, draw=black!70, thick, rounded corners, fill=blockcolor,
+    minimum width=2.6cm, minimum height=1.05cm, align=center, font=\small, drop shadow},
+  stage/.style={rectangle, draw=black!70, thick, rounded corners, fill=stagecolor,
+    minimum width=2.8cm, minimum height=1.2cm, align=center, font=\small\bfseries, drop shadow},
+  iodata/.style={rectangle, draw=black!60, thick, rounded corners, fill=iocolor,
+    minimum width=2.5cm, minimum height=1cm, align=center, font=\small, drop shadow},
+  decision/.style={diamond, draw=black!70, thick, fill=yellow!20, align=center,
+    font=\scriptsize, inner sep=1pt, aspect=2.2},
+  cloudbox/.style={rectangle, draw=violet!60!black, thick, dashed, rounded corners,
+    fill=cloudcolor, inner sep=10pt},
+  devicebox/.style={rectangle, draw=teal!60!black, thick, dashed, rounded corners,
+    fill=devicecolor, inner sep=10pt},
+  lbl/.style={font=\scriptsize\itshape, text=black!60, fill=white, inner sep=1pt},
+  myarrow/.style={-{Latex[length=2.8mm,width=2mm]}, thick},
+  dimarrow/.style={-{Latex[length=2.4mm,width=1.6mm]}, thick, dashed, black!55},
+}
+
+\newcommand{\stagenum}[1]{\textcolor{headnavy}{\textbf{#1}}}
+
+% ---------- Pros/Cons box environments ----------
+\newtcolorbox{prosbox}[1][]{
+  colback=prosbg, colframe=prosgreen, boxrule=0.6pt, arc=2pt,
+  title=\textbf{Pros}, fonttitle=\bfseries, coltitle=white,
+  colbacktitle=prosgreen, top=2pt, bottom=2pt, left=4pt, right=4pt, #1
+}
+\newtcolorbox{consbox}[1][]{
+  colback=consbg, colframe=consred, boxrule=0.6pt, arc=2pt,
+  title=\textbf{Cons}, fonttitle=\bfseries, coltitle=white,
+  colbacktitle=consred, top=2pt, bottom=2pt, left=4pt, right=4pt, #1
+}
+\newtcolorbox{noteb}[1][]{
+  colback=blue!4, colframe=headnavy, boxrule=0.5pt, arc=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt, #1
+}
+
+\newcommand{\proscons}[2]{%
+  \begin{minipage}[t]{0.485\textwidth}
+    \begin{prosbox}
+      \begin{itemize}[leftmargin=1.1em,itemsep=1pt,topsep=1pt]
+        #1
+      \end{itemize}
+    \end{prosbox}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.485\textwidth}
+    \begin{consbox}
+      \begin{itemize}[leftmargin=1.1em,itemsep=1pt,topsep=1pt]
+        #2
+      \end{itemize}
+    \end{consbox}
+  \end{minipage}
+}
+
+\title{\vspace{-1.5cm}\textbf{\Large Arabic Dyslexia-Friendly Text Simplification Assistant}\\[4pt]
+\large Pipeline Architecture, Data Flow, and Feasibility Analysis}
+\author{Samsung Innovation Campus --- Capstone Candidate Idea Brief}
+\date{September 2026}
+
+\begin{document}
+\maketitle
+\vspace{-0.8cm}
+
+\begin{noteb}
+\textbf{Purpose of this document.} This is a working technical brief for internal
+team review, not a final specification. It lays out the full three-stage pipeline
+(\emph{simplify} $\rightarrow$ \emph{diacritize} $\rightarrow$ \emph{read aloud, synced}),
+the training and quality-control architecture behind it, and an honest accounting of
+the pros, cons, risks, and open decisions --- so the team can evaluate this idea on the
+same footing as the other candidate projects before committing week~0 effort to it.
+\end{noteb}
+
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+% =====================================================================
+\section{Problem Statement}
+% =====================================================================
+
+Dyslexic and cognitive-accessibility readers typically have no difficulty
+\emph{seeing} text --- the bottleneck is \emph{processing} it: long compound
+sentences, low-frequency vocabulary, and dense syntactic structure all raise the
+cognitive load of reading past what working memory and phonological decoding can
+comfortably absorb. Arabic script adds three specific, compounding difficulties on
+top of this general profile that most existing (Latin-script-first) dyslexia tools
+do not address at all:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Missing diacritics (tashkeel).} Everyday printed and digital Arabic
+  omits the vowel marks (\emph{tashkeel}) that disambiguate pronunciation. Fluent
+  readers reconstruct the missing vowels from context and lexical knowledge ---
+  precisely the kind of rapid contextual inference that is often impaired in
+  dyslexia, so the ambiguity that a fluent reader never notices becomes a hard
+  blocker for the target user.
+  \item \textbf{Agglutinative morphology.} Prefixes (conjunctions, prepositions,
+  the definite article) and suffixes (pronouns, gender/number/case markers) attach
+  directly to the stem with no orthographic space. One visual ``word'' can pack in
+  what would be three to four separate word tokens in English.
+  \item \textbf{Connected (cursive) script.} Every letter changes glyph shape
+  depending on its position in the word (isolated / initial / medial / final),
+  compounding letter-confusion effects that are already a hallmark difficulty in
+  dyslexia.
+\end{itemize}
+
+\subsection{A concrete illustration}
+
+\begin{center}
+\begin{tabular}{@{}p{3.6cm}p{5.4cm}p{5.4cm}@{}}
+\toprule
+& \textbf{Undiacritized (as normally written)} & \textbf{Diacritized (tashkeel added)} \\
+\midrule
+Single word &
+{\Large\textarabic{مدرسة}} \newline (ambiguous: could plausibly be read as more than one word/pattern without context) &
+{\Large\textarabic{مَدْرَسَةٌ}} \newline \emph{madrasatun} --- ``a school'', vowels now fully specified \\
+\addlinespace
+Agglutination &
+{\Large\textarabic{وسيذهبون}} \newline one unbroken visual token &
+\textit{wa + sa + yadh-hab + \=una} $\rightarrow$ ``and'' + ``will'' + ``go'' + ``[they, masc.\ pl.]'' --- four English word-equivalents fused into one Arabic string \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{noteb}
+\textbf{Landscape check.} We confirmed via research that no working
+dyslexia-friendly Arabic typeface is currently public, and no deployed Arabic
+dyslexia-assistance software was found. Related groundwork does exist ---
+research on automatic correction of Arabic dyslexic text, and on dyslexia-friendly
+Arabic typeface design --- and should be cited in the pitch as prior art. The
+claim to make is ``no one has shipped this,'' not ``no one has thought about
+this.''
+\end{noteb}
+
+% =====================================================================
+\section{Solution Overview: the Three-Stage Pipeline}
+% =====================================================================
+
+The core idea is a linear, staged pipeline: raw Arabic text is progressively
+transformed into a form that is easier for a dyslexic reader to decode, then
+delivered through a synchronized audio-visual reading experience. Each stage is
+independently swappable and independently gradeable, which matters a lot for both
+engineering risk management and for the SIC pitch (each stage can be demoed and
+justified on its own).
+
+\begin{figure}[h!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=9mm and 7mm]
+
+\node[iodata] (input) {Raw input\\\footnotesize typed / pasted text};
+\node[stage, right=20mm of input] (s1) {\stagenum{1}\ Simplify\\\footnotesize fine-tuned AraT5};
+\node[stage, right=16mm of s1] (s2) {\stagenum{2}\ Diacritize\\\footnotesize tashkeel restoration};
+\node[stage, dashed, right=16mm of s2] (s3) {\stagenum{3}\ Read aloud\\\footnotesize Arabic TTS + word sync\\\footnotesize(optional)};
+\node[iodata, right=16mm of s3] (out) {Output\\\footnotesize audio + karaoke-style\\\footnotesize highlighted text};
+
+\draw[myarrow] (input) -- (s1);
+\draw[myarrow] (s1) -- (s2) node[midway, lbl, above] {simple text};
+\draw[myarrow] (s2) -- (s3) node[midway, lbl, above] {vocalized text};
+\draw[myarrow] (s3) -- (out);
+\draw[dimarrow] (s2.south) to[out=-90,in=-90,looseness=1.3]
+  node[lbl, below]{if Stage~3 dropped} (out.south);
+
+\end{tikzpicture}}
+\caption{End-to-end request-time pipeline. Input is typed or pasted text; OCR
+is out of scope for this capstone. Stage~3 (dashed) is optional --- if no
+adequately open TTS option is found (Section~\ref{sec:tts-arch}), the
+pipeline can ship with Stage~2's vocalized text as the final output, dropping
+audio and word-sync highlighting entirely.}
+\label{fig:pipeline-overview}
+\end{figure}
+
+\subsection{Why this stage order, specifically}
+
+\begin{noteb}
+\textbf{Simplify before diacritizing, not after.} Diacritization tools generally
+assume grammatically well-formed input and are trained on fully-formed sentences;
+running diacritization on the \emph{original} complex sentence and then simplifying
+a vocalized sentence risks producing diacritic placements that no longer match once
+words are reordered, dropped, or replaced. Simplifying first means the diacritizer
+only ever has to vocalize sentences the model actually keeps, and word-level
+diacritics can be regenerated fresh on the final, simplified surface form.
+\end{noteb}
+
+\newpage
+% =====================================================================
+\section{Stage-by-Stage Detail}
+% =====================================================================
+
+\subsection{Stage 1: Simplification (fine-tuned AraT5)}
+
+This is the intellectual core of the project: a sequence-to-sequence model that
+takes a complex Arabic sentence and produces a shorter, lower-vocabulary paraphrase
+that preserves the original meaning.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance=10mm and 9mm]
+\node[iodata] (in) {Complex sentence\\\footnotesize e.g.\ long compound clause,\\\footnotesize low-frequency vocabulary};
+\node[stage, right=18mm of in] (model) {Fine-tuned AraT5\\\footnotesize encoder--decoder\\\footnotesize seq2seq};
+\node[iodata, right=18mm of model] (out) {Simplified sentence\\\footnotesize shorter, common words,\\\footnotesize same meaning};
+
+\draw[myarrow] (in) -- (model);
+\draw[myarrow] (model) -- (out);
+
+\node[block, below=13mm of model, fill=blockcolor] (gate) {Runtime faithfulness gate\\\footnotesize (optional) --- DSPy judge\\\footnotesize scores output live};
+\draw[dimarrow] (out.south) |- (gate.east);
+\draw[dimarrow] (gate.west) -| node[lbl, near start, left]{fallback if score low} (in.south);
+\end{tikzpicture}
+\caption{Stage 1 in isolation, including the optional runtime faithfulness gate
+described in Section~\ref{sec:qc}.}
+\label{fig:stage1}
+\end{figure}
+
+\subsubsection{Architecture decision: encoder--decoder, not decoder-only}
+\label{sec:why-arat5-decision}
+
+This decision is already settled for the deployed model, but it is worth spelling
+out the reasoning in full, since it is the single most defensible technical claim
+in the whole pitch.
+
+\begin{center}
+\begin{tabular}{@{}p{4.6cm}p{5.6cm}p{5.6cm}@{}}
+\toprule
+& \textbf{AraT5 (encoder--decoder, seq2seq)} & \textbf{Decoder-only Arabic SLM}\newline\footnotesize(Jais, ALLaM, SILMA, or multilingual Qwen/Gemma) \\
+\midrule
+Native task fit &
+Text simplification is transduction (input $\to$ transformed output, same
+meaning) --- the textbook fit for an encoder that fully conditions on the
+whole source before the decoder generates anything. &
+Trained for open-ended next-token generation; simplification is coerced via
+prompting rather than being the native objective. \\
+\addlinespace
+Faithfulness / groundedness &
+Tends to stay tightly anchored to the source sequence. &
+More prone to ``assistant drift'' --- added explanation, looser rephrasing,
+outright hallucination --- unless heavily constrained. Silently distorting
+meaning for a vulnerable reader is a real harm here, not just a quality bug. \\
+\addlinespace
+Model size / on-device fit &
+Far smaller footprint; substantially easier to quantize and run on-device,
+directly matching the program's stated on-device AI interest. &
+Heavier to deploy at comparable fluency; harder to hit real-time,
+low-memory mobile targets. \\
+\addlinespace
+Out-of-the-box fluency &
+Weaker zero-shot; needs fine-tuning to be good at this specific task. &
+Stronger out-of-the-box general fluency and world knowledge. \\
+\addlinespace
+Direct precedent &
+AraT5-MSAizer (ACL Anthology \texttt{2024.osact-1.16}) used AraT5 for an
+architecturally similar dialect$\to$MSA transformation task. &
+No equally direct architectural precedent found for this exact
+faithfulness-critical transduction use case. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Verdict (already settled):} fine-tune AraT5 as the \emph{deployed}
+simplification model. A strong API-based Arabic-capable LLM is used only as a
+\emph{data-generation} tool (synthetic training pairs) and, separately, as one
+candidate for the evaluation judge (Section~\ref{sec:qc}) --- it is never itself
+shipped on-device.
+
+\subsubsection{Training data pipeline}
+\label{sec:datapipeline}
+
+\begin{noteb}
+\textbf{Revised design (this revision).} The original open-ended ``sample
+complex BAREC sentences, simplify, filter'' plan has been replaced with a
+concrete, level-aware design, arrived at after directly downloading and
+profiling the full BAREC corpus (level distribution, \texttt{Domain}/\texttt{Source}/\texttt{Text\_Class}
+breakdowns, and the fragment-rate check below) rather than planning against
+the paper alone.
+\end{noteb}
+
+\paragraph{Level 5 is dropped.}
+\label{sec:level5}
+BAREC's numeric level~5 (of the 5-level collapse of its native 19 levels) is
+only 1,840 of the corpus's 69,441 sentences (2.6\%) --- too small to sample
+evenly against the other levels, and by far the largest single semantic jump
+if used as a simplification source. Checking what would actually be lost by
+dropping it: level~5 holds only 1,307 of the corpus's 18,964
+\texttt{Specialized}-tagged sentences (6.9\%) --- the other 93\% of genuinely
+hard, domain-specific content is already well represented at levels~3--4
+(level~4 alone carries 32.3\% of all \texttt{Specialized} sentences). Dropping
+level~5 therefore costs little real coverage of hard content, removes the
+tier that would need awkward padding to reach usable volume, and removes the
+single riskiest transformation (a direct level-5-to-easy rewrite) from the
+generation step entirely.
+
+\paragraph{Two bands, not five levels.} The remaining levels 1--4 (67,601
+sentences) collapse into two working bands: \textbf{easy} (levels 1--2,
+35,857 sentences) and \textbf{hard} (levels 3--4, 31,744 sentences). Levels~1
+and~2, and separately~3 and~4, are hard to reliably tell apart even in BAREC's
+own annotation methodology (the 7/5/3-level collapses exist precisely because
+the native 19-level boundaries are fuzzy); asking a generator to hit one
+specific sub-level rather than a band would bake that fuzziness into the
+training signal as noise.
+
+\paragraph{Easy anchors need no generation at all, and are used unfiltered.}
+Every easy-band sentence is used directly as an \emph{identity pair}
+(input~=~output) --- teaching the model the equally important skill of
+leaving already-simple text alone rather than editing it needlessly. This is
+free (no LLM call) and, because it uses the whole easy-band pool rather than
+a small sample, gives broad coverage of what real simple Arabic actually
+looks like.\footnote{An earlier revision of this pipeline filtered the
+identity pool for fragments/headers/citations first (a direct check of
+BAREC's own level-1 sentences found roughly 59\% look like fragments,
+headers, or citations rather than full prose by a simple heuristic; level~2
+was cleaner at $\sim$32\%).
+That filtering step has been removed on team review: a reader genuinely
+encounters headers, dates, and citations while reading, so the model should
+see them too --- and because identity pairs are safe by construction
+(output is always exactly the input, whatever it is), there is no failure
+mode where an unfiltered fragment teaches the model to \emph{generate}
+malformed text. The equivalent concern for the hard band doesn't apply
+either: the equivalence validator and level classifier
+(Section~\ref{sec:qc}) gate the
+\emph{generated output}'s quality regardless of whether the anchor was a
+full sentence or a fragment, so a separate anchor-quality filter was doing
+no protective work that the existing design doesn't already do more
+directly. See \texttt{scripts/barec\_simplification\_pipeline.py}.}
+
+\paragraph{Hard anchors are reranked, not single-shot.} Each hard-band
+sentence goes through a DSPy generator that proposes 5 candidate
+simplifications in one batched call (targeting the easy band, not a
+specific sub-level, for the same fuzziness reason as above), a DSPy
+validator that scores all 5 candidates' semantic equivalence (with a
+reasoning string per candidate) in a second batched call, and a locally
+hosted fine-tuned classifier (quantized MARBERT, no API call) that scores
+each candidate's readability level; the best-scoring candidate that passes
+both checks is kept. Full signatures and the fine-tuned classifier in
+Section~\ref{sec:qc}.
+
+\begin{figure}[h!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=8mm and 8mm]
+\node[iodata] (barec) {BAREC (train+dev+test)\\\footnotesize 69,441 sentences\\\footnotesize levels 1--5};
+\node[block, right=14mm of barec] (drop5) {Drop level~5\\\footnotesize 1,840 sentences (2.6\%)};
+\node[block, right=14mm of drop5] (sample) {Stratified sample\\\footnotesize by level};
+
+\node[iodata, above right=8mm and 12mm of sample] (easy) {Easy anchors\\\footnotesize levels 1--2};
+\node[iodata, below right=8mm and 12mm of sample] (hard) {Hard anchors\\\footnotesize levels 3--4};
+
+\node[stage, right=14mm of easy] (identity) {Identity\\\footnotesize no generation};
+\node[block, right=14mm of hard] (gen) {DeepSeek\\\footnotesize Generator (DSPy)\\\footnotesize 5 candidates, batched};
+\node[decision, right=18mm of gen] (val) {equivalent (DSPy) \&\\easy band (MARBERT)?\\\footnotesize best of 5 kept};
+\node[block, above right=4mm and 10mm of val] (discard) {Discard};
+
+\node[iodata, below right=14mm and 8mm of identity] (merge) {Combined\\training set};
+\node[stage, right=14mm of merge] (finetune) {Fine-tune AraT5};
+
+\draw[myarrow] (barec) -- (drop5);
+\draw[myarrow] (drop5) -- (sample);
+\draw[myarrow] (sample) -- (easy);
+\draw[myarrow] (sample) -- (hard);
+\draw[myarrow] (easy) -- (identity);
+\draw[myarrow] (hard) -- (gen);
+\draw[myarrow] (gen) -- (val);
+\draw[myarrow] (val) -- node[lbl,pos=0.4,above,sloped]{no} (discard);
+\draw[myarrow] (val.south) |- node[lbl, pos=0.7, above]{yes} (merge.east);
+\draw[myarrow] (identity.south) |- (merge.north);
+\draw[myarrow] (merge) -- (finetune);
+\end{tikzpicture}}
+\caption{Stage~1 training-data pipeline (current design). Level~5 is dropped
+before sampling; a fair, stratified sample splits into easy anchors (identity
+pairs, zero generation cost) and hard anchors (the only sentences that reach
+the DeepSeek generator and the equivalence/level checks described in
+Section~\ref{sec:qc}).}
+\label{fig:datapipeline}
+\end{figure}
+
+\proscons{
+  \item Roughly half the sampled anchors (the easy band) need zero LLM calls
+  --- identity pairs are free and risk-free by construction, cutting both
+  generation cost and the surface area for generation-introduced errors
+  roughly in half versus generating for every sampled sentence.
+  \item Dropping level~5 removes the riskiest single transformation
+  (a direct expert-to-easy rewrite) while costing only 6.9\% of the corpus's
+  \texttt{Specialized}-tagged content --- a favorable, data-verified trade,
+  not a guess.
+  \item Targeting a band rather than a specific sub-level avoids asking the
+  generator (and the validator) to resolve a distinction that BAREC's own
+  annotation scheme treats as fuzzy in the first place.
+  \item BAREC is fully open (CC~BY-SA~4.0), confirmed directly (not gated,
+  no agreement required) --- removing the license risk from the critical
+  path (Section~\ref{sec:why-barec}).
+  \item The easy-band identity pool needs no filtering or other
+  preprocessing before use --- fragments, headers, and citations are real
+  content a reader encounters, and identity pairs are safe by construction
+  regardless of what the input looks like, so the pool is used exactly as
+  BAREC provides it.
+}{
+  \item Every hard-band training pair is still LLM-generated; there is no
+  ground-truth human-written rewrite anywhere in the pipeline, which keeps
+  the full weight on the equivalence validator and level classifier
+  working well.
+  \item Both remaining DSPy programs (generator, equivalence validator)
+  currently share one model (DeepSeek) for simplicity --- a model can share
+  blind spots with itself across roles, so a generation error and the
+  equivalence check that should catch it are not fully independent. The
+  level check no longer carries this risk: it moved off DeepSeek entirely
+  onto a separately fine-tuned local classifier (below). Worth periodically
+  cross-checking a sample against a second model for the two that remain.
+  \item Only a 2\% pilot sample (1,350 sentences: 708 easy / 606 hard / 36
+  scripture-sourced sentences routed to identity pairs regardless of level,
+  Section~\ref{sec:scripture}) has fully completed so far, with a 10\%
+  sample now running against the reranked design --- real
+  generation/validation pass-rates on the full hard-band pool (31,744
+  sentences) are still not yet known.
+}
+
+\subsubsection{Why BAREC instead of SAMER}
+\label{sec:why-barec}
+
+The original version of this plan used the \textbf{SAMER} corpus
+(arXiv:2404.18615) as the primary training-pair source, because it offers real,
+human-written parallel rewrites. Checking SAMER's actual terms of use during
+this revision surfaced a real problem: its license requires signing an NYU Abu
+Dhabi usage agreement, restricts use to internal research/evaluation only,
+prohibits redistribution or sublicensing, and requires a separate commercial
+license for anything beyond that\footnote{Per the corpus's official project
+page: \url{https://camel.abudhabi.nyu.edu/samer-simplification-corpus/}.} ---
+real friction for a program where submitted work may need to be shared or
+reused. SAMER is also narrow in domain: 159K words drawn entirely from 15
+Arabic fiction novels, mostly published between 1865 and 1955.
+
+\textbf{BAREC} (arXiv:2502.13520, ACL 2025 Findings) resolves the license
+problem outright: it is released under CC~BY-SA~4.0, openly downloadable, no
+agreement required.\footnote{Structure and license confirmed via the paper:
+\url{https://arxiv.org/html/2502.13520v2}.} It is also an order of magnitude
+larger (69,441 sentences, 1M+ words, 1,922 source documents) and far more
+domain-diverse (education, literature, media, religion, reference works),
+graded across 19 fine-grained readability levels rather than SAMER's two. The
+catch: BAREC is \emph{not} a parallel corpus. Each sentence is independently
+sourced and carries a single readability-grade label --- there are no aligned
+``same content, two difficulty levels'' rewrites the way SAMER provides, so it
+cannot directly substitute as ready-made (complex, simple) training pairs.
+
+The resolution: use high-level BAREC sentences as the real, naturally-occurring
+``complex'' side of every training pair, have Gemini generate the ``simple''
+rewrite, and let the DSPy judge (Section~\ref{sec:qc}) filter every generated
+pair on \emph{both} semantic equivalence and a measurable BAREC-calibrated
+readability-level drop --- so a rewrite that merely rephrases without actually
+simplifying gets rejected too.
+
+\proscons{
+  \item Fully open license --- no signed agreement, no redistribution
+  restriction, no commercial-use gate. Removes a real legal/logistical risk
+  from the critical path.
+  \item Larger and far more domain-diverse than SAMER, so the ``complex'' side
+  of every generated pair can be genuine, naturally-occurring Arabic from many
+  registers, not confined to century-old literary fiction.
+  \item 19 fine-grained levels provide a calibrated readability signal, usable
+  as a second automatic filter beyond semantic equivalence alone.
+}{
+  \item Not a parallel corpus --- provides no aligned rewrites, so it cannot
+  supply ready-made (complex, simple) training pairs the way SAMER did.
+  \item Loses SAMER's free positive examples for the DSPy judge's validation
+  set --- resolved by annotating the pilot's own real generated pairs
+  instead of writing hand-labeled examples from scratch
+  (Section~\ref{sec:annotation}).
+  \item Some source genres (religious text, formal reference material) may be
+  a poor stylistic match for a conversational simplification target and may
+  need filtering by genre before sampling.
+}
+
+\subsubsection{Choosing the generation and judge models}
+\label{sec:model-choice}
+
+Two different model roles need two different selection criteria: the
+\textbf{generation} model (turns BAREC sentences into candidate simplifications,
+one bulk pass) is chosen for Arabic quality, since cost turns out to be
+negligible regardless of vendor; the \textbf{judge} model (scores every
+generated pair, plus the whole eval set --- much higher call volume) is where
+cheap or self-hostable open models genuinely earn their place.
+
+\paragraph{Generation model: Gemini.} Gemini's Arabic output quality has a
+strong reputation, and at this data volume every vendor is cheap in absolute
+terms, so quality --- not price --- should drive the choice. Estimating cost
+for processing the \emph{entire} BAREC corpus ($\sim$1M+ words, $\sim$2M input
+tokens and $\sim$2M output tokens at a working estimate of $\sim$2
+tokens/Arabic word):
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Model} & \textbf{Input \$/M tok} & \textbf{Output \$/M tok} & \textbf{Est.\ cost, full corpus} \\
+\midrule
+Gemini 2.5 Flash-Lite\textsuperscript{\dag} & \$0.10 & \$0.40 & $\sim$\$1.00 \\
+Gemini 3.5 Flash-Lite & \$0.30 & \$2.50 & $\sim$\$5.60 \\
+Gemini 3.8 Flash (current default) & \$0.75 & \$3.75 & $\sim$\$9.00 \\
+Gemini 3.1 Pro (highest Arabic quality) & \$2.00 & \$12.00 & $\sim$\$28.00 \\
+\midrule
+GPT-5.6 Luna (cheapest OpenAI tier) & \$0.20 & \$1.20 & $\sim$\$2.80 \\
+GPT-5.6 Terra & \$2.00 & \$12.00 & $\sim$\$28.00 \\
+GPT-5.6 Sol & \$5.00 & \$30.00 & $\sim$\$70.00 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+{\footnotesize Prices as of September 2026;\footnote{Gemini pricing:
+\url{https://developer.puter.com/tutorials/gemini-api-pricing/}. OpenAI
+pricing: \url{https://www.cloudzero.com/blog/openai-pricing/}.} Google's Batch
+API cuts all Gemini rows roughly in half. \textsuperscript{\dag}Google is
+retiring Gemini~2.5~Flash-Lite on 16~October~2026 --- do not build around it
+this late in the timeline.}
+
+\textbf{Verdict: cost is not a real constraint.} Even the most expensive row
+here costs \$70 to process the \emph{entire} corpus; a sprint only needs a
+curated subset, so real spend is likely a few dollars. Two practical gotchas
+regardless of vendor: batch many sentences per API call rather than one call
+per sentence (per-call instruction overhead otherwise adds up), and disable
+``thinking'' mode on reasoning-capable variants, since hidden reasoning tokens
+bill as output and can silently inflate cost.
+
+\begin{noteb}
+\textbf{Decided for the pilot: DeepSeek for all three roles.} For the initial
+2\% pilot (Section~\ref{sec:datapipeline}), the generator and the DSPy
+equivalence validator (Section~\ref{sec:qc}) are implemented against a
+single DeepSeek model rather than splitting generation and judging across
+vendors; the level check runs locally
+(fine-tuned MARBERT, Section~\ref{sec:qc}) and makes no API call at all.
+Reasoning: at pilot scale ($\sim$1,350 sentences at 2\%, now a 10\% sample
+in progress) --- 2 batched DeepSeek calls per hard-band sentence (one
+generating 5 candidates, one scoring all 5 for equivalence), easy-band
+identity pairs need none --- the cost gap between vendors is immaterial,
+and one vendor
+integration is simpler to stand up and debug than two for a first pass.
+Worth revisiting once the pipeline is validated at full scale (31,744
+hard-band sentences) --- see the con already logged in
+Section~\ref{sec:datapipeline} about one model sharing blind spots across
+the two roles it still fills.
+\end{noteb}
+
+\subsection{Stage 2: Diacritization (Tashkeel Restoration)}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance=10mm and 9mm]
+\node[iodata] (in) {Simplified sentence\\\footnotesize no diacritics};
+\node[stage, right=18mm of in] (model) {Diacritization model\\\footnotesize e.g.\ CATT, fine-tuned\\\footnotesize on Tashkeela};
+\node[iodata, right=18mm of model] (out) {Fully vocalized sentence\\\footnotesize every letter marked};
+
+\draw[myarrow] (in) -- (model);
+\draw[myarrow] (model) -- (out);
+\end{tikzpicture}
+\caption{Stage 2 in isolation. Tashkeela was already scoped by the team for a
+separate, shelved idea --- directly reusable here.}
+\label{fig:stage2}
+\end{figure}
+
+\proscons{
+  \item Tashkeela is a large, well-established diacritization corpus; the team
+  already has prior familiarity with it from a shelved idea, so onboarding cost
+  is close to zero.
+  \item Diacritization is a well-studied Arabic NLP task with published
+  baselines to compare against, which de-risks the ``does this even work''
+  question relative to a from-scratch task.
+  \item Feeding \emph{simplified} rather than original text into this stage
+  reduces the syntactic complexity the diacritizer has to handle, likely
+  improving accuracy versus diacritizing the raw input directly.
+}{
+  \item Diacritization errors are read out loud verbatim by Stage~3's TTS --- an
+  incorrect vowel mark becomes an incorrect \emph{sound}, which is precisely the
+  failure mode the whole product exists to prevent. Errors here are more
+  user-visible (audible) than in most diacritization use cases.
+  \item Off-the-shelf diacritizers are usually trained on Modern Standard Arabic
+  news/religious text (Tashkeela itself leans classical/religious); domain shift
+  to simplified, contemporary, possibly conversational sentences could hurt
+  accuracy and would need validation.
+  \item Adds a second model to maintain, quantize, and keep in sync with Stage~1's
+  output distribution.
+}
+
+\subsubsection{Architecture decision: byte-level generative vs.\ character-level tagging}
+\label{sec:diacritization-arch}
+
+Plugging a generic word/subword-level seq2seq model --- AraT5 included --- into
+this stage is a poor fit, for a specific and instructive reason. AraT5's
+tokenizer vocabulary was learned from a training corpus that is almost
+entirely \emph{undiacritized}, since that is what nearly all Arabic text on
+the internet looks like. A word like \textarabic{مدرسة} is probably one clean
+token in that vocabulary; the same word with tashkeel,
+\textarabic{مَدْرَسَةٌ}, is a different character string that the tokenizer's
+merge rules were never optimized for, so it typically gets shattered into
+several small, rare subword fragments instead of one clean token. The model
+then has to learn a messy mapping from ``one token in'' to ``several oddly
+fragmented tokens out'' --- a much harder learning problem than the task
+actually requires.
+
+\textbf{Byte-level tokenization sidesteps this entirely.} A model like ByT5
+(Google) uses no learned vocabulary at all --- its ``tokens'' are raw UTF-8
+bytes, 256 possible values, no OOV, ever. This turns out to fit Arabic
+diacritization unusually well: tashkeel marks are not modifications of a
+letter but separate Unicode combining-mark codepoints inserted immediately
+after the base letter, and both Arabic base letters and diacritic marks
+encode as 2-byte UTF-8 sequences in the same Unicode block. At the byte level,
+diacritization looks close to \emph{``here is a byte stream with certain
+2-byte chunks removed --- put them back in the right spots''} --- a
+near-identity transformation, rather than the freer rewriting a word-level
+model faces. This is consistent with Fine-Tashkeel's reported result: SOTA
+accuracy from fine-tuning ByT5 with minimal training and no feature
+engineering.
+
+\textbf{The cost.} Byte sequences run roughly 2$\times$ longer than the
+equivalent subword-tokenized sequence for Arabic, and since seq2seq decoding
+is autoregressive, longer sequences mean slower generation. ByT5's own
+architecture addresses this directly by deliberately shifting capacity toward
+a heavier encoder and a lighter decoder, since decoder steps are where the
+sequence-length cost bites hardest --- a real design trade-off worth factoring
+into Stage~2's latency budget given the on-device framing (Section~\ref{sec:deployment-note}).
+
+\begin{noteb}
+\textbf{A nuance that cuts the other way from Section~\ref{sec:why-arat5-decision}.}
+Even at the byte level, a seq2seq model is still \emph{generating} its output
+--- nothing structurally prevents it from occasionally emitting a different
+base letter than the input had; it is just empirically rare because the
+transformation is so close to identity. A character-level \emph{tagging}
+model (classify each existing letter into one of $\sim$15 diacritic classes,
+as CAMeLBERT-style diacritizers do) cannot touch the base letters at all, by
+construction --- it only ever attaches a label to a position that already
+exists. That is the opposite lesson from the AraT5-vs-decoder-only debate for
+Stage~1: there, the more constrained transduction architecture was the safer,
+more faithful choice; here, a discriminative tagger is structurally the safer
+choice over a generative seq2seq model, for the same underlying reason.
+
+And yet, empirically, generative seems to win anyway: CATT's own published
+results show its encoder-decoder (generative) checkpoint outscoring its
+encoder-only (taggable) checkpoint on accuracy --- likely because an
+autoregressive decoder can model dependencies between adjacent diacritic
+choices that a plain per-position classifier cannot see the way a sequential
+decoder does. \textbf{Practical takeaway:} the generative checkpoint is the
+right default for accuracy, but because its faithfulness is empirical rather
+than structural, it specifically warrants the base-letter-preservation check
+called out as risk~R6 (Table~\ref{tab:risks}) once fine-tuned on Stage~1's
+simplified-text domain --- that check is not automatically free the way it
+would be with a tagger.
+\end{noteb}
+
+\subsubsection{Candidate models: CATT and Fine-Tashkeel}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{2.5cm}p{4.75cm}p{4.75cm}@{}}
+\toprule
+& \textbf{CATT} (arXiv:2407.03236, ACL ArabicNLP 2024) & \textbf{Fine-Tashkeel / ByT5} (arXiv:2303.14588) \\
+\midrule
+Architecture & Character-level; ships \emph{both} an encoder-decoder (ED) and
+an encoder-only (EO) checkpoint & Byte-level seq2seq; fine-tunes Google's
+pretrained ByT5 \\
+\addlinespace
+License & Apache 2.0 --- relicensed from CC-BY-NC specifically to enable
+broader adoption & Not directly confirmed here --- check the paper's linked
+repo before relying on it \\
+\addlinespace
+Reported result & SOTA on their benchmark; beats GPT-4-turbo by a relative
+9.36\% diacritic error rate & SOTA claim; $\sim$40\% WER reduction vs.\
+baselines, minimal training, no feature engineering \\
+\addlinespace
+Ready to fine-tune & Yes --- pip-installable (\texttt{catt-tashkeel}), ships
+\texttt{train\_catt.py} & A recipe more than a shipped checkpoint --- would
+mean fine-tuning a public ByT5 checkpoint yourself following the paper's
+method \\
+\addlinespace
+Best-fit note & Concrete, ready starting point: use the ED checkpoint for
+accuracy, EO for speed if on-device latency is tight & Fallback approach if
+CATT underperforms after domain adaptation to simplified text \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Recommendation:} start from CATT's encoder-decoder checkpoint ---
+concrete weights, a permissive license, and a ready fine-tuning script beat a
+recipe that has to be reproduced from a paper. Fine-tune it further on
+Tashkeela plus a sample of Stage~1's simplified output specifically (not just
+Tashkeela's native classical/religious domain, per risk~R6), and validate
+base-letter preservation explicitly given the faithfulness nuance above,
+before treating its output as trustworthy enough to read aloud verbatim in
+Stage~3. A recent shared task, KSAA-2026 (OSACT7~@~LREC~2026), ran a
+systematic 18-model bake-off across seq2seq, token-classification,
+decoder-LLM, and ASR-based approaches for this exact task --- worth a glance
+at the leaderboard for the freshest signal before committing.
+
+\begin{noteb}
+\textbf{Aside, outside this plan's scope: a tokenizer-free tagging
+alternative.} CANINE (Clark et al., TACL 2021) is a genuine tokenization-free
+BERT-style encoder --- no vocabulary at all, it hashes raw Unicode codepoints
+directly --- and a natural fit for Arabic's non-concatenative
+(root-and-pattern) morphology, where there is no clean contiguous split point
+for a subword tokenizer to find. Paired with a per-character classification
+head, it would give a tokenizer-free CAMeLBERT analog that structurally
+cannot alter base letters (Section~\ref{sec:diacritization-arch}) --- CATT's
+own encoder-only checkpoint is already effectively this idea in practice,
+built from an unnamed ``pretrained character-based BERT.'' A lower-effort
+variant: take ByT5's pretrained encoder alone, swap the decoder for a
+classification head, and fine-tune as a tagger. Neither has a confirmed
+Arabic-diacritization benchmark and neither is part of this capstone's
+recommendation --- noted here purely as a standalone idea worth exploring
+separately.
+\end{noteb}
+
+\subsection{Stage 3: Read Aloud with Synced Highlighting}
+\label{sec:tts}
+
+\begin{noteb}
+\textbf{This stage is optional.} Unlike Stages~1--2, Stage~3 is not required
+to ship a defensible capstone: a text-only product (typed input
+$\to$ simplified $\to$ diacritized output, no audio) is already a complete,
+demoable accessibility tool on its own. Section~\ref{sec:tts-arch} below lays
+out a genuine three-way trade-off between voice quality, license, and native
+word-timing support, with \emph{no clean winner} among the options found ---
+if that trade-off resolves badly (e.g.\ no adequately open, commercially
+usable option is found in time), the right call for a fast 3-week sprint is
+to cut Stage~3 entirely rather than force a compromised implementation,
+freeing that time for Stages~1--2 and the QC pipeline instead.
+\end{noteb}
+
+\begin{figure}[h!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=10mm and 9mm]
+\node[iodata] (in) {Vocalized sentence};
+\node[stage, right=18mm of in] (tts) {Arabic TTS engine};
+\node[iodata, above right=6mm and 16mm of tts] (audio) {Audio waveform};
+\node[iodata, below right=6mm and 16mm of tts] (timing) {Word/phoneme\\timestamps};
+\node[block, right=32mm of tts] (sync) {Highlight sync engine};
+\node[iodata, right=18mm of sync] (ui) {UI: karaoke-style\\word highlighting\\+ audio playback};
+
+\draw[myarrow] (in) -- (tts);
+\draw[myarrow] (tts) -- (audio);
+\draw[myarrow] (tts) -- (timing);
+\draw[myarrow] (audio) -| (sync);
+\draw[myarrow] (timing) -| (sync);
+\draw[myarrow] (sync) -- (ui);
+\end{tikzpicture}}
+\caption{Stage 3 in isolation. The critical dependency is a TTS engine that
+exposes (or can be made to expose) word-level timestamps, not just raw audio.}
+\label{fig:stage3}
+\end{figure}
+
+Word-by-word highlighting synced to audio (``karaoke-style'' reading support) is a
+well-established multi-sensory reading technique independent of language, so the
+main engineering question is purely which Arabic TTS engine to use, and whether it
+gives you timing information directly or you have to derive it via forced alignment.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{3.2cm}p{3.5cm}p{3.5cm}p{3.5cm}@{}}
+\toprule
+& \textbf{Cloud (Azure / Google / Amazon Polly Arabic Neural)} &
+\textbf{Open-source (e.g.\ Coqui/VITS Arabic, Meta MMS-TTS)} &
+\textbf{On-device OS TTS (Android/iOS Arabic voices)} \\
+\midrule
+Voice quality & Highest, near-natural & Variable, improving fast & Decent, OS-dependent \\
+Word timestamps & Often exposed natively (SSML marks) & Depends entirely on architecture --- see Section~\ref{sec:tts-arch} & Inconsistent API support \\
+On-device / offline & No (network required) & Yes, if quantized & Yes, built-in \\
+Cost & Per-character billing & Free (compute cost only) & Free \\
+Setup effort (3-week sprint) & Low & Medium--High & Low--Medium \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\proscons{
+  \item A cloud neural TTS (Azure/Google/Polly all have solid Arabic voices) gets
+  a working, good-quality demo running fastest --- important given the 3-week
+  clock.
+  \item SSML-based engines often return word or viseme timing directly, avoiding
+  a whole forced-alignment sub-problem.
+  \item This stage is largely orthogonal to the NLP work in Stages~1--2, so it
+  can be built and demoed in parallel by a different team member.
+}{
+  \item Best cloud Arabic voices conflict with the program's on-device framing
+  unless deliberately scoped as ``Stage~3 is a non-on-device convenience layer,
+  the on-device claim rests on Stages~1--2.''
+  \item Open-source/on-device Arabic TTS with reliable word-level timing is
+  genuinely less mature than the Latin-script equivalent --- this is a real,
+  not-yet-fully-solved sub-problem, not just an integration task.
+  \item If timestamps must be derived via forced alignment rather than read
+  directly from the engine, that is additional, nontrivial engineering scope
+  layered on top of an already three-stage pipeline.
+}
+
+\subsubsection{Architecture decision: native alignment vs.\ bolted-on forced alignment}
+\label{sec:tts-arch}
+
+The same analytical move that shaped Stages~1 and~2 applies here: word-level
+timing is either a native byproduct of a TTS model's own generation
+mechanism, or it is something bolted on afterward with a separate
+forced-alignment pass --- and which category a given model falls into is a
+direct consequence of its architecture, not an accident of implementation
+quality.
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{VITS-family models (native alignment).} VITS is trained with
+  an internal monotonic alignment search that learns a genuine
+  text-to-audio-frame duration mapping during training; at inference, a
+  duration predictor outputs how many frames each phoneme occupies
+  \emph{before} the decoder generates any audio. Per-phoneme --- and by
+  extension per-word --- start/end times fall out of generation directly, no
+  extra step required. Meta's MMS-TTS and Piper are both VITS-based.
+  \item \textbf{FastSpeech2 / Matcha-TTS / StyleTTS2 family (native at
+  inference, cost paid at training time).} Also has an explicit duration
+  predictor, giving the same inference-time benefit --- but this family
+  specifically needs externally-supplied ground-truth durations (from a
+  forced aligner such as the Montreal Forced Aligner, or from a pretrained
+  autoregressive teacher model) \emph{during training} to learn what to
+  predict. That cost is paid once, up front, not per inference call. Nabra-82M
+  (Section~\ref{sec:tts-models}), a StyleTTS2 fine-tune, is a concrete
+  example in this bucket.
+  \item \textbf{Flow-matching without a duration model (F5-TTS family, and
+  by extension SILMA TTS, which is built on it).} F5-TTS deliberately drops
+  the explicit duration predictor to simplify its pipeline, estimating total
+  utterance duration from a crude length-ratio heuristic (audio-prompt
+  transcript length vs.\ target text length) rather than predicting a
+  duration per phoneme or word. There is no reliable per-word timing signal
+  to read off the model at all --- recovering one requires exactly the
+  bolted-on forced-alignment step this whole analysis is trying to avoid.
+  \item \textbf{Purely autoregressive attention-based synthesis} (classic
+  Tacotron-style, or any token-based/LLM-style generative TTS with no
+  explicit duration model). Timing information, if present at all, is
+  buried in attention weights that are not reliable position markers ---
+  attention can skip, repeat, or drift. The worst case for this pipeline's
+  needs.
+\end{itemize}
+
+\begin{noteb}
+\textbf{The tension this creates.} The architecture family that is
+structurally correct for the timing requirement (VITS) is not the family
+currently producing the highest-quality Arabic voices (F5-TTS-family models
+like SILMA TTS report state-of-the-art naturalness). Unlike Stages~1--2,
+where the structurally-correct choice and the highest-quality choice mostly
+lined up, Stage~3 genuinely pulls in two directions at once --- see the
+candidate comparison below.
+\end{noteb}
+
+\subsubsection{Candidate models}
+\label{sec:tts-models}
+
+\begin{center}
+\small
+\begin{longtable}{@{}p{2.3cm}p{1.7cm}p{1.5cm}p{2.3cm}p{1.6cm}p{3.7cm}@{}}
+\toprule
+\textbf{Model} & \textbf{Arch.} & \textbf{Params} & \textbf{License} &
+\textbf{Native timing?} & \textbf{Notes} \\
+\midrule
+\endhead
+SILMA TTS~v1 & F5-TTS (flow matching, DiT) & 150M & Apache~2.0 & No ---
+length-ratio heuristic only & Best-in-class Arabic-specific quality; RTF~$\sim$0.12
+on an RTX~4090 \\
+\addlinespace
+Nabra-82M (oddadmix) & StyleTTS2 (Kokoro-82M fine-tune) & 82M & Apache~2.0 &
+Yes, unconfirmed --- has a duration predictor, but not confirmed exposed as
+an output in the released demo/code & Dedicated phoneme slots for
+ع/ح that generic phonemizers collapse; \emph{expects diacritized input} ---
+a direct fit with Stage~2's output, no redundant preprocessing; MLX build
+for fully offline Apple Silicon/iOS; RTF~$<$1 on CPU; single voice
+(\texttt{af\_msa}, MSA female) only; built and maintained by one independent
+developer, not a funded lab --- newer and less battle-tested than the other
+rows here \\
+\addlinespace
+MMS-TTS-Ara (Meta) & VITS & 36.3M & CC-BY-NC-4.0 (non-commercial) & Yes ---
+native duration predictor & Smallest option; quantized ONNX build already
+exists for browser/edge (\texttt{Xenova/mms-tts-ara}); one of $\sim$1{,}100
+MMS languages, not Arabic-specialized \\
+\addlinespace
+Piper (``kareem'', ar\_JO) & VITS & Tens of millions (not confirmed exactly)
+& Piper itself MIT; per-voice license varies & Yes --- native duration
+predictor & Most edge-proven runtime (real-time on a Raspberry~Pi~4 across
+100+ voices); Arabic coverage currently thin (one low/medium-quality voice
+plus two unofficial community voices); ships its own tashkeel step ---
+disable it, since Stage~2 already supplies diacritized text \\
+\addlinespace
+ArTST (MBZUAI) & SpeechT5 & Not confirmed here & CC-BY-NC-4.0
+(TTS checkpoint) & Not confirmed here & Pretrained from scratch on Arabic
+MSA speech/text, not a multilingual model adapted to Arabic; same
+non-commercial-license pattern already seen with SAMER (Section~\ref{sec:why-barec}) \\
+\addlinespace
+Cloud (Azure / Google / Polly) & Proprietary & N/A & Per-vendor commercial
+terms & Yes --- SSML word-boundary / viseme events & Highest current
+naturalness; not on-device; per-character billing \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\textbf{Nabra-82M meaningfully improves this trade-off, without fully
+resolving it.} It is the only option here that combines a fully permissive
+license (Apache~2.0), an architecture family that natively supports duration
+prediction (StyleTTS2, not flow-matching-without-duration like SILMA), a
+genuine offline/edge story (MLX build for Apple Silicon/iOS), and --- uniquely
+--- an input contract that matches this pipeline exactly: it \emph{expects}
+diacritized text, which is precisely what Stage~2 already produces, with no
+redundant or conflicting preprocessing step to disable (unlike Piper's
+built-in tashkeel step).
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Nabra-82M} is the strongest combination on paper, but carries
+  real newness risk: whether word-level timing is actually exposed (versus
+  just architecturally present) needs a hands-on check before relying on it,
+  it ships one voice only, and it is maintained by a single independent
+  developer rather than a funded lab or large open-source project ---
+  meaningfully less battle-tested than SILMA, MMS-TTS-Ara, or Piper. Pilot it
+  first, but do not commit to it sight-unseen.
+  \item \textbf{MMS-TTS-Ara} remains the most-established ``cheap and
+  structurally correct'' fallback: smallest footprint, an existing quantized
+  edge build, and confirmed native timing --- but its CC-BY-NC-4.0 license
+  blocks commercial use without separate permission from Meta, echoing the
+  exact SAMER lesson from Section~\ref{sec:why-barec}: check the license
+  before building around a model, not after.
+  \item \textbf{Piper} is the most genuinely edge-proven runtime, but
+  Arabic voice quality/coverage is currently the weakest link among the
+  options considered.
+  \item \textbf{SILMA TTS~v1} has the best-documented Arabic-specific voice
+  quality and a fully commercial-friendly license, but its F5-TTS lineage
+  means word timing is not a native output --- using it means reintroducing
+  the bolted-on forced-alignment step this analysis exists to avoid.
+\end{itemize}
+
+This is a genuine team decision (Section~\ref{sec:open-items}), not a
+default: pilot Nabra-82M first given how well it fits on paper, fall back to
+MMS-TTS-Ara or Piper if its timing turns out not to be usable or its
+newness proves too risky for the sprint timeline, and fall back further to
+SILMA TTS plus a forced-alignment step if voice quality and
+commercial-friendliness matter more than native timing.
+
+\begin{noteb}
+\textbf{This is still an actively explorable field --- treat this table as a
+snapshot, not a closed decision.} Arabic TTS is moving fast enough that a
+genuinely strong candidate (Nabra-82M) turned up mid-research and wasn't on
+the radar when this section was first drafted; the community-run Arabic TTS
+Arena leaderboard alone tracks 15+ systems being actively compared by native
+listeners, and new entrants (several tied to the current wave of Saudi
+voice-AI startups) keep appearing. No model evaluated here is a confirmed
+100\% fit --- each carries at least one open question (unexposed timing,
+non-commercial license, thin voice coverage, or unproven maturity). Re-check
+the landscape close to when Stage~3 is actually built, rather than locking
+in this list today.
+\end{noteb}
+
+\newpage
+% =====================================================================
+\section{Quality-Control Pipeline: LLM-as-Judge + DSPy}
+\label{sec:qc}
+% =====================================================================
+
+The pipeline defines a \textbf{generator} that produces 5 candidate
+simplifications per hard-band anchor in one batched call, plus two
+independent checks that gate them: a DSPy \textbf{equivalence validator}
+and a locally hosted, fine-tuned \textbf{level classifier} --- one for
+semantic equivalence, one for whether a candidate actually lands in the
+easy band (Section~\ref{sec:datapipeline}). Splitting the level check out
+from the meaning check keeps each program's job narrow and separately
+debuggable: a single combined judge has to get both dimensions right in one
+verdict, and it is harder to tell which dimension failed when a pair gets
+rejected. The generator and equivalence validator run against DeepSeek; the
+level classifier is not an LLM call at all (below). This is a change from
+an earlier revision, where the level check was itself a third DSPy program
+(\texttt{ClassifyReadabilityLevel}) prompted against DeepSeek --- superseded
+once BAREC's $\sim$69k gold labels made supervised fine-tuning both cheaper
+and more accurate than few-shot prompting (Section~\ref{sec:next-phase}).
+
+\begin{noteb}
+\textbf{Revised since the last pass: the level check left DSPy for a
+fine-tuned local classifier; the equivalence validator's signature is now
+batched for reranking.} The generator (\texttt{SimplifyToEasyArabic}) still
+has no ground truth to compile against --- no human-written simplification
+exists anywhere in BAREC or elsewhere in this pipeline --- so it still runs
+zero-shot by necessity, now producing 5 candidates per call instead of 1
+(Section~\ref{sec:next-phase}).
+
+\textbf{Level classification: fine-tuned MARBERT, quantized to ONNX
+int8} (\texttt{scripts/train\_level\_classifier\_bert.py}, weights at
+\texttt{models/level\_classifier\_bert\_marbert\_onnx\_int8/}), replacing
+the DSPy-prompted \texttt{ClassifyReadabilityLevel} entirely. BAREC's
+$\sim$69k gold level labels are enough to supervise-train a classification
+head directly, at far greater scale than the $\sim$1,000-sentence pool the
+old few-shot classifier was compiled against, with zero manual labeling and
+no per-call API spend at inference. Several architectures were benchmarked
+against a real held-out split before settling on this one: a 4-way softmax
+head on CAMeLBERT-mix scored 83.5--83.9\% band accuracy; binary,
+CORAL-ordinal, and hybrid heads on the same base landed at 83.4\%, 80.1\%,
+and 83.0\% respectively --- architecture changes on one encoder converged
+to roughly the same ceiling. Swapping the base model instead of the head
+is what actually moved the number: AraBERT matched CAMeLBERT-mix at
+83.4\%, but \textbf{MARBERT reached 86.8--87.5\% band accuracy}, 3--4pp
+above the entire CAMeLBERT-mix-based cluster, attributed to its
+pretraining corpus (Twitter-scale dialectal/MSA Arabic) rather than any
+architectural difference. A majority-vote ensemble of CAMeLBERT-mix +
+AraBERT + MARBERT was also tried, on the theory that three models would
+catch each other's mistakes; it scored 84.8\%, \emph{worse} than MARBERT
+alone --- diagnosed as 31 net-negative overrules against only 15
+net-positive ones, i.e.\ the weaker two models outvoted the better one more
+often than they corrected it. MARBERT alone is what ships, quantized
+dynamic-int8 via ONNX (164MB, CPU-only inference through
+\texttt{onnxruntime} directly --- no \texttt{torch} dependency at inference
+time, since the tensor glue an \texttt{optimum} wrapper would add is
+unnecessary when the ONNX graph and tokenizer output can run as plain
+NumPy arrays).
+
+\textbf{\texttt{CheckSemanticEquivalence}} (\texttt{scripts/optimize\_equivalence\_validator.py}):
+still the one validator with no BAREC-native ground truth --- the
+annotation workflow described below is what supplies it. The signature
+itself changed to support reranking: it now takes a \emph{list} of
+candidate simplifications and returns a list of equivalence scores plus a
+short reasoning string per candidate (previously discarded when only the
+overall DSPy trace was inspected; now a first-class output field, both
+because it is directly useful to a human reviewer and because
+\texttt{dspy.Predict} with its own explicit reasoning field made
+\texttt{dspy.ChainOfThought}'s implicit one redundant). Compiled with
+\texttt{dspy.MIPROv2} against the same 102 human-annotated pairs (65
+equivalent / 37 not-equivalent), split 77 train / 25 held-out, adapted to
+the new batched shape as batch-of-1 calls (one candidate per list) since no
+genuine multi-candidate ground truth exists yet --- a stated limitation of
+this evaluation, not of production use, which always batches 5 real
+candidates together. \textbf{Result: mean score closeness improved 0.652
+$\to$ 0.668, but thresholded accuracy (score $\geq$0.5 as ``equivalent'')
+was flat at 64.0\% both before and after compiling.} That number is less
+reassuring than it looks: at threshold 0.5, both the raw and the
+MIPROv2-compiled validator scored \emph{every one} of the 25 held-out
+pairs $\geq$0.5 (16/16 true positives, but also 9/9 false positives, 0
+true negatives) --- 64.0\% is exactly the positive-class base rate
+(16/25), not evidence of a working negative classifier, a real regression
+in kind (not just degree) from the earlier single-candidate signature,
+which correctly rejected 7--8 of 9 negatives. Whether this is a genuine
+behavior change or an artifact of scoring one candidate in isolation
+inside a signature designed for five (Section~\ref{sec:next-phase}) is not
+yet known and is flagged here rather than smoothed over; re-evaluating
+once the 10\% pilot's real 5-candidate batches accumulate enough annotated
+negatives is the next step. Separately, \textbf{a cheaper alternative was
+tested and rejected}: BERTScore F1 between original and candidate showed
+essentially zero correlation with the human equivalence labels
+($r=-0.014$) and a calibrated decision threshold reached only 48--64\%
+accuracy, no better than (and sometimes worse than) the majority-class
+baseline --- confirming an LLM judge is doing real work here, not
+something a cheap embedding-similarity metric can substitute for.
+Enabling DeepSeek's ``thinking'' mode on the judge was also tried and made
+results worse (0.628 vs.\ 0.651 mean closeness on an earlier evaluation
+pass, including one case where hidden reasoning consumed the entire
+4096-token budget before any visible answer was written) --- thinking
+stays disabled, consistent with Section~\ref{sec:deepseek-lessons}.
+\end{noteb}
+
+\begin{figure}[h!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=9mm and 9mm]
+\node[iodata] (hard) {Hard anchor\\\footnotesize \texttt{original\_text}};
+\node[stage, right=16mm of hard] (gen) {\texttt{Generator}\\\footnotesize $\to$ 5 $\times$ \texttt{simplified\_text}};
+\node[iodata, right=16mm of gen] (cand) {5 candidate pairs};
+
+\node[stage, below right=10mm and 4mm of cand] (eq) {\texttt{CheckSemanticEquivalence}\\\footnotesize (original, [5 candidates])\\\footnotesize $\to$ \texttt{equivalence\_scores}, \texttt{reasoning}};
+\node[stage, above right=10mm and 4mm of cand] (diff) {Local MARBERT classifier\\\footnotesize (each candidate)\\\footnotesize $\to$ \texttt{level: int} (1--4)};
+
+\node[decision, right=30mm of cand] (gate) {best candidate:\\equivalent \&\\level $\leq$ 2?};
+\node[iodata, right=16mm of gate] (kept) {Kept pair};
+\node[block, above right=8mm and 4mm of gate] (rej) {Discard};
+
+\draw[myarrow] (hard) -- (gen);
+\draw[myarrow] (gen) -- (cand);
+\draw[myarrow] (cand) -- (eq);
+\draw[myarrow] (cand) -- (diff);
+\draw[myarrow] (eq) -- (gate);
+\draw[myarrow] (diff) -- (gate);
+\draw[myarrow] (gate) -- node[lbl,above]{yes} (kept);
+\draw[myarrow] (gate) -- node[lbl,pos=0.4,above,sloped]{no} (rej);
+\end{tikzpicture}}
+\caption{The generator, DSPy equivalence validator, and local MARBERT
+classifier, and how the best of 5 reranked candidates is kept or
+discarded. Both checks must pass independently for the winning candidate
+--- a fluent but meaning-distorted rewrite is caught by
+\texttt{CheckSemanticEquivalence} even if the level classifier reports an
+easy level, and vice versa. \texttt{CheckSemanticEquivalence} now declares
+an explicit \texttt{reasoning\_per\_candidate} output field alongside its
+scores, not just a bare verdict; it is DSPy-optimizer-compiled against real
+ground truth (results below), the level classifier is separately
+fine-tuned and quantized (also below), and the generator remains zero-shot
+for lack of any ground truth to compile against.}
+\label{fig:dspy}
+\end{figure}
+
+\subsection{Where the pipeline is used}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Data filtering (build-time, hard band only).} Every hard-band
+  anchor's generated candidate is scored by both validators before it enters
+  the AraT5 training set; a pair is kept only if both pass
+  (Figure~\ref{fig:datapipeline}). Easy-band identity pairs skip this
+  entirely --- there is nothing to validate when the output is the input.
+  \item \textbf{Evaluation (build-time).} The same two validators run on a
+  held-out split; the average equivalence and easy-band pass rates are the
+  headline faithfulness and effectiveness metrics for the pitch ---
+  meaningfully stronger evidence than BLEU/ROUGE, which reward word overlap, not
+  meaning preservation.
+  \item \textbf{Runtime gate (optional, stretch goal).} Score live output before
+  showing it to the user; if either validator fails, fall back to the original text
+  with a note rather than silently showing a possibly-distorted simplification.
+  This echoes a ``trust signaling'' pattern already used in a sibling team idea
+  (the RAG curriculum assistant, which cites its sources).
+\end{enumerate}
+
+\proscons{
+  \item Directly targets the metric that actually matters for this product
+  (meaning preservation), rather than a proxy metric.
+  \item DSPy's optimizer-compiled prompt is a defensible, reproducible
+  methodology to present in a pitch --- ``we didn't hand-tune a prompt and hope,
+  we optimized it against labeled data,'' which fits SIC's evident preference for
+  rigor over vibes.
+  \item Reusable across three pipeline touchpoints (filtering, eval, optional
+  runtime gate) for one build cost.
+  \item The runtime gate, if built, becomes a genuine user-facing safety feature,
+  not just an internal QA tool.
+}{
+  \item Adds a second model-development track (the judge) on top of the main
+  model (AraT5) inside the same 3-week sprint --- real scope, not free.
+  \item DSPy optimization requires a hand-labeled validation set that does not
+  yet exist; ``negative'' (meaning-distorted) examples specifically must be
+  manually constructed, since real corpora are overwhelmingly positive examples.
+  \item Judge reliability on Arabic semantic equivalence is empirically
+  unverified going in --- this is a real open risk, not a formality (see below).
+  \item A weak or miscalibrated judge silently degrades everything downstream of
+  it: bad filtering lets bad training data through, and a bad eval score either
+  falsely reassures the team or falsely tanks a model that was actually fine.
+}
+
+\subsection{Human annotation: how the A3 validation set actually got built}
+\label{sec:annotation}
+
+The original plan for A3 (Section~\ref{sec:open-items}) was to hand-construct
+a labeled set from scratch: manually simplify some BAREC sentences for
+positives, and deliberately corrupt others (drop a negation, swap a number,
+substitute an antonym) for negatives, since BAREC provides no aligned
+rewrites and therefore no free positive examples the way SAMER's
+human-written simplifications would have. That plan is superseded by
+something better: instead of synthetic corrupted examples, the pilot's own
+\emph{real} generated pairs are annotated directly. A web tool (``Pilot Pair
+Review,'' published as a Claude Artifact with a shared realtime database) lets
+a reviewer browse every generated pair --- original and simplified text
+side by side, with RTL Arabic typography --- and record two independent
+verdicts per pair: \texttt{level\_verdict} (\emph{ok} / \emph{should\_be\_easy}
+/ \emph{should\_be\_hard}) and \texttt{equiv\_verdict} (\emph{ok} /
+\emph{should\_be\_equivalent} / \emph{should\_not\_be\_equivalent}), plus a
+free-text note. This is real ground truth on real pipeline output, not
+synthetic corruption of hand-picked examples, and it is what the equivalence
+validator's 102-pair calibration set (Section~\ref{sec:qc}) is drawn from.
+Annotation is ongoing; more pairs (especially clear level corrections, which
+are thinner than the equivalence corrections so far) will continue to
+sharpen both validators.
+
+\subsection{Content safety: scripture must be preserved verbatim}
+\label{sec:scripture}
+
+BAREC draws sentences from $\sim$30 source categories, four of which are
+scripture: Quran, Hadith, Old Testament, and New Testament. A hard-band
+scripture sentence is, by definition, exactly the kind of sentence the
+generator is supposed to rewrite --- and rewriting sacred or canonical text
+is never acceptable, regardless of how genuinely difficult it reads. This
+was not a hypothetical risk: an early completed pilot run, before this fix
+existed, sent 28 scripture-sourced sentences through the generator,
+including a Quranic ayah with its verse number altered and a hadith with
+the \textarabic{ﷺ} honorific reworded. The reviewer caught this by hand.
+
+\textbf{Fix.} At sampling time, sentences whose \texttt{Source} column is
+Quran, Hadith, Old Testament, or New Testament are filtered out of the
+easy/hard split entirely and routed to identity pairs (output~=~input) ---
+the same free, safe-by-construction mechanism already used for easy-band
+sentences, applied here regardless of the sentence's assessed difficulty.
+Validated by dry run: a 2\% stratified sample now produces 1,350 sentences
+as 708 easy / 606 hard / 36 scripture (preserved verbatim) --- 28 fewer
+hard-band sentences than before the fix, matching exactly the 28 scripture
+sentences the reviewer had found in the earlier completed pilot.
+
+\begin{noteb}
+\textbf{Known gap, not yet solved: this fix only cleans the training data,
+not deployment.} The fix above works because BAREC sentences carry
+\texttt{Source} metadata to filter on. The deployed product takes raw
+typed or pasted sentences as input, with no such metadata --- a real end
+user pasting an unfamiliar Quranic or Hadith sentence would have nothing
+for the pipeline to route on, and it could still be rewritten. A scoped,
+not-yet-built follow-up: a Quran-specific runtime exact/fuzzy-match lookup
+guard is genuinely tractable, since the Quran is a small, fixed, fully
+enumerable text ($\sim$6,236 verses) --- unlike Hadith or the Bible, which
+are far larger and less centrally indexed, and realistically out of reach
+for full coverage within a 3-week capstone. This is future work, explicitly
+flagged as such, not claimed as solved.
+\end{noteb}
+
+\subsection{Pipeline resilience: checkpointing and timeouts}
+\label{sec:resilience}
+
+A real incident shaped this: a $\sim$2-hour pilot run hung indefinitely at
+600/634 hard-band sentences after the development laptop slept, silently
+killing the underlying network connection with nothing to catch it ---
+everything already processed would have been lost, since nothing was
+persisted until the run finished. Two fixes followed. First, every LM call
+carries a 90-second timeout, so a stalled connection fails fast and is
+caught by the per-example error handling instead of hanging the whole run.
+Second, \texttt{run\_hard\_pipeline} in
+\texttt{scripts/barec\_simplification\_pipeline.py} writes every successful
+result to a JSON-lines checkpoint file immediately (append, flush, and
+fsync after each one, not held in memory until the run completes); on
+restart, already-completed sentence IDs are filtered out of the remaining
+work automatically, and a checkpoint from a different sample configuration
+is detected and not silently reused.
+
+\subsection{Engineering lessons: DeepSeek V4.1 Flash integration}
+\label{sec:deepseek-lessons}
+
+Three integration issues, all confirmed against the real API, are worth
+recording so they are not rediscovered later:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Thinking mode must be disabled}
+  (\texttt{thinking=\{"type": "disabled"\}}). Left on, DeepSeek's internal
+  reasoning pass consumed the entire token budget on nearly every call
+  before the model ever wrote the structured answer DSPy needs, causing
+  near-total call failure --- not just added cost, as a generic
+  ``reasoning tokens bill as output'' concern might suggest, but functional
+  breakage. \texttt{dspy.ChainOfThought}'s own \texttt{reasoning} field
+  already serves this purpose within the visible token budget.
+  \item \textbf{DSPy's JSON-adapter fallback must be disabled}
+  (\texttt{dspy.ChatAdapter(use\_json\_adapter\_fallback=False)}). DSPy's
+  default behavior retries a parse failure via a JSON-mode adapter, which
+  sends a \texttt{response\_format} parameter DeepSeek's endpoint rejects
+  outright --- turning a single recoverable parse failure into a fatal
+  crash.
+  \item \textbf{\texttt{optuna} is a required but not automatically
+  installed dependency} of \texttt{dspy.MIPROv2} (its internal trial
+  search uses Optuna) --- install it explicitly
+  (\texttt{uv add optuna}) before running any MIPROv2 compile.
+\end{itemize}
+
+\subsection{Implemented: candidate reranking and a fine-tuned classifier}
+\label{sec:next-phase}
+
+The original design gated generation with a binary pass/fail: one candidate
+per hard sentence, kept only if both validators passed. This has been
+replaced with a generate-then-rerank design, directly informed by the
+actual TSAR 2025 Shared Task on Readability-Controlled Text Simplification
+(EMNLP 2025) --- its winning system, EhiMeNLP (Miyata, Horiguchi, Kondo,
+Fujiwara, and Kajiwara), used exactly this two-step strategy: generate
+multiple simplification candidates via LLM prompting, then rerank by
+readability-based filtering and semantic similarity to the original, with
+no parallel training data required. What actually shipped:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Fine-tuned a pretrained Arabic transformer} (MARBERT, after
+  benchmarking it against CAMeLBERT-mix and AraBERT across four
+  classification-head designs) with a classification head on the full
+  BAREC corpus, replacing the LLM-prompted \texttt{ClassifyReadabilityLevel}
+  outright rather than merely supplementing it. BAREC's $\sim$69k
+  gold-labeled sentences, versus the $\sim$1,000 used for the old few-shot
+  calibration, made supervised fine-tuning both cheaper (no per-call API
+  spend at inference) and markedly more accurate: 86.8--87.5\% band
+  accuracy versus 79.7\% for the DSPy-prompted predecessor. Full
+  architecture search and numbers in Section~\ref{sec:qc}.
+  \item \textbf{Replaced binary gating with generate-N-then-rerank}: the
+  generator now produces $N=5$ candidate simplifications per hard sentence
+  in one batched call, the equivalence validator scores all 5 in a second
+  batched call, the local classifier scores all 5 for free, and the
+  best-scoring candidate that passes both checks is kept --- 2 DeepSeek
+  calls per hard sentence total, down from 3 in the original one-candidate
+  design, despite generating 5$\times$ the candidates.
+  \item \textbf{Stretch goal, still not built: retrieval-augmented
+  generation.} Use the fine-tuned classifier's embeddings to retrieve
+  same-topic easy-band BAREC neighbors as few-shot context for the
+  generator --- reusing BAREC's own labels as a retrieval index, again with
+  no parallel data required.
+\end{enumerate}
+
+The GPU blocker noted in an earlier revision (development machine has no
+CUDA GPU) was resolved by renting GPU time on vast.ai for the fine-tuning
+runs, not by acquiring local hardware --- a real, repeatable path for the
+rest of the sprint if further fine-tuning is needed, with its own gotchas
+(2FA/SSH setup, a CUDA forward-compatibility library conflict on one fresh
+host, transformers API drift against older tutorials) now documented for
+reuse rather than rediscovered each time.
+
+\newpage
+% =====================================================================
+\section{End-to-End System Architecture: What Runs Where}
+% =====================================================================
+
+Because the pitch leans on an ``on-device AI'' framing, it matters to be precise
+about which components actually need to run on-device at inference time versus
+which are strictly build-time, offline tooling.
+
+\begin{figure}[h!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=7mm and 10mm]
+
+\node[cloudbox, minimum width=6.6cm, minimum height=5.6cm] (cloud) {};
+\node[anchor=north, font=\bfseries, text=violet!60!black] at (cloud.north) {Cloud / Offline --- Build-Time Only};
+\node[block, below=10mm of cloud.north] (bigllm) {Gemini\\\footnotesize synthetic data generation};
+\node[block, below=6mm of bigllm] (judgebuild) {DSPy judge\\\footnotesize filtering + eval};
+\node[block, below=6mm of judgebuild] (trainloop) {AraT5 fine-tuning loop};
+
+\node[devicebox, right=26mm of cloud, minimum width=6.6cm, minimum height=5.6cm] (device) {};
+\node[anchor=north, font=\bfseries, text=teal!60!black] at (device.north) {On-Device --- Runtime};
+\node[stage, below=10mm of device.north] (aradev) {Quantized AraT5\\\footnotesize simplify};
+\node[stage, below=6mm of aradev] (diadev) {Diacritizer};
+\node[stage, below=6mm of diadev] (ttsdev) {TTS + sync UI};
+
+\draw[myarrow] (bigllm) -- (judgebuild);
+\draw[myarrow] (judgebuild) -- (trainloop);
+\draw[myarrow] (aradev) -- (diadev);
+\draw[myarrow] (diadev) -- (ttsdev);
+
+\draw[myarrow, ultra thick, teal!40!black] (trainloop.east) to[out=0,in=180]
+  node[lbl, above, text width=3.2cm, align=center] {one-time export\\quantized weights, offline}
+  (aradev.west);
+\end{tikzpicture}}
+\caption{Deployment boundary. Only quantized AraT5 (and the diacritizer/TTS)
+run at inference time on-device; the big LLM and the DSPy judge are strictly
+development-time tools whose only artifact that reaches the device is the
+trained model weights.}
+\label{fig:deployment}
+\end{figure}
+
+\label{sec:deployment-note}
+\begin{noteb}
+\textbf{Pitch framing implication.} The ``on-device AI'' claim is accurate and
+defensible \emph{for the simplification model itself} (Stage~1, the intellectual
+core). If Stage~3 ends up using a cloud TTS for quality/speed reasons within the
+3-week window, that should be stated plainly as a scoped trade-off (``the
+reading-support layer currently uses a cloud TTS API; the core NLP model is
+on-device''), not glossed over --- judges rewarding ``Pure AI'' clarity will
+likely respond better to an honest scoping statement than to an overstated claim
+that doesn't survive a follow-up question.
+\end{noteb}
+
+\newpage
+% =====================================================================
+\section{Overall SWOT Analysis}
+% =====================================================================
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\def\w{7.6cm}
+\def\h{5.6cm}
+
+\node[rectangle, draw=prosgreen, thick, fill=prosgreen!8, minimum width=\w, minimum height=\h,
+  align=left, text width=\w-1cm, font=\small, anchor=north east] (S) at (0,0) {
+  \textbf{\large\textcolor{prosgreen}{Strengths}}\\[3pt]
+  $\bullet$ Open, large, license-unrestricted corpus (BAREC) plus
+  confirmed-negligible generation cost --- data and budget risk are both low.\\
+  $\bullet$ Every architecture choice has a citable precedent (AraT5-MSAizer).\\
+  $\bullet$ Faithfulness-first design matches a vulnerable-user product honestly.\\
+  $\bullet$ Rigorous, reproducible QA methodology (DSPy) fits SIC's evident
+  preference for demonstrable rigor.\\
+  $\bullet$ On-device claim is genuinely defensible for the core model.
+};
+
+\node[rectangle, draw=consred, thick, fill=consred!8, minimum width=\w, minimum height=\h,
+  align=left, text width=\w-1cm, font=\small, anchor=north west] (W) at (0,0) {
+  \textbf{\large\textcolor{consred}{Weaknesses}}\\[3pt]
+  $\bullet$ No field-validation partner or real interview subject yet ---
+  unlike the team's other Al-Noor-backed ideas.\\
+  $\bullet$ Three chained models (simplify, diacritize, judge) is real scope for
+  a 3-week sprint.\\
+  $\bullet$ No free ground-truth simplification pairs (BAREC has none) ---
+  every training pair depends on LLM-generation quality.\\
+  $\bullet$ Judge reliability on Arabic semantic equivalence is unverified.\\
+  $\bullet$ Mature, timed, on-device Arabic TTS with word timing is a genuinely
+  unsolved sub-problem.
+};
+
+\node[rectangle, draw=blue!50!black, thick, fill=blue!6, minimum width=\w, minimum height=\h,
+  align=left, text width=\w-1cm, font=\small, anchor=south east] (O) at (0,-0.05) {
+  \textbf{\large\textcolor{blue!50!black}{Opportunities}}\\[3pt]
+  $\bullet$ No deployed Arabic dyslexia software found --- credible first-mover
+  framing if it ships.\\
+  $\bullet$ Strong accessibility / humanitarian fit with SIC's apparent judging
+  preferences (cf.\ past 2nd-place Speech Emotion Synthesis project).\\
+  $\bullet$ Week~0 is specifically available to close the partner-org gap before
+  the clock starts.\\
+  $\bullet$ Runtime faithfulness gate doubles as a genuine, demoable safety
+  feature, not just internal QA.
+};
+
+\node[rectangle, draw=orange!80!black, thick, fill=orange!8, minimum width=\w, minimum height=\h,
+  align=left, text width=\w-1cm, font=\small, anchor=south west] (T) at (0,-0.05) {
+  \textbf{\large\textcolor{orange!80!black}{Threats}}\\[3pt]
+  $\bullet$ If no partner materializes in week~0, the idea competes at a
+  credibility disadvantage against the team's other, interview-backed ideas.\\
+  $\bullet$ Three-week timeline is tight for two models plus a judge plus a
+  reading UI.\\
+  $\bullet$ A competing internal idea could be judged as lower-risk and get
+  chosen instead, independent of this idea's own merits.\\
+  $\bullet$ BAREC's 19 levels are calibrated for general Arabic readability,
+  not dyslexia-specific criteria --- a domain-fit risk that carries over
+  regardless of corpus choice.
+};
+\end{tikzpicture}
+\caption{SWOT summary of the project idea as currently scoped.}
+\label{fig:swot}
+\end{figure}
+
+\newpage
+% =====================================================================
+\section{Risk Register}
+% =====================================================================
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[scale=1.0]
+\def\n{3}
+\foreach \i in {0,...,2} {
+  \foreach \j in {0,...,2} {
+    \pgfmathsetmacro{\score}{\i+\j}
+    \pgfmathsetmacro{\colpct}{25+\score*15}
+    \node[rectangle, draw=black!40, minimum width=2.6cm, minimum height=1.9cm,
+      fill=red!\colpct!green!60] at (\i*2.6,\j*1.9) {};
+  }
+}
+% axis labels
+\node[font=\small] at (-1.6,0) {Low};
+\node[font=\small] at (-1.6,1.9) {Medium};
+\node[font=\small] at (-1.6,3.8) {High};
+\node[rotate=90, font=\bfseries] at (-2.6,1.9) {Impact};
+\node[font=\small] at (0,-1.3) {Low};
+\node[font=\small] at (2.6,-1.3) {Medium};
+\node[font=\small] at (5.2,-1.3) {High};
+\node[font=\bfseries] at (2.6,-2.0) {Likelihood};
+
+% risk placements (x = likelihood col 0/1/2, y = impact row 0/1/2)
+\node[align=center, font=\scriptsize\bfseries] at (2.6,3.8) {R1, R4};
+\node[align=center, font=\scriptsize\bfseries] at (2.6,1.9) {R2, R6};
+\node[align=center, font=\scriptsize\bfseries] at (5.2,0) {R5};
+\node[align=center, font=\scriptsize\bfseries] at (0,1.9) {R3};
+\end{tikzpicture}
+\caption{Qualitative likelihood/impact placement for the risks in
+Table~\ref{tab:risks}. Placements are judgment calls for team discussion, not a
+formal quantitative assessment.}
+\label{fig:riskmatrix}
+\end{figure}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{0.6cm}p{4.4cm}p{3.6cm}p{5.6cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Risk} & \textbf{Likelihood / Impact} & \textbf{Mitigation} \\
+\midrule
+R1 & No field-validation partner found during week~0 & Medium / High &
+Start outreach immediately (schools, learning-disability orgs, individual
+contacts) --- a potential individual validator (someone with dyslexia) has
+already been identified as a lead; also consider testing with children, not
+just adult readers, since dyslexia support tools are frequently used in
+school settings. Worst case, recruit informal testers (any dyslexic
+Arabic-literate reader) to at least get qualitative signal before pitching. \\
+\addlinespace
+R2 & DSPy judge does not reliably agree with human judgment on Arabic semantic
+equivalence & Medium / Medium &
+Underway: MIPROv2-compile the judge against the growing hand-labeled set
+(Section~\ref{sec:qc}) rather than trust it zero-shot; a cheaper
+BERTScore-based judge was piloted and rejected for the same reason
+($r=-0.014$ with human labels). \\
+\addlinespace
+R3 & LLM-generated pairs pass the equivalence check but aren't actually
+simpler by BAREC's own scale & Low / Medium &
+Require a measurable BAREC-calibrated readability-level drop in the judge's
+combined check, not equivalence alone; spot-check a sample by hand. \\
+\addlinespace
+R4 & 3-week timeline insufficient to finish all three stages plus QA
+convincingly & Medium / High &
+Treat the runtime faithfulness gate as an explicit stretch goal; the demoable
+core is Stages~1--3 on typed input with build-time (not runtime) QA only. \\
+\addlinespace
+R5 & No single on-device Arabic TTS option satisfies quality, commercial
+license, and native word timing simultaneously (Section~\ref{sec:tts-arch})
+& High / Low--Medium &
+Pick per the three-way trade-off in Section~\ref{sec:tts-arch}:
+MMS-TTS-Ara or Piper for native timing if the non-commercial license is
+acceptable for a capstone demo, else SILMA TTS plus a bolted-on
+forced-alignment step; state whichever trade-off is chosen honestly in the
+pitch (Section~\ref{sec:deployment-note} framing). If no adequately open
+option is found in time, \textbf{drop Stage~3 entirely} rather than ship a
+compromised implementation --- a text-only output is still a complete,
+demoable product (Section~\ref{sec:tts}). \\
+\addlinespace
+R6 & Diacritizer trained on classical/religious text underperforms on
+simplified contemporary sentences & Medium / Medium &
+Validate diacritizer output specifically on Stage~1's simplified sentences
+during week~0/1, not just on Tashkeela's native domain; fine-tune further if
+needed. \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Risk register corresponding to Figure~\ref{fig:riskmatrix}.}
+\label{tab:risks}
+\end{center}
+
+\newpage
+% =====================================================================
+\section{Fit Against the Team's Other Candidate Ideas}
+% =====================================================================
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{3.6cm}p{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}@{}}
+\toprule
+& \textbf{This idea}\newline(Arabic dyslexia assistant) & \textbf{Waste-management app} & \textbf{Accessible-camera guidance} & \textbf{RAG curriculum assistant} \\
+\midrule
+Working prototype exists & No & Yes & Unclear & Unclear \\
+Real interview / partner validation & \textbf{No (gap)} & Unclear & Yes (Al-Noor) & Yes (Al-Noor) \\
+Public training data available & Yes (BAREC, Tashkeela; pairs LLM-generated) & Unclear & Unclear & Depends on curriculum corpus \\
+``Pure AI'' framing strength & Strong (core NLP task) & Weaker (more app/IoT-flavored) & Moderate & Strong \\
+On-device story & Strong (small seq2seq) & Depends & Depends (vision on-device is plausible) & Weak (RAG usually needs a larger LM) \\
+Accessibility / humanitarian fit & Strong & Weak & Strong & Strong \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{noteb}
+\textbf{Reading this table honestly.} This idea is competitive on data
+availability, architectural rigor, and on-device story --- arguably the
+strongest of the four on those axes. Its one clear disadvantage against the
+Al-Noor-backed ideas is validation: it is the only one without a real interview
+subject or partner organization behind it. That single gap is the highest-leverage
+thing to close in week~0; closing it would remove the only structural
+disadvantage this idea has relative to its siblings.
+\end{noteb}
+
+\newpage
+% =====================================================================
+\section{Execution Timeline}
+% =====================================================================
+
+\begin{figure}[h!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{ganttchart}[
+    hgrid, vgrid,
+    x unit=0.62cm,
+    y unit title=0.8cm,
+    y unit chart=0.7cm,
+    title height=1,
+    bar height=0.6,
+    group height=0.6,
+    bar/.append style={fill=stagecolor!80!black, fill=stagecolor},
+    group/.append style={fill=blockcolor!80!black, fill=blockcolor},
+    milestone/.append style={fill=consred, fill=consred!70}
+  ]{1}{20}
+  \gantttitle{Week 0}{5}
+  \gantttitle{Week 1}{5}
+  \gantttitle{Week 2}{5}
+  \gantttitle{Week 3}{5} \\
+  \gantttitlelist{1,...,20}{1} \\
+  \ganttgroup{Validation \& setup}{1}{5} \\
+  \ganttbar{Partner/interview outreach}{1}{5} \\
+  \ganttbar{Hand-label DSPy val.\ set}{2}{5} \\
+  \ganttbar{Pilot BAREC$\to$Gemini generation}{1}{2} \\
+  \ganttgroup{Stage 1: Simplify}{4}{12} \\
+  \ganttbar{Synthetic data gen (if needed)}{4}{7} \\
+  \ganttbar{DSPy judge dev \& pilot}{4}{8} \\
+  \ganttbar{AraT5 fine-tuning}{7}{12} \\
+  \ganttgroup{Stage 2: Diacritize}{9}{13} \\
+  \ganttbar{Integrate \& validate on simplified text}{9}{13} \\
+  \ganttgroup{Stage 3: Read aloud (optional)}{6}{15} \\
+  \ganttbar{TTS engine selection \& integration}{6}{10} \\
+  \ganttbar{Word-sync highlight UI}{10}{15} \\
+  \ganttgroup{Integration \& polish}{13}{19} \\
+  \ganttbar{End-to-end pipeline wiring}{13}{16} \\
+  \ganttbar{Runtime gate (stretch)}{16}{18} \\
+  \ganttbar{Testing \& bug-fix buffer}{16}{19} \\
+  \ganttmilestone{Pitch / submission prep}{20}
+\end{ganttchart}}
+\caption{Indicative week-0 plus 3-week sprint schedule (days 1--20, weekdays
+only). OCR is out of scope, which frees the days it would have used. The
+runtime gate is the first thing cut if the schedule slips; Stage~3 as a
+whole is the second, and its optionality (Section~\ref{sec:tts}) means those
+days~6--15 fall back to extra buffer for Stages~1--2 and the QC pipeline if
+the TTS trade-off in Section~\ref{sec:tts-arch} doesn't resolve in time.}
+\label{fig:gantt}
+\end{figure}
+
+\newpage
+% =====================================================================
+\section{Open Decisions and Next Steps}
+\label{sec:open-items}
+% =====================================================================
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Find a real field-validation partner} (a school, a
+  learning-disabilities org, or individual dyslexic Arabic readers) --- closes
+  the single biggest credibility gap versus the team's other, Al-Noor-backed
+  ideas. A potential individual validator (someone with dyslexia) is already
+  a lead; testing with children, not just adults, is also worth pursuing
+  given dyslexia support tools are frequently used in school settings.
+  Highest priority for week~0.
+  \item \textbf{Re-evaluate the equivalence validator's batched signature
+  against real 5-candidate production data} (Section~\ref{sec:qc}) --- the
+  current MIPROv2 calibration is still a batch-of-1 proxy evaluation, and
+  the flat 64.0\% thresholded accuracy (validator scoring every held-out
+  pair as equivalent) needs to be confirmed as an artifact of that proxy,
+  or fixed if it is not, once the 10\% pilot's real batched judgments
+  accumulate enough annotated negatives.
+  \item \textbf{Continue annotation}, specifically level corrections
+  (Section~\ref{sec:annotation}), which remain thinner than equivalence
+  corrections; these no longer feed \texttt{ClassifyReadabilityLevel}
+  (retired in favor of the supervised MARBERT classifier,
+  Section~\ref{sec:next-phase}) but still matter for spot-checking the
+  local classifier's real-world error pattern beyond its held-out benchmark
+  numbers.
+  \item \textbf{Decide whether other BAREC source categories need the same
+  identity-pair carve-out as scripture} (Section~\ref{sec:scripture}) ---
+  e.g.\ legal or official text --- before generating at full hard-band scale,
+  rather than assuming scripture was the only case worth a dedicated rule.
+  \item \textbf{Resolve the TTS three-way trade-off, or drop Stage~3}
+  (Section~\ref{sec:tts-arch}): MMS-TTS-Ara or Piper for native word timing
+  if the CC-BY-NC-4.0 / per-voice license is acceptable, SILMA TTS plus a
+  bolted-on forced-alignment step if voice quality and commercial licensing
+  matter more --- or, if no adequately open option is found in time, cut
+  Stage~3 entirely and ship the text-only pipeline (Section~\ref{sec:tts}).
+\end{enumerate}
+
+\begin{noteb}
+\textbf{Resolved since the last revision.} (1)~SAMER's license (signed
+agreement, no redistribution, non-commercial only) made it a poor fit and
+it has been replaced with BAREC (CC~BY-SA~4.0, no agreement required,
+larger and more diverse --- Section~\ref{sec:why-barec}); (2)~the API cost
+of bulk data generation has been confirmed negligible
+(Section~\ref{sec:model-choice}); (3)~the data-splitting design is
+concrete and validated --- level~5 dropped (Section~\ref{sec:level5}),
+easy/hard/scripture three-way routing at sampling time
+(Section~\ref{sec:scripture}), a 2\% pilot actually run (1,350 sentences:
+708 easy / 606 hard / 36 scripture); (4)~the DSPy validation set (A3) is
+no longer hand-constructed from scratch --- real generated pairs are
+annotated directly through a purpose-built review tool
+(Section~\ref{sec:annotation}), currently 102 equivalence annotations and
+12 level corrections; (5)~the equivalence validator is optimizer-compiled
+against real ground truth with measured production accuracy, not run
+zero-shot (Section~\ref{sec:qc}); (6)~pipeline resilience --- incremental
+checkpointing and per-call timeouts --- was added after a real run-loss
+incident (Section~\ref{sec:resilience}); (7)~the level check was moved off
+DSPy/DeepSeek entirely onto a fine-tuned, quantized local MARBERT
+classifier (86.8--87.5\% band accuracy, up from 79.7\%), and binary
+pass/fail generation was replaced with generate-5-then-rerank, both
+previously listed as not-yet-built (Section~\ref{sec:next-phase}); (8)~a
+cheaper BERTScore-based alternative to the LLM equivalence judge was
+piloted and rejected on real annotated data ($r=-0.014$ with human
+labels), closing out risk~R2's premise that a non-LLM judge might suffice
+(Section~\ref{sec:qc}); (9)~a 10\% stratified pilot sample is in progress
+(up from the initial 2\%), annotated through the same review tool.
+\end{noteb}
+
+\vspace{0.4cm}
+\begin{noteb}
+\textbf{Bottom line for the team discussion.} The technical design here is
+unusually well-grounded for a capstone idea --- real data, a defensible
+architecture choice, and a rigorous QA methodology. The idea's fate mostly hinges
+on one non-technical variable: whether a real validation partner can be found in
+week~0. Everything else in this document is buildable in three weeks if that one
+piece falls into place early.
+\end{noteb}
+
+\newpage
+% =====================================================================
+\section*{References}
+\addcontentsline{toc}{section}{References}
+% =====================================================================
+\begin{enumerate}[leftmargin=1.6em]
+\item BAREC: A Large and Balanced Corpus for Fine-grained Arabic Readability
+Assessment. arXiv:2502.13520 (ACL 2025 Findings). Replaces SAMER as the
+primary data source (Section~\ref{sec:why-barec}).
+\item Alhafni, B., et al. ``The SAMER Arabic Text Simplification Corpus.''
+arXiv:2404.18615 (LREC-COLING 2024). Considered but not used here --- restrictive
+license, see Section~\ref{sec:why-barec}.
+\item Zerrouki, T. and Balla, A. ``Tashkeela: Novel corpus of Arabic vocalized
+texts, data for auto-diacritization systems.'' \emph{Data in Brief}, 2017.
+\item Nagoudi, E.M.B., Elmadany, A., and Abdul-Mageed, M. ``AraT5: Text-to-Text
+Transformers for Arabic Language Generation.'' \emph{Proceedings of ACL}, 2022.
+\item AraT5-MSAizer. ACL Anthology \texttt{2024.osact-1.16}.
+\item ``CATT: Character-based Arabic Tashkeel Transformer.'' arXiv:2407.03236
+(ACL ArabicNLP 2024). Recommended diacritization model, Section~\ref{sec:diacritization-arch}.
+\item Al-Rfooh, B. and Abandah, G. ``Fine-Tashkeel: Fine-Tuning Byte-Level
+Models for Accurate Arabic Text Diacritization.'' arXiv:2303.14588, 2023.
+\item Xue, L., et al. ``ByT5: Towards a Token-Free Future with Pre-trained
+Byte-to-Byte Models.'' \emph{Transactions of the ACL}, 2022.
+\item Khattab, O., Singhvi, A., Maheshwari, P., et al. ``DSPy: Compiling
+Declarative Language Model Calls into Self-Improving Pipelines.''
+arXiv:2310.03714, 2023.
+\item Kim, J., Kong, J., and Son, J. ``Conditional Variational Autoencoder
+with Adversarial Learning for End-to-End Text-to-Speech.'' (VITS)
+\emph{Proceedings of ICML}, 2021. Architecture behind MMS-TTS and Piper,
+Section~\ref{sec:tts-arch}.
+\item ``F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow
+Matching.'' arXiv:2410.06885, 2024. Architecture behind SILMA TTS,
+Section~\ref{sec:tts-arch}.
+\item ``ArTST: Arabic Text and Speech Transformer.'' arXiv:2310.16621, 2023
+(MBZUAI).
+\item Related prior work on automatic correction of Arabic dyslexic text, and on
+dyslexia-friendly Arabic typeface design (cite specific papers in the final pitch
+deck --- referenced here as context confirming the gap, not claiming novelty over
+this groundwork).
+\end{enumerate}
+
+\subsection*{Vendor and Tooling References}
+\begin{itemize}[leftmargin=1.4em]
+\item Gemini API pricing (Section~\ref{sec:model-choice}), via
+\href{https://developer.puter.com/tutorials/gemini-api-pricing/}{developer.puter.com}.
+\item OpenAI API pricing (Section~\ref{sec:model-choice}), via
+\href{https://www.cloudzero.com/blog/openai-pricing/}{cloudzero.com}.
+\item DeepSeek API pricing, via
+\href{https://benchlm.ai/deepseek/api-pricing}{benchlm.ai}.
+\item DeepSeek-V4.1-Flash announcement, via
+\href{https://www.deepseek.com/en/news/deepseek-v4-1-flash/}{deepseek.com}.
+\item SAMER corpus license terms, via
+\href{https://camel.abudhabi.nyu.edu/samer-simplification-corpus/}{camel.abudhabi.nyu.edu}.
+\item CATT model checkpoints, license, and training code, via
+\href{https://github.com/abjadai/catt}{github.com/abjadai/catt}.
+\item SILMA TTS v1 model card and details, via
+\href{https://huggingface.co/blog/silma-ai/opensource-arabic-english-text-to-speech-model}{huggingface.co/blog/silma-ai}.
+\item MMS-TTS-Ara model card (architecture, license, params), via
+\href{https://huggingface.co/facebook/mms-tts-ara}{huggingface.co/facebook/mms-tts-ara}.
+\item Piper TTS voices and Arabic support, via
+\href{https://github.com/rhasspy/piper}{github.com/rhasspy/piper}.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,72 @@
+{
+  "predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "original_text": "من الأفضل أن تستقل قطار الثامنة والنصف .",
+        "simplified_text": "الأفضل أن تركب قطار الثامنة والنصف.",
+        "equivalence_score": 1.0
+      },
+      {
+        "original_text": "وقد رجّح الباحث عبد الله معروف بأن آدم هو من بنى المسجد الأقصى البناء الأول، لرواية عن ابن عباس، ولترجيح أن يكون آدم هو الباني للكعبة، كما رجّحه الإمام ابن حجر العسقلاني في كتابه فتح الباري.",
+        "simplified_text": "قال الباحث عبد الله معروف إن آدم هو أول من بنى المسجد الأقصى. واستدل على ذلك برواية عن ابن عباس. وقال أيضا إن آدم هو من بنى الكعبة. وقد رجّح الإمام ابن حجر العسقلاني هذا الرأي في كتابه فتح الباري.",
+        "equivalence_score": 1.0
+      },
+      {
+        "original_text": "نقوم على البناية محسنينا ونعهد بالتمام إلى بنينا",
+        "simplified_text": "نحن نُحسّن البناء. ونتعهد بإكماله لأبنائنا.",
+        "equivalence_score": 1.0
+      },
+      {
+        "original_text": "ل \" الحقول السماوية \" فكر أيضا لدي ( تارتارس )",
+        "simplified_text": "تارتارس أيضا لديه فكرة عن \"الحقول السماوية\".",
+        "equivalence_score": 0.0
+      }
+    ],
+    "signature": {
+      "instructions": "You are an expert Arabic semantic-equivalence judge for a text-simplification pipeline. Your job is to read an original Arabic sentence (`original_text`) and a candidate simplified Arabic sentence (`simplified_text`) and decide how completely the simplified sentence preserves the original's exact meaning. Output two things: (1) a concise `reasoning` trace in Arabic that walks through the comparison, and (2) a continuous `equivalence_score` from 0.0 to 1.0.\n\nWhy a continuous score: a degree-of-drift score is more useful than a pass/fail verdict because it lets downstream code rank multiple candidate simplifications against each other and lets the pass/fail threshold be tuned later without retraining this judge.\n\nCompare the two sentences along these four checks, and explicitly walk through each one in your reasoning:\n\n(1) FACTUAL PRESERVATION — every factual claim, entity, proper name, number, date, quantifier, and relationship in the original is still present and unchanged in the simplified version. Watch for dropped honorifics (e.g., ﷺ, رحمه الله), dropped hedges, dropped superlatives, and collapsed lists.\n\n(2) NO ADDED CONTENT — nothing appears in the simplified version that was not present or directly implied in the original. Added interpretation, elaboration, explanation, or extra entities/attributes count against the score.\n\n(3) NO MEANING SHIFT — the simplified version does not contradict, soften, strengthen, or reverse any part of the original's meaning. Pay special attention to: modal and speech-act shifts (command → statement, wish → assertion), temporal precision changes (specific → vague or vague → specific), definiteness/indefiniteness shifts, and changes in the relationship between parallel concepts (e.g., two coordinates becoming one containing the other).\n\n(4) NEGATION PRESERVED EXACTLY — a dropped, added, or moved negation is always a meaning change, never \"just\" a simplification.\n\nIMPORTANT — what does NOT lower the score by itself:\n- Rewording, paraphrase, or substitution of synonyms.\n- Shortening, or splitting one sentence into several (or merging).\n- Using much simpler, more modern, or more colloquial vocabulary.\n- Removing diacritics (tashkīl).\n- Making implicit referents explicit when the referent is unambiguous from the original.\nThese are expected and desirable outcomes of simplification. Only real meaning drift should pull the score down.\n\nUse the full range of the scale with fine-grained values — do not cluster at 0.0, 0.5, and 1.0:\n- 1.0: no detectable meaning change at all.\n- 0.7–0.9: essentially equivalent — at most a very minor nuance, emphasis, or word-choice shift that does not change what is actually being claimed.\n- 0.4–0.6: partially equivalent — some real information was added, dropped, or softened/strengthened, but the core gist survives.\n- 0.0–0.3: the meaning was substantially changed, reversed, or a central fact, entity, or negation was altered or lost.\n\nAnchor examples from the corpus:\n- \"حتَّى إذا أدركَهُم اللَّيلُ وجَدوا أنفُسَهم بجانِبِ كهفٍ\" → \"وعندما جاءَهُم الليل، وجدوا أنفسَهم بجانبِ كهفٍ\" scores 0.9: same event sequence, only \"until when\" softened to \"and when.\"\n- \"الإطار التاريخي والنقدي\" → \"الخلفية التاريخية التي تتضمن النقد\" scores 0.7: two parallel dimensions become one containing the other, a real but small structural shift.\n- \"فاخْتَرْ قَرِينَكَ واصْطَفِيهِ تَفاخُرًا\" → \"اختر صديقك واختره لتفتخر به\" scores 0.75: gist survives, but \"قرين\" narrowed to \"صديق\" and \"اصطفى\" flattened to a repeated \"اختر.\"\n\nField definitions:\n- `original_text` (input): the original Arabic sentence.\n- `simplified_text` (input): the candidate simplified Arabic sentence.\n- `reasoning` (output): your Arabic-language analysis. Name the specific words/phrases that shifted, characterize the shift type (fact drop, addition, modal/temporal change, negation change, or purely stylistic), and say why that shift does or does not move the score.\n- `equivalence_score` (output): a float from 0.0 to 1.0 using fine-grained values across the whole range.\n\nBe decisive: give a single score, not a range, and justify it in the reasoning using the anchors above.",
+      "fields": [
+        {
+          "prefix": "Original Text:",
+          "description": "The original Arabic sentence."
+        },
+        {
+          "prefix": "Simplified Text:",
+          "description": "The candidate simplified Arabic sentence."
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Equivalence Score:",
+          "description": "A number from 0.0 to 1.0 scoring how completely simplified_text preserves original_text's meaning (1.0 = fully equivalent, 0.0 = meaning completely changed). Use fine-grained values across the whole range, not just 0.0/0.5/1.0."
+        }
+      ]
+    },
+    "lm": {
+      "_dspy_lm_class": "dspy.clients.lm.LM",
+      "model": "deepseek/deepseek-flash",
+      "model_type": "chat",
+      "cache": true,
+      "num_retries": 3,
+      "temperature": 0.0,
+      "max_tokens": 1024,
+      "thinking": {
+        "type": "disabled"
+      },
+      "timeout": 90,
+      "finetuning_model": null,
+      "launch_kwargs": {},
+      "train_kwargs": {}
+    }
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.3.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "traces": [],
+  "train": [],
+  "demos": [
+    {
+      "augmented": true,
+      "original_text": "ثانيًا: علم الاجتماع والدين: الإطار التاريخي والنقدي",
+      "simplified_candidates": [
+        "ثانيًا: علم الاجتماع والدين: الخلفية التاريخية التي تتضمن النقد"
+      ],
+      "reasoning_per_candidate": [
+        "The original heading is 'علم الاجتماع والدين: الإطار التاريخي والنقدي' — 'the historical and critical framework.' The candidate renders it as 'الخلفية التاريخية التي تتضمن النقد' — 'the historical background that includes criticism.' This shifts 'الإطار' (framework) to 'الخلفية' (background) and, more importantly, turns the coordinated adjective 'النقدي' (critical, modifying the framework) into a separate clause 'التي تتضمن النقد' (that includes criticism), which adds a relational claim not present in the original and changes the meaning of the second element."
+      ],
+      "equivalence_scores": [
+        0.55
+      ]
+    },
+    {
+      "augmented": true,
+      "original_text": "في النفخة الثانية يبعث الله الموتى من قبورهم (أ) صح (ب) خطأ",
+      "simplified_candidates": [
+        "في النفخة الثانية يبعث الله الموتى من قبورهم. (أ) صح (ب) خطأ"
+      ],
+      "reasoning_per_candidate": [
+        "النص مطابق تمامًا للأصل؛ الفرق الوحيد هو إضافة نقطة في نهاية الجملة قبل خياري الإجابة، وهذا لا يغيّر أي معنى أو معلومة."
+      ],
+      "equivalence_scores": [
+        1.0
+      ]
+    },
+    {
+      "original_text": "يأمرُ اللّهُ نبيَّه أنْ يردّ على أولئكَ الّذينَ يجاهرونَ ويفاخرونَ بما فعلوا إعجابًا بأنفسِهم، لعلّهم يعودونَ إلى صوابِهم،",
+      "simplified_candidates": [
+        "يأمر الله نبيه أن يرد على الذين يتكلمون عن أعمالهم بفخر وإعجاب بأنفسهم. لعلهم يرجعون إلى الحق."
+      ],
+      "equivalence_scores": [
+        1.0
+      ]
+    },
+    {
+      "original_text": "فتشبه كيمياء البلاستيك صنعة الحياكة أو تشكيل الفسيفساء،",
+      "simplified_candidates": [
+        "كيمياء البلاستيك تشبه صناعة الحياكة. وهي تشبه أيضا تشكيل الفسيفساء."
+      ],
+      "equivalence_scores": [
+        1.0
+      ]
+    }
+  ],
+  "signature": {
+    "instructions": "You are an expert Arabic linguist and semantic-equivalence judge. Your job is to evaluate how faithfully EACH simplified candidate preserves the meaning of the ORIGINAL Arabic text, assigning a continuous 0.0–1.0 equivalence score to each candidate, independently and in a single pass.\n\n────────────────────────────────────────\nINPUTS\n────────────────────────────────────────\n- `original_text`: a single Arabic sentence/heading/passage (the fixed source of truth).\n- `simplified_candidates`: a list of N candidate rewrites of that same original.\n\nYou must produce, for each candidate, (a) a short reasoning trace and (b) a numeric equivalence score.\n\n────────────────────────────────────────\nCORE PRINCIPLE\n────────────────────────────────────────\nMeaning lives in *propositions*, not in surface form. A candidate may freely:\n- swap vocabulary for simpler synonyms,\n- split or merge sentences,\n- change word order,\n- drop function words,\n- convert a verbal clause into a nominal one,\n- modernize archaic phrasing,\n\n…and still score near 1.0, because the *claims being made* are unchanged.\n\nOnly real semantic drift — altered facts, entities, numbers, negation, agency, or added/dropped information — should pull the score down.\n\n────────────────────────────────────────\nHOW TO JUDGE EACH CANDIDATE (independently!)\n────────────────────────────────────────\nJudge every candidate entirely on its own merits against the SAME fixed original. Do NOT:\n- let one candidate's score anchor or pull another's,\n- average across the batch,\n- give a candidate a high score just because a sibling candidate was bad (or vice-versa).\n\nA candidate that changes the meaning is wrong regardless of what the other candidates did.\n\nFor EACH candidate, systematically ask:\n\n1. **Claim coverage** — Is every factual claim, entity, name, place, number, date, and relationship in the original still present and unchanged?\n2. **No additions** — Has the candidate introduced anything not present or *directly* implied in the original (added clauses, added interpretation, added causal/temporal links, added qualifiers)?\n3. **No distortion** — Does the candidate contradict, strengthen, soften, generalize, or narrow any part of the original?\n4. **Negation fidelity** — Is negation preserved exactly? A dropped, doubled, or newly introduced negation is a *meaning change*, never \"just a simplification.\"\n5. **Agency & focus** — Is the agent, patient, and focus of the sentence the same? Shifts like \"X did Y\" → \"Y happened to X,\" or \"framework\" → \"background,\" are real (if small) drift.\n\n────────────────────────────────────────\nSCORING RUBRIC (use the whole scale, not just extremes)\n────────────────────────────────────────\n- **0.95–1.0** — No detectable meaning change. Pure stylistic/syntactic modernization.\n- **0.7–0.9** — Essentially equivalent. At most a minor nuance, emphasis shift, or register change that does not change what is being claimed. (Example: \"الليل أدركهم\" → \"جاءهم الليل\" ≈ 0.9.)\n- **0.4–0.6** — Partially equivalent. Some real information was added, dropped, or softened/strengthened, but the core gist survives. (Example: \"الإطار التاريخي والنقدي\" → \"الخلفية التاريخية التي تتضمن النقد\" ≈ 0.6.)\n- **0.15–0.35** — Substantial drift. A central fact, entity, or relationship is altered, or a key negation is lost, while traces of the original remain.\n- **0.0–0.1** — Meaning reversed or wholly different.\n\nPush scores apart when candidates genuinely differ in fidelity — do not cluster everything at 0.8.\n\n────────────────────────────────────────\nOUTPUT FORMAT\n────────────────────────────────────────\nReturn exactly two parallel lists, one entry per candidate, in the SAME order as the input:\n\n- `reasoning_per_candidate`: for each candidate, 2–4 sentences of Arabic-aware analysis. Quote the specific Arabic phrase(s) that changed (e.g., \"الإطار\" → \"الخلفية\") and state explicitly whether the change touches *factual content* or only *framing/style*. Note negation and agency shifts when present.\n- `equivalence_scores`: a float in [0.0, 1.0] for each candidate, aligned by index.\n\nDo not skip any candidate. Do not merge candidates into a single verdict. Produce N reasonings and N scores.\n\n────────────────────────────────────────\nEXAMPLE\n────────────────────────────────────────\nOriginal Text: حتَّى إذا أدركَهُم اللَّيلُ وجَدوا أنفُسَهم بجانِبِ كهفٍ،\nSimplified Candidates: ['وعندما جاءَهُم الليل، وجدوا أنفسَهم بجانبِ كهفٍ.']\n\nReasoning Per Candidate: [\"The candidate replaces 'حتَّى إذا أدركَهُم اللَّيلُ' (until the night overtook them) with 'وعندما جاءَهُم الليل' (and when the night came to them). 'Night overtaking' vs. 'night coming' describes the same event; the second clause 'وجدوا أنفسهم بجانب كهف' is unchanged. Only a negligible temporal/verbal framing shift occurs, with no change to factual content.\"]\n\nEquivalence Scores: [0.9]",
+    "fields": [
+      {
+        "prefix": "Original Text:",
+        "description": "The original Arabic sentence."
+      },
+      {
+        "prefix": "Simplified Candidates:",
+        "description": "Candidate simplified versions of original_text, each to be scored independently."
+      },
+      {
+        "prefix": "Reasoning Per Candidate:",
+        "description": "One short reasoning string per candidate, in the SAME ORDER as simplified_candidates (same list length) -- for each candidate, state concretely what (if anything) changed in meaning versus original_text. Judge each candidate independently; do not compare candidates to each other, only each one to original_text."
+      },
+      {
+        "prefix": "Equivalence Scores:",
+        "description": "One score per candidate, in the SAME ORDER as simplified_candidates and reasoning_per_candidate (all three lists must be the same length). Each score is a number from 0.0 to 1.0 (1.0 = fully equivalent, 0.0 = meaning completely changed). Use fine-grained values across the whole range, not just 0.0/0.5/1.0."
+      }
+    ]
+  },
+  "lm": {
+    "_dspy_lm_class": "dspy.clients.lm.LM",
+    "model": "deepseek/deepseek-flash",
+    "model_type": "chat",
+    "cache": true,
+    "num_retries": 3,
+    "temperature": 0.0,
+    "max_tokens": 4096,
+    "thinking": {
+      "type": "disabled"
+    },
+    "timeout": 90,
+    "finetuning_model": null,
+    "launch_kwargs": {},
+    "train_kwargs": {}
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.3.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}

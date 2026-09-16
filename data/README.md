@@ -1,0 +1,62 @@
+# Data
+
+Raw and processed data files are git-ignored (large, and easy to regenerate) — this note
+is so anyone on the team can get them back.
+
+## BAREC corpus (`data/raw/barec/{train,dev,test}.csv`)
+
+Source: [`CAMeL-Lab/BAREC-Shared-Task-2025-sent`](https://huggingface.co/datasets/CAMeL-Lab/BAREC-Shared-Task-2025-sent)
+on Hugging Face — confirmed public (not gated), **CC-BY-SA 4.0**, no registration
+required to download. The shared-task GitHub repo
+([`CAMeL-Lab/barec-shared-task-2025`](https://github.com/CAMeL-Lab/barec-shared-task-2025))
+only has eval scripts (MIT) plus a Google Form; that form registers you for the
+*competition leaderboard*, it is not needed just to get the corpus.
+
+69,441 sentences total (train 54,845 / dev 7,310 / test 7,286 minus headers), each
+labeled at four readability granularities (19 / 7 / 5 / 3 levels), with `Domain`,
+`Source`, `Text_Class`, and `Annotator` metadata — **not a parallel
+simplification corpus** (no aligned complex/simple rewrites), same role as
+already designed in the pipeline report: real "complex" source sentences plus a
+calibrated readability signal for QC.
+
+Re-download with:
+
+```bash
+mkdir -p data/raw/barec
+for f in train dev test; do
+  curl -sL "https://huggingface.co/datasets/CAMeL-Lab/BAREC-Shared-Task-2025-sent/resolve/main/$f.csv" \
+    -o "data/raw/barec/$f.csv"
+done
+```
+
+## Processed (`data/processed/`)
+
+The cleaned corpus (columns kept, level 5 dropped) is no longer a standalone file --
+`load_and_clean_barec()` in `scripts/barec_simplification_pipeline.py` reads directly from
+`data/raw/barec/*.csv` and does this in-memory, every run. There's nothing to regenerate or
+keep in sync; if you need the cleaned DataFrame standalone, call that function.
+
+Everything else under `data/processed/` is real output, not intermediate scratch, and none of
+it is regenerable from the corpus alone -- most of it required real API or GPU spend to
+produce:
+
+- `barec_hard_pilot_raw_results.parquet`, `barec_simplification_pilot.parquet`,
+  `barec_hard_pilot_checkpoint.jsonl` -- the main pipeline's pilot run output and its
+  resume checkpoint (see `barec_simplification_pipeline.py`).
+- `marbert_full_corpus_predictions.parquet` -- the production ONNX MARBERT level
+  classifier run over the entire 67,601-sentence corpus (see `run_marbert_full_corpus.py`
+  and the `level-classifier-benchmark` memory note), split into held-out/train-seen views.
+- `*_eval_results.parquet` -- per-example predictions from the various classifier/validator
+  benchmarking runs (see the `level-classifier-benchmark` memory note for what each one is).
+- `data/processed/archive/` -- superseded checkpoints and results kept for reference, not
+  deleted outright when a design changed underneath them.
+- `data/annotations/equivalence_and_level_annotations.json` -- human verdicts pulled from
+  the "Pilot Pair Review" Claude Artifact's shared database (not live; re-pull for a fresher
+  snapshot). Read by `optimize_equivalence_validator.py` to build MIPROv2 training/held-out
+  data; real ground truth, not regenerable.
+
+Also not under `data/`: `models/level_classifier_bert_marbert_onnx_int8/` (the production
+quantized MARBERT weights, ~164MB) is git-ignored (see `.gitignore`) and real trained output,
+not source-controlled -- see the `level-classifier-benchmark` memory note for how to
+regenerate it. `scripts/compiled/*.json` (DSPy-optimizer-compiled generator/validator
+programs) are small enough to commit and are not git-ignored.

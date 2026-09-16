@@ -1,0 +1,428 @@
+[
+  {
+    "id": "10100080007",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10100160019",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_easy"
+  },
+  {
+    "id": "10100200021",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10101830042",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "10102110136",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10102810028",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10200360008",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10300010006",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "10300120040",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10300310045",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10300410006",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10400110189",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "10400130013",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10400330042",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10400350062",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10400450063",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10500010005",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "10500280016",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "10500560031",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10600210005",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "10800070015",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20100020010",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_easy"
+  },
+  {
+    "id": "20100040012",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20100240027",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20100500006",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20100560038",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_easy"
+  },
+  {
+    "id": "20100620028",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20100680008",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_easy"
+  },
+  {
+    "id": "20101530025",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20200350002",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20200490006",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20200900010",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20201100005",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20300150066",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20300290002",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20300350039",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20300430014",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20300490045",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20300530049",
+    "level_verdict": "should_be_hard"
+  },
+  {
+    "id": "20300530051",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20300560064",
+    "equiv_verdict": "ok",
+    "level_verdict": "should_be_easy"
+  },
+  {
+    "id": "20300580039",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_easy"
+  },
+  {
+    "id": "20300610018",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20400010167",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20400080079",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20400130210",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20400200059",
+    "equiv_verdict": "ok",
+    "level_verdict": "should_be_hard"
+  },
+  {
+    "id": "20400220007",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "20400230007",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_hard"
+  },
+  {
+    "id": "20400430015",
+    "level_verdict": "should_be_hard"
+  },
+  {
+    "id": "20400480077",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20400540069",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20400570048",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20500020015",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20500930003",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20600080001",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20600430017",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20700070003",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "20800080005",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "20800150033",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "20900160009",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "21000070031",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "21000090036",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "21300010019",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100020007",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30100060021",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100060022",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30100130021",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100220007",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30100230082",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30100240020",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100260004",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100320048",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_hard"
+  },
+  {
+    "id": "30100430021",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100520021",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100840028",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30100940008",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30101090015",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30101320031",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30101340020",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30101440032",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30101550115",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30101660032",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30200440008",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "30200450003",
+    "equiv_verdict": "should_be_equivalent",
+    "level_verdict": "should_be_easy"
+  },
+  {
+    "id": "30200540015",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30201000014",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30300010010",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30300100017",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30300330038",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30300480034",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30300610005",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30400050050",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30400070015",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30400130006",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30400140011",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30400170087",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30500030037",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30500050075",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30500070036",
+    "equiv_verdict": "ok"
+  },
+  {
+    "id": "30500190023",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30500250076",
+    "equiv_verdict": "should_be_equivalent"
+  },
+  {
+    "id": "30500260011",
+    "equiv_verdict": "should_not_be_equivalent"
+  },
+  {
+    "id": "31000680006",
+    "equiv_verdict": "should_be_equivalent"
+  }
+]

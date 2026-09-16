@@ -1,0 +1,73 @@
+{
+  "predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "text": "ويؤمن المسلمون أن الصلاة فيه تعادل مئة ألف صلاة.",
+        "reasoning": "The sentence is short (8 words) and uses common, everyday vocabulary (المسلمون، الصلاة، تعادل، مئة ألف). The structure is a simple nominal sentence with a subordinate clause (أن الصلاة فيه تعادل...), which adds mild complexity but nothing advanced. No rare words, no complex morphology, no specialized knowledge required beyond basic religious familiarity. This places it at level 2 — slightly beyond the simplest level due to the subordinate clause, but still straightforward.",
+        "level": 2
+      },
+      {
+        "augmented": true,
+        "text": "– اسرح معي.",
+        "reasoning": "The sentence is very short, consisting of only two words: the imperative verb \"اسرح\" (go out/graze) and the prepositional phrase \"معي\" (with me). The vocabulary is common and everyday, the morphology is simple with no clitic stacking or irregular inflection, and the syntax is a direct imperative construction with no subordinate clauses or passive voice. No specialized background knowledge is required. This places it at the simplest level.",
+        "level": 1
+      },
+      {
+        "augmented": true,
+        "text": "قَامَ الْفَأْرُ بِنَخْرِ ثُقْبٍ فِي الصُّنْدُوقِ وَأَخْرَجَ الْخَاتَمَ.",
+        "reasoning": "The sentence is a short, simple narrative clause of about 11 words. Vocabulary is common and everyday (فأر، صندوق، خاتم، ثقب), with no technical or classical terms. Morphology is straightforward: verbs in the past tense with simple subject suffixes, and nouns with basic definite articles and case endings. Syntax is a simple coordinated verbal sentence (two verbs joined by و) with no subordination, passive voice, or unusual word order. Content requires no specialized background knowledge — it is a plain storybook-style event. The only mild complexity is the slightly less common verb نخر and the fully vowelized (مشكول) orthography, but neither raises it beyond a simple level. This fits level 2 (short, common vocabulary, simple structure).",
+        "level": 2
+      },
+      {
+        "augmented": true,
+        "text": "تحتاج لرؤية أخصائي .",
+        "reasoning": "The sentence is very short (4 words) and uses only common, everyday vocabulary (\"تحتاج\" = you need, \"لرؤية\" = to see, \"أخصائي\" = a specialist). The structure is a simple, direct verbal sentence with no subordinate clauses, passive voice, or unusual word order. Morphology is simple: a present-tense verb with a pronoun suffix and a prepositional phrase. No specialized or abstract knowledge is required to understand it. This places it at the simplest level.",
+        "level": 1
+      },
+      {
+        "text": "أَتَعاوَنُ مَعَ زُمَلائي",
+        "level": 1
+      },
+      {
+        "text": "حسناً . هل ستحتسي القهوة الآن أم فيما بعد ؟",
+        "level": 3
+      },
+      {
+        "text": "وتضع الأنثى في شهر أبريل نحو خمس بيضات لونها أبيض أو أصفر شاحب وبها بقع بنية داكنة، داخل عش في أحد شقوق الصخور أو داخل فجوة بجذع شجرة.",
+        "level": 3
+      },
+      {
+        "text": "أين موقف الحافلات ل بي ؟",
+        "level": 1
+      }
+    ],
+    "signature": {
+      "instructions": "Classify an Arabic sentence into one of this pipeline's 4 readability\nlevels (1 = simplest, 4 = hardest). This is a 4-level scale specific to\nthis pipeline, not BAREC's native 19-level scale -- levels here are\ncoarser bands, and BAREC's original level 5 (hardest) is excluded from\nthis pipeline entirely.\n\nBase the judgment on BAREC's own six annotation dimensions, and on\nwhichever is the sentence's single hardest feature -- a sentence is\nonly as easy as its hardest phenomenon, not its average:\n- Spelling: short, common word forms vs. long or rare ones.\n- Word count: few distinct/unique words vs. many.\n- Morphology: simple word forms vs. complex clitic stacking (multiple\n  attached prefixes/suffixes on one word) or irregular/dual inflection.\n- Syntax: simple, direct sentence structure vs. compound or subordinate\n  clauses, passive voice, or unusual word order.\n- Vocabulary: common, everyday words vs. technical, classical, or\n  literary vocabulary.\n- Content: no specialized prior knowledge needed vs. requiring\n  domain-specific or abstract background knowledge.\n\nRough length anchors from this pipeline's own corpus (word count alone\ndoes not decide the level -- one rare word or one complex construction\ncan outweigh a short sentence): level 1 averages about 5 words, level 2\nabout 12, level 3 about 18, level 4 about 25.",
+      "fields": [
+        {
+          "prefix": "Text:",
+          "description": "A single Arabic sentence to classify."
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Level:",
+          "description": "An integer from 1 to 4 (1 = simplest, 4 = hardest) on this pipeline's 4-level scale."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.3.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}

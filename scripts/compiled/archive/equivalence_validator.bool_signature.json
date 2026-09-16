@@ -1,0 +1,80 @@
+{
+  "predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "original_text": "حتَّى إذا أدركَهُم اللَّيلُ وجَدوا أنفُسَهم بجانِبِ كهفٍ،",
+        "simplified_text": "وعندما جاءَهُم الليل، وجدوا أنفسَهم بجانبِ كهفٍ.",
+        "reasoning": "The original says \"حتى إذا أدركهم الليل\" which means \"until when the night overtook them\" — implying they were traveling/walking until night caught up with them. The simplified version says \"وعندما جاءهم الليل\" meaning \"and when the night came to them.\" \n\nThe core facts are preserved: night came upon them, and they found themselves beside a cave. The entities (night, themselves, cave) and the relationship (finding themselves beside a cave upon nightfall) are unchanged. The rewording from \"حتى إذا أدركهم\" to \"وعندما جاءهم\" is a stylistic simplification that preserves the temporal relationship and meaning. No facts are added, omitted, or contradicted.",
+        "equivalent": true
+      },
+      {
+        "augmented": true,
+        "original_text": "ثانيًا: علم الاجتماع والدين: الإطار التاريخي والنقدي",
+        "simplified_text": "ثانيًا: علم الاجتماع والدين: الخلفية التاريخية التي تتضمن النقد",
+        "reasoning": "The original phrase is a heading: \"ثانيًا: علم الاجتماع والدين: الإطار التاريخي والنقدي\" — meaning \"Second: Sociology and Religion: The Historical and Critical Framework.\" The simplified version changes \"الإطار التاريخي والنقدي\" (\"the historical and critical framework\") into \"الخلفية التاريخية التي تتضمن النقد\" (\"the historical background that includes criticism\"). This alters the meaning: \"إطار\" (framework) is replaced with \"خلفية\" (background), and the coordinated adjective \"نقدي\" (critical) is turned into a relative clause \"التي تتضمن النقد\" (that includes criticism), which is not equivalent — it adds an implication of inclusion and shifts the concept from a critical framework to a historical background containing criticism. This is a change in meaning, not merely a stylistic simplification.",
+        "equivalent": false
+      },
+      {
+        "augmented": true,
+        "original_text": "فاخْتَرْ قَرِينَكَ واصْطَفِيهِ تَفاخُرًا",
+        "simplified_text": "اختر صديقك واختره لتفتخر به.",
+        "reasoning": "The original says: \"So choose your companion and select him for boasting/vaunting (تفاخرًا).\" The simplified version says: \"Choose your friend and choose him to boast about him (لتفتخر به).\" \n\n- \"قَرِينَكَ\" (your companion) → \"صديقك\" (your friend): close enough, companion/friend is a reasonable simplification.\n- \"واصْطَفِيهِ\" (and select him) → \"واختره\" (and choose him): preserved.\n- \"تَفاخُرًا\" (for boasting/vaunting) → \"لتفتخر به\" (so that you boast about him): The original's \"تفاخرًا\" is an adverbial expressing the purpose/manner of choosing — boasting/vaunting. The simplified version renders it as \"to boast about him,\" which slightly shifts the object of boasting (boasting about the companion vs. boasting in general). However, this is a minor stylistic/interpretive shift rather than a substantive change in meaning; the core sense of choosing a companion for the sake of pride/boasting is retained.\n\nNo facts, entities, numbers, or negations are added, dropped, or reversed. The meaning is preserved.",
+        "equivalent": true
+      },
+      {
+        "augmented": true,
+        "original_text": "وتدثرنا بالمعاطف وزادت حاجتنا للطعام وأسعفتنا الباخرة بالأغذية ولا سيما الحساء والشاي واللحوم الباردة في كل ساعتين تقريبًا، ما عدا وجبات الطعام الدسمة السخية.",
+        "simplified_text": "لبسنا المعاطف. وزادت حاجتنا إلى الطعام. وأعطتنا الباخرة طعامًا، مثل الحساء والشاي واللحوم الباردة، كل ساعتين تقريبًا. وهذا غير الوجبات الكبيرة والسخية.",
+        "reasoning": "The simplified text preserves all the key facts from the original: wearing coats, increased need for food, the ship providing food (soup, tea, cold meats) about every two hours, and the exception of large, generous meals. The rewording and sentence splitting do not change the meaning. No facts are added, omitted, or contradicted.",
+        "equivalent": true
+      }
+    ],
+    "signature": {
+      "instructions": "Judge whether a simplified Arabic sentence preserves the exact\nmeaning of its original.\n\nCompare original_text and simplified_text on:\n(1) every factual claim, entity, name, number, date, and relationship in\n    the original is still present and unchanged in the simplified version;\n(2) nothing has been added to the simplified version that was not present\n    or directly implied in the original;\n(3) the simplified version does not contradict, soften, strengthen, or\n    reverse any part of the original's meaning;\n(4) negation is preserved exactly -- a dropped or added negative is a\n    meaning change, never \"just\" a simplification.\n\nA sentence can be heavily reworded, shortened, split into more than one\nsentence, or use much simpler vocabulary and still be fully equivalent\n-- style, length, and vocabulary changes are expected and desired. Only\nanswer False for an actual change in meaning, never for style alone.",
+      "fields": [
+        {
+          "prefix": "Original Text:",
+          "description": "The original Arabic sentence."
+        },
+        {
+          "prefix": "Simplified Text:",
+          "description": "The candidate simplified Arabic sentence."
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Equivalent:",
+          "description": "True only if simplified_text preserves every fact, entity, number, and relationship in original_text with no additions, omissions, or contradictions. False otherwise."
+        }
+      ]
+    },
+    "lm": {
+      "_dspy_lm_class": "dspy.clients.lm.LM",
+      "model": "deepseek/deepseek-flash",
+      "model_type": "chat",
+      "cache": true,
+      "num_retries": 3,
+      "temperature": 0.0,
+      "max_tokens": 1024,
+      "thinking": {
+        "type": "disabled"
+      },
+      "timeout": 90,
+      "finetuning_model": null,
+      "launch_kwargs": {},
+      "train_kwargs": {}
+    }
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.3.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}
