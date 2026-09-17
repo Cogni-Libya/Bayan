@@ -98,6 +98,8 @@ Details: [`references/02_text_simplification/evaluation_and_benchmarking.md`](re
 ```
 Bayan/
 ├── README.md                      # This file
+├── CONTRIBUTING.md                # Team workflow: branches, PRs, reviews
+├── .github/                       # CODEOWNERS, PR and issue templates
 ├── deliverables/                  # SIC capstone deliverables (action plan, WBS, report, slides, demo)
 ├── references/                    # Literature review, benchmarks, and the project's reference architecture
 │   ├── INDEX.md                   # Start here
@@ -132,7 +134,11 @@ uv run python scripts/barec_simplification_pipeline.py --dry-run
 | Mohammed Thabet | Application Engineer | Application; read-aloud with highlighting; data annotation and quality review |
 | Abdul Majid | Evaluation & Benchmarking Lead | Test set design; benchmarking; automatic and human evaluation |
 
-## 10. Open items
+## 10. Contributing
+
+Never push to `main` — every change goes through a reviewed pull request. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## 11. Open items
 
 - Fix and validate the equivalence judge on real negatives before generating the full corpus.
 - Add lexical constraints and few-shot examples to the generator.

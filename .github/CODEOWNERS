@@ -1,0 +1,29 @@
+# Code owners are requested for review automatically when a PR touches their files.
+# The last matching pattern wins. Abdul Majid (Evaluation & Benchmarking) will be added
+# once his GitHub account has access to the repository.
+
+# Default: team leads
+*                                   @marwanelamami @khengari77
+
+# Data pipeline and annotations — Data Lead
+/data/                              @khengari77
+/scripts/barec_simplification_pipeline.py  @khengari77
+/scripts/optimize_equivalence_validator.py @khengari77
+/scripts/compiled/                  @khengari77
+
+# Model training — Model Training Lead & ML Engineer
+/scripts/train_*.py                 @elaybe @qSanad
+/scripts/optimize_level_classifier*.py     @elaybe @qSanad
+/scripts/ensemble_level_classifiers.py     @elaybe @qSanad
+/scripts/reeval_level_classifier.py        @elaybe @qSanad
+/scripts/run_marbert_full_corpus.py        @elaybe @qSanad
+
+# Documentation, references, deliverables — Team Leader
+/README.md                          @marwanelamami
+/references/                        @marwanelamami
+/deliverables/                      @marwanelamami
+
+# Repository configuration and dependencies
+/.github/                           @marwanelamami @khengari77
+/pyproject.toml                     @marwanelamami @khengari77
+/.gitignore                         @marwanelamami @khengari77

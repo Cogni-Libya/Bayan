@@ -1,0 +1,43 @@
+name: Task
+description: A unit of planned work (matches a WBS item)
+title: "[Task] "
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Data
+        - Model training
+        - Evaluation & benchmarking
+        - Application
+        - Documentation / deliverables
+        - Project management
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What needs to be done and why.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of done
+      description: Concrete, checkable outcomes.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: input
+    id: due
+    attributes:
+      label: Target day
+      placeholder: e.g. D5
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / dependencies
