@@ -51,10 +51,10 @@ scripture are kept unchanged.
 | Risk | Source |
 |---|---|
 | All generated targets are LLM-written; no human reference exists unless the team adds one | Bayan pipeline design |
-| The same LLM (DeepSeek) generates and judges equivalence, so their blind spots are correlated | `report/pipeline_architecture.tex` |
+| The same LLM (DeepSeek) generates and judges equivalence, so their blind spots are correlated | `../03_project_architecture/pipeline_architecture.tex` |
 | The "easy" band covers BAREC 19-levels 1–11, which is broad | BAREC level mapping (see `evaluation_and_benchmarking.md`) |
 
-## 3. Bayan internal results (from `report/pipeline_architecture.tex`, not peer-reviewed)
+## 3. Bayan internal results (from `../03_project_architecture/pipeline_architecture.tex`, not peer-reviewed)
 
 | Component | Result |
 |---|---|

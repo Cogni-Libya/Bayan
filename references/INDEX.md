@@ -16,6 +16,9 @@ the SIC report or slides, cite the **primary source** listed, not these notes.
 ```
 references/
 ├── INDEX.md                                        # This file
+├── 00_project_brief/
+│   └── original_project_brief.md                   # The original idea brief (historical; superseded by
+│                                                   # the root README.md)
 ├── 01_problem_motivation/
 │   └── arabic_reading_and_dyslexia_evidence.md     # Verified prevalence & reading statistics; evidence
 │                                                   # relevant to simplification; list of removed claims
@@ -28,6 +31,9 @@ references/
     ├── architecture_decisions.md                   # Why fine-tuned AraT5v2; generate-and-rerank data
     │                                               # pipeline; internal results; design changes
     └── baseet_baseline_analysis.md                 # Our re-analysis of Baseet's published predictions
+└── 03_project_architecture/                        # The project's reference architecture (team documents)
+    ├── pipeline_architecture.tex                   # Three-stage pipeline design, QC pipeline, SWOT, risks
+    └── execution_plan.tex                          # Milestones, dependency flow, task groups A–F
 ```
 
 | File | Use it for | SIC Final Report section |
@@ -37,6 +43,15 @@ references/
 | `02_text_simplification/evaluation_and_benchmarking.md` | Evaluation design and result reporting | 3.5 |
 | `02_text_simplification/architecture_decisions.md` | Model and pipeline justification | 2.2, 2.4, 3.3 |
 | `02_text_simplification/baseet_baseline_analysis.md` | Choosing and reporting the Baseet baseline | 3.3, 3.5 |
+| `03_project_architecture/pipeline_architecture.tex` | System design and data/QC pipeline | 2.2, 2.4, 3.3 |
+| `03_project_architecture/execution_plan.tex` | Planning and project management | Project Management (WBS) |
+| `00_project_brief/original_project_brief.md` | History of the idea only — do not cite | — |
+
+**Note on `03_project_architecture/`:** these LaTeX documents were written by the team before the
+2026-09-17 audit. Where they conflict with the notes above, the notes win. Known updates: SAMER is used
+for **evaluation only** (not training); diacritization and TTS use **ready pretrained models** (fine-tuning
+only if time permits); the chosen TTS model is **Nabra-7M-Distill** (not Nabra-82M); the equivalence
+validator currently rejects nothing and must be fixed before full-scale generation.
 
 ---
 
