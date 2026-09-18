@@ -41,7 +41,7 @@ next to it.
 ### BERTScore — weak evidence of meaning preservation
 - Khallaf et al. (2022): the lexical system scored BERTScore F1 0.97, yet manual analysis found only
   31 of 299 test sentences correctly simplified.
-- Bayan internal result (report/pipeline_architecture.tex): BERTScore F1 had r = −0.014 with human
+- Bayan internal result (`../03_project_architecture/pipeline_architecture.tex`): BERTScore F1 had r = −0.014 with human
   equivalence labels (102 annotated pairs, one annotator). This is an internal pilot, not a general
   finding about Arabic.
 
