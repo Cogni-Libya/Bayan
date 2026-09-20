@@ -55,12 +55,22 @@ grounds of "assistant drift" — added explanation, looser rephrasing, hallucina
 Wu & Arase (2025) ran an error-based *human* evaluation on sentence simplification — Bayan's exact
 task — and found the fine-tuned encoder-decoder was the **worst** system tested:
 
-| System | Total errors | Altered Meaning (lexical) |
-|---|---|---|
-| Qwen2.5-72B | 172 | 59 |
-| GPT-4 | 211 | 94 |
-| Llama-3.2-3B | 326 | — |
-| **Control-T5** (fine-tuned seq2seq SOTA) | **350** | **176** |
+| System | Params | Architecture | Total errors | Altered Meaning (lexical) |
+|---|---|---|---|---|
+| Qwen2.5-72B | 72B | decoder-only | 172 | 59 |
+| GPT-4 | undisclosed, ≫10B | decoder-only | 211 | 94 |
+| Llama-3.2-3B | 3B | decoder-only | 326 | — |
+| **Control-T5** (fine-tuned seq2seq SOTA) | **220M** (T5-base) | **encoder-decoder** | **350** | **176** |
+
+Control-T5 is the authors' own replication of Sheang et al.'s controllable simplifier: **T5-base
+fine-tuned on WikiLarge**, with Optuna hyperparameter search (Wu & Arase §4, "Replicated
+Control-T5"). That matters for Bayan in both directions. It is the *same architecture family and the
+same order of magnitude* as AraT5v2-base (368M), so the comparison is like-for-like rather than a
+strawman — but it also means the worst system in the study is the one Bayan's deployed model most
+closely resembles.
+
+Read the table by the params column and the ordering is exact: **error count rises monotonically as
+size falls, across both architectures.** The two worst systems are the only two at deployable size.
 
 So "an encoder-decoder preserves meaning better than an LLM" is **false** as a general statement, and
 must not appear in Bayan's deliverables. The claim that the same evidence *does* support is narrower
@@ -98,6 +108,67 @@ documented *in fine-tuned encoder-decoders*.
 four independent human evaluations the pattern is consistent — **capacity, not architecture, predicts
 meaning errors.** Every deployable-size system studied, of either architecture, produces them at
 non-trivial rates (16% of edits, 63% of simplifications, in SALSA).
+
+#### Objections to this reading, and what answers them
+
+These are the three challenges the argument has actually received. Each is answered here so the
+answer is on record before it is needed in a review.
+
+**1. "AraT5v2 is a second-generation model pretrained on far more Arabic data than T5-base ever saw.
+Doesn't that change the result?"**
+
+The study contains its own test of this. **Llama-3.2-3B was pretrained on roughly 9T tokens** (Meta's
+reported figure for the Llama 3.2 1B/3B corpus) against T5's **~34B** — about two orders of magnitude
+more data, a modern recipe, and distillation from larger models. It still produced **326 errors, close
+to double Qwen2.5-72B's 172**. Within this experiment, pretraining scale did not substitute for
+capacity on *this specific failure mode*.
+
+Wu & Arase also found Control-T5's errors were **concentrated rather than diffuse** — 96 of its 104
+coreference errors came from a single dataset — which points at overfitting during *fine-tuning*, not
+a pretraining deficiency. Pretraining scale does not fix that, and Bayan fine-tunes on a small set
+(SAMER plus ~5.6k synthetic pairs), which is exactly the regime where it happens.
+
+So AraT5v2's stronger pretraining is a reason to expect it to beat AraT5v1. It is not evidence that it
+escapes the size effect.
+
+**2. "All of this evidence is English."**
+
+Correct, and it is a real limitation rather than a rhetorical one. No Arabic study measures
+simplification errors at this granularity. The two Arabic rows in the evidence table above are
+**grammatical error correction, not simplification**, and one of them compares a *prompted* LLM with a
+*fine-tuned* model — so it speaks to the value of in-domain fine-tuning, not to architecture.
+
+The honest position is therefore that the transfer to Arabic is **untested in both directions**. That
+is a weak thing to say in a defence, which is the argument for measuring it ourselves (below).
+
+**3. "Our equivalence judge catches meaning errors, so this is already handled."**
+
+It catches some, at a different point in the pipeline from where these papers measured.
+`optimize_equivalence_validator.py` compiles the judge against real human verdicts and production uses
+a conservative 0.7 threshold — genuinely stronger than metric-only filtering, and a real answer to
+Devaraj et al. But three gaps remain:
+
+- It filters **training data**; it does not gate **model output**. Wu & Arase measured errors at
+  inference. Control-T5 was trained on standard corpora and still made 350. Nothing currently checks
+  meaning between Bayan's model and a reader — that is E2, still scoped as a stretch goal.
+- **SAMER does not pass through the judge at all.** It is the human-authored corpus the first model
+  trains on, and Devaraj's finding is precisely about errors inside such corpora.
+- The judge's accuracy is measured **batch-of-1** while production scores **5 candidates per call**;
+  its own module docstring records that the anti-anchoring instruction is "an instruction, not a
+  guarantee."
+
+#### What would actually settle this for Arabic
+
+An error-based human annotation of Bayan's **own** outputs — roughly 50 simplifications marked by
+error type, following Wu & Arase's taxonomy. That is a few hours of work and it yields:
+
+- the first Arabic data point of this kind, as a genuine contribution for the final report;
+- a direct reply to "your own citation says this architecture was worst" — *in English, at 220M, on
+  WikiLarge; here is ours, in Arabic*;
+- a faithfulness number that does not depend on transferring anyone else's result.
+
+Until that exists, Bayan's faithfulness claim rests on the verification gate, not on the architecture
+and not on the literature.
 
 **The settled position for Bayan's deliverables:**
 

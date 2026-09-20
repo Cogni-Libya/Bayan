@@ -335,7 +335,12 @@ that an encoder--decoder is \emph{inherently} more faithful than a decoder-only
 model. That claim was never sourced, and the most directly relevant study ---
 error-based human evaluation on sentence simplification itself --- contradicts
 it: the fine-tuned encoder--decoder made more meaning errors than GPT-4 and
-Qwen2.5-72B (Wu \& Arase, 2025). The claim has been narrowed to one the evidence
+Qwen2.5-72B (Wu \& Arase, 2025). That system, Control-T5, is \emph{T5-base
+fine-tuned on WikiLarge} --- 220M parameters against AraT5v2-base's 368M, so the
+comparison is like-for-like in scale rather than a strawman. Nor does stronger
+pretraining escape the effect: Llama-3.2-3B saw roughly two orders of magnitude
+more pretraining data than T5 and still produced 326 errors, close to double
+Qwen2.5-72B's 172. The claim has been narrowed to one the evidence
 supports: \emph{at deployable size}, a fine-tuned encoder--decoder remains our
 choice, because the only systems that beat it on faithfulness are one to two
 orders of magnitude too large to ship on-device, and the one small decoder-only
@@ -345,7 +350,11 @@ Among models we could actually ship, the evidence shows \emph{no} faithfulness
 advantage for either architecture; the choice rests on task-nativeness,
 controllability and size. Architecture is a deployment argument here, not a
 faithfulness guarantee; the faithfulness claim rests on Bayan's own human
-meaning check.
+meaning check. One limitation stated plainly: every study cited here is on
+English. No Arabic work measures simplification errors at this granularity, so
+the transfer is untested in both directions --- which is the argument for
+annotating a sample of our own outputs by error type rather than inheriting a
+result.
 Full evidence tables: \texttt{references/02\_text\_simplification/architecture\_decisions.md} §1.1.
 \end{noteb}
 
