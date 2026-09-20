@@ -1,7 +1,8 @@
 # Architecture Decisions for Arabic Text Simplification
 
 Supports: Final Report 2.2 (Training Methodology), 2.4 (System Design), 3.3 (Modeling).
-Separates what the literature supports from what is a design judgment. Verified 2026-09-17.
+Separates what the literature supports from what is a design judgment. Verified 2026-09-17;
+§1.1 (decoder-only evidence) and the model-size table added 2026-09-20.
 
 ---
 
@@ -30,10 +31,92 @@ established result.
 
 **Model sizes (checked on the Hugging Face Hub / measured locally):**
 
-| Model | Parameters | Checkpoint |
+| Model | Parameters | Vocab | Checkpoint |
+|---|---|---|---|
+| `UBC-NLP/AraT5v2-base-1024` | ~368M | 110,208 (untied output head) | 1.47 GB (`pytorch_model.bin`) |
+| `moussaKam/AraBART` | ~139M | ~50K | — |
+| `HPLT/hplt_t5_base_3_0_ara_Arab` | ~230M (estimated) | 32,768 | — |
+| `flax-community/arabic-t5-small` | ~110M | — | 439 MB |
+
+AraT5v2's two 110,208 × 768 embedding matrices account for **169M parameters — about 46% of the
+model**. Vocabulary pruning to the tokens Arabic sentence data actually uses is therefore the largest
+available size reduction that costs no quality, and it applies to whichever base is chosen. HPLT's
+Arabic T5 reaches the same effect by design, with the same body capacity as AraT5v2.
+
+### 1.1 Architecture and faithfulness: what the evidence actually supports
+
+*Settled 2026-09-20 against four independent human evaluations. Read this before repeating the
+"encoder-decoder is more faithful" argument anywhere in the report, slides or pitch.*
+
+The original project brief rejected decoder-only Arabic SLMs for the *deployed* simplifier on the
+grounds of "assistant drift" — added explanation, looser rephrasing, hallucination — with no source.
+
+**The literature does not support that claim as stated, and one paper directly contradicts it.**
+Wu & Arase (2025) ran an error-based *human* evaluation on sentence simplification — Bayan's exact
+task — and found the fine-tuned encoder-decoder was the **worst** system tested:
+
+| System | Total errors | Altered Meaning (lexical) |
 |---|---|---|
-| `UBC-NLP/AraT5v2-base-1024` | ~368M | 1.47 GB (`pytorch_model.bin`) |
-| `flax-community/arabic-t5-small` | ~110M | 439 MB |
+| Qwen2.5-72B | 172 | 59 |
+| GPT-4 | 211 | 94 |
+| Llama-3.2-3B | 326 | — |
+| **Control-T5** (fine-tuned seq2seq SOTA) | **350** | **176** |
+
+So "an encoder-decoder preserves meaning better than an LLM" is **false** as a general statement, and
+must not appear in Bayan's deliverables. The claim that the same evidence *does* support is narrower
+and conditioned on **deployable size**:
+
+> At the model sizes Bayan can actually ship, a fine-tuned encoder-decoder is the better bet.
+> Larger LLMs are better still, but cannot run on-device — which is precisely why Bayan uses them
+> offline as generators and judges rather than as the product.
+
+A second independent human study agrees. In SALSA (19K edit annotations, 840 simplifications),
+fine-tuned **MUSS** (BART-large) "produce[s] more diverse edits than GPT-3.5, yet suffer[s] from
+**incredibly high errors**", while fine-tuned **T5-3B/11B** "learn to **minimize loss by making very
+few changes**". Across all systems 16% of edits are errors and **63% of simplifications contain at
+least one error**. So both failure modes Bayan must avoid — copying and meaning errors — are
+documented *in fine-tuned encoder-decoders*.
+
+| Evidence for the size-conditioned claim | Source |
+|---|---|
+| The only small decoder-only model tested (Llama-3.2-3B) produced roughly twice the errors of the 72B model, and **Repetition and Hallucination were notably more frequent** than in any other system | Wu & Arase, ACM, July 2025, [arXiv:2403.04963](https://arxiv.org/abs/2403.04963) · [doi:10.1145/3744744](https://doi.org/10.1145/3744744) |
+| Open instruction-tuned models (Alpaca, Vicuna) matched GPT-3.5's edit count but with **more conceptual errors, "due to the inherent limits of model imitation"** | Heineman, Dou, Maddela & Xu, EMNLP 2023, [2023.emnlp-main.211](https://aclanthology.org/2023.emnlp-main.211/) |
+| Small on-device LLMs' "**limited capacity** compared to larger counterparts introduces critical considerations regarding the **reliability and harmfulness**" of their simplifications | Hayakawa, Bott & Saggion, INLG 2025, [arXiv:2509.25086](https://arxiv.org/abs/2509.25086) |
+| At **sub-1B** scale, fine-tuning beats prompting: human raters preferred fine-tuned outputs **46.9% vs 31.5%** (p = 0.0062), while prompting scored well on BERTScore largely by **copying the input** | Cohen, Bul, Inbar & Loewenbach, 2026, [arXiv:2601.05794](https://arxiv.org/abs/2601.05794) |
+| Over-editing **survives fine-tuning**: on BEA-19, fine-tuned Chat-LLaMA-2-7B/13B reach precision 72.3 / 74.6, while a **770M** T5-large reaches 78.0 and the best F0.5 | Park, Do & Lee (2025), [arXiv:2509.20811](https://arxiv.org/abs/2509.20811) |
+| **In Arabic:** 3–14B LLMs underperformed specialized models on Arabic GEC, the gap narrowing as scale grows | Dekmak (AUB thesis, 2026) |
+| **In Arabic:** GPT-4 reaches F0.5 67 on QALB-2014 against 80.09 for fine-tuned AraT5 — though this compares a prompted LLM with a fine-tuned model, so it shows the value of in-domain fine-tuning, not of the architecture | Alrehili & Alhothali (2025), [arXiv:2511.14230](https://arxiv.org/abs/2511.14230) |
+| ChatGPT **over-corrects and does not follow the minimal-edit principle**; GPT-3.5/GPT-4 score well on fluency-oriented benchmarks and poorly on minimal-edit ones | Fang et al. (2023), [arXiv:2304.01746](https://arxiv.org/abs/2304.01746); Coyne et al. (2023), [arXiv:2303.14342](https://arxiv.org/abs/2303.14342) |
+
+| Caution — do not overclaim | Source |
+|---|---|
+| Fine-tuned encoder-decoders altered lexical meaning **more** than GPT-4 and Qwen2.5-72B, and overfit during fine-tuning (96 of Control-T5's 104 coreference errors came from one dataset) | Wu & Arase (2025) |
+| Insertion, deletion and substitution errors occur in encoder-decoder simplifiers **and in the reference corpora themselves**, undetected by standard metrics | Devaraj, Sheffield, Wallace & Li, ACL 2022, [2022.acl-long.506](https://aclanthology.org/2022.acl-long.506/) |
+| LLMs beat non-LLM methods across simplification tasks, sometimes exceeding human references | Qiang et al. (2025) |
+
+**Reading:** architecture is not a faithfulness guarantee, and Bayan should never claim it is. Across
+four independent human evaluations the pattern is consistent — **capacity, not architecture, predicts
+meaning errors.** Every deployable-size system studied, of either architecture, produces them at
+non-trivial rates (16% of edits, 63% of simplifications, in SALSA).
+
+**The settled position for Bayan's deliverables:**
+
+> Bayan deploys a fine-tuned sub-1B encoder-decoder because at deployable scale fine-tuning beats
+> prompting (Cohen et al., 2026), and the large LLMs that outperform it cannot run on-device.
+> No model class is faithful by construction, so faithfulness is **enforced by a verification gate,
+> not inherited from the architecture**.
+
+Two consequences that change the plan rather than just the wording:
+
+1. **Distillation is a safety risk, not only a quality risk.** Hayakawa et al. (INLG 2025) found that
+   knowledge distillation into a small model *raised automatic scores while increasing the proportion
+   of **harmful** simplifications*, judged manually. Any Bayan distillation or compression step must
+   therefore be evaluated by human meaning review, not by SARI alone — the metric will improve while
+   the harm rate rises.
+2. **The runtime faithfulness gate should be core, not a stretch goal.** It currently appears as
+   stretch item E2 in `execution_plan.tex`. On this evidence it is the component the faithfulness
+   claim actually rests on. Hayakawa et al. also give a cheap implementation: the model's own **output
+   log-probability** is an effective detector of harmful simplifications, needing no second model.
 
 ## 2. Training data: generate-and-rerank over BAREC
 
