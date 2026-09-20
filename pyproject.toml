@@ -20,6 +20,7 @@ dependencies = [
     "python-bidi>=0.6.11",
     "python-dotenv>=1.2.2",
     "sacrebleu>=2.6.0",
+    "sacremoses>=0.2.0",
     "seaborn>=0.13.2",
     "transformers>=4.57.6",
 ]

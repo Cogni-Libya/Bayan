@@ -1,0 +1,10 @@
+{
+  "barec_test.csv": {
+    "rows": 7286,
+    "sha256": "086c684a928054e03f3c18d4cfddded6e426550aa751f4d3cdffc7ae8bdde84e"
+  },
+  "samer_test.tsv": {
+    "rows": 3277,
+    "sha256": "ad964688ad39a0dd2488ecb68e684189cf3f0c16b72b8b38e73d08884f878af4"
+  }
+}
