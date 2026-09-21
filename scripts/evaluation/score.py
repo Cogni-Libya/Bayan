@@ -79,12 +79,15 @@ def is_changed(row: dict) -> bool:
     return any(ref.strip() != source for ref in row["references"])
 
 
-def split_by_changed(rows: list[dict]) -> tuple[list[dict], list[dict]]:
-    """Returns (changed_rows, unchanged_rows)."""
-    changed = [r for r in rows if is_changed(r)]
-    unchanged = [r for r in rows if not is_changed(r)]
-    return changed, unchanged
-
+def split_by_changed(rows: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
+    """Returns (changed, unchanged, no_references).
+    Rows with no references (e.g. BAREC) go in their own bucket. Only rows
+    that have references can be judged changed or unchanged."""
+    no_refs = [r for r in rows if not r["references"]]
+    with_refs = [r for r in rows if r["references"]]
+    changed = [r for r in with_refs if is_changed(r)]
+    unchanged = [r for r in with_refs if not is_changed(r)]
+    return changed, unchanged, no_refs
 
 def make_copy_baseline(rows: list[dict]) -> list[dict]:
     """The 'model that does nothing': prediction replaced with source.
@@ -202,23 +205,28 @@ def report(rows: list[dict], label: str) -> None:
 
 def main(path: str) -> None:
     rows = load_jsonl(path)
-    changed, unchanged = split_by_changed(rows)
+    changed, unchanged, no_refs = split_by_changed(rows)
 
     baseline_rows = make_copy_baseline(rows)
-    baseline_changed, baseline_unchanged = split_by_changed(baseline_rows)
+    b_changed, b_unchanged, b_no_refs = split_by_changed(baseline_rows)
 
     print(f"SARI implementation: {SARI_IMPLEMENTATION}")
-    print(f"Loaded {len(rows)} rows ({len(changed)} changed, {len(unchanged)} unchanged)")
+    print(
+        f"Loaded {len(rows)} rows ({len(changed)} changed, "
+        f"{len(unchanged)} unchanged, {len(no_refs)} no references)"
+    )
 
     print("\n========== MODEL ==========")
     report(rows, "Overall")
-    report(changed, "Changed only")
-    report(unchanged, "Unchanged only")
+    report(changed, "Changed references")
+    report(unchanged, "Unchanged references")
+    report(no_refs, "No references")
 
     print("\n========== COPY BASELINE ==========")
     report(baseline_rows, "Overall")
-    report(baseline_changed, "Changed only")
-    report(baseline_unchanged, "Unchanged only")
+    report(b_changed, "Changed references")
+    report(b_unchanged, "Unchanged references")
+    report(b_no_refs, "No references")
 
 
 if __name__ == "__main__":
