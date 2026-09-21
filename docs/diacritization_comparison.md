@@ -3,7 +3,7 @@
 **DER/WER corpus:** Official Tashkeela Test Split, using the CATT benchmark fixture snapshot (743 sentences; pinned CATT commit `8d5330499feb`).
 **Base-letter corpus:** Supplied SAMER 100-sentence corpus.
 **Manual review input:** Supplied `manual_check_30.txt` (30 inputs; no gold labels).
-**Evaluation runner:** `scripts/eval_all_models_fixed.py`.
+**Evaluation runner:** `scripts/evaluation/benchmark_diacritization.py`.
 
 ---
 
@@ -49,30 +49,23 @@ The SAMER base-letter rate is a strict Arabic-letter integrity measure, not a di
 
 ### CAMeL Tools MLE
 
-### Example 1
-- **Raw Input:** ولكنها لم تعبس له وقالت وفي عينها نظرة عتب ورضى في لحظة: آه!
-- **Model Output:** وَلٰكِنَّها لَم تَعْبِس لَهُ وَقالَت وَفِي عَيْنِها نَظْرَةٌ عَتْبٌ وَرَضِيَ فِي لَحْظَةٍ: آه!
-- **Specific Error Type:** Changed character(s): 'ى' → 'ي'
+The CAMeL MLE path rewrites base letters as well as adding diacritics. The
+corrupted-sentence rate is **32/100**; the two substitutions responsible are
+`ة → ه` and `ى → ي`, plus alif normalisation `إ → أ`. Word-level examples from
+the run:
 
-### Example 2
-- **Raw Input:** فقال برقة،
-- **Model Output:** فَقالَ بَرْقه،
-- **Specific Error Type:** Changed character(s): 'ة' → 'ه'
+| Input word | CAMeL output | Corruption |
+| :--- | :--- | :--- |
+| برقة | بَرْقه | `ة → ه` |
+| بنغمة | بِنَغَمه | `ة → ه` |
+| إعجابى | إِعْجابِي | `ى → ي` |
+| ورضى | وَرَضِيَ | `ى → ي` |
+| إنك | أَنَّكَ | `إ → أ` |
 
-### Example 3
-- **Raw Input:** فقالت بنغمة من طلب الزيادة مما يحرم عليه: لا تقل هذا يا دكتور!
-- **Model Output:** فَقالَت بِنَغَمه مِن طَلَبَ الزِيادَةِ مِمّا يَحْرِم عَلَيهِ: لا تُقِلّ هٰذا يا دُكْتُور!
-- **Specific Error Type:** Changed character(s): 'ة' → 'ه'
-
-### Example 4
-- **Raw Input:** إنك تعرفين إعجابى بك.
-- **Model Output:** أَنَّكَ تَعْرِفِينَ إِعْجابِي بَك.
-- **Specific Error Type:** Normalized Alif variant: إ → أ; Changed character(s): 'ى' → 'ي'
-
-### Example 5
-- **Raw Input:** فلم يظهر عليها ما يدل على الارتياح إلى إعرابه عن هذا «الإعجاب» ورغبت لو أنه استخدم في وصف شعوره لفظا أقوى من «الإعجاب» وقالت بنغمة أقسى مما كان ينتظر إذا اعتبرنا ما مر إلى الوقت الحالي: كلا!
-- **Model Output:** فَلَم يُظْهِر عَلَيها ما يَدُلّ عَلَى الاِرْتِياحِ إِلَى أَعْرابه عَن هٰذا «الإِعْجاب» وَرَغِبَت لَو أَنَّهُ اِسْتَخْدَمَ فِي وَصَفَ شُعُورَهُ لَفَظا أَقْوَى مِن «الإِعْجاب» وَقالَت بِنَغَمه أَقْسَى مِمّا كانَ يَنْتَظِر إِذا اِعْتَبَرْنا ما مَرِّ إِلَى الوَقْتِ الحالِيَّ: كُلّاً!
-- **Specific Error Type:** Normalized Alif variant: إ → أ; Changed character(s): 'ة' → 'ه'
+The source sentences are SAMER test-split text and are not reproduced here —
+see the raw predictions under `results/benchmark_raw/`, which stay out of git.
+This is what rules CAMeL out for us regardless of its DER: a diacritizer that
+edits the letters underneath the marks corrupts the text it was given.
 
 ### CATT Encoder-Only
 
@@ -160,7 +153,7 @@ The SAMER base-letter rate is a strict Arabic-letter integrity measure, not a di
 The runner creates the pinned Tashkeela/CATT test snapshot under `data/tashkeela_test.txt`, runs each model in an isolated subprocess, and stores raw predictions under `results/benchmark_raw/`. Run:
 
 ```bash
-.venv_camel/bin/python scripts/eval_all_models_fixed.py
+.venv_camel/bin/python scripts/evaluation/benchmark_diacritization.py
 ```
 
 The official test snapshot is from the CATT project's benchmark fixture at `https://raw.githubusercontent.com/abjadai/catt/8d5330499feb85f6625e6af632141ed2ed6065fd/benchmarking/all_models_CATT_data/CATT_data_gt.txt`. It contains 743 lines in this pinned repository state, not the 817k-line aggregate corpus used by unrelated text2tashkeel benchmarks; DER values must not be compared across those different corpora.

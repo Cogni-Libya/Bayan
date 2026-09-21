@@ -31,7 +31,7 @@ from typing import Iterable
 from urllib.request import Request, urlopen
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]  # scripts/evaluation/ -> repo root
 RESULTS = ROOT / "results"
 RAW_RESULTS = RESULTS / "benchmark_raw"
 DATA = ROOT / "data"
@@ -452,7 +452,7 @@ def write_report(
         f"({len(official)} sentences; pinned CATT commit `{TASHKEELA_COMMIT[:12]}`).",
         "**Base-letter corpus:** Supplied SAMER 100-sentence corpus.",
         "**Manual review input:** Supplied `manual_check_30.txt` (30 inputs; no gold labels).",
-        "**Evaluation runner:** `scripts/eval_all_models_fixed.py`.",
+        "**Evaluation runner:** `scripts/evaluation/benchmark_diacritization.py`.",
         "",
         "---",
         "",
@@ -564,7 +564,7 @@ def write_report(
         "and stores raw predictions under `results/benchmark_raw/`. Run:",
         "",
         "```bash",
-        ".venv_camel/bin/python scripts/eval_all_models_fixed.py",
+        ".venv_camel/bin/python scripts/evaluation/benchmark_diacritization.py",
         "```",
         "",
         "The official test snapshot is from the CATT project's benchmark fixture "
@@ -585,8 +585,19 @@ def main(args: argparse.Namespace) -> int:
     download_dataset(official_path)
     official_gold = read_lines(official_path)
     official_input = [re.sub(f"[{''.join(sorted(ARABIC_MARKS))}]", "", x) for x in official_gold]
-    samer_path = ROOT / "attached_assets" / "samer_100_sentences_1789994666724.txt"
-    manual_path = ROOT / "attached_assets" / "manual_check_30_1789994645863.txt"
+    # Both files are held out of git: the 100-sentence sample is SAMER text,
+    # which we are not licensed to redistribute. Ask Sanad for them, or
+    # regenerate an equivalent sample locally from the corpus.
+    eval_inputs = ROOT / "data" / "diacritization_eval"
+    samer_path = eval_inputs / "samer_100_sentences.txt"
+    manual_path = eval_inputs / "manual_check_30.txt"
+    for required in (samer_path, manual_path):
+        if not required.exists():
+            raise SystemExit(
+                f"missing benchmark input: {required}\n"
+                "These are not in git (SAMER text is not redistributable). "
+                "See docs/diacritization_comparison.md for what they contain."
+            )
     samer = read_lines(samer_path)
     manual_inputs = parse_manual_inputs(manual_path)
     if len(manual_inputs) != 30:

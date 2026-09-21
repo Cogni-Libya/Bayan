@@ -36,3 +36,6 @@ models/
 
 # Claude Code local state (worktrees, session files)
 .claude/
+
+# Benchmark outputs (raw model predictions; regenerable)
+results/
