@@ -2,7 +2,7 @@
 Scoring script for Bayan simplification models.
 
 Usage:
-    uv run python scripts/score.py <predictions.jsonl>
+    uv run python scripts/evaluation/score.py <predictions.jsonl>
 
 Input format: one JSON object per line, with fields:
     id            - unique row id
@@ -72,22 +72,33 @@ def strip_diacritics(text: str) -> str:
     return _ARABIC_DIACRITICS.sub("", text)
 
 
-def is_changed(row: dict) -> bool:
-    """True if AT LEAST ONE reference differs from the source —
-    meaning this row was supposed to be simplified."""
+CHANGED = "Changed references"
+UNCHANGED = "Unchanged references"
+NO_REFERENCE = "No references"
+
+
+def reference_status(row: dict) -> str:
+    """Which bucket a row belongs in.
+
+    A row with no references is NOT 'unchanged'. 'Unchanged' means the human
+    reference left this sentence alone, so a good model should leave it alone too —
+    a claim we cannot make without a reference. BAREC has no reference
+    simplifications at all, so its rows get their own bucket and only the metrics
+    that don't need references.
+    """
+    if not row["references"]:
+        return NO_REFERENCE
     source = row["source"].strip()
-    return any(ref.strip() != source for ref in row["references"])
+    return CHANGED if any(ref.strip() != source for ref in row["references"]) else UNCHANGED
 
 
-def split_by_changed(rows: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
-    """Returns (changed, unchanged, no_references).
-    Rows with no references (e.g. BAREC) go in their own bucket. Only rows
-    that have references can be judged changed or unchanged."""
-    no_refs = [r for r in rows if not r["references"]]
-    with_refs = [r for r in rows if r["references"]]
-    changed = [r for r in with_refs if is_changed(r)]
-    unchanged = [r for r in with_refs if not is_changed(r)]
-    return changed, unchanged, no_refs
+def split_by_reference(rows: list[dict]) -> dict[str, list[dict]]:
+    """Group rows into the three buckets, keeping empty ones so the report is stable."""
+    buckets: dict[str, list[dict]] = {CHANGED: [], UNCHANGED: [], NO_REFERENCE: []}
+    for row in rows:
+        buckets[reference_status(row)].append(row)
+    return buckets
+
 
 def make_copy_baseline(rows: list[dict]) -> list[dict]:
     """The 'model that does nothing': prediction replaced with source.
@@ -197,40 +208,35 @@ def report(rows: list[dict], label: str) -> None:
         print("(no rows)")
         return
     print(f"Copy rate:        {copy_rate(rows):.3f}")
-    print(f"SARI:             {compute_sari(rows):.3f}")
-    print(f"BLEU:             {compute_bleu(rows):.3f}")
+    if any(r["references"] for r in rows):
+        print(f"SARI:             {compute_sari(rows):.3f}")
+        print(f"BLEU:             {compute_bleu(rows):.3f}")
+    else:
+        print("SARI, BLEU:       not scored (no reference simplifications)")
     print(f"BERTScore:        {compute_bertscore(rows):.3f}")
     print(f"Readability drop: {compute_readability_drop(rows):.3f}")
 
 
 def main(path: str) -> None:
     rows = load_jsonl(path)
-    changed, unchanged, no_refs = split_by_changed(rows)
-
-    baseline_rows = make_copy_baseline(rows)
-    b_changed, b_unchanged, b_no_refs = split_by_changed(baseline_rows)
+    buckets = split_by_reference(rows)
 
     print(f"SARI implementation: {SARI_IMPLEMENTATION}")
-    print(
-        f"Loaded {len(rows)} rows ({len(changed)} changed, "
-        f"{len(unchanged)} unchanged, {len(no_refs)} no references)"
-    )
+    counts = ", ".join(f"{len(v)} {k.lower()}" for k, v in buckets.items())
+    print(f"Loaded {len(rows)} rows ({counts})")
 
-    print("\n========== MODEL ==========")
-    report(rows, "Overall")
-    report(changed, "Changed references")
-    report(unchanged, "Unchanged references")
-    report(no_refs, "No references")
-
-    print("\n========== COPY BASELINE ==========")
-    report(baseline_rows, "Overall")
-    report(b_changed, "Changed references")
-    report(b_unchanged, "Unchanged references")
-    report(b_no_refs, "No references")
+    for heading, scored_rows in (
+        ("MODEL", rows),
+        ("COPY BASELINE", make_copy_baseline(rows)),
+    ):
+        print(f"\n========== {heading} ==========")
+        report(scored_rows, "Overall")
+        for label, bucket in split_by_reference(scored_rows).items():
+            report(bucket, label)
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: uv run python scripts/score.py <predictions.jsonl>")
+        print("Usage: uv run python scripts/evaluation/score.py <predictions.jsonl>")
         sys.exit(1)
     main(sys.argv[1])

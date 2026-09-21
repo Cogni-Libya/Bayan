@@ -33,4 +33,15 @@ data/test_locked/
 # and scripts/optimize_*.py; see the level-classifier-benchmark memory note for how each one
 # was produced. Never belongs in git history.
 models/
+# Claude Code local state (worktrees, session files)
+.claude/
+
+# Multi-agent orchestrator scratch and audit files
+.agents/
+ORIGINAL_REQUEST.md
+
+# Benchmark outputs (raw model predictions; regenerable)
+results/
+
+# Converter output for the locked test sets (regenerable)
 data/eval_inputs/

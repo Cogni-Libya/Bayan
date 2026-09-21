@@ -288,10 +288,26 @@ whole source before the decoder generates anything. &
 Trained for open-ended next-token generation; simplification is coerced via
 prompting rather than being the native objective. \\
 \addlinespace
-Faithfulness / groundedness &
-Tends to stay tightly anchored to the source sequence. &
-More prone to ``assistant drift'' --- added explanation, looser rephrasing,
-outright hallucination --- unless heavily constrained. Silently distorting
+Faithfulness / groundedness
+\newline\footnotesize(the evidence here is weaker than earlier drafts of this
+document claimed --- see the note below the table) &
+Anchored to the source sequence by cross-attention, but \emph{not} more
+faithful in practice: in error-based human evaluation of sentence
+simplification, a fine-tuned Control-T5 produced the most errors of any
+system tested (350 vs 211 for GPT-4 and 172 for Qwen2.5-72B) and the most
+lexical meaning alterations (176 vs 94 and 59) (Wu \& Arase, 2025,
+\texttt{doi:10.1145/3744744}). Insertion, deletion and substitution errors
+also occur in the reference corpora themselves, undetected by standard
+metrics (Devaraj et al., ACL 2022, \texttt{2022.acl-long.506}). &
+Prone to ``assistant drift'' --- added explanation, looser rephrasing,
+hallucination --- \emph{at deployable sizes}. In the same study the only
+small model, Llama-3.2-3B, produced roughly twice the errors of the 72B
+model, with Repetition and Hallucination notably more frequent. ChatGPT
+over-corrects and does not follow the minimal-edit principle (Fang et al.,
+2023, \texttt{arXiv:2304.01746}; Coyne et al., 2023,
+\texttt{arXiv:2303.14342}), a tendency that survives fine-tuning: a 770M
+T5-large beat fine-tuned 7B/13B LLaMA-2 on precision, 78.0 vs 72.3/74.6
+(Park, Do \& Lee, 2025, \texttt{arXiv:2509.20811}). Silently distorting
 meaning for a vulnerable reader is a real harm here, not just a quality bug. \\
 \addlinespace
 Model size / on-device fit &
@@ -312,6 +328,35 @@ faithfulness-critical transduction use case. \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\begin{noteb}
+\textbf{Evidence note (2026-09-20).} Earlier revisions of this document argued
+that an encoder--decoder is \emph{inherently} more faithful than a decoder-only
+model. That claim was never sourced, and the most directly relevant study ---
+error-based human evaluation on sentence simplification itself --- contradicts
+it: the fine-tuned encoder--decoder made more meaning errors than GPT-4 and
+Qwen2.5-72B (Wu \& Arase, 2025). That system, Control-T5, is \emph{T5-base
+fine-tuned on WikiLarge} --- 220M parameters against AraT5v2-base's 368M, so the
+comparison is like-for-like in scale rather than a strawman. Nor does stronger
+pretraining escape the effect: Llama-3.2-3B saw roughly two orders of magnitude
+more pretraining data than T5 and still produced 326 errors, close to double
+Qwen2.5-72B's 172. The claim has been narrowed to one the evidence
+supports: \emph{at deployable size}, a fine-tuned encoder--decoder remains our
+choice, because the only systems that beat it on faithfulness are one to two
+orders of magnitude too large to ship on-device, and the one small decoder-only
+model tested was no better (326 errors against Control-T5's 350 --- the two
+worst systems in the study were precisely the two deployable-size ones).
+Among models we could actually ship, the evidence shows \emph{no} faithfulness
+advantage for either architecture; the choice rests on task-nativeness,
+controllability and size. Architecture is a deployment argument here, not a
+faithfulness guarantee; the faithfulness claim rests on Bayan's own human
+meaning check. One limitation stated plainly: every study cited here is on
+English. No Arabic work measures simplification errors at this granularity, so
+the transfer is untested in both directions --- which is the argument for
+annotating a sample of our own outputs by error type rather than inheriting a
+result.
+Full evidence tables: \texttt{references/02\_text\_simplification/architecture\_decisions.md} §1.1.
+\end{noteb}
 
 \textbf{Verdict (already settled):} fine-tune AraT5 as the \emph{deployed}
 simplification model. A strong API-based Arabic-capable LLM is used only as a
@@ -1050,7 +1095,9 @@ AraBERT + MARBERT was also tried, on the theory that three models would
 catch each other's mistakes; it scored 84.8\%, \emph{worse} than MARBERT
 alone --- diagnosed as 31 net-negative overrules against only 15
 net-positive ones, i.e.\ the weaker two models outvoted the better one more
-often than they corrected it. MARBERT alone is what ships, quantized
+often than they corrected it. \emph{Update (September 2026): MARBERT has since been replaced by CAMeL
+AraBERT as the pipeline's readability check (issue \#17); the description below is
+the design as first built.} MARBERT alone is what ships, quantized
 dynamic-int8 via ONNX (164MB, CPU-only inference through
 \texttt{onnxruntime} directly --- no \texttt{torch} dependency at inference
 time, since the tensor glue an \texttt{optimum} wrapper would add is

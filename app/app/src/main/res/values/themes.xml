@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base Material 3 Theme -->
+    <style name="Theme.Bayan" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/bayan_primary</item>
+        <item name="colorOnPrimary">@color/bayan_on_primary</item>
+        <item name="colorPrimaryContainer">@color/bayan_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/bayan_on_primary_container</item>
+        <item name="colorSurface">@color/bayan_surface</item>
+        <item name="colorOnSurface">@color/bayan_on_surface</item>
+        <item name="colorSurfaceVariant">@color/bayan_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/bayan_on_surface_variant</item>
+        <item name="bottomSheetDialogTheme">@style/Theme.Bayan.BottomSheetDialog</item>
+    </style>
+
+    <!-- Translucent Activity Theme for ProcessTextActivity -->
+    <style name="Theme.Bayan.Translucent" parent="Theme.Bayan">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="bottomSheetDialogTheme">@style/Theme.Bayan.BottomSheetDialog</item>
+    </style>
+
+    <!-- Material 3 Bottom Sheet Dialog Style -->
+    <style name="Theme.Bayan.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Bayan.BottomSheet.Modal</item>
+    </style>
+
+    <style name="Widget.Bayan.BottomSheet.Modal" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@color/bayan_surface</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Bayan.LargeComponent</item>
+        <item name="behavior_skipCollapsed">true</item>
+    </style>
+
+    <style name="ShapeAppearance.Bayan.LargeComponent" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerSizeTopLeft">24dp</item>
+        <item name="cornerSizeTopRight">24dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+</resources>
+

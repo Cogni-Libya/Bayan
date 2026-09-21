@@ -25,10 +25,11 @@ design:
 4. Easy and scripture -> identity pairs. No generation, no cost, no risk.
 5. Hard -> one DSPy Generator call producing NUM_CANDIDATES candidate
    rewrites, one DSPy equivalence-validator call scoring all of them
-   against the original (0.0-1.0 each), and one local MARBERT (ONNX, no
-   API call) pass classifying all of them into this pipeline's 1-4 level
-   scale -- 2 LM calls per hard sentence total, not NUM_CANDIDATES*3.
-   Candidates that land on level 1-2 AND score above EQUIVALENCE_THRESHOLD
+   against the original (0.0-1.0 each), and one local CAMeL readability
+   pass (no API call) scoring how much easier each one is than the
+   original -- 2 LM calls per hard sentence total, not NUM_CANDIDATES*3.
+   Candidates whose P(easy) rose by at least TAU over the original AND that
+   score above EQUIVALENCE_THRESHOLD
    outrank ones that don't; the best-scoring candidate is kept even when
    none of the NUM_CANDIDATES attempts fully pass (same downstream `passed`
    filter as always). See simplify_and_validate()'s docstring for the
@@ -63,8 +64,10 @@ import onnxruntime
 import dspy
 import polars as pl
 from dotenv import load_dotenv
-from transformers import AutoTokenizer
 from tqdm import tqdm
+
+from camel_readability import CamelReadability
+from validation import TAU, load_readability_classifier, score_readability
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 BAREC_DIR = PROJECT_ROOT / "data" / "raw" / "barec"
@@ -76,20 +79,12 @@ PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 # processed, and re-running the script picks up where it left off instead of starting over.
 HARD_CHECKPOINT_PATH = PROCESSED_DIR / "barec_hard_pilot_checkpoint.jsonl"
 
-# Superseded by LEVEL_CLASSIFIER_ONNX_PATH below (a fine-tuned local MARBERT classifier beats
-# this LLM-prompted one on every measured axis: 86.8-87.5% band accuracy vs. 79.7-83.9%, free
-# vs. an API call per classification, and it can't parse-fail the way an LLM response can). Kept
-# for reference/comparison -- ClassifyReadabilityLevel and optimize_level_classifier.py still
-# work standalone, just no longer wired into this pipeline's configure_dspy().
+# Superseded by the local CAMeL readability model (camel_readability.py, loaded once in
+# configure_dspy() and reused for every candidate: no API call, no per-candidate cost, and it
+# can't parse-fail the way an LLM response can). Kept for reference/comparison --
+# ClassifyReadabilityLevel and optimize_level_classifier.py still work standalone, just no longer
+# wired into this pipeline's configure_dspy().
 COMPILED_LEVEL_CLASSIFIER_PATH = PROJECT_ROOT / "scripts" / "compiled" / "level_classifier.json"
-
-# Fine-tuned MARBERT (UBC-NLP/MARBERT), dynamically quantized to int8 ONNX (164MB, ~3.8x
-# smaller than the fp32 checkpoint, validated at 95.1% prediction-agreement with the original
-# fp32 model, no meaningful accuracy loss). Loaded once in configure_dspy() and reused for every
-# candidate's level check -- local CPU inference, no API call, no per-candidate cost, and it's
-# the strongest level classifier this project has produced (see memory: level-classifier-benchmark).
-LEVEL_CLASSIFIER_ONNX_PATH = PROJECT_ROOT / "models" / "level_classifier_bert_marbert_onnx_int8"
-LEVEL_CLASSIFIER_MAX_LENGTH = 128  # matches what the model was fine-tuned and validated with
 
 # Produced by optimize_equivalence_validator.py, which compiles CheckSemanticEquivalence
 # against human-annotated ground truth via MIPROv2 -- loaded automatically below if present.
@@ -106,7 +101,7 @@ KEEP_COLS = ["ID", "Sentence", "Word_Count", "Readability_Level_5", "Domain", "S
 # don't conflate the two when reading or editing the prompts below.
 EASY_LEVELS = (1, 2)
 HARD_LEVELS = (3, 4)
-EASY_LEVEL_CEILING = 2  # a generated pair passes the level check if predicted_level <= this
+EASY_LEVEL_CEILING = 2  # `is_easy` = predicted_level <= this; informational for generated pairs (the gate is the rise in P(easy))
 
 # CheckSemanticEquivalence outputs a continuous 0.0-1.0 score, not a boolean -- this threshold
 # is what simplify_and_validate() uses to derive the pass/fail gate (and, now, to break ties
@@ -178,26 +173,9 @@ def build_identity_pairs(rows: pl.DataFrame, pair_type: str) -> pl.DataFrame:
 
 
 # --------------------------------------------------------------------------------------
-# Local level classifier (MARBERT, ONNX, int8) -- pure onnxruntime + numpy, no torch. optimum's
-# ORTModelForSequenceClassification would also work but pulls in torch for its tensor glue even
-# though the actual compute runs through onnxruntime either way; running the .onnx graph and
-# tokenizer output directly as numpy arrays gets the same result without that dependency weight.
+# The readability check is the shared CAMeL model in camel_readability.py, scored through
+# validation.score_readability(): GPU (torch) or cached ONNX on CPU, each text on its own.
 # --------------------------------------------------------------------------------------
-
-
-class LocalLevelClassifier:
-    def __init__(self, onnx_path: Path):
-        self.session = onnxruntime.InferenceSession(str(onnx_path / "model_quantized.onnx"))
-        self.tokenizer = AutoTokenizer.from_pretrained(str(onnx_path))
-
-    def classify(self, texts: list[str]) -> list[int]:
-        """Batched: one onnxruntime call for however many texts are passed, not one call each."""
-        inputs = self.tokenizer(
-            texts, return_tensors="np", truncation=True, max_length=LEVEL_CLASSIFIER_MAX_LENGTH, padding=True
-        )
-        onnx_inputs = {k: v for k, v in inputs.items() if k in {i.name for i in self.session.get_inputs()}}
-        (logits,) = self.session.run(None, onnx_inputs)
-        return (np.argmax(logits, axis=-1) + 1).tolist()  # argmax is 0-indexed; levels are 1-4
 
 
 # --------------------------------------------------------------------------------------
@@ -207,7 +185,7 @@ class LocalLevelClassifier:
 # prompt; each field's `desc` is the per-field guidance. CheckSemanticEquivalence is
 # MIPROv2-compiled against human-annotated ground truth (optimize_equivalence_validator.py);
 # ClassifyReadabilityLevel is defined here for reference/comparison but no longer wired into
-# this pipeline (see LEVEL_CLASSIFIER_ONNX_PATH's comment). Both the generator and the
+# this pipeline (see COMPILED_LEVEL_CLASSIFIER_PATH's comment). Both the generator and the
 # equivalence validator score/generate NUM_CANDIDATES items per call, not one -- see each
 # signature's own docstring for why.
 # --------------------------------------------------------------------------------------
@@ -369,16 +347,15 @@ class ClassifyReadabilityLevel(dspy.Signature):
 # --------------------------------------------------------------------------------------
 
 
-def configure_dspy() -> tuple[dspy.Module, dspy.Module, LocalLevelClassifier]:
-    """Build the generator, the equivalence validator, and the local level classifier.
+def configure_dspy() -> tuple[dspy.Module, dspy.Module, CamelReadability]:
+    """Build the generator, the equivalence validator, and the local CAMeL readability model.
 
     Generation gets a higher temperature (varied phrasing is fine, even
     desirable, and NUM_CANDIDATES candidates in one call need genuine
     variety to be worth reranking); the equivalence judge gets temperature 0
-    (consistent verdicts matter more than varied ones for a judge). Level
-    classification no longer goes through an LLM call at all -- see
-    LEVEL_CLASSIFIER_ONNX_PATH's comment for why the local MARBERT model
-    replaced it (more accurate, free, can't parse-fail).
+    (consistent verdicts matter more than varied ones for a judge). Readability
+    scoring never goes through an LLM call -- see COMPILED_LEVEL_CLASSIFIER_PATH's
+    comment for why the local CAMeL model replaced it (free, can't parse-fail).
     """
     load_dotenv(PROJECT_ROOT / ".env")
     api_key = os.environ.get("DEEPSEEK_API_KEY")
@@ -439,24 +416,24 @@ def configure_dspy() -> tuple[dspy.Module, dspy.Module, LocalLevelClassifier]:
         )
     equivalence_validator.set_lm(judge_lm)
 
-    level_classifier = LocalLevelClassifier(LEVEL_CLASSIFIER_ONNX_PATH)
-    print(f"loaded local MARBERT level classifier from {LEVEL_CLASSIFIER_ONNX_PATH}")
+    readability = load_readability_classifier()
 
-    return generator, equivalence_validator, level_classifier
+    return generator, equivalence_validator, readability
 
 
 def simplify_and_validate(
     generator: dspy.Module,
     equivalence_validator: dspy.Module,
-    level_classifier: LocalLevelClassifier,
+    readability: CamelReadability,
     original_text: str,
 ) -> dict:
     """Generate NUM_CANDIDATES simplifications in ONE call, score all of them for equivalence in
-    ONE call, classify all of them locally (free, no API call), and keep the best-scoring one --
-    2 API calls per hard sentence total, not NUM_CANDIDATES*3 (see NUM_CANDIDATES's own comment
-    for the TSAR 2025/EhiMeNLP precedent behind generating multiple candidates and reranking).
+    ONE call, score their readability locally (free, no API call; each candidate's P(easy) against
+    the original's), and keep the best-scoring one -- 2 API calls per hard sentence total, not
+    NUM_CANDIDATES*3 (see NUM_CANDIDATES's own comment for the TSAR 2025/EhiMeNLP precedent behind
+    generating multiple candidates and reranking).
 
-    Ranking: candidates that pass both checks (equivalent AND easy) always outrank ones that
+    Ranking: candidates that pass both checks (equivalent AND readability rose) always outrank ones that
     don't; within either group, the higher equivalence_score wins. This means: if ANY candidate
     passes, we return the most faithful passing one; if NONE pass, we still return the most
     faithful failure available (a better fallback than an arbitrary single attempt) rather than
@@ -487,14 +464,17 @@ def simplify_and_validate(
         )
     candidate_texts, scores, reasons = candidate_texts[:n], scores[:n], reasons[:n]
 
-    predicted_levels = level_classifier.classify(candidate_texts)  # one batched local call, all n at once
+    # Local and free: every text is scored on its own, and each candidate is compared with the original.
+    r = score_readability(readability, [original_text] * n, candidate_texts)
 
     candidates = []
-    for text, raw_score, reasoning, predicted_level in zip(candidate_texts, scores, reasons, predicted_levels):
+    for i, (text, raw_score, reasoning) in enumerate(zip(candidate_texts, scores, reasons)):
         equivalence_score = max(0.0, min(1.0, float(raw_score)))  # clamp against a judge that
         # ignores the 0.0-1.0 instruction and returns something out of range
         equivalent = equivalence_score >= EQUIVALENCE_THRESHOLD
-        is_easy = predicted_level <= EASY_LEVEL_CEILING
+        predicted_level = int(r["predicted_level"][i])
+        d_logit = float(r["d_logit"][i])
+        readability_passed = d_logit >= TAU
         candidates.append(
             {
                 "simplified_text": text,
@@ -502,8 +482,12 @@ def simplify_and_validate(
                 "equivalent": equivalent,
                 "equivalence_reasoning": str(reasoning),
                 "predicted_level": predicted_level,
-                "is_easy": is_easy,
-                "passed": equivalent and is_easy,
+                "is_easy": predicted_level <= EASY_LEVEL_CEILING,
+                "p_easy_original": float(r["p_easy_original"][i]),
+                "p_easy_simplified": float(r["p_easy_simplified"][i]),
+                "d_logit": d_logit,
+                "readability_passed": readability_passed,
+                "passed": equivalent and readability_passed,
             }
         )
 
@@ -518,6 +502,10 @@ def simplify_and_validate(
         "equivalence_reasoning": best["equivalence_reasoning"],
         "predicted_level": best["predicted_level"],
         "is_easy": best["is_easy"],
+        "p_easy_original": best["p_easy_original"],
+        "p_easy_simplified": best["p_easy_simplified"],
+        "d_logit": best["d_logit"],
+        "readability_passed": best["readability_passed"],
         "passed": best["passed"],
         "num_candidates": len(candidates),
         "num_passed": num_passed,
@@ -533,6 +521,11 @@ def load_checkpoint() -> list[dict]:
             line = line.strip()
             if line:
                 rows.append(json.loads(line))
+    if rows and "readability_passed" not in rows[0]:
+        raise SystemExit(
+            f"{HARD_CHECKPOINT_PATH} was written before the CAMeL readability gate (#17), so resuming it would mix two "
+            "accept criteria. Move it aside (or pass a fresh run) and start again."
+        )
     return rows
 
 
@@ -540,7 +533,7 @@ def run_hard_pipeline(
     hard_sample: pl.DataFrame,
     generator: dspy.Module,
     equivalence_validator: dspy.Module,
-    level_classifier: LocalLevelClassifier,
+    readability: CamelReadability,
 ) -> pl.DataFrame:
     HARD_CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -558,7 +551,7 @@ def run_hard_pipeline(
     with open(HARD_CHECKPOINT_PATH, "a", encoding="utf-8") as f:
         for row in tqdm(remaining.iter_rows(named=True), total=remaining.shape[0], desc="hard band"):
             try:
-                result = simplify_and_validate(generator, equivalence_validator, level_classifier, row["Sentence"])
+                result = simplify_and_validate(generator, equivalence_validator, readability, row["Sentence"])
             except Exception as e:
                 # A single truncated/malformed LM response (or, tonight, a stalled connection
                 # after the machine slept) shouldn't kill a run that's already spent real API
@@ -582,7 +575,7 @@ def run_hard_pipeline(
         # rather than reporting "0 succeeded" cleanly. A real network outage hit 20/20 failures
         # here once already; this shouldn't be a stack trace when it happens again.
         print("WARNING: no hard-band results at all (every attempt failed, or nothing has run yet).")
-        return pl.DataFrame(schema={"ID": pl.Int64, "passed": pl.Boolean, "equivalent": pl.Boolean, "is_easy": pl.Boolean})
+        return pl.DataFrame(schema={"ID": pl.Int64, "passed": pl.Boolean, "equivalent": pl.Boolean, "readability_passed": pl.Boolean})
     all_done = pl.DataFrame(checkpoint_rows)
     # Guard against a stale checkpoint from a run with different --sample-fraction/--seed:
     # only return rows that are actually part of *this* run's hard_sample.
@@ -630,8 +623,8 @@ def main() -> None:
     scripture_pairs = build_identity_pairs(scripture_sample, "scripture")
 
     calls_per_sentence = 2  # 1 batched generation call (NUM_CANDIDATES candidates) + 1 batched
-    # equivalence-scoring call (all NUM_CANDIDATES candidates) -- level classification is local
-    # (MARBERT, ONNX), not an API call, so it doesn't add to this count regardless of NUM_CANDIDATES.
+    # equivalence-scoring call (all NUM_CANDIDATES candidates) -- readability scoring is local
+    # (CAMeL), not an API call, so it doesn't add to this count regardless of NUM_CANDIDATES.
     if args.dry_run:
         print("\n--dry-run: stopping before any LM call.")
         print(f"Would run {hard_sample.shape[0]} hard sentences x {calls_per_sentence} LM calls each "
@@ -639,10 +632,10 @@ def main() -> None:
         return
 
     print("\nConfiguring DSPy (DeepSeek V4.1 Flash)...")
-    generator, equivalence_validator, level_classifier = configure_dspy()
+    generator, equivalence_validator, readability = configure_dspy()
 
     print(f"Running hard band ({hard_sample.shape[0]} sentences x {calls_per_sentence} calls each, reranking {NUM_CANDIDATES} candidates, batched)...")
-    hard_results = run_hard_pipeline(hard_sample, generator, equivalence_validator, level_classifier)
+    hard_results = run_hard_pipeline(hard_sample, generator, equivalence_validator, readability)
 
     if hard_results.shape[0] == 0:
         # Every attempt failed (confirmed real cause once already: a network outage took out
@@ -654,7 +647,8 @@ def main() -> None:
 
     print(f"\npass rate: {hard_results['passed'].mean():.1%}")
     print(f"  equivalence pass rate: {hard_results['equivalent'].mean():.1%}")
-    print(f"  easy-band pass rate: {hard_results['is_easy'].mean():.1%}")
+    print(f"  readability pass rate (P(easy) rose by >= {TAU}): {hard_results['readability_passed'].mean():.1%}")
+    print(f"  informational: easy-band (level <= {EASY_LEVEL_CEILING}) rate: {hard_results['is_easy'].mean():.1%}")
     # num_passed=0 means none of the NUM_CANDIDATES attempts passed for that sentence (we still
     # returned the best-scoring failure) -- worth knowing separately from the overall pass rate,
     # since it's the "reranking couldn't rescue this one at all" rate, not just "didn't win the tiebreak."

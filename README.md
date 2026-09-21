@@ -36,11 +36,22 @@ All figures are verified in [`references/01_problem_motivation/`](references/01_
 | Stage | What it does | Status of the decision |
 |---|---|---|
 | **1. Simplify (core)** | Shorten and restructure sentences, replace rare words, keep meaning | **Primary focus.** Fine-tune one or more pretrained Arabic encoder-decoder (seq2seq) Transformers; AraT5v2 is the current candidate |
-| 2. Diacritize | Restore full tashkeel on the simplified text | **Secondary.** Use a ready pretrained model (e.g. CATT); fine-tune only if time permits. Must never alter base letters |
+| 2. Diacritize | Restore full tashkeel on the simplified text | **Secondary.** Decided: **Libtashkeel** (`text2tashkeel`) — MIT, ~45 MB, exports to ONNX. Must never alter base letters |
 | 3. Read aloud | TTS with word-by-word highlighting | **Secondary.** Ready model: **Nabra-7M-Distill** |
 
 Order matters: simplify → diacritize → read aloud, because diacritics depend on the final wording.
 An optional runtime quality gate shows the original text when a simplification is judged unfaithful.
+
+### How it reaches the reader
+
+Bayan ships as an **Android plugin**, not a separate app. It registers a `PROCESS_TEXT` intent, so "تبسيط"
+appears in the text-selection menu of any app on the phone: the reader selects hard Arabic text where they
+meet it, and a bottom sheet returns the simplified version and can read it aloud. **All inference runs on the
+device** — no server, no network, and the text never leaves the phone.
+
+That constrains every model choice: ONNX Runtime Mobile only, nothing that needs Python at runtime or a GPU,
+and a total download budget of roughly 250 MB. Full reasoning in
+[`docs/decisions/0001-product-form.md`](docs/decisions/0001-product-form.md).
 
 ## 3. Data — we build our own simplification corpus
 
@@ -50,17 +61,23 @@ No large, open, parallel Arabic simplification corpus exists, so Bayan builds on
   (CAMeL Lab, 69,441 sentences, 19 readability levels, CC BY-SA 4.0, **not parallel**). See [`data/README.md`](data/README.md).
 - **Generate-and-rerank pipeline** ([`scripts/barec_simplification_pipeline.py`](scripts/barec_simplification_pipeline.py)):
   easy sentences and scripture are kept verbatim; each hard sentence gets several LLM-generated candidates, scored by an
-  LLM equivalence judge (DSPy) and a fine-tuned MARBERT readability classifier; the best passing candidate is kept and
-  annotators review samples. A **2% pilot run is complete**.
-- **SAMER** is **not** used for training. The team has CAMeL Lab's approval to use its test split **for evaluation only**;
-  SAMER data must never be committed or redistributed.
+  LLM equivalence judge (DSPy) and the CAMeL BAREC readability model (`CAMeL-Lab/readability-arabertv02-word-CE`; it replaced
+  the fine-tuned MARBERT classifier in #17); the best passing candidate is kept and
+  annotators review samples. The current export holds **41,256 rows**, of which 5,585 are model-generated pairs and
+  1,509 are human-written gold pairs from DAASI; the rest are identity pairs, scripture and poetry kept verbatim.
+- **SAMER** *is* used for training. CAMeL Lab approved fine-tuning on it and publishing the resulting weights for
+  non-commercial use. What is **not** allowed is redistributing the corpus, so SAMER text must never be committed,
+  pasted into an issue, or included in any deliverable. Its official train split is the basis of our first model;
+  its official test split is one of the two locked test sets.
 - **Diacritization check data:** Tashkeela.
+- **Leakage:** both training sets were checked against both locked test sets on 2026-09-21 and are clean. See
+  [`scripts/evaluation/README.md`](scripts/evaluation/README.md).
 
 ## 4. Where we stand (internal results, not peer-reviewed)
 
 | Component | Result | Implication |
 |---|---|---|
-| Readability classifier (easy/hard, 800-sentence held-out set) | MARBERT 86.8–87.5% (best); ensemble 84.8% | Usable as a filter; use an independent CAMeL BAREC model as the *evaluation* judge |
+| Readability classifier (easy/hard, 800-sentence held-out set) | MARBERT 86.8–87.5% (best of those tried); ensemble 84.8% | MARBERT was **replaced by CAMeL AraBERT** (#17): on SAMER it ranks the human-simplified version higher 80.1% of the time (sentence pairs) and 76.9% (word swaps), against about 76% and 72–74% for MARBERT. CAMeL now gates the data, so evaluate with a different model or with human review |
 | Equivalence validator (DSPy MIPROv2, 25 held-out pairs) | Rejected **nothing** (0 true negatives) | **Must be fixed before full-scale generation** |
 | BERTScore as equivalence signal | r = −0.014 with human labels | Don't rely on it |
 
@@ -86,7 +103,11 @@ Full details and sources: [`references/INDEX.md`](references/INDEX.md).
 Same test inputs and one scoring script for every system:
 
 - **Systems:** copy-the-input baseline · plain fine-tuned AraT5v2 (Baseet setup) · zero-shot LLMs (incl. lexically constrained) · Bayan.
-- **Test sets:** team-verified BAREC test set · SAMER test split (evaluation only) · DAASI / ATSC as out-of-domain.
+- **Test sets:** two locked splits, both upstream and unmodified — the BAREC test split (7,286 rows) and the SAMER
+  test split (3,277 rows). They live in `data/test_locked/`, which git ignores; only `data/test_manifest.json` with
+  their row counts and SHA-256 hashes is committed, so everyone can prove they scored the same data.
+  BAREC has no reference simplifications, so it carries the reference-free metrics and doubles as the
+  out-of-domain check — SAMER splits by chapter, not by novel, so its test set is fully in-domain.
 - **Metrics:** SARI (pinned, fixed Arabic normalization) · BLEU (secondary) · readability drop (independent CAMeL BAREC model) ·
   meaning preservation (judge independent of the generator) · level-control checks · error-based human evaluation · DER/WER for stage 2.
 - **Leakage:** never score on rows a model trained on.
@@ -101,6 +122,7 @@ Bayan/
 ├── CONTRIBUTING.md                # Team workflow: branches, PRs, reviews
 ├── .github/                       # CODEOWNERS, PR and issue templates
 ├── deliverables/                  # SIC capstone deliverables (action plan, WBS, report, slides, demo)
+├── docs/decisions/                # Decision records — what we chose, and why
 ├── references/                    # Literature review, benchmarks, and the project's reference architecture
 │   ├── INDEX.md                   # Start here
 │   ├── 00_project_brief/          # Original idea brief (historical)
@@ -108,8 +130,10 @@ Bayan/
 │   ├── 02_text_simplification/    # Datasets, systems, evaluation, architecture decisions, Baseet analysis
 │   └── 03_project_architecture/   # Pipeline architecture & execution plan (LaTeX)
 ├── scripts/                       # Data pipeline, classifiers, DSPy validator optimization
-│   └── compiled/                  # Compiled DSPy programs
+│   ├── compiled/                  # Compiled DSPy programs
+│   └── evaluation/                # Scoring, leakage check, test-set manifest (+ fixtures/)
 ├── data/                          # README + human annotations (raw/processed data are git-ignored)
+│   └── test_manifest.json         # Hashes of the locked test sets; the sets themselves are never committed
 ├── pyproject.toml                 # Python dependencies (uv)
 └── .env.example                   # API key template — copy to .env, never commit keys
 ```
@@ -117,10 +141,29 @@ Bayan/
 ## 8. Getting started
 
 ```bash
-uv sync                                  # install dependencies (Python ≥ 3.12)
+uv sync                                  # install dependencies (Python ≥ 3.12; includes torch)
 cp .env.example .env                     # add your DEEPSEEK_API_KEY
 # download BAREC — see data/README.md
+uv run python scripts/camel_readability.py   # optional: fetch the CAMeL readability model now (else the first run does)
 uv run python scripts/barec_simplification_pipeline.py --dry-run
+```
+
+The CAMeL readability model needs no manual setup: it runs on an NVIDIA GPU when there is one (`--device cpu|cuda|auto`),
+otherwise on CPU through an ONNX export that is made once on first use (about a minute) and cached in `models/`.
+`uv sync` installs torch with its CUDA libraries on Linux. On a machine without a GPU you can skip them by installing
+outside the lockfile and running with `--no-sync` afterwards (a plain `uv run` re-syncs to the lockfile):
+
+```bash
+uv venv
+UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv pip install -r pyproject.toml
+uv run --no-sync python scripts/camel_readability.py
+```
+
+Before any training file is used, check it for test-set leakage:
+
+```bash
+uv run python scripts/evaluation/check_leakage.py <training_file> \
+    --reachable data/raw/barec/train.csv --reachable data/raw/barec/dev.csv
 ```
 
 ## 9. Team Cogni
@@ -140,9 +183,10 @@ Never push to `main` — every change goes through a reviewed pull request. See 
 
 ## 11. Open items
 
-- Fix and validate the equivalence judge on real negatives before generating the full corpus.
-- Add lexical constraints and few-shot examples to the generator.
-- Build and annotate the team-verified test set.
-- Reproduce the plain AraT5v2 baseline on our test sets.
+- Train the three stage-1 base models on SAMER and pick an architecture.
+- Fix and validate the equivalence judge on real negatives.
+- Export the simplifier to ONNX and quantize it to int8, then measure size and latency on a real phone.
+- Prove the SentencePiece tokenizer and the KV-cached decode loop work under ONNX Runtime Mobile —
+  the two hardest parts of the app, and neither depends on a trained Bayan checkpoint.
+- Name who presents at the final pitch and who writes the slides.
 - Find dyslexic readers / schools for user testing.
-- The schedule in the Action Plan is a working draft and may change.

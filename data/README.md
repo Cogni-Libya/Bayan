@@ -44,8 +44,10 @@ produce:
   `barec_hard_pilot_checkpoint.jsonl` -- the main pipeline's pilot run output and its
   resume checkpoint (see `barec_simplification_pipeline.py`).
 - `marbert_full_corpus_predictions.parquet` -- the production ONNX MARBERT level
-  classifier run over the entire 67,601-sentence corpus (see `run_marbert_full_corpus.py`
-  and the `level-classifier-benchmark` memory note), split into held-out/train-seen views.
+  classifier run over the entire 67,601-sentence corpus (see the `level-classifier-benchmark`
+  memory note), split into held-out/train-seen views. MARBERT was replaced by CAMeL AraBERT as the
+  readability check in #17; the script that produced this file, `run_marbert_full_corpus.py`, was
+  removed then and is in the git history before that change.
 - `*_eval_results.parquet` -- per-example predictions from the various classifier/validator
   benchmarking runs (see the `level-classifier-benchmark` memory note for what each one is).
 - `data/processed/archive/` -- superseded checkpoints and results kept for reference, not
@@ -55,8 +57,10 @@ produce:
   snapshot). Read by `optimize_equivalence_validator.py` to build MIPROv2 training/held-out
   data; real ground truth, not regenerable.
 
-Also not under `data/`: `models/level_classifier_bert_marbert_onnx_int8/` (the production
-quantized MARBERT weights, ~164MB) is git-ignored (see `.gitignore`) and real trained output,
-not source-controlled -- see the `level-classifier-benchmark` memory note for how to
-regenerate it. `scripts/compiled/*.json` (DSPy-optimizer-compiled generator/validator
+Also not under `data/`: `models/level_classifier_bert_marbert_onnx_int8/` (the former production
+quantized MARBERT weights, ~164MB, replaced by CAMeL AraBERT in #17; no code loads it any more) is
+git-ignored (see `.gitignore`) and real trained output, not source-controlled -- see the
+`level-classifier-benchmark` memory note for how to regenerate it. The current readability model
+needs no manual download: `models/camel_readability_arabertv02_word_onnx/` (git-ignored, ~520MB) is
+created on first use by `scripts/camel_readability.py`. `scripts/compiled/*.json` (DSPy-optimizer-compiled generator/validator
 programs) are small enough to commit and are not git-ignored.
