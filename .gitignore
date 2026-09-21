@@ -36,3 +36,7 @@ models/
 
 # Claude Code local state (worktrees, session files)
 .claude/
+
+# Multi-agent orchestrator scratch and audit files
+.agents/
+ORIGINAL_REQUEST.md
