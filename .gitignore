@@ -26,6 +26,9 @@ references/03_project_architecture/*.synctex.gz
 data/raw/
 data/processed/
 
+# Locked test sets — never commit; see data/test_manifest.json for hashes instead.
+data/test_locked/
+
 # Trained model artifacts — large (hundreds of MB to GB), regenerable from scripts/train_*.py
 # and scripts/optimize_*.py; see the level-classifier-benchmark memory note for how each one
 # was produced. Never belongs in git history.
