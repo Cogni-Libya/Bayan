@@ -1095,7 +1095,9 @@ AraBERT + MARBERT was also tried, on the theory that three models would
 catch each other's mistakes; it scored 84.8\%, \emph{worse} than MARBERT
 alone --- diagnosed as 31 net-negative overrules against only 15
 net-positive ones, i.e.\ the weaker two models outvoted the better one more
-often than they corrected it. MARBERT alone is what ships, quantized
+often than they corrected it. \emph{Update (September 2026): MARBERT has since been replaced by CAMeL
+AraBERT as the pipeline's readability check (issue \#17); the description below is
+the design as first built.} MARBERT alone is what ships, quantized
 dynamic-int8 via ONNX (164MB, CPU-only inference through
 \texttt{onnxruntime} directly --- no \texttt{torch} dependency at inference
 time, since the tensor glue an \texttt{optimum} wrapper would add is

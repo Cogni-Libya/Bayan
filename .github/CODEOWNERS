@@ -1,6 +1,5 @@
 # Code owners are requested for review automatically when a PR touches their files.
-# The last matching pattern wins. Abdul Majid (Evaluation & Benchmarking) will be added
-# once his GitHub account has access to the repository.
+# The last matching pattern wins.
 
 # Default: team leads
 *                                   @marwanelamami @khengari77
@@ -14,9 +13,11 @@
 # Model training — Model Training Lead & ML Engineer
 /scripts/train_*.py                 @elaybe @qSanad
 /scripts/optimize_level_classifier*.py     @elaybe @qSanad
-/scripts/ensemble_level_classifiers.py     @elaybe @qSanad
 /scripts/reeval_level_classifier.py        @elaybe @qSanad
-/scripts/run_marbert_full_corpus.py        @elaybe @qSanad
+
+# Evaluation and benchmarking — Evaluation Lead
+/scripts/evaluation/                @majid-mraiedd
+/data/test_manifest.json            @majid-mraiedd
 
 # Documentation, references, deliverables — Team Leader
 /README.md                          @marwanelamami

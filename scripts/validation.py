@@ -11,11 +11,15 @@ What is measured
    entities, numbers, negation; rewording/shortening is NOT penalised). `equivalent` means
    score >= EQUIVALENCE_THRESHOLD (0.7). The judge is CheckSemanticEquivalence, MIPROv2-compiled
    against human-annotated pairs (scripts/compiled/equivalence_validator.json).
-2. Readability level -- fine-tuned MARBERT (int8 ONNX, runs locally, no API call). Predicts the
-   project's 4-level scale (1 = simplest ... 4 = hardest; BAREC's 5-level scale with level 5
-   dropped -- NOT BAREC's native 19 levels). `is_easy` means level <= EASY_LEVEL_CEILING (2).
-   `p_easy` is the summed probability of levels 1-2: a diagnostic, not part of the gate.
-3. Gate -- `passed = equivalent and is_easy`.
+2. Readability -- CAMeL Lab's BAREC model (CAMeL-Lab/readability-arabertv02-word-CE, 19 levels; runs
+   locally, no API call; see camel_readability.py). It scores the ORIGINAL and the SIMPLIFIED text
+   separately and the pair passes when the simplified text got easier:
+   d_logit = logit P(easy | simplified) - logit P(easy | original) >= TAU (0.33). P(easy) is the summed
+   probability of BAREC levels 1-11, i.e. levels 1-2 of the 5-level scale. `predicted_level` (5-level
+   scale, simplified text) and `is_easy` (level <= 2) are informational, not part of the gate: an absolute
+   band rule rejected 41% of the human-written simplifications in SAMER (measured with the previous
+   readability check) and accepts texts that were never simplified at all.
+3. Gate -- `passed = equivalent and readability_passed`.
 
 Known limits (report these alongside any numbers built on the gate)
 - Equivalence: on the 25-pair annotated held-out set the compiled judge rejected nothing (0 true
@@ -23,30 +27,34 @@ Known limits (report these alongside any numbers built on the gate)
   read `equivalent` as "not flagged by the judge", not "verified". The 0.7 threshold was picked
   from a sweep on those same 25 pairs (0.70-0.75 plateau, 84% accuracy vs 64% at 0.8):
   directional only. Fixing this on real negatives is an open README item.
-- Readability: a filter, not an independent judge. MARBERT was fine-tuned on BAREC (so BAREC rows
-  are not clean test data for it), and the README's evaluation plan calls for an independent
-  CAMeL BAREC model for the final readability metric. It scores 86.8-87.5% easy/hard band accuracy
-  on the 800-sentence held-out set and agrees with its fp32 original on 95.1% of predictions.
-  Texts are classified one at a time so a label never depends on batch composition (batching
-  flips ~3% of boundary predictions with int8 dynamic quantization); int8 kernels may still
-  differ across CPU types and that has not been measured. The argmax gate is coarse -- P(easy)
-  can move without the predicted level changing -- which is what `p_easy` exposes.
+- Readability: a filter, not an independent judge, with a ceiling of about 80%. On SAMER (human
+  simplifications; evaluation only) CAMeL ranks the simplified version above the original 80.1% of
+  the time for sentence pairs and 76.9% for single-word swaps; the other BAREC-trained encoders we
+  tried score 72-77%, and every model is worse when the simple version is longer. It is noisy on light edits (only 61% of the "light" pairs in Marwan's set rise by TAU).
+  TAU = 0.33 was chosen on SAMER's test split (about 10% of the human pairs, reversed, would pass),
+  so it is a default, not a calibrated final value. Texts are scored one at a time in fp32 on CPU,
+  so a label never depends on its batch neighbours (the previous int8 check's did).
 
 Library use (from another script in scripts/):
-    from validation import load_equivalence_validator, load_level_classifier, validate_pairs, summarize
-    df = validate_pairs(originals, simplified, load_equivalence_validator(), load_level_classifier())
+    from validation import load_equivalence_validator, load_readability_classifier, validate_pairs, summarize
+    df = validate_pairs(originals, simplified, load_equivalence_validator(), load_readability_classifier())
     print(summarize(df))
 
 Command line -- score any .jsonl/.csv/.parquet with original_text and simplified_text columns:
     uv run python scripts/validation.py pairs.jsonl --out data/processed/pairs_validated.parquet
-    uv run python scripts/validation.py pairs.jsonl --skip-equivalence     # local only, free
+    uv run python scripts/validation.py pairs.jsonl --skip-equivalence     # readability only: local, free
     uv run python scripts/validation.py pairs.jsonl --limit 50             # small paid test first
 
 Output keeps every input column and adds val_* columns (prefixed so they never overwrite the
 input's own scores). The equivalence stage calls the DeepSeek API (needs DEEPSEEK_API_KEY, via the
 environment or a project-root .env); it checkpoints as it goes and resumes if interrupted.
-The level classifier needs models/level_classifier_bert_marbert_onnx_int8/ (git-ignored weights;
-set BAYAN_LEVEL_MODEL_DIR or pass --level-model-dir if they live elsewhere).
+
+The readability model needs no manual setup. The first run downloads it and, on CPU, exports it to
+ONNX once (about a minute; cached in models/camel_readability_arabertv02_word_onnx/, so later runs
+start at once); with an NVIDIA GPU it runs in torch on CUDA instead (--device cpu|cuda|auto).
+`uv sync` installs torch with its CUDA libraries on Linux; on a CPU-only machine you can skip them with
+`uv venv` and `UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match
+uv pip install -r pyproject.toml`, then run with `uv run --no-sync` (a plain `uv run` re-syncs to the lockfile).
 """
 
 from __future__ import annotations
@@ -69,16 +77,11 @@ import dspy
 import polars as pl
 from dotenv import load_dotenv
 from tqdm import tqdm
-from transformers import AutoTokenizer
+
+from camel_readability import CamelReadability
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
-
-# Fine-tuned MARBERT (UBC-NLP/MARBERT), dynamically quantized to int8 ONNX (164MB, ~3.8x smaller
-# than the fp32 checkpoint, 95.1% prediction agreement with it). Local CPU inference: no API call,
-# no per-text cost, and it can't parse-fail the way an LLM classifier can.
-LEVEL_CLASSIFIER_ONNX_PATH = PROJECT_ROOT / "models" / "level_classifier_bert_marbert_onnx_int8"
-LEVEL_CLASSIFIER_MAX_LENGTH = 128  # matches what the model was fine-tuned and validated with
 
 # Produced by optimize_equivalence_validator.py, which compiles CheckSemanticEquivalence against
 # human-annotated ground truth via MIPROv2 -- loaded automatically if present.
@@ -87,8 +90,13 @@ COMPILED_EQUIVALENCE_VALIDATOR_PATH = PROJECT_ROOT / "scripts" / "compiled" / "e
 DEEPSEEK_MODEL = "deepseek/deepseek-flash"  # DeepSeek V4.1 Flash's current API model id
 # ("deepseek-v4-flash" still works but is a deprecated alias for the same model).
 
-# Levels are this pipeline's 4-level scale (1 = simplest ... 4 = hardest).
-EASY_LEVEL_CEILING = 2  # a pair passes the level check if predicted_level <= this
+# Readability gate: the simplified text's P(easy) must rise over the original's by at least TAU (logit units).
+# Chosen on SAMER's test split so that about 10% of the human-written simplifications, REVERSED (made harder),
+# would still pass (TAU 0.7 gives about 5%). A default, not a calibrated final value.
+TAU = 0.33
+
+# `predicted_level` is BAREC's 5-level scale (1 = simplest ... 5 = hardest), mapped from CAMeL's 19 levels.
+EASY_LEVEL_CEILING = 2  # informational `is_easy`: predicted_level <= this
 
 # CheckSemanticEquivalence outputs a continuous 0.0-1.0 score; this threshold derives the
 # equivalent/not-equivalent decision. Calibrated on the compiled validator's predictions for the
@@ -162,48 +170,6 @@ class CheckSemanticEquivalence(dspy.Signature):
     )
 
 
-class LocalLevelClassifier:
-    """MARBERT via pure onnxruntime + numpy -- no torch. optimum's ORTModelForSequenceClassification
-    would also work but pulls in torch for its tensor glue even though the compute runs through
-    onnxruntime either way."""
-
-    # One text per onnxruntime call. Dynamic int8 quantization derives activation scales at runtime
-    # from the whole input tensor, padding included, so with batching a text's predicted level
-    # depends on which other texts share its batch: measured on 300 real pairs, 3% of predictions
-    # (all at level boundaries) flip between per-text inference and batches of 5-300, and merely
-    # reordering the same texts flips ~3% too. Batch size 1 is the only batch-independent setting.
-    # It is also the fastest on CPU (16 texts/s vs 5 at batch 256, batching mostly adds padding)
-    # and bounds peak memory, which one 15,000-sentence batch previously OOM-killed a dev machine on.
-    CHUNK_SIZE = 1
-
-    def __init__(self, onnx_path: Path):
-        self.session = onnxruntime.InferenceSession(str(onnx_path / "model_quantized.onnx"))
-        self.tokenizer = AutoTokenizer.from_pretrained(str(onnx_path))
-
-    def classify(self, texts: list[str]) -> list[int]:
-        return (np.argmax(self.predict_proba(texts), axis=-1) + 1).tolist()  # argmax is 0-indexed; levels are 1-4
-
-    def predict_proba(self, texts: list[str]) -> np.ndarray:
-        """Softmax probabilities per level, shape (len(texts), 4)."""
-        if not texts:
-            return np.zeros((0, 4))
-        chunks = []
-        for i in range(0, len(texts), self.CHUNK_SIZE):
-            inputs = self.tokenizer(
-                texts[i:i + self.CHUNK_SIZE], return_tensors="np", truncation=True,
-                max_length=LEVEL_CLASSIFIER_MAX_LENGTH, padding=True,
-            )
-            wanted = {inp.name for inp in self.session.get_inputs()}
-            (logits,) = self.session.run(None, {k: v for k, v in inputs.items() if k in wanted})
-            exp = np.exp(logits - logits.max(axis=-1, keepdims=True))
-            chunks.append(exp / exp.sum(axis=-1, keepdims=True))
-        return np.vstack(chunks)
-
-    @staticmethod
-    def p_easy(proba: np.ndarray) -> np.ndarray:
-        return proba[:, :EASY_LEVEL_CEILING].sum(axis=-1)
-
-
 def make_deepseek_lm(temperature: float, max_tokens: int) -> dspy.LM:
     load_dotenv(PROJECT_ROOT / ".env")
     api_key = os.environ.get("DEEPSEEK_API_KEY")
@@ -247,30 +213,29 @@ def load_equivalence_validator() -> dspy.Module:
     return validator
 
 
-def load_level_classifier(model_dir: Path | str | None = None) -> LocalLevelClassifier:
-    path = Path(model_dir or os.environ.get("BAYAN_LEVEL_MODEL_DIR") or LEVEL_CLASSIFIER_ONNX_PATH)
-    if not (path / "model_quantized.onnx").exists():
-        raise FileNotFoundError(
-            f"no level classifier at {path}. The weights are git-ignored (models/); get "
-            "models/level_classifier_bert_marbert_onnx_int8/ from the maintainers, then either "
-            "place it there or point BAYAN_LEVEL_MODEL_DIR (or --level-model-dir) at it."
-        )
-    classifier = LocalLevelClassifier(path)
-    print(f"loaded local MARBERT level classifier from {path}")
+def load_readability_classifier(device: str | None = None) -> CamelReadability:
+    """CAMeL readability model: torch on a GPU, cached ONNX on CPU (the first CPU run exports it once)."""
+    classifier = CamelReadability(device)
+    print(f"loaded the CAMeL readability model on {classifier.device}")
     return classifier
 
 
-def apply_gate(equivalence_score: float, predicted_level: int) -> dict:
+def _logit(p: np.ndarray) -> np.ndarray:
+    p = np.clip(p, 1e-6, 1 - 1e-6)
+    return np.log(p / (1 - p))
+
+
+def apply_gate(equivalence_score: float, d_logit: float, tau: float = TAU) -> dict:
     equivalence_score = max(0.0, min(1.0, float(equivalence_score)))  # clamp against a judge that
     # ignores the 0.0-1.0 instruction and returns something out of range
     equivalent = equivalence_score >= EQUIVALENCE_THRESHOLD
-    is_easy = predicted_level <= EASY_LEVEL_CEILING
+    readability_passed = d_logit >= tau
     return {
         "equivalence_score": equivalence_score,
         "equivalent": equivalent,
-        "predicted_level": predicted_level,
-        "is_easy": is_easy,
-        "passed": equivalent and is_easy,
+        "d_logit": d_logit,
+        "readability_passed": readability_passed,
+        "passed": equivalent and readability_passed,
     }
 
 
@@ -293,20 +258,39 @@ def score_equivalence(
     return [(max(0.0, min(1.0, float(s))), str(r)) for s, r in zip(scores[:n], reasons[:n])]
 
 
+def score_readability(
+    readability: CamelReadability, originals: list[str], simplified: list[str], show_progress: bool = False
+) -> dict[str, np.ndarray]:
+    """Per pair: P(easy) of the original and of the simplified text, d_logit, and the simplified text's
+    5-level level. Every distinct text is scored once, on its own."""
+    texts = list(dict.fromkeys(originals + simplified))
+    probs = readability.predict_probs(texts, show_progress=show_progress)
+    p_easy, levels = readability.p_easy(probs), readability.levels(probs)
+    index = {t: i for i, t in enumerate(texts)}
+    o = np.array([index[t] for t in originals], dtype=int)
+    s = np.array([index[t] for t in simplified], dtype=int)
+    return {"p_easy_original": p_easy[o], "p_easy_simplified": p_easy[s],
+            "d_logit": _logit(p_easy[s]) - _logit(p_easy[o]), "predicted_level": levels[s]}
+
+
 def score_candidates(
     equivalence_validator: dspy.Module,
-    level_classifier: LocalLevelClassifier,
+    readability: CamelReadability,
     original_text: str,
     candidate_texts: list[str],
+    tau: float = TAU,
 ) -> list[dict]:
     """Full validation of several candidates for ONE original: one batched equivalence call plus
-    one local classification. Returns one dict per scored candidate (see apply_gate)."""
+    local readability scoring. Returns one dict per scored candidate (see apply_gate)."""
     scored = score_equivalence(equivalence_validator, original_text, candidate_texts)
     texts = candidate_texts[:len(scored)]
-    levels = level_classifier.classify(texts)
+    r = score_readability(readability, [original_text] * len(texts), texts)
     return [
-        {"simplified_text": text, "equivalence_reasoning": reasoning, **apply_gate(score, level)}
-        for text, (score, reasoning), level in zip(texts, scored, levels)
+        {"simplified_text": text, "equivalence_reasoning": reasoning,
+         "p_easy_original": float(r["p_easy_original"][i]), "p_easy_simplified": float(r["p_easy_simplified"][i]),
+         "predicted_level": int(r["predicted_level"][i]), "is_easy": bool(r["predicted_level"][i] <= EASY_LEVEL_CEILING),
+         **apply_gate(score, float(r["d_logit"][i]), tau)}
+        for i, (text, (score, reasoning)) in enumerate(zip(texts, scored))
     ]
 
 
@@ -330,9 +314,10 @@ def validate_pairs(
     originals: list[str],
     simplified: list[str],
     equivalence_validator: dspy.Module | None = None,
-    level_classifier: LocalLevelClassifier | None = None,
+    readability: CamelReadability | None = None,
     workers: int = 8,
     checkpoint_path: Path | None = None,
+    tau: float = TAU,
 ) -> pl.DataFrame:
     """Score (original, simplified) pairs; one output row per pair, same order. Pass None for a
     validator to skip that check (its columns come back null, and val_passed is null unless both
@@ -342,17 +327,20 @@ def validate_pairs(
     assert len(simplified) == n
     out: dict[str, list] = {
         "val_equivalence_score": [None] * n, "val_equivalent": [None] * n,
-        "val_equivalence_reasoning": [None] * n, "val_predicted_level": [None] * n,
-        "val_is_easy": [None] * n, "val_p_easy": [None] * n, "val_error": [None] * n,
+        "val_equivalence_reasoning": [None] * n, "val_p_easy_original": [None] * n,
+        "val_p_easy_simplified": [None] * n, "val_d_logit": [None] * n, "val_readability_passed": [None] * n,
+        "val_predicted_level": [None] * n, "val_is_easy": [None] * n, "val_error": [None] * n,
     }
 
-    if level_classifier is not None:
-        proba = level_classifier.predict_proba(simplified)
-        p_easy = level_classifier.p_easy(proba)
-        for i, level in enumerate((np.argmax(proba, axis=-1) + 1).tolist()):
-            out["val_predicted_level"][i] = level
-            out["val_is_easy"][i] = level <= EASY_LEVEL_CEILING
-            out["val_p_easy"][i] = float(p_easy[i])
+    if readability is not None:
+        r = score_readability(readability, originals, simplified, show_progress=True)
+        for i in range(n):
+            out["val_p_easy_original"][i] = float(r["p_easy_original"][i])
+            out["val_p_easy_simplified"][i] = float(r["p_easy_simplified"][i])
+            out["val_d_logit"][i] = float(r["d_logit"][i])
+            out["val_readability_passed"][i] = bool(r["d_logit"][i] >= tau)
+            out["val_predicted_level"][i] = int(r["predicted_level"][i])
+            out["val_is_easy"][i] = bool(r["predicted_level"][i] <= EASY_LEVEL_CEILING)
 
     if equivalence_validator is not None:
         keys = [_pair_key(o, s) for o, s in zip(originals, simplified)]
@@ -399,12 +387,13 @@ def validate_pairs(
 
     out["val_passed"] = [
         (e and z) if e is not None and z is not None else None
-        for e, z in zip(out["val_equivalent"], out["val_is_easy"])
+        for e, z in zip(out["val_equivalent"], out["val_readability_passed"])
     ]
     return pl.DataFrame(out, schema={
         "val_equivalence_score": pl.Float64, "val_equivalent": pl.Boolean,
-        "val_equivalence_reasoning": pl.Utf8, "val_predicted_level": pl.Int64,
-        "val_is_easy": pl.Boolean, "val_p_easy": pl.Float64, "val_error": pl.Utf8,
+        "val_equivalence_reasoning": pl.Utf8, "val_p_easy_original": pl.Float64,
+        "val_p_easy_simplified": pl.Float64, "val_d_logit": pl.Float64, "val_readability_passed": pl.Boolean,
+        "val_predicted_level": pl.Int64, "val_is_easy": pl.Boolean, "val_error": pl.Utf8,
         "val_passed": pl.Boolean,
     })
 
@@ -421,8 +410,9 @@ def summarize(df: pl.DataFrame) -> dict:
         "equivalence_failed": int(df["val_error"].drop_nulls().len()),
         "mean_equivalence_score": rate("val_equivalence_score"),
         "equivalent_rate": rate("val_equivalent"),
+        "readability_passed_rate": rate("val_readability_passed"),
+        "mean_d_logit": rate("val_d_logit"),
         "easy_rate": rate("val_is_easy"),
-        "mean_p_easy": rate("val_p_easy"),
         "passed_rate": rate("val_passed"),
         "level_distribution": {int(k): int(v) for k, v in
                                df["val_predicted_level"].drop_nulls().value_counts().iter_rows()},
@@ -437,9 +427,10 @@ def format_summary(s: dict) -> str:
         f"pairs: {s['pairs']}   equivalence scored: {s['equivalence_scored']}   failed: {s['equivalence_failed']}",
         f"equivalent (score >= {EQUIVALENCE_THRESHOLD}): {pct(s['equivalent_rate'])}"
         + ("" if s["mean_equivalence_score"] is None else f"   (mean score {s['mean_equivalence_score']:.3f})"),
-        f"easy (level <= {EASY_LEVEL_CEILING}): {pct(s['easy_rate'])}"
-        + ("" if s["mean_p_easy"] is None else f"   (mean P(easy) {s['mean_p_easy']:.3f})"),
-        f"passed (equivalent AND easy): {pct(s['passed_rate'])}",
+        f"readability rose (d_logit >= TAU {TAU}): {pct(s['readability_passed_rate'])}"
+        + ("" if s["mean_d_logit"] is None else f"   (mean d_logit {s['mean_d_logit']:+.2f})"),
+        f"passed (equivalent AND readability rose): {pct(s['passed_rate'])}",
+        f"informational: easy (level <= {EASY_LEVEL_CEILING}): {pct(s['easy_rate'])}   "
         f"predicted level distribution: {dict(sorted(s['level_distribution'].items()))}",
     ]
     return "\n".join(lines)
@@ -470,9 +461,11 @@ def main() -> None:
     parser.add_argument("--simplified-col", default="simplified_text")
     parser.add_argument("--limit", type=int, default=0, help="score a seeded random sample of N pairs (cheap test)")
     parser.add_argument("--workers", type=int, default=8, help="parallel equivalence API calls")
-    parser.add_argument("--skip-equivalence", action="store_true", help="level check only: local, no API calls")
-    parser.add_argument("--skip-level", action="store_true", help="equivalence check only")
-    parser.add_argument("--level-model-dir", type=Path, default=None)
+    parser.add_argument("--skip-equivalence", action="store_true", help="readability check only: local, no API calls")
+    parser.add_argument("--skip-readability", action="store_true", help="equivalence check only")
+    parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto",
+                        help="readability model: GPU (torch) or CPU (cached ONNX); auto picks the GPU if there is one")
+    parser.add_argument("--tau", type=float, default=TAU, help="readability gate: minimum rise in logit P(easy)")
     args = parser.parse_args()
 
     df = load_pairs(args.input)
@@ -485,11 +478,12 @@ def main() -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print(f"{df.height} pairs from {args.input}")
 
-    level_classifier = None if args.skip_level else load_level_classifier(args.level_model_dir)
+    readability = None if args.skip_readability else load_readability_classifier(args.device)
     validator = None if args.skip_equivalence else load_equivalence_validator()
     scored = validate_pairs(
-        df[args.original_col].to_list(), df[args.simplified_col].to_list(), validator, level_classifier,
+        df[args.original_col].to_list(), df[args.simplified_col].to_list(), validator, readability,
         workers=args.workers, checkpoint_path=out_path.with_suffix(".checkpoint.jsonl") if validator else None,
+        tau=args.tau,
     )
     result = df.hstack(scored)
     result.write_parquet(out_path)

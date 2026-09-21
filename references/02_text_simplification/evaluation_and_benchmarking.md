@@ -107,7 +107,9 @@ simplification is "easy".
 ### Neural readability scoring
 Use CAMeL Lab's released BAREC models (`CAMeL-Lab/readability-arabertv2-d3tok-reg`, MIT) as an
 independent judge of level reduction. Bayan's own MARBERT classifier was used to *filter training data*,
-so it should not be the only readability judge of Bayan's outputs.
+so it should not be the only readability judge of Bayan's outputs. (MARBERT has since been replaced by CAMeL
+AraBERT as the pipeline's readability filter, issue #17, so the same caution now applies to that CAMeL model:
+evaluate with a different model, for example CAMeLBERT, or with human review.)
 
 ## 4. Benchmark protocol for Bayan (*recommendation*)
 
