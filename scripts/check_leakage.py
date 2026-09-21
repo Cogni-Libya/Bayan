@@ -67,9 +67,13 @@ def normalize(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 def _read_rows(path: Path) -> list[dict]:
-    """Read a .jsonl, .csv or .tsv file into a list of dicts.
+    """Read a .jsonl, .csv, .tsv or .parquet file into a list of dicts.
     utf-8-sig because BAREC's CSV ships with a byte-order mark."""
     suffix = path.suffix.lower()
+    if suffix == ".parquet":
+        import pandas as pd  # heavy, and only this branch needs it
+
+        return pd.read_parquet(path).to_dict("records")
     with open(path, encoding="utf-8-sig", newline="") as f:
         if suffix in (".jsonl", ".json"):
             rows = []
@@ -88,7 +92,7 @@ def _read_rows(path: Path) -> list[dict]:
         if suffix in (".csv", ".tsv"):
             return list(csv.DictReader(f, delimiter="\t" if suffix == ".tsv" else ","))
     raise SystemExit(
-        f"{path}: unsupported file type '{suffix}'. Expected .jsonl, .csv or .tsv."
+        f"{path}: unsupported file type '{suffix}'. Expected .jsonl, .csv, .tsv or .parquet."
     )
 
 

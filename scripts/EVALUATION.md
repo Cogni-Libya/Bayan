@@ -59,8 +59,8 @@ uv run python scripts/check_leakage.py <training_file> <test_file>
 uv run python scripts/check_leakage.py scripts/toy_train.jsonl scripts/toy_test.jsonl
 ```
 
-Reads `.jsonl`, `.csv` and `.tsv` on both sides, and compares **every column that
-holds sentences** — so for SAMER that is `L5`, `L4` and `L3` together, because a
+Reads `.jsonl`, `.csv`, `.tsv` and `.parquet` on both sides — `convert_samer.py`
+writes parquet — and compares **every column that holds sentences** — so for SAMER that is `L5`, `L4` and `L3` together, because a
 simplified target that reappears in training is leakage just as much as a source
 sentence is. Columns are auto-detected (`original_text`, `simplified_text`,
 `source`, `target`, `Sentence`, `L5`, `L4`, `L3`, `text`); override with
