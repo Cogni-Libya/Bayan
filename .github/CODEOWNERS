@@ -19,6 +19,9 @@
 /scripts/evaluation/                @majid-mraiedd
 /data/test_manifest.json            @majid-mraiedd
 
+# Android application — Mohammed
+/app/                               @mohamedthabet7
+
 # Documentation, references, deliverables — Team Leader
 /README.md                          @marwanelamami
 /references/                        @marwanelamami

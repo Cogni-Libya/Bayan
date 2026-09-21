@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bayan</string>
+    <string name="process_text_label">Simplify</string>
+    <string name="app_subtitle">Arabic text simplification assistant for readers with dyslexia</string>
+
+    <!-- Model Status Card -->
+    <string name="model_status_title">AI Model Status</string>
+    <string name="model_status_name">AraT5v2-base-1024 int8 ~164MB</string>
+    <string name="model_status_ready">Ready for testing (demo engine — ready for AraT5 ONNX drop-in)</string>
+    <string name="model_status_specs">Model size: ~164 MB (runs on-device CPU without internet)</string>
+
+    <!-- Interactive Sandbox -->
+    <string name="sandbox_title">Interactive Simplification Sandbox</string>
+    <string name="input_hint">Paste or type Arabic text here to try...</string>
+    <string name="btn_paste">Paste from Clipboard</string>
+    <string name="btn_simplify">Simplify Text</string>
+    <string name="empty_text_warning">Please enter text first to simplify</string>
+    <string name="clipboard_empty_warning">Clipboard is empty or contains no text</string>
+
+    <!-- Instructions -->
+    <string name="instructions_title">How to use Bayan in other apps:</string>
+    <string name="instruction_step_1">1. Select any Arabic text in any app (Chrome, WhatsApp, Notes).</string>
+    <string name="instruction_step_2">2. Choose «Simplify» (تبسيط) from the floating context menu.</string>
+    <string name="instruction_step_3">3. Read the simplified text immediately in the bottom sheet.</string>
+
+    <!-- Bottom Sheet Strings -->
+    <string name="sheet_header_title">Bayan Simplification</string>
+    <string name="original_text_title">Original Text</string>
+    <string name="simplified_text_title">Simplified Text for Accessible Reading</string>
+    <string name="action_listen">▶ Listen</string>
+    <string name="action_copy">⧉ Copy</string>
+    <string name="action_settings">⚙ Settings</string>
+    <string name="action_disabled_notice">Audio playback and advanced copy are under development</string>
+</resources>
+
