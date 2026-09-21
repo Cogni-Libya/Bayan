@@ -30,3 +30,8 @@ data/processed/
 # and scripts/optimize_*.py; see the level-classifier-benchmark memory note for how each one
 # was produced. Never belongs in git history.
 models/
+
+# Multi-agent orchestrator scratch and audit files
+.agents/
+ORIGINAL_REQUEST.md
+
