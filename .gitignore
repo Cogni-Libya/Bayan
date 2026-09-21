@@ -40,3 +40,6 @@ models/
 # Multi-agent orchestrator scratch and audit files
 .agents/
 ORIGINAL_REQUEST.md
+
+# Benchmark outputs (raw model predictions; regenerable)
+results/
