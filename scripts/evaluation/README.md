@@ -26,12 +26,12 @@ as `nan`.
 
 **Usage:**
 ```bash
-uv run python scripts/score.py <predictions.jsonl>
+uv run python scripts/evaluation/score.py <predictions.jsonl>
 ```
 
 **Example:**
 ```bash
-uv run python scripts/score.py scripts/toy_predictions.jsonl
+uv run python scripts/evaluation/score.py scripts/evaluation/fixtures/toy_predictions.jsonl
 ```
 
 SARI is computed with `evaluate`'s implementation (see `SARI_IMPLEMENTATION`
@@ -48,15 +48,15 @@ hide a real duplicate.
 **Usage:**
 ```bash
 # against every file in data/test_locked/ — this is the one to run
-uv run python scripts/check_leakage.py <training_file>
+uv run python scripts/evaluation/check_leakage.py <training_file>
 
 # or against a single test file
-uv run python scripts/check_leakage.py <training_file> <test_file>
+uv run python scripts/evaluation/check_leakage.py <training_file> <test_file>
 ```
 
 **Example:**
 ```bash
-uv run python scripts/check_leakage.py scripts/toy_train.jsonl scripts/toy_test.jsonl
+uv run python scripts/evaluation/check_leakage.py scripts/evaluation/fixtures/toy_train.jsonl scripts/evaluation/fixtures/toy_test.jsonl
 ```
 
 Reads `.jsonl`, `.csv`, `.tsv` and `.parquet` on both sides — `convert_samer.py`
@@ -82,7 +82,7 @@ test split. Pass the splits the training file was allowed to use and those match
 are subtracted:
 
 ```bash
-uv run python scripts/check_leakage.py data/processed/synthetic.jsonl \
+uv run python scripts/evaluation/check_leakage.py data/processed/synthetic.jsonl \
     --reachable data/raw/barec/train.csv \
     --reachable data/raw/barec/dev.csv
 ```
@@ -100,7 +100,7 @@ Regenerates `data/test_manifest.json` from the files in `data/test_locked/`.
 Only needed if the locked test files change.
 
 ```bash
-uv run python scripts/make_manifest.py
+uv run python scripts/evaluation/make_manifest.py
 ```
 
 ## Locked test sets
@@ -116,7 +116,7 @@ unmodified — we did not make our own split. So to reproduce them:
 ```bash
 cp data/raw/barec/test.csv                                        data/test_locked/barec_test.csv
 cp data/raw/samer/samer-simplification-corpus-v1/data/test.tsv    data/test_locked/samer_test.tsv
-uv run python scripts/make_manifest.py     # hashes must match what is committed
+uv run python scripts/evaluation/make_manifest.py     # hashes must match what is committed
 ```
 
 `make_manifest.py` recomputes rows and hashes but **carries `source` over** from the

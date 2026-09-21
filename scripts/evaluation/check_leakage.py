@@ -2,13 +2,13 @@
 Leakage check for Bayan.
 
 Usage:
-    uv run python scripts/check_leakage.py <training_file>              # against every locked test set
-    uv run python scripts/check_leakage.py <training_file> <test_file>  # against one
+    uv run python scripts/evaluation/check_leakage.py <training_file>              # against every locked test set
+    uv run python scripts/evaluation/check_leakage.py <training_file> <test_file>  # against one
 
 Compares a training file's sentences against the locked test sentences, looking for
 exact matches and near-duplicates. Exits with an error if anything is found.
 
-Reads .jsonl, .csv and .tsv, and compares every column that holds sentences. For the
+Reads .jsonl, .csv, .tsv and .parquet, and compares every column that holds sentences. For the
 SAMER test set that means L5, L4 and L3 together: a simplified target that turns up in
 training is leakage just as much as a source sentence is.
 """
@@ -20,7 +20,8 @@ import string
 import sys
 from pathlib import Path
 
-LOCKED_DIR = Path(__file__).resolve().parent.parent / "data" / "test_locked"
+REPO_ROOT = Path(__file__).resolve().parents[2]  # scripts/evaluation/ -> repo root
+LOCKED_DIR = REPO_ROOT / "data" / "test_locked"
 
 # Ordered groups: the first group with any column present wins, and every present
 # column in it is read. Groups rather than one flat list because "source" means a
