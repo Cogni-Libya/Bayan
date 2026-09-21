@@ -61,7 +61,8 @@ No large, open, parallel Arabic simplification corpus exists, so Bayan builds on
   (CAMeL Lab, 69,441 sentences, 19 readability levels, CC BY-SA 4.0, **not parallel**). See [`data/README.md`](data/README.md).
 - **Generate-and-rerank pipeline** ([`scripts/barec_simplification_pipeline.py`](scripts/barec_simplification_pipeline.py)):
   easy sentences and scripture are kept verbatim; each hard sentence gets several LLM-generated candidates, scored by an
-  LLM equivalence judge (DSPy) and a fine-tuned MARBERT readability classifier; the best passing candidate is kept and
+  LLM equivalence judge (DSPy) and the CAMeL BAREC readability model (`CAMeL-Lab/readability-arabertv02-word-CE`; it replaced
+  the fine-tuned MARBERT classifier in #17); the best passing candidate is kept and
   annotators review samples. The current export holds **41,256 rows**, of which 5,585 are model-generated pairs and
   1,509 are human-written gold pairs from DAASI; the rest are identity pairs, scripture and poetry kept verbatim.
 - **SAMER** *is* used for training. CAMeL Lab approved fine-tuning on it and publishing the resulting weights for
@@ -76,7 +77,7 @@ No large, open, parallel Arabic simplification corpus exists, so Bayan builds on
 
 | Component | Result | Implication |
 |---|---|---|
-| Readability classifier (easy/hard, 800-sentence held-out set) | MARBERT 86.8–87.5% (best); ensemble 84.8% | Usable as a filter; use an independent CAMeL BAREC model as the *evaluation* judge |
+| Readability classifier (easy/hard, 800-sentence held-out set) | MARBERT 86.8–87.5% (best of those tried); ensemble 84.8% | MARBERT was **replaced by CAMeL AraBERT** (#17): on SAMER it ranks the human-simplified version higher 80.1% of the time (sentence pairs) and 76.9% (word swaps), against about 76% and 72–74% for MARBERT. CAMeL now gates the data, so evaluate with a different model or with human review |
 | Equivalence validator (DSPy MIPROv2, 25 held-out pairs) | Rejected **nothing** (0 true negatives) | **Must be fixed before full-scale generation** |
 | BERTScore as equivalence signal | r = −0.014 with human labels | Don't rely on it |
 
@@ -140,11 +141,17 @@ Bayan/
 ## 8. Getting started
 
 ```bash
-uv sync                                  # install dependencies (Python ≥ 3.12)
+uv sync                                  # install dependencies (Python ≥ 3.12; includes torch)
 cp .env.example .env                     # add your DEEPSEEK_API_KEY
 # download BAREC — see data/README.md
+uv run python scripts/camel_readability.py   # optional: fetch the CAMeL readability model now (else the first run does)
 uv run python scripts/barec_simplification_pipeline.py --dry-run
 ```
+
+The CAMeL readability model needs no manual setup: it runs on an NVIDIA GPU when there is one (`--device cpu|cuda|auto`),
+otherwise on CPU through an ONNX export that is made once on first use (about a minute) and cached in `models/`.
+On a machine without a GPU, a plain `uv sync` also downloads the CUDA libraries that come with torch on Linux; to skip
+them, run `UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv sync`.
 
 Before any training file is used, check it for test-set leakage:
 

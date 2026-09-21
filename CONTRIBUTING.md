@@ -69,4 +69,7 @@ uv sync
 cp .env.example .env   # add your own API key
 ```
 
+No NVIDIA GPU? Skip torch's CUDA libraries with
+`UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv sync`.
+
 Data download instructions: [`data/README.md`](data/README.md).

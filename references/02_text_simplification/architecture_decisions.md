@@ -212,7 +212,7 @@ scripture are kept unchanged.
 
 | Component | Result |
 |---|---|
-| Readability classifier (800-sentence balanced held-out set, easy/hard band accuracy) | MARBERT 86.8–87.5%; CAMeLBERT-mix 83.5–83.9%; binary head 83.4%; CORAL head 80.1%; 3-model majority vote 84.8%. The prior DSPy-prompted classifier reached 79.7%. |
+| Readability classifier (800-sentence balanced held-out set, easy/hard band accuracy) | MARBERT 86.8–87.5%; CAMeLBERT-mix 83.5–83.9%; binary head 83.4%; CORAL head 80.1%; 3-model majority vote 84.8%. The prior DSPy-prompted classifier reached 79.7%. MARBERT was later replaced by CAMeL AraBERT as the pipeline's readability check (issue #17): on SAMER it ranks the human-simplified version higher 80.1% of the time (sentence pairs) vs about 76% for MARBERT. |
 | Semantic-equivalence validator (DSPy MIPROv2, 102 human-annotated pairs, 77 train / 25 held-out) | With the current batched signature, **every** held-out pair scored as equivalent (0 true negatives): the gate does not yet reject meaning changes. |
 | BERTScore as an equivalence signal | r = −0.014 with human labels on the same annotations (one annotator). |
 
