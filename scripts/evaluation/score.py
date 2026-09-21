@@ -2,7 +2,7 @@
 Scoring script for Bayan simplification models.
 
 Usage:
-    uv run python scripts/score.py <predictions.jsonl>
+    uv run python scripts/evaluation/score.py <predictions.jsonl>
 
 Input format: one JSON object per line, with fields:
     id            - unique row id
@@ -237,6 +237,6 @@ def main(path: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: uv run python scripts/score.py <predictions.jsonl>")
+        print("Usage: uv run python scripts/evaluation/score.py <predictions.jsonl>")
         sys.exit(1)
     main(sys.argv[1])
