@@ -52,8 +52,9 @@ environment or a project-root .env); it checkpoints as it goes and resumes if in
 The readability model needs no manual setup. The first run downloads it and, on CPU, exports it to
 ONNX once (about a minute; cached in models/camel_readability_arabertv02_word_onnx/, so later runs
 start at once); with an NVIDIA GPU it runs in torch on CUDA instead (--device cpu|cuda|auto).
-On a CPU-only machine a plain `uv sync` also downloads the CUDA libraries that come with torch; to
-skip them: UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv sync
+`uv sync` installs torch with its CUDA libraries on Linux; on a CPU-only machine you can skip them with
+`uv venv` and `UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match
+uv pip install -r pyproject.toml`, then run with `uv run --no-sync` (a plain `uv run` re-syncs to the lockfile).
 """
 
 from __future__ import annotations

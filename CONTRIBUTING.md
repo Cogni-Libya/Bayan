@@ -69,7 +69,13 @@ uv sync
 cp .env.example .env   # add your own API key
 ```
 
-No NVIDIA GPU? Skip torch's CUDA libraries with
-`UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv sync`.
+`uv sync` installs torch with its CUDA libraries on Linux. No NVIDIA GPU? Skip them by installing outside the lockfile,
+and run with `--no-sync` afterwards (a plain `uv run` re-syncs to the lockfile):
+
+```bash
+uv venv
+UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv pip install -r pyproject.toml
+uv run --no-sync python scripts/camel_readability.py
+```
 
 Data download instructions: [`data/README.md`](data/README.md).

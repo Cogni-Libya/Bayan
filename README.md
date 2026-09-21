@@ -150,8 +150,14 @@ uv run python scripts/barec_simplification_pipeline.py --dry-run
 
 The CAMeL readability model needs no manual setup: it runs on an NVIDIA GPU when there is one (`--device cpu|cuda|auto`),
 otherwise on CPU through an ONNX export that is made once on first use (about a minute) and cached in `models/`.
-On a machine without a GPU, a plain `uv sync` also downloads the CUDA libraries that come with torch on Linux; to skip
-them, run `UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv sync`.
+`uv sync` installs torch with its CUDA libraries on Linux. On a machine without a GPU you can skip them by installing
+outside the lockfile and running with `--no-sync` afterwards (a plain `uv run` re-syncs to the lockfile):
+
+```bash
+uv venv
+UV_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu UV_INDEX_STRATEGY=unsafe-best-match uv pip install -r pyproject.toml
+uv run --no-sync python scripts/camel_readability.py
+```
 
 Before any training file is used, check it for test-set leakage:
 
