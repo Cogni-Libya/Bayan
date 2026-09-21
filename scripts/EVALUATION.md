@@ -66,11 +66,33 @@ sentence is. Columns are auto-detected (`original_text`, `simplified_text`,
 `source`, `target`, `Sentence`, `L5`, `L4`, `L3`, `text`); override with
 `--columns`, and the near-duplicate threshold with `--threshold`.
 
-Exits with code 1 and prints details if any exact match or near-duplicate
-(character 5-gram overlap ≥ 0.8) is found.
+Exits with code 1 if any exact match or near-duplicate (character 5-gram overlap
+≥ 0.8) survives the two filters below.
+
+### Two filters, and why they exist
+
+**`--min-words` (default 5).** BAREC is sentence-level and full of one- and
+two-word rows — 797 of its 7,286 test rows are ≤ 2 words. Those match everything.
+Short matches are still counted and printed, they just don't fail the run.
+
+**`--reachable FILE` (repeatable).** BAREC repeats **311 sentences between its own
+train and test splits**, and more again as near-duplicates. So a pair generated
+from a train row can reproduce a test sentence without anyone ever touching the
+test split. Pass the splits the training file was allowed to use and those matches
+are subtracted:
+
+```bash
+uv run python scripts/check_leakage.py data/processed/synthetic.jsonl \
+    --reachable data/raw/barec/train.csv \
+    --reachable data/raw/barec/dev.csv
+```
+
+Without this, **any** BAREC-derived training file fails the check, and a check
+that always fails is a check everyone learns to ignore. With it, a failure means
+something.
 
 Expect roughly **2 minutes** for a 10,000-row training file against both locked
-test sets.
+test sets, or **8 minutes** for the full 41,000-row synthetic export.
 
 ## make_manifest.py
 
