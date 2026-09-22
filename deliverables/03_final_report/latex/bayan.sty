@@ -1,0 +1,124 @@
+% bayan.sty -- house style for the Bayan final report.
+%
+% Reproduces the visual language of the Samsung Innovation Campus template
+% (blue section banners, accent subsection headings, body colour, cover
+% layout) without copying the template file itself, which is copyrighted.
+%
+% SamsungOne is not redistributable and is not installed here, so Liberation
+% Sans stands in for it: both are humanist sans faces at similar widths.
+% Swap the \setmainfont below if SamsungOne is available on the build machine.
+\ProvidesPackage{bayan}[2026/09/22 Bayan final report style]
+
+\RequirePackage{fontspec}
+\RequirePackage{polyglossia}
+\RequirePackage[dvipsnames,table]{xcolor}
+\RequirePackage[explicit]{titlesec}
+\RequirePackage{geometry}
+\RequirePackage{fancyhdr}
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+\RequirePackage{caption}
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\RequirePackage{pgfplots}
+\RequirePackage{enumitem}
+\RequirePackage[hidelinks]{hyperref}
+
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc, shapes.geometric}
+\pgfplotsset{compat=1.18}
+
+% ---------------------------------------------------------------- palette --
+\definecolor{sicblue}{HTML}{193DB0}   % template accent
+\definecolor{sicbody}{HTML}{1A1A1A}   % template body text
+\definecolor{sicgrey}{HTML}{A6A6A6}   % template separator grey
+\definecolor{sicpale}{HTML}{EEF2FC}   % tint for table banding and figure fills
+\definecolor{sicwarm}{HTML}{C2410C}   % single contrast hue, used sparingly
+
+% ------------------------------------------------------------------ fonts --
+\setmainlanguage{english}
+\setotherlanguage{arabic}
+\newfontfamily\arabicfont[Script=Arabic,
+  Path=/usr/share/fonts/paktype-naskh-basic-fonts/, Extension=.ttf]{PakTypeNaskhBasic}
+\setmainfont[Path=/usr/share/fonts/liberation-sans-fonts/, Extension=.ttf,
+  BoldFont=LiberationSans-Bold, ItalicFont=LiberationSans-Italic,
+  BoldItalicFont=LiberationSans-BoldItalic]{LiberationSans-Regular}
+\setmonofont[Path=/usr/share/fonts/liberation-mono-fonts/, Extension=.ttf,
+  BoldFont=LiberationMono-Bold]{LiberationMono-Regular}
+
+% Short inline Arabic, e.g. the menu entry \ar{تبسيط}.
+\newcommand{\ar}[1]{\textarabic{#1}}
+
+\color{sicbody}
+\geometry{a4paper, top=25mm, bottom=24mm, left=24mm, right=24mm}
+
+% --------------------------------------------------------------- headings --
+% Level 1 mirrors the template's filled blue banner; level 2 its accent text.
+\titleformat{\section}
+  {\normalfont\bfseries\color{white}}
+  {}{0pt}
+  {\colorbox{sicblue}{\parbox{\dimexpr\textwidth-2\fboxsep\relax}%
+     {\vspace{2pt}\large\thesection.\hspace{0.5em}#1\vspace{2pt}}}}
+\titlespacing*{\section}{0pt}{16pt plus 2pt minus 2pt}{9pt}
+
+\titleformat{\subsection}
+  {\normalfont\bfseries\color{sicblue}}{\thesubsection.}{0.5em}{#1}
+\titlespacing*{\subsection}{0pt}{12pt plus 2pt minus 2pt}{4pt}
+
+\titleformat{\subsubsection}
+  {\normalfont\bfseries\color{sicbody}}{}{0pt}{#1}
+\titlespacing*{\subsubsection}{0pt}{9pt}{3pt}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt}
+
+% ---------------------------------------------------------------- captions --
+\captionsetup{font=small, labelfont={bf,color=sicblue}, skip=6pt}
+\captionsetup[table]{position=top}
+
+% ----------------------------------------------------------------- header --
+\pagestyle{fancy}\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[C]{\small\color{sicgrey}\thepage}
+\fancyhead[R]{\footnotesize\color{sicgrey}Bayan \textperiodcentered\ SIC AI Capstone}
+
+% ------------------------------------------------------- evidence labels ---
+% Every claim in this report is measured, decided or planned. The label is
+% part of the argument, so it is typeset rather than left to prose.
+\newcommand{\measured}{\textcolor{sicblue}{\footnotesize\bfseries[measured]}\,}
+\newcommand{\decided}{\textcolor{sicblue}{\footnotesize\bfseries[decided]}\,}
+\newcommand{\planned}{\textcolor{sicgrey}{\footnotesize\bfseries[planned]}\,}
+
+% A boxed note for the things a reader should not miss.
+\newcommand{\keynote}[1]{%
+  \par\vspace{4pt}\noindent
+  \begin{tikzpicture}
+    \node[draw=sicblue, line width=0.8pt, fill=sicpale, rounded corners=2pt,
+          inner sep=8pt, text width=\dimexpr\textwidth-20pt\relax,
+          align=left, font=\small] {#1};
+  \end{tikzpicture}\par\vspace{4pt}}
+
+% ------------------------------------------------------------------ cover --
+\newcommand{\bayancover}[4]{%  {title}{date}{team}{members}
+  \begin{titlepage}
+  \thispagestyle{empty}
+  \vspace*{12mm}
+  {\color{sicblue}\bfseries\large AI Course}\par\vspace{2mm}
+  {\color{sicbody}\Large Capstone Project}\par
+  {\color{sicbody}\Huge\bfseries Final Report}\par\vspace{3mm}
+  {\color{sicgrey}\small For students (instructor review required)}\par
+  \vspace{18mm}
+  \textcolor{sicblue}{\rule{\textwidth}{2pt}}\par\vspace{6mm}
+  {\color{sicbody}\LARGE\bfseries #1}\par\vspace{6mm}
+  \textcolor{sicgrey}{\rule{\textwidth}{0.6pt}}\par\vspace{10mm}
+  \begin{tabular}{@{}p{32mm}l@{}}
+    {\color{sicblue}\bfseries Date}       & #2 \\[3mm]
+    {\color{sicblue}\bfseries Team Name}  & #3 \\[3mm]
+    {\color{sicblue}\bfseries Members}    & \begin{tabular}[t]{@{}l@{}}#4\end{tabular} \\
+  \end{tabular}
+  \vfill
+  {\color{sicgrey}\scriptsize
+   Layout after the Samsung Innovation Campus Final Report template.
+   \textcopyright\ 2025 Samsung. The template itself is copyright of the
+   Samsung Electronics Corporate Citizenship Office and is not reproduced here.}
+  \end{titlepage}}
+\endinput

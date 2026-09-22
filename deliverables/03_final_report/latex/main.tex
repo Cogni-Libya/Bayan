@@ -1,0 +1,478 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{bayan}
+\input{figures}
+
+\begin{document}
+
+\bayancover
+  {Bayan: An On-Device Arabic Reading Assistant for Readers with Dyslexia}
+  {22 September 2026}
+  {Cogni}
+  {Marwan Elamami (Team Leader)\\ Abdulrahman Khengari\\ Ahmed Alaeb\\
+   Sanad Ali\\ Mohammed Thabet\\ Abdul Majid}
+
+% ------------------------------------------------------------------ abstract
+\begin{center}
+{\color{sicblue}\bfseries\large Abstract}
+\end{center}
+\begin{quote}\small
+Arabic places barriers in front of readers with dyslexia that tools built for
+Latin scripts do not address: short vowels are omitted, clitics attach directly
+to the stem, and clauses chain without sentence-final punctuation. We present
+Bayan, an Android plugin that simplifies Arabic text in place. Selecting text in
+any application offers \ar{تبسيط} (\emph{Simplify}) in the system text-selection
+menu; simplification, diacritization and read-aloud all run on the device, so the
+text never leaves the phone. This report covers the work completed at the
+two-thirds point of a three-week capstone. Our central methodological finding is
+that Arabic simplification corpora contain so many sentences needing no change
+that a model doing nothing scores well: on the SAMER test split, copying the
+input yields SARI 77.5 overall but 56.1 on the rows a human actually simplified.
+Reported against that baseline, our first fine-tuned model gains $+2.8$ SARI
+overall and $+7.5$ where the work is --- and \emph{loses} to the baseline under
+the greedy decoding we ship on-device. We also detect and remove 9.3\% test-set
+contamination in a published Arabic simplification corpus before training on it.
+Every claim below is labelled \measured, \decided\ or \planned.
+\end{quote}
+
+\vspace{2mm}
+
+% ============================================================== 1 Introduction
+\section{Introduction}
+
+\subsection{Background Information}
+
+Dyslexia impairs reading through phonological processing. Modern Standard Arabic
+compounds this in three specific ways.
+
+\textbf{Omitted short vowels.} Written Arabic normally leaves short vowels
+unmarked, so one orthographic form carries several readings: \ar{كتب} is
+\emph{kataba} (he wrote), \emph{kutiba} (it was written) or \emph{kutub} (books).
+The reader resolves this from context --- precisely the process dyslexia impairs.
+
+\textbf{Agglutination.} Arabic is templatic and agglutinative. Conjunctions,
+articles and object pronouns attach directly to the stem, producing long
+unbroken words that crowd the line and resist chunking.
+
+\textbf{Clause chaining.} Prose chains clauses with \ar{و} and \ar{ف} across long
+stretches without sentence-final punctuation, so a single sentence can exceed
+working memory.
+
+Full diacritization is not a complete answer: marking every character adds
+visual clutter of its own. The useful intervention is to simplify first, then
+vocalise. We found no deployed Arabic dyslexia-support software and no large
+open Arabic simplification corpus, which shapes both the product and the data
+work below.
+
+\subsection{Motivation and Objective}
+
+\textbf{Objective.} Let an Arabic reader with dyslexia read difficult text
+independently, wherever they meet it.
+
+\decided The product is an Android plugin registered on the system
+\texttt{PROCESS\_TEXT} intent, so \ar{تبسيط} (\emph{Simplify}) appears in the
+text-selection menu of every application. The reader selects text in a message,
+a news page or a PDF and is helped in place. A standalone application was
+rejected for the opposite reason: it reintroduces the copy-and-paste friction
+the project exists to remove.
+
+\decided Every model runs on the device. The reader's text never leaves the
+phone, the tool works offline, and no hosted service sits on the critical path
+of the final demonstration. \autoref{fig:arch} shows the arrangement.
+
+\begin{figure}[t]
+\centering
+\figarchitecture
+\caption{System architecture. The plugin is entered from the host application's
+text-selection menu and returns a bottom sheet over it. All three models run
+locally through ONNX Runtime Mobile. Diacritics are stripped \emph{before} the
+simplifier and restored after, for the reason measured in
+\autoref{sec:modeling}.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Members and Role Assignments}
+
+\begin{table}[h]
+\small
+\caption{Role assignments.}
+\label{tab:roles}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\textbf{Member} & \textbf{Responsibility} \\
+\midrule
+Marwan Elamami & Team lead; architecture; compression and quantization; integration; human evaluation \\
+Abdulrahman Khengari & Data lead; simplification corpus; readability classifier; annotation guidelines and agreement \\
+Ahmed Alaeb & Model training lead; corpus conversion; training infrastructure \\
+Sanad Ali & Diacritization selection and benchmarking; co-training the simplification models \\
+Mohammed Thabet & Android plugin; on-device inference integration; read-aloud with word highlighting \\
+Abdul Majid & Evaluation lead; test-set design and locking; leakage detection; scoring pipeline \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Schedule and Milestones}
+
+Week~1 (16--20 Sep), complete: data pipeline and validators; readability
+classifier; test-set design; product-form decision; application skeleton.
+Week~2 (21--27 Sep), in progress: corpus generation and review; first and second
+training runs; diacritization benchmark; locked test sets and scoring pipeline;
+Android plugin with on-device inference. Week~3 (28 Sep--4 Oct): architecture
+frozen; int8 quantization with size and latency measured on a real device;
+annotator agreement; full benchmark including human error annotation; human
+evaluation with dyslexic readers. Week~4 (5--6 Oct): submission and pitch.
+
+Work is tracked package by package in the Work Breakdown Structure: 8 phases,
+38 work packages, one named owner each.
+
+% ========================================================= 2 Project Execution
+\section{Project Execution}
+
+\subsection{Data Acquisition}
+
+\autoref{tab:corpora} lists the five sources, all under licences permitting our
+use. SAMER is used under written approval from CAMeL Lab to fine-tune and to
+publish the resulting weights non-commercially; the corpus itself is never
+redistributed.
+
+\begin{table}[h]
+\small
+\caption{Corpora. Counts are usable pairs after filtering.}
+\label{tab:corpora}
+\begin{tabularx}{\textwidth}{@{}lrlX@{}}
+\toprule
+\textbf{Source} & \textbf{Size} & \textbf{Licence} & \textbf{Role} \\
+\midrule
+BAREC \cite{barec}            & 69{,}441 sent. & CC BY-SA 4.0 & source sentences; readability labels \\
+SAMER \cite{samer}            & 14{,}343 pairs & research, non-redistributable & literary simplification pairs \\
+Baseet \cite{baseet}          & 31{,}104 pairs & unlicensed (permission sought) & general domain, three levels \\
+DAASI \cite{daasi}            & 1{,}509 + 350 & CC0 & human-written; out-of-domain test \\
+Bayan corpus (ours)           & in progress    & ours & LLM-generated behind a human gate \\
+Tashkeela \cite{tashkeela}    & --             & open & diacritization validation \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Training Methodology}
+\label{sec:method}
+
+\measured \textbf{Model~1.} AraT5v2-base-1024 \cite{arat5}, 368M parameters,
+fine-tuned on SAMER L5$\rightarrow$L3. Learning rate $10^{-4}$, AdamW with weight
+decay 0.01, 100 warmup steps, effective batch 16, fp16, gradient checkpointing,
+10 epochs over 3{,}250 steps, seed 42. Identity pairs capped at 20\% in training
+and left untouched in dev and test.
+
+Three corrections follow from its measured behaviour and apply to every later
+run.
+
+\begin{enumerate}[leftmargin=*, itemsep=2pt]
+\item \textbf{Select on the changed-reference subset, decoded greedily.}
+Selecting on full-dev SARI pays a model for inaction, because roughly half the
+dev set needs no change; selecting under beam search measures a decoder we do
+not ship.
+\item \textbf{Stop on validation loss, not SARI.} Validation loss bottoms near
+step 2{,}200 while SARI wanders inside noise for a further 1{,}400 steps
+(\autoref{fig:training}) and picked its checkpoint on a 0.18 difference.
+\item \textbf{Train on plain and diacritized copies of every pair.} SAMER
+carries no diacritics at all, and the resulting model degrades badly on
+diacritized input (\autoref{fig:ood}).
+\end{enumerate}
+
+\planned \textbf{Model~2.} The same recipe over a mixed corpus of
+$\approx$107{,}000 pairs across three domains, with level tokens so one model
+offers three simplification strengths plus a leave-unchanged mode. AraBART
+\cite{arabart} (139M) is trained alongside AraT5v2 on identical data; the choice
+between them will be made on measured results, with the smaller model preferred
+at equal quality because it makes on-device decoding affordable.
+
+\subsection{Workflow}
+
+\autoref{fig:pipeline} shows the path from corpus to score. Two gates decide
+what may be trained on: a human review of every LLM-generated pair, and a
+leakage check against the locked test sets. Only the evaluation lead runs the
+locked sets, and only on final models; everyone else tunes on dev.
+
+\begin{figure}[t]
+\centering
+\figpipeline
+\caption{Data and evaluation workflow. The two orange gates are the ones that
+can reject data: human review of generated pairs, and the leakage check that
+removed 9.3\% of one published corpus.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{System Design}
+
+One Android application, two activities, three models.
+\texttt{ProcessTextActivity} registers
+\texttt{android.intent.action.PROCESS\_TEXT} with mime type
+\texttt{text/plain}. A translucent theme lets the result float over the host
+application, which avoids requesting the \texttt{SYSTEM\_ALERT\_WINDOW} overlay
+permission entirely --- a meaningful reduction in what the user must grant.
+Inference runs behind a \texttt{TextSimplifier} interface so the engine can be
+replaced without touching the interface; decoding is greedy and the tokenizer is
+exported inside the ONNX graph, so no Python runtime is needed on the phone.
+
+\decided Size budget: 250\,MB for the simplifier plus $\approx$45\,MB for
+diacritization and read-aloud. Vocabulary-pruned int8 is $\approx$223\,MB and
+fits; int4 ($\approx$112\,MB) is the fallback if load time or memory on a
+mid-range phone proves binding. Models download on first run rather than
+shipping inside the APK.
+
+% ================================================================== 3 Results
+\section{Results}
+
+\subsection{Data Preprocessing}
+
+\textbf{Normalisation for comparison only.} Diacritics and punctuation are
+stripped and alef variants (\ar{أ إ آ}), \ar{ة}/\ar{ه} and \ar{ى}/\ar{ي}
+unified. This is used for leakage detection and scoring alignment, never on
+training text, where the original orthography is preserved.
+
+\textbf{Test sets locked first.} Two splits were locked before any training and
+are never trained on: BAREC test (7{,}286 rows) and SAMER test (3{,}277 rows),
+each recorded by row count and SHA-256 in a committed manifest. Both are the
+official upstream splits, unmodified.
+
+\measured \textbf{Leakage filtering.} Every training file is checked against both
+locked sets for exact matches and near-duplicates, using character 5-gram
+Jaccard overlap at a 0.8 threshold. Matches shorter than five words are reported
+but not counted, because short formulaic fragments recur in any corpus.
+
+\keynote{This check found that \textbf{3{,}190 of Baseet's 34{,}294 rows (9.3\%)}
+overlapped our locked test sets --- 1{,}829 touching SAMER test and 1{,}361
+touching BAREC test. Put the other way, \textbf{1{,}835 of SAMER's 3{,}933
+substantive test sentences (47\%) appear somewhere in that corpus}. Training on
+it unfiltered would have produced inflated scores with no error and nothing to
+notice. The rows were removed and the remainder re-verified clean.}
+
+\subsection{Exploratory Data Analysis}
+
+The corpora differ in ways that turned out to drive model behaviour, so we
+report them rather than assume them.
+
+\textbf{SAMER is literary and short.} Drawn from early twentieth-century novels;
+the test split has median sentence length 6 words, and 17.8\% of rows are three
+words or fewer --- chapter headings and dialogue fragments rather than sentences.
+48.8\% of test rows are identity pairs. It splits \emph{by chapter, not by
+novel}, so all fifteen novels appear in all three splits: its test set is fully
+in-domain and SARI on it reads optimistically. It contains \textbf{no diacritics
+at all}.
+
+\textbf{BAREC duplicates itself.} 311 sentences appear in both its train and
+test splits, and 797 of 7{,}286 test rows are two words or fewer. Both cause
+false alarms in leakage checking and motivate the minimum-length floor. 56\% of
+its sentences carry diacritics.
+
+\textbf{Baseet is closer to the product.} Median source length 14 words, 35.4\%
+diacritized, no identity pairs at any level; its strongest level shortens a
+14-word median source to 9 words. \textbf{DAASI} is government and insurance
+text, median 12 words, 32\% diacritized, no identity pairs.
+
+\subsection{Modeling}
+\label{sec:modeling}
+
+\measured \textbf{The copy baseline comes first.} On a corpus where half the
+sentences need no change, a model that does nothing scores well, so every result
+is reported beside copying the input. On SAMER test the baseline is
+\textbf{SARI 77.5 overall} but \textbf{56.1} on the 1{,}678 rows a human actually
+simplified. The second number is the bar.
+
+\measured \textbf{Model~1.} On SAMER dev: SARI 77.06 overall and 63.66 on changed
+references, against a baseline of 74.25 and 56.21 --- $+2.81$ and $+7.46$. Under
+greedy decoding, which is what the on-device build uses, the same model scores
+\emph{below} the baseline (\autoref{fig:sari}). Beam search accounts for the
+difference; whether to pay its cost on the device is pending a latency
+measurement.
+
+\begin{figure}[h]
+\centering
+\figsari
+\caption{SARI on 300 matched SAMER dev rows, same model, same rows. Reported
+against a copy-the-input baseline, the gain is modest; under the greedy decoder
+we ship, it is negative. Scored with the \texttt{evaluate} SARI implementation
+\cite{sari}, reproduced independently.}
+\label{fig:sari}
+\end{figure}
+
+\measured \textbf{Behavioural findings.} The model copies its input 66.5\% of the
+time against a human rate of 41.2\%, and returns unchanged text on 46.8\% of the
+rows a human simplified. Where it edits, 75.3\% of edits change a single word
+(humans: 53.2\%), and the median prediction-to-source length ratio is
+\textbf{1.000} --- it substitutes vocabulary but never restructures a sentence.
+\autoref{fig:training} shows why: the selection metric flattened while the
+behaviour we care about was still improving.
+
+\begin{figure}[h]
+\centering
+\figtraining
+\caption{Training dynamics for model~1. Copy rate falls monotonically from
+91.4\% and has not converged at the final step, while SARI --- the metric that
+selected the checkpoint --- is flat inside noise after step 1{,}800. Validation
+loss bottoms near step 2{,}200 and then rises.}
+\label{fig:training}
+\end{figure}
+
+\measured \textbf{Out-of-domain collapse.} On diacritized BAREC input, which the
+training data never contained, only 60\% of source words survive into the output
+and 38\% of sentences lose more than half their content to character-level
+corruption; on undiacritized input the figures are 90\% and 3\%
+(\autoref{fig:ood}). This is why diacritization must run \emph{after}
+simplification in \autoref{fig:arch}, never before.
+
+\begin{figure}[h]
+\centering
+\figood
+\caption{Out-of-domain behaviour on 300 BAREC test sentences, greedy decoding.
+The model was trained on SAMER, which contains no diacritics; 56\% of BAREC
+does.}
+\label{fig:ood}
+\end{figure}
+
+\measured \textbf{Meaning errors are not rare.} 832 of the model's substitutions
+disagree with the human reference, 347 of them on words the human deliberately
+left alone. Observed examples include \ar{عزلة} (isolation) $\rightarrow$
+\ar{استعباد} (enslavement) and \ar{ملجم} (bridled) $\rightarrow$ \ar{مسلح}
+(armed). Neither SARI nor BLEU detects this class of error, which is why
+BERTScore \cite{bertscore} and human error annotation are part of the
+evaluation.
+
+\measured \textbf{Diacritization.} Four models were benchmarked on the pinned
+Tashkeela test split (\autoref{tab:diac}). Libtashkeel was selected. CATT is
+statistically tied on accuracy --- the 0.01 point difference is about six
+character positions across 67{,}576 --- but sixteen times larger and six times
+slower. CAMeL Tools was rejected on a stronger ground than accuracy: it altered
+base letters in 32\% of sentences, corrupting text before the simplifier sees
+it.
+
+\begin{table}[h]
+\small
+\caption{Diacritization benchmark, 743 sentences from the pinned Tashkeela/CATT
+test fixture. DER excludes case endings in the second column.}
+\label{tab:diac}
+\begin{tabularx}{\textwidth}{@{}Xrrrrrl@{}}
+\toprule
+\textbf{Model} & \textbf{DER} & \textbf{DER$^{-case}$} & \textbf{WER} &
+\textbf{Base-letter} & \textbf{Size} & \textbf{Licence} \\
+\midrule
+CAMeL Tools MLE \cite{cameltools} & 16.57\% & 13.97\% & 56.73\% & \textbf{32.0\%} & 129\,MB & MIT/GPL \\
+CATT \cite{catt}                  & 8.44\%  & 6.92\%  & 29.40\% & 0.0\% & 77.9\,MB & CC BY-NC \\
+Mishkal \cite{mishkal}            & 12.74\% & 10.12\% & 39.33\% & 0.0\% & 4.3\,MB & GPLv3 \\
+\textbf{Libtashkeel} \cite{libtashkeel} & \textbf{8.43\%} & \textbf{6.91\%} & 29.57\% & 0.0\% & \textbf{4.8\,MB} & MIT \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{User Interface}
+
+Selecting Arabic text in any application shows \ar{تبسيط} in the system menu.
+Choosing it opens a modal bottom sheet over the host application with the
+original text in a muted card and the simplified text below, plus controls for
+read-aloud, copy and settings.
+
+Typography is set for dyslexic reading rather than density: line height 1.6,
+additional line spacing 10\,sp, letter spacing 0.04, and right-to-left text left
+\emph{unjustified}, because justification in Arabic stretches words and opens
+uneven rivers of space. Selection behaviour was verified across Chrome,
+WhatsApp, Google Keep, Gmail and PDF readers.
+
+\subsection{Testing and Improvements}
+
+41 unit and Robolectric tests cover intent extraction, empty-input handling,
+view binding and the typography attributes. The leakage checker is tested
+against a deliberately planted duplicate and must exit non-zero. Running the
+scoring script end to end on real data --- rather than only on fixtures ---
+exposed a bug that placed every BAREC row in the unchanged-reference bucket
+instead of a separate no-reference bucket, since BAREC has no gold
+simplifications at all.
+
+Improvements already made as a result of measurement: the copy baseline is
+reported beside every score; checkpoint selection moved to the
+changed-reference subset under greedy decoding; diacritics are stripped before
+the simplifier; and 9.3\% of a published corpus was removed before it could
+contaminate our results.
+
+% ========================================================== 4 Projected Impact
+\section{Projected Impact}
+
+\subsection{Accomplishments and Benefits}
+
+\measured To date: a copy-the-input baseline on two locked test sets; a first
+model trained and scored against it with its failure modes characterised; a
+four-model diacritization benchmark; and 9.3\% test-set contamination detected
+and removed from a published corpus before training.
+
+\textbf{Built:} a working Android plugin shell on the \texttt{PROCESS\_TEXT}
+intent; a locked and hashed test-set manifest; a reusable leakage checker; and a
+scoring pipeline that reports a copy baseline beside every metric.
+
+\textbf{Benefits.} Reading independence at the moment and place the difficulty
+occurs, rather than in a separate application. Support for students, teachers
+and schools, and for readers with low literacy and learners of Arabic.
+Everything runs on the device, so the tool works offline and the reader's text
+stays private.
+
+\textbf{For the field:} an Arabic simplification corpus, an evaluation benchmark
+with human-written references, and a leakage-detection tool, none of which
+existed in openly reusable form.
+
+\subsection{Future Improvements}
+
+\planned Before submission: complete the mixed-corpus runs and choose between
+AraT5v2 and AraBART on measured results; quantize the winner and measure size
+and latency on a real phone; run the human evaluation with Arabic readers who
+have dyslexia; report annotator agreement.
+
+\textbf{Known limitations.} The current model substitutes vocabulary but does
+not restructure sentences, and clause splitting is arguably the larger part of
+the problem for dyslexic readers. Automatic metrics do not detect
+meaning-altering substitutions, so human annotation remains necessary.
+On-device latency is not yet measured, so the choice between greedy and beam
+decoding is open.
+
+\textbf{Beyond the capstone.} Fine-tune the diacritizer on simplified output
+rather than using it unchanged; add read-aloud with word-level timing; and
+extend the corpus beyond the three domains currently covered.
+
+% ====================================================== 5 Team Member Review
+\section{Team Member Review and Comment}
+
+Each member writes their own review before submission.
+
+\begin{table}[h]
+\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\textbf{Name} & \textbf{Review and comment} \\
+\midrule
+Marwan Elamami & \\[5mm]
+Abdulrahman Khengari & \\[5mm]
+Ahmed Alaeb & \\[5mm]
+Sanad Ali & \\[5mm]
+Mohammed Thabet & \\[5mm]
+Abdul Majid & \\[5mm]
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% refs.bib holds the same entries in BibTeX form for reuse elsewhere. The
+% document carries them inline so it builds with tectonic alone -- neither
+% biber nor bibtex is required.
+\begin{thebibliography}{99}
+\small
+\bibitem{barec} CAMeL Lab. \emph{BAREC: Balanced Arabic Readability Evaluation Corpus}, 2025. 69,441 sentences with 19-level readability labels, CC BY-SA 4.0.
+\bibitem{samer} B.~Alhafni, M.~Al Khalil and N.~Habash. The SAMER Arabic Text Simplification Corpus. \emph{LREC-COLING}, 2024.
+\bibitem{baseet} Baseet: A Multi-Level Dataset and Hybrid Framework for Arabic Text Simplification. University of Jeddah graduation project. \url{https://github.com/raya-y/Baseet}
+\bibitem{daasi} DAASI: Arabic simplification pairs for government and insurance text. CC0; 1,509 pairs and a 350-pair held-out split.
+\bibitem{tashkeela} T.~Zerrouki and A.~Balla. Tashkeela: Novel corpus of Arabic vocalized texts. \emph{Data in Brief}, 2017.
+\bibitem{arat5} E.~M.~B. Nagoudi, A.~Elmadany and M.~Abdul-Mageed. AraT5: Text-to-Text Transformers for Arabic Language Generation. \emph{ACL}, 2022.
+\bibitem{arabart} M.~K. Eddine, N.~Tomeh, N.~Habash, J.~Le Roux and M.~Vazirgiannis. AraBART: a Pretrained Arabic Sequence-to-Sequence Model for Abstractive Summarization. \emph{WANLP}, 2022.
+\bibitem{sari} W.~Xu, C.~Napoles, E.~Pavlick, Q.~Chen and C.~Callison-Burch. Optimizing Statistical Machine Translation for Text Simplification. \emph{TACL}, 4:401--415, 2016.
+\bibitem{bertscore} T.~Zhang, V.~Kishore, F.~Wu, K.~Q. Weinberger and Y.~Artzi. BERTScore: Evaluating Text Generation with BERT. \emph{ICLR}, 2020.
+\bibitem{cameltools} O.~Obeid et al. CAMeL Tools: An Open Source Python Toolkit for Arabic Natural Language Processing. \emph{LREC}, 2020.
+\bibitem{catt} abjadai. CATT: Character-based Arabic Tashkeel Transformer, 2024. \url{https://github.com/abjadai/catt} (fixture pinned at commit 8d5330499feb).
+\bibitem{mishkal} T.~Zerrouki. Mishkal: Arabic text vocalization software. \url{https://github.com/linuxscout/mishkal}
+\bibitem{libtashkeel} Libtashkeel: an ONNX Arabic diacritization model. MIT licence, 4.79\,MB; evaluated through the \texttt{text2tashkeel} wrapper.
+\end{thebibliography}
+
+
+\end{document}

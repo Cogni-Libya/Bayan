@@ -1,0 +1,132 @@
+% References for the Bayan final report.
+%
+% Entries marked VERIFY below were written from memory and must be checked
+% against the published record before submission. Resources that have no
+% associated paper are given as @misc with their URL rather than dressed up
+% as publications.
+
+@article{sari,
+  author  = {Xu, Wei and Napoles, Courtney and Pavlick, Ellie and Chen, Quanze
+             and Callison-Burch, Chris},
+  title   = {Optimizing Statistical Machine Translation for Text Simplification},
+  journal = {Transactions of the Association for Computational Linguistics},
+  volume  = {4},
+  pages   = {401--415},
+  year    = {2016},
+  note    = {Defines SARI, the metric used throughout this report.}
+}
+
+@inproceedings{bertscore,
+  author    = {Zhang, Tianyi and Kishore, Varsha and Wu, Felix and
+               Weinberger, Kilian Q. and Artzi, Yoav},
+  title     = {{BERTScore}: Evaluating Text Generation with {BERT}},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2020}
+}
+
+@inproceedings{arat5,
+  author    = {Nagoudi, El Moatez Billah and Elmadany, AbdelRahim and
+               Abdul-Mageed, Muhammad},
+  title     = {{AraT5}: Text-to-Text Transformers for {A}rabic Language Generation},
+  booktitle = {Proceedings of the 60th Annual Meeting of the Association for
+               Computational Linguistics},
+  year      = {2022},
+  note      = {VERIFY volume and pages.}
+}
+
+@inproceedings{arabart,
+  author    = {Eddine, Moussa Kamal and Tomeh, Nadi and Habash, Nizar and
+               Le Roux, Joseph and Vazirgiannis, Michalis},
+  title     = {{AraBART}: a Pretrained {A}rabic Sequence-to-Sequence Model for
+               Abstractive Summarization},
+  booktitle = {Proceedings of the Seventh Arabic Natural Language Processing
+               Workshop (WANLP)},
+  year      = {2022},
+  note      = {VERIFY pages.}
+}
+
+@inproceedings{samer,
+  author    = {Alhafni, Bashar and Al Khalil, Muhamed and Habash, Nizar},
+  title     = {The {SAMER} {A}rabic Text Simplification Corpus},
+  booktitle = {Proceedings of LREC-COLING},
+  year      = {2024},
+  note      = {VERIFY author order, venue and pages. Used under written
+               permission from CAMeL Lab to fine-tune and publish weights
+               non-commercially; the corpus is not redistributed.}
+}
+
+@inproceedings{cameltools,
+  author    = {Obeid, Ossama and Zalmout, Nasser and Khalifa, Salam and
+               Taji, Dima and Oudah, Mai and Alhafni, Bashar and
+               Inoue, Go and Eryani, Fadhl and Erdmann, Alexander and
+               Habash, Nizar},
+  title     = {{CAMeL} Tools: An Open Source {P}ython Toolkit for {A}rabic
+               Natural Language Processing},
+  booktitle = {Proceedings of the Twelfth Language Resources and Evaluation
+               Conference (LREC)},
+  year      = {2020},
+  note      = {VERIFY pages.}
+}
+
+@article{tashkeela,
+  author  = {Zerrouki, Taha and Balla, Amar},
+  title   = {Tashkeela: Novel corpus of {A}rabic vocalized texts, data for
+             auto-diacritization systems},
+  journal = {Data in Brief},
+  year    = {2017},
+  note    = {VERIFY volume and pages.}
+}
+
+% ---------------------------------------------------------------- resources --
+% No associated publication; cited as software or data.
+
+@misc{barec,
+  title        = {{BAREC}: Balanced {A}rabic Readability Evaluation Corpus},
+  author       = {{CAMeL Lab}},
+  year         = {2025},
+  howpublished = {Shared task dataset, 69{,}441 sentences with 19-level
+                  readability labels, CC BY-SA 4.0},
+  note         = {VERIFY citation form and authorship.}
+}
+
+@misc{baseet,
+  title        = {Baseet: A Multi-Level Dataset and Hybrid Framework for
+                  {A}rabic Text Simplification},
+  author       = {{University of Jeddah graduation project}},
+  year         = {2025},
+  howpublished = {\url{https://github.com/raya-y/Baseet}},
+  note         = {No licence file at time of use; permission sought before
+                  training. 9.3\% of its rows overlap our locked test sets and
+                  were removed.}
+}
+
+@misc{daasi,
+  title        = {{DAASI}: Arabic simplification pairs for government and
+                  insurance text},
+  year         = {2025},
+  howpublished = {CC0 dataset, 1{,}509 pairs plus a 350-pair held-out split},
+  note         = {VERIFY canonical citation.}
+}
+
+@misc{libtashkeel,
+  title        = {Libtashkeel: an {ONNX} {A}rabic diacritization model},
+  year         = {2024},
+  howpublished = {MIT licence, 4.79\,MB; evaluated here through the
+                  \texttt{text2tashkeel} wrapper},
+  note         = {VERIFY canonical repository URL.}
+}
+
+@misc{catt,
+  title        = {{CATT}: Character-based {A}rabic Tashkeel Transformer},
+  author       = {{abjadai}},
+  year         = {2024},
+  howpublished = {\url{https://github.com/abjadai/catt}},
+  note         = {Benchmark fixture pinned at commit 8d5330499feb.}
+}
+
+@misc{mishkal,
+  title        = {Mishkal: {A}rabic text vocalization software},
+  author       = {Zerrouki, Taha},
+  howpublished = {\url{https://github.com/linuxscout/mishkal}},
+  year         = {2020}
+}

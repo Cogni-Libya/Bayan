@@ -1,0 +1,164 @@
+% Figures for the Bayan final report. Every number plotted here is measured;
+% the source of each series is named in its caption.
+
+% ---------------------------------------------------------------- Figure 1 --
+% Where the product sits: the plugin runs inside whatever app the reader is
+% already using, and every model stays on the device.
+\newcommand{\figarchitecture}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  box/.style={draw=sicblue, line width=0.7pt, rounded corners=2pt,
+              fill=white, minimum height=9mm, inner xsep=5pt, align=center},
+  model/.style={box, fill=sicpale},
+  flow/.style={-{Stealth[length=4pt]}, draw=sicbody, line width=0.6pt}]
+
+  % top row: what the reader sees
+  \node[box, minimum width=31mm] (host) {Any app\\{\scriptsize message, news, PDF}};
+  \node[box, right=11mm of host, minimum width=33mm] (intent)
+       {\texttt{PROCESS\_TEXT}\\{\scriptsize menu entry \ar{تبسيط}}};
+  \node[box, right=11mm of intent, minimum width=31mm] (sheet)
+       {Bottom sheet\\{\scriptsize original + simplified}};
+  \draw[flow] (host) -- (intent);
+  \draw[flow] (intent) -- (sheet);
+
+  % bottom row: what runs locally, set clear of the label strip above it
+  \node[model, below=26mm of host.west, anchor=west, minimum width=26mm]
+       (strip) {strip diacritics};
+  \node[model, right=5mm of strip, minimum width=29mm] (simp)
+       {simplifier\\{\scriptsize AraT5v2 / AraBART}};
+  \node[model, right=5mm of simp, minimum width=25mm] (diac)
+       {diacritizer\\{\scriptsize Libtashkeel}};
+  \node[model, right=5mm of diac, minimum width=22mm] (tts)
+       {read-aloud\\{\scriptsize word timings}};
+  \draw[flow] (strip) -- (simp);
+  \draw[flow] (simp) -- (diac);
+  \draw[flow] (diac) -- (tts);
+
+  \begin{scope}[on background layer]
+    \node[draw=sicgrey, dashed, line width=0.7pt, rounded corners=3pt,
+          inner xsep=7pt, inner ysep=6pt, fit=(strip)(simp)(diac)(tts)] (dev) {};
+  \end{scope}
+  \node[anchor=south west, font=\scriptsize\itshape, text=sicgrey]
+       at ([yshift=2pt]dev.north west) {on device --- ONNX Runtime Mobile, no network};
+
+  \draw[flow] (intent.south) -- ++(0,-7mm) -| (strip.north);
+  \draw[flow] (tts.north) -- ++(0,7mm) -| (sheet.south);
+\end{tikzpicture}}
+
+\newcommand{\figpipeline}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  stage/.style={draw=sicblue, line width=0.7pt, rounded corners=2pt, fill=white,
+                minimum height=9mm, minimum width=33mm, align=center, inner xsep=4pt},
+  gate/.style={draw=sicwarm, line width=0.9pt, fill=sicpale, rounded corners=2pt,
+               minimum height=9mm, minimum width=33mm, align=center, inner xsep=4pt},
+  locked/.style={draw=sicgrey, line width=0.7pt, dashed, rounded corners=2pt,
+                 minimum height=9mm, minimum width=29mm, align=center},
+  flow/.style={-{Stealth[length=4pt]}, draw=sicbody, line width=0.6pt}]
+
+  \node[stage] (src) {source corpora\\{\scriptsize BAREC, SAMER, Baseet, DAASI}};
+  \node[gate,  below=10mm of src]   (leak)  {leakage check};
+  \node[stage, below=10mm of leak]  (mix)   {training mix\\{\scriptsize $\approx$107k pairs}};
+  \node[stage, below=10mm of mix]   (train) {fine-tuning\\{\scriptsize level tokens}};
+  \node[stage, below=10mm of train] (eval)  {scoring\\{\scriptsize vs.\ copy baseline}};
+
+  \draw[flow] (src)   -- (leak);
+  \draw[flow] (leak)  -- node[right, font=\scriptsize, text=sicwarm, xshift=2pt] {clean only} (mix);
+  \draw[flow] (mix)   -- (train);
+  \draw[flow] (train) -- (eval);
+
+  \node[locked, left=30mm of leak] (test)
+       {locked test sets\\{\scriptsize SHA-256 manifest}};
+  \draw[flow] (test) -- (leak);
+  \draw[flow] (test.south) |- (eval.west);
+
+  \node[stage, right=30mm of src]  (gen) {LLM generation};
+  \node[gate,  right=30mm of leak] (judge)
+       {judge + classifier\\{\scriptsize + human review}};
+  \draw[flow] (gen) -- (judge);
+  \draw[flow] (judge) |- (mix.east);
+\end{tikzpicture}}
+
+% ---------------------------------------------------------------- Figure 3 --
+% The disagreement that drove the recipe change: SARI flattens while copy rate
+% is still falling, and validation loss has already turned.
+\newcommand{\figtraining}{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth, height=58mm, font=\footnotesize,
+  xlabel={training step}, ylabel={copy rate (\%)},
+  xmin=100, xmax=3350, ymin=58, ymax=95,
+  axis y line*=left, axis x line*=bottom,
+  legend style={at={(0.98,0.98)}, anchor=north east, draw=sicgrey,
+                font=\scriptsize, fill=white},
+  grid=major, grid style={sicpale}]
+  \addplot[sicwarm, line width=1pt, mark=*, mark size=1.1pt] coordinates {
+    (200,91.4)(400,90.2)(600,88.2)(800,85.6)(1000,77.8)(1200,75.2)(1400,68.8)
+    (1600,71.8)(1800,70.2)(2000,69.0)(2200,68.6)(2400,67.6)(2600,66.8)
+    (2800,63.6)(3000,65.2)(3200,64.8)(3250,64.8)};
+  \addlegendentry{copy rate}
+  \addplot[sicgrey, dashed, line width=0.8pt] coordinates {(100,41.2)(3350,41.2)};
+  \addlegendentry{human rate 41.2\%}
+\end{axis}
+\begin{axis}[
+  width=0.92\textwidth, height=58mm, font=\footnotesize,
+  xmin=100, xmax=3350, ymin=71, ymax=77.5,
+  axis y line*=right, axis x line=none, ylabel={SARI (500-row dev subset)},
+  legend style={at={(0.98,0.70)}, anchor=north east, draw=sicgrey,
+                font=\scriptsize, fill=white}]
+  \addplot[sicblue, line width=1pt, mark=square*, mark size=1.1pt] coordinates {
+    (200,72.35)(400,73.69)(600,73.99)(800,74.13)(1000,73.75)(1200,74.17)
+    (1400,74.34)(1600,74.87)(1800,75.27)(2000,74.90)(2200,75.29)(2400,75.14)
+    (2600,75.61)(2800,75.42)(3000,75.74)(3200,75.56)(3250,75.56)};
+  \addlegendentry{SARI}
+  \draw[sicgrey, line width=0.6pt, dotted] (axis cs:2200,71) -- (axis cs:2200,77.5);
+  \node[font=\scriptsize, text=sicgrey, anchor=south west]
+    at (axis cs:2230,71.1) {validation loss bottoms here};
+\end{axis}
+\end{tikzpicture}}
+
+% ---------------------------------------------------------------- Figure 4 --
+% The comparison the reported numbers were missing.
+\newcommand{\figsari}{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth, height=52mm, font=\footnotesize,
+  ybar, bar width=11pt, ymin=0, ymax=80,
+  ylabel={SARI}, symbolic x coords={all rows, changed rows},
+  xtick=data, enlarge x limits=0.45,
+  nodes near coords, nodes near coords style={font=\tiny, /pgf/number format/fixed,
+    /pgf/number format/precision=2},
+  legend style={at={(0.5,-0.18)}, anchor=north, legend columns=3,
+                draw=sicgrey, font=\scriptsize},
+  grid=major, grid style={sicpale}, axis x line*=bottom, axis y line*=left]
+  \addplot[draw=sicgrey, fill=sicgrey!45] coordinates {(all rows,68.92) (changed rows,56.83)};
+  \addlegendentry{copy the input}
+  \addplot[draw=sicblue, fill=sicblue!70] coordinates {(all rows,71.54) (changed rows,61.84)};
+  \addlegendentry{model, beam search}
+  \addplot[draw=sicwarm, fill=sicwarm!70] coordinates {(all rows,62.09) (changed rows,54.60)};
+  \addlegendentry{model, greedy (shipped)}
+\end{axis}
+\end{tikzpicture}}
+
+% ---------------------------------------------------------------- Figure 5 --
+% Out-of-domain failure, and its cause.
+\newcommand{\figood}{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth, height=44mm, font=\footnotesize,
+  xbar, bar width=11pt, xmin=0, xmax=100,
+  xlabel={per cent},
+  symbolic y coords={{rows losing $>$half the sentence}, {source words surviving}},
+  ytick=data, enlarge y limits=0.6,
+  nodes near coords, nodes near coords style={font=\tiny},
+  legend style={at={(0.5,-0.32)}, anchor=north, legend columns=2,
+                draw=sicgrey, font=\scriptsize},
+  grid=major, grid style={sicpale}, axis x line*=bottom, axis y line*=left]
+  \addplot[draw=sicblue, fill=sicblue!70] coordinates {
+    (90,{source words surviving}) (3,{rows losing $>$half the sentence})};
+  \addlegendentry{undiacritized input}
+  \addplot[draw=sicwarm, fill=sicwarm!70] coordinates {
+    (60,{source words surviving}) (38,{rows losing $>$half the sentence})};
+  \addlegendentry{diacritized input}
+\end{axis}
+\end{tikzpicture}}
