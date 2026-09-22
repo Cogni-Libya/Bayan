@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">بيان</string>
+    <string name="process_text_label">تبسيط</string>
+    <string name="app_subtitle">تبسيط النصوص العربية لدعم القراء ذوي عسر القراءة وتيسير الفهم القرائي</string>
+
+    <!-- Model Status Card -->
+    <string name="model_status_title">حالة نموذج الذكاء الاصطناعي</string>
+    <string name="model_status_name">AraT5v2-base-1024 int8 ~164MB</string>
+    <string name="model_status_ready">جاهز للاختبار (محرك تجريبي — جاهز لدمج نموذج AraT5 ONNX)</string>
+    <string name="model_status_specs">حجم النموذج: ~164 ميجابايت (يعمل محلياً على المعالج دون إنترنت)</string>
+
+    <!-- Interactive Sandbox -->
+    <string name="sandbox_title">تجربة التبسيط المباشر</string>
+    <string name="input_hint">الصق أو اكتب النص العربي هنا لتجريبه...</string>
+    <string name="btn_paste">لصق من الحافظة</string>
+    <string name="btn_simplify">تبسيط النص</string>
+    <string name="empty_text_warning">يرجى إدخال نص أولاً للتبسيط</string>
+    <string name="clipboard_empty_warning">الحافظة فارغة أو لا تحتوي على نص</string>
+
+    <!-- Instructions -->
+    <string name="instructions_title">كيفية استخدام بيان في التطبيقات الأخرى:</string>
+    <string name="instruction_step_1">1. حدد أي نص عربي في أي تطبيق (المتصفح، واتساب، الملاحظات).</string>
+    <string name="instruction_step_2">2. اختر «تبسيط» من قائمة الخيارات العائمة.</string>
+    <string name="instruction_step_3">3. اقرأ النص المبسط والواضح مباشرة داخل النافذة السفلية.</string>
+
+    <!-- Bottom Sheet Strings -->
+    <string name="sheet_header_title">تبسيط بيان</string>
+    <string name="original_text_title">النص الأصلي</string>
+    <string name="simplified_text_title">النص المبسط للقراءة الميسرة</string>
+    <string name="action_listen">▶ استمع</string>
+    <string name="action_copy">⧉ نسخ</string>
+    <string name="action_settings">⚙ إعدادات</string>
+    <string name="action_disabled_notice">الميزات الصوتية والنسخ المتقدم قيد التطوير</string>
+</resources>
+

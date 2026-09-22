@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Padding & Margins -->
+    <dimen name="spacing_tiny">4dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">16dp</dimen>
+    <dimen name="spacing_large">20dp</dimen>
+    <dimen name="spacing_xlarge">24dp</dimen>
+
+    <!-- Corner Radii -->
+    <dimen name="corner_radius_card">16dp</dimen>
+    <dimen name="corner_radius_input">12dp</dimen>
+    <dimen name="corner_radius_sheet">24dp</dimen>
+
+    <!-- Typography Dimensions -->
+    <dimen name="text_size_app_title">28sp</dimen>
+    <dimen name="text_size_header">18sp</dimen>
+    <dimen name="text_size_body_dyslexia">20sp</dimen>
+    <dimen name="text_size_original_muted">13sp</dimen>
+    <dimen name="text_size_caption">11sp</dimen>
+
+    <!-- Dyslexia Line Spacing Extra -->
+    <dimen name="dyslexia_line_spacing_extra">10sp</dimen>
+
+    <!-- Drag Handle -->
+    <dimen name="drag_handle_width">36dp</dimen>
+    <dimen name="drag_handle_height">4dp</dimen>
+</resources>
+
