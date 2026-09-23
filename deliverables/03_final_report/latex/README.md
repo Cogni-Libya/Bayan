@@ -1,32 +1,51 @@
 # Bayan final report — LaTeX source
 
-Builds with **tectonic** alone; no TeX Live installation, no `biber`, no
-`bibtex`. Tectonic fetches the packages it needs on first run.
+The SIC AI Capstone **Final Report template**, rebuilt in LaTeX: the template's
+own cover page, its fonts (SamsungOne, Samsung Sharp Sans), its A4 margins,
+blue section banners, "Content" page, grid tables with the pale-blue header row,
+the team-review and instructor-score tables, and the `Page N / M` footer. Every
+measurement is taken from the template's `document.xml`; see the header of
+`bayan.sty`.
+
+## Build
 
 ```sh
+# once: pull the fonts and the cover page out of the template
+python extract_template_assets.py "path/to/SIC_AI_Capstone Project_Final Report.docx"
+
+# whenever the evaluation is re-run: regenerate every reported number
+python make_results.py eval
+
 tectonic -X compile main.tex        # -> main.pdf
 ```
 
+Builds with **tectonic** alone (no TeX Live, no biber). Without `fonts/` the
+report falls back to Liberation Sans; `fonts/` is gitignored because Samsung's
+fonts are not ours to publish.
+
 | File | What it holds |
 |---|---|
-| `main.tex` | the report: sections, prose, tables, inline bibliography |
-| `bayan.sty` | house style — SIC palette, blue section banners, cover, evidence labels |
-| `figures.tex` | the five figures (TikZ diagrams and pgfplots charts) |
-| `refs.bib` | the same references in BibTeX form, for reuse elsewhere |
+| `main.tex` | the report, in the template's six sections |
+| `bayan.sty` | the template's layout and styles |
+| `figures.tex` | timeline, architecture, workflow, EDA, training and UI figures (TikZ/pgfplots) |
+| `results.tex` | **generated** by `make_results.py` — test-set tables, SARI and behaviour charts, and every number quoted from them |
+| `make_results.py` | reads `score.py` outputs and behaviour statistics, writes `results.tex` |
+| `extract_template_assets.py` | de-obfuscates the template's embedded fonts; renders its cover page to `assets/sic_cover.pdf` |
+| `eval/` | the numbers behind `results.tex`: `score.py` outputs, behaviour statistics, and the scripts that produced them (no corpus text) |
+| `refs.bib` | the references in BibTeX form, checked against Crossref; the report carries them inline |
 
-## Notes
+## The evaluation behind `results.tex`
 
-**Fonts.** SamsungOne is not redistributable and is not installed here, so
-Liberation Sans stands in for it; both are humanist sans faces at similar
-widths. Swap `\setmainfont` in `bayan.sty` on a machine that has SamsungOne.
-Arabic is set in PakType Naskh Basic — Noto's Arabic faces are *variable*
-fonts, which XeTeX cannot load.
+Model 1 (`Congi-libya/samer-arat5v2-base-simplification`) was run once on the
+locked SAMER and BAREC test sets (hashes checked against
+`data/test_manifest.json`) and on DAASI's 350-pair held-out split:
 
-**Bibliography.** Carried inline as `thebibliography` so the document builds
-with tectonic alone. `refs.bib` holds the same entries for anyone who wants
-them; several are marked `VERIFY` and must be checked against the published
-record before submission.
-
-**Evidence labels.** `\measured`, `\decided` and `\planned` mark every claim.
-The label is part of the argument, not decoration — see the Action Plan for
-the same convention.
+- **Input prefix `بسّط: `** on every source — the model was trained with it
+  (`model_traning.ipynb`, cell 10). `scripts/evaluation/predict.py` does not add
+  it yet; without it the model scores twelve SARI points lower.
+- Greedy decoding (what the phone runs), plus beam 4 on SAMER for comparison.
+- BAREC and DAASI: tashkeel stripped from the source before the model sees it,
+  as the application does; BAREC was also run raw, for comparison.
+- Scored with `scripts/evaluation/score.py`, with its models moved to the GPU
+  and repeated strings cached; output verified identical to the unmodified
+  script on a sample.

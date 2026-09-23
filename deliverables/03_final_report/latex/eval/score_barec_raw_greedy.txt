@@ -1,0 +1,42 @@
+SARI implementation: huggingface/evaluate (sari, wraps EASSE-style SARI)
+Loaded 7286 rows (0 changed references, 0 unchanged references, 7286 no references)
+
+========== MODEL ==========
+
+--- Overall (n=7286) ---
+Copy rate:        0.375
+SARI, BLEU:       not scored (no reference simplifications)
+BERTScore:        0.905
+Readability drop: -0.449
+
+--- Changed references (n=0) ---
+(no rows)
+
+--- Unchanged references (n=0) ---
+(no rows)
+
+--- No references (n=7286) ---
+Copy rate:        0.375
+SARI, BLEU:       not scored (no reference simplifications)
+BERTScore:        0.905
+Readability drop: -0.449
+
+========== COPY BASELINE ==========
+
+--- Overall (n=7286) ---
+Copy rate:        1.000
+SARI, BLEU:       not scored (no reference simplifications)
+BERTScore:        1.000
+Readability drop: 0.000
+
+--- Changed references (n=0) ---
+(no rows)
+
+--- Unchanged references (n=0) ---
+(no rows)
+
+--- No references (n=7286) ---
+Copy rate:        1.000
+SARI, BLEU:       not scored (no reference simplifications)
+BERTScore:        1.000
+Readability drop: 0.000

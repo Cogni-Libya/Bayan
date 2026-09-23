@@ -1,124 +1,164 @@
-% bayan.sty -- house style for the Bayan final report.
+% bayan.sty -- the SIC AI Capstone Final Report template, rebuilt in LaTeX.
 %
-% Reproduces the visual language of the Samsung Innovation Campus template
-% (blue section banners, accent subsection headings, body colour, cover
-% layout) without copying the template file itself, which is copyrighted.
-%
-% SamsungOne is not redistributable and is not installed here, so Liberation
-% Sans stands in for it: both are humanist sans faces at similar widths.
-% Swap the \setmainfont below if SamsungOne is available on the build machine.
-\ProvidesPackage{bayan}[2026/09/22 Bayan final report style]
+% Every measurement below is taken from the template's own document.xml:
+%   page      A4; margins top 1701tw, left/right/bottom 1440tw
+%   banner    fill 193DB0, SamsungOne-700 14pt white, text inset 142tw
+%   headings  SamsungOne-400 11pt black, inset 427tw -- the body inset too
+%   contents  "Content" in Samsung Sharp Sans 24pt 193DB0; entries 12pt/11pt
+%   tables    header fill DEE5FA, rules BFBFBF 0.5pt, SamsungOne-700 12pt
+%   footer    "Page N / M", right-aligned, inset 400tw
+% The cover is the template's page 1 itself (assets/sic_cover.pdf); fonts come
+% from the template via extract_template_assets.py and fall back to Liberation
+% Sans when absent.
+\ProvidesPackage{bayan}[2026/09/23 SIC final report template]
 
 \RequirePackage{fontspec}
 \RequirePackage{polyglossia}
-\RequirePackage[dvipsnames,table]{xcolor}
+\RequirePackage[table]{xcolor}
 \RequirePackage[explicit]{titlesec}
+\RequirePackage{titletoc}
 \RequirePackage{geometry}
 \RequirePackage{fancyhdr}
-\RequirePackage{booktabs}
+\RequirePackage{lastpage}
+\RequirePackage{array}
 \RequirePackage{tabularx}
+\RequirePackage{makecell}
 \RequirePackage{caption}
 \RequirePackage{graphicx}
+\RequirePackage{pdfpages}
+\RequirePackage{changepage}
 \RequirePackage{tikz}
 \RequirePackage{pgfplots}
 \RequirePackage{enumitem}
 \RequirePackage[hidelinks]{hyperref}
 
-\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc, shapes.geometric}
-\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc, shapes.geometric, shadows, matrix}
+\pgfplotsset{compat=1.18, /pgf/number format/assume math mode=true,
+  every axis/.append style={/pgf/number format/1000 sep={,}}}
 
 % ---------------------------------------------------------------- palette --
-\definecolor{sicblue}{HTML}{193DB0}   % template accent
-\definecolor{sicbody}{HTML}{1A1A1A}   % template body text
-\definecolor{sicgrey}{HTML}{A6A6A6}   % template separator grey
-\definecolor{sicpale}{HTML}{EEF2FC}   % tint for table banding and figure fills
-\definecolor{sicwarm}{HTML}{C2410C}   % single contrast hue, used sparingly
+\definecolor{sicblue}{HTML}{193DB0}   % banners, "Content", table categories
+\definecolor{sichead}{HTML}{DEE5FA}   % table header fill
+\definecolor{sicrule}{HTML}{BFBFBF}   % table rules, placeholder text
+\definecolor{sicbody}{HTML}{000000}   % body text
+% Two figure hues beyond the template's own, used only inside charts.
+\definecolor{figgrey}{HTML}{8C8C8C}
+\definecolor{figwarm}{HTML}{C2410C}
+\definecolor{figpale}{HTML}{EEF2FC}
 
 % ------------------------------------------------------------------ fonts --
 \setmainlanguage{english}
 \setotherlanguage{arabic}
 \newfontfamily\arabicfont[Script=Arabic,
   Path=/usr/share/fonts/paktype-naskh-basic-fonts/, Extension=.ttf]{PakTypeNaskhBasic}
-\setmainfont[Path=/usr/share/fonts/liberation-sans-fonts/, Extension=.ttf,
-  BoldFont=LiberationSans-Bold, ItalicFont=LiberationSans-Italic,
-  BoldItalicFont=LiberationSans-BoldItalic]{LiberationSans-Regular}
-\setmonofont[Path=/usr/share/fonts/liberation-mono-fonts/, Extension=.ttf,
-  BoldFont=LiberationMono-Bold]{LiberationMono-Regular}
-
-% Short inline Arabic, e.g. the menu entry \ar{تبسيط}.
 \newcommand{\ar}[1]{\textarabic{#1}}
 
-\color{sicbody}
-\geometry{a4paper, top=25mm, bottom=24mm, left=24mm, right=24mm}
+\IfFileExists{fonts/SamsungOne-400.ttf}{%
+  \setmainfont[Path=fonts/, Extension=.ttf, BoldFont=SamsungOne-700,
+    ItalicFont=SamsungOne-400, ItalicFeatures={FakeSlant=0.18}]{SamsungOne-400}
+  \newfontfamily\sicsharp[Path=fonts/, Extension=.ttf]{SamsungSharpSans-Bold}
+}{%
+  \setmainfont[Path=/usr/share/fonts/liberation-sans-fonts/, Extension=.ttf,
+    BoldFont=LiberationSans-Bold, ItalicFont=LiberationSans-Italic,
+    BoldItalicFont=LiberationSans-BoldItalic]{LiberationSans-Regular}
+  \newcommand{\sicsharp}{\bfseries}
+}
+\setmonofont[Path=/usr/share/fonts/liberation-mono-fonts/, Extension=.ttf,
+  BoldFont=LiberationMono-Bold, Scale=0.88]{LiberationMono-Regular}
 
-% --------------------------------------------------------------- headings --
-% Level 1 mirrors the template's filled blue banner; level 2 its accent text.
-\titleformat{\section}
-  {\normalfont\bfseries\color{white}}
-  {}{0pt}
-  {\colorbox{sicblue}{\parbox{\dimexpr\textwidth-2\fboxsep\relax}%
-     {\vspace{2pt}\large\thesection.\hspace{0.5em}#1\vspace{2pt}}}}
-\titlespacing*{\section}{0pt}{16pt plus 2pt minus 2pt}{9pt}
+% ------------------------------------------------------------------- page --
+% The body is inset 427tw (7.5mm) from the banner edge, so the text block
+% starts there and the banners, contents and review tables reach back out.
+\newlength{\sicinset}\setlength{\sicinset}{7.5mm}
+\geometry{a4paper, top=30mm, bottom=25.4mm, right=25.4mm,
+          left=\dimexpr25.4mm+\sicinset\relax, footskip=14.5mm}
+\newenvironment{fullwidth}{\begin{adjustwidth}{-\sicinset}{0pt}}{\end{adjustwidth}}
 
-\titleformat{\subsection}
-  {\normalfont\bfseries\color{sicblue}}{\thesubsection.}{0.5em}{#1}
-\titlespacing*{\subsection}{0pt}{12pt plus 2pt minus 2pt}{4pt}
-
-\titleformat{\subsubsection}
-  {\normalfont\bfseries\color{sicbody}}{}{0pt}{#1}
-\titlespacing*{\subsubsection}{0pt}{9pt}{3pt}
-
+\AtBeginDocument{\fontsize{10.5}{14.2}\selectfont\color{sicbody}}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt plus 1pt}
+\setlist{leftmargin=5mm, itemsep=1pt, topsep=2pt}
 
-% ---------------------------------------------------------------- captions --
-\captionsetup{font=small, labelfont={bf,color=sicblue}, skip=6pt}
-\captionsetup[table]{position=top}
-
-% ----------------------------------------------------------------- header --
+% ----------------------------------------------------------------- footer --
 \pagestyle{fancy}\fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
-\fancyfoot[C]{\small\color{sicgrey}\thepage}
-\fancyhead[R]{\footnotesize\color{sicgrey}Bayan \textperiodcentered\ SIC AI Capstone}
+\fancyfoot[R]{\fontsize{10}{12}\selectfont Page\enspace\thepage\ / \pageref*{LastPage}\hspace*{7mm}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[R]{\fontsize{10}{12}\selectfont
+  Page\enspace\thepage\ / \pageref*{LastPage}\hspace*{7mm}}}
 
-% ------------------------------------------------------- evidence labels ---
-% Every claim in this report is measured, decided or planned. The label is
-% part of the argument, so it is typeset rather than left to prose.
-\newcommand{\measured}{\textcolor{sicblue}{\footnotesize\bfseries[measured]}\,}
-\newcommand{\decided}{\textcolor{sicblue}{\footnotesize\bfseries[decided]}\,}
-\newcommand{\planned}{\textcolor{sicgrey}{\footnotesize\bfseries[planned]}\,}
+% --------------------------------------------------------------- headings --
+\titleformat{\section}{\normalfont}{}{0pt}{%
+  \hspace*{-\sicinset}\colorbox{sicblue}{%
+    \parbox[c][5.4mm][c]{\dimexpr\textwidth+\sicinset-2\fboxsep\relax}{%
+      \hspace*{2.5mm}\fontsize{14}{16}\selectfont\bfseries\color{white}%
+      \thesection.\ #1}}}
+\titlespacing*{\section}{0pt}{16pt plus 3pt minus 2pt}{8pt}
 
-% A boxed note for the things a reader should not miss.
-\newcommand{\keynote}[1]{%
-  \par\vspace{4pt}\noindent
-  \begin{tikzpicture}
-    \node[draw=sicblue, line width=0.8pt, fill=sicpale, rounded corners=2pt,
-          inner sep=8pt, text width=\dimexpr\textwidth-20pt\relax,
-          align=left, font=\small] {#1};
-  \end{tikzpicture}\par\vspace{4pt}}
+\titleformat{\subsection}{\normalfont\fontsize{11}{14}\selectfont}
+  {\thesubsection.}{0.3em}{#1}
+\titlespacing*{\subsection}{0pt}{11pt plus 2pt minus 2pt}{3pt}
 
-% ------------------------------------------------------------------ cover --
-\newcommand{\bayancover}[4]{%  {title}{date}{team}{members}
-  \begin{titlepage}
-  \thispagestyle{empty}
-  \vspace*{12mm}
-  {\color{sicblue}\bfseries\large AI Course}\par\vspace{2mm}
-  {\color{sicbody}\Large Capstone Project}\par
-  {\color{sicbody}\Huge\bfseries Final Report}\par\vspace{3mm}
-  {\color{sicgrey}\small For students (instructor review required)}\par
-  \vspace{18mm}
-  \textcolor{sicblue}{\rule{\textwidth}{2pt}}\par\vspace{6mm}
-  {\color{sicbody}\LARGE\bfseries #1}\par\vspace{6mm}
-  \textcolor{sicgrey}{\rule{\textwidth}{0.6pt}}\par\vspace{10mm}
-  \begin{tabular}{@{}p{32mm}l@{}}
-    {\color{sicblue}\bfseries Date}       & #2 \\[3mm]
-    {\color{sicblue}\bfseries Team Name}  & #3 \\[3mm]
-    {\color{sicblue}\bfseries Members}    & \begin{tabular}[t]{@{}l@{}}#4\end{tabular} \\
-  \end{tabular}
-  \vfill
-  {\color{sicgrey}\scriptsize
-   Layout after the Samsung Innovation Campus Final Report template.
-   \textcopyright\ 2025 Samsung. The template itself is copyright of the
-   Samsung Electronics Corporate Citizenship Office and is not reproduced here.}
-  \end{titlepage}}
+% Unnumbered run-in label for paragraphs inside a subsection.
+\newcommand{\lead}[1]{\textbf{#1}\enspace}
+
+% --------------------------------------------------------------- contents --
+\setcounter{tocdepth}{2}
+\titlecontents{section}[0pt]{\addvspace{10pt}\fontsize{12}{14}\selectfont\bfseries}
+  {\thecontentslabel.\ }{}{}[\vspace{3pt}]
+\titlecontents{subsection}[5mm]{\fontsize{11}{13}\selectfont}
+  {\thecontentslabel.\ }{}{}[\vspace{3pt}]
+\newcommand{\siccontents}{%
+  \begin{fullwidth}
+  \begin{center}{\sicsharp\fontsize{24}{28}\selectfont\color{sicblue}Content}\end{center}
+  \vspace{2mm}
+  \@starttoc{toc}
+  \end{fullwidth}\clearpage}
+
+% ------------------------------------------------------------ cover pages --
+% Page 1 is the template's own cover. Page 2 places the title, date, team and
+% members where the template's content controls sit.
+\newcommand{\siccover}[4]{% {title}{date DD/MM/YY}{team}{members, \\-separated}
+  \includepdf[pages=1, pagecommand={\thispagestyle{empty}}]{assets/sic_cover.pdf}
+  \thispagestyle{plain}
+  \begin{tikzpicture}[remember picture, overlay]
+    \coordinate (tl) at ([xshift=25.4mm, yshift=-36mm]current page.north west);
+    \draw[sicrule, line width=0.5pt] (tl) rectangle ++(159.2mm, -30.7mm);
+    \node[align=center, text width=150mm, font=\bfseries\fontsize{20}{25}\selectfont]
+      at ([xshift=79.6mm, yshift=-15.35mm]tl) {#1};
+    \node[font=\bfseries\fontsize{18}{22}\selectfont]
+      at ([yshift=-112mm]current page.north) {#2};
+    \node[anchor=base east, font=\bfseries\fontsize{24}{28}\selectfont]
+      at ([xshift=-25.4mm, yshift=-143mm]current page.north east) {#3};
+    \node[anchor=north east, align=right, font=\bfseries\fontsize{12}{14.6}\selectfont]
+      at ([xshift=-25.4mm, yshift=-148mm]current page.north east) {#4};
+  \end{tikzpicture}
+  \null\clearpage}
+
+% ----------------------------------------------------------------- tables --
+% Template tables: thin grey grid, pale-blue header row in SamsungOne-700.
+\arrayrulecolor{sicrule}
+\setlength{\arrayrulewidth}{0.5pt}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\head}[1]{\cellcolor{sichead}\bfseries\centering\arraybackslash #1}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ---------------------------------------------------------------- captions --
+\captionsetup{font={small}, labelfont={bf,color=sicblue}, labelsep=period,
+              skip=5pt, justification=raggedright, singlelinecheck=false}
+\captionsetup[table]{position=top}
+
+% Status marks for progress tables.
+\newcommand{\done}{\textcolor{sicblue}{\bfseries Done}}
+\newcommand{\wip}{\textcolor{figwarm}{\bfseries In progress}}
+\newcommand{\todo}{\textcolor{figgrey}{\bfseries Not started}}
+
+% A boxed finding, for the few results a reader must not miss.
+\newcommand{\finding}[1]{%
+  \par\vspace{3pt}\noindent
+  \fcolorbox{sicblue}{figpale}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+    \setlength{\parskip}{3pt}\vspace{2pt}#1\vspace{2pt}}}\par\vspace{3pt}}
+% The bibliography sits under a References subsection, not a new banner.
+\RequirePackage{etoolbox}
+\patchcmd{\thebibliography}{\section*{\refname}\@mkboth{\MakeUppercase\refname}{\MakeUppercase\refname}}{}{}{}
 \endinput

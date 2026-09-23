@@ -1,164 +1,230 @@
-% Figures for the Bayan final report. Every number plotted here is measured;
-% the source of each series is named in its caption.
+% Figures for the Bayan final report. Every number plotted is measured; the
+% source of each series is named in the caption that uses it.
 
-% ---------------------------------------------------------------- Figure 1 --
-% Where the product sits: the plugin runs inside whatever app the reader is
-% already using, and every model stays on the device.
+\tikzset{
+  flow/.style={-{Stealth[length=4pt]}, draw=black!80, line width=0.6pt},
+  built/.style={draw=sicblue, line width=0.8pt, fill=white, rounded corners=2pt,
+                minimum height=9mm, align=center, inner xsep=4pt},
+  chosen/.style={built, fill=figpale, dash pattern=on 3pt off 1.5pt},
+  pending/.style={draw=figgrey, line width=0.7pt, dashed, fill=white,
+                  rounded corners=2pt, minimum height=9mm, align=center,
+                  inner xsep=4pt, text=black!70},
+  gate/.style={draw=figwarm, line width=0.9pt, fill=figpale, rounded corners=2pt,
+               minimum height=9mm, align=center, inner xsep=4pt},
+}
+
+% ------------------------------------------------------------- schedule --
+% Gantt of the real timeline. 13 Sep is day 0; 4.3mm per day.
+\newcommand{\figschedule}{%
+\begin{tikzpicture}[font=\scriptsize, x=4.3mm, y=-4.6mm]
+  \def\lab{-0.6}
+  % day grid and date labels
+  \foreach \d/\t in {0/13,2/15,4/17,6/19,8/21,10/23,12/25,14/27,16/29,18/1,20/3,22/5} {
+    \draw[black!12] (\d,0.3) -- (\d,16.9);
+    \node[anchor=south, text=black!60] at (\d,0.3) {\t};
+  }
+  \node[anchor=south east, text=black!60] at (\lab,0.3) {September \enspace$|$\enspace day};
+  \node[anchor=south, text=black!60] at (19.5,-0.35) {October};
+  % bars: row, start, end, style, label
+  \foreach \r/\s/\e/\c/\t in {
+    1/0/5/sicblue/{Scoping, literature audit, brief},
+    2/4/6/sicblue/{Repository and review workflow \#1--\#3},
+    3/6/8/sicblue/{Product-form decision \#9},
+    4/6/9/sicblue/{Validators, readability check \#10 \#17},
+    5/6/9/sicblue/{Evaluation scripts, locked tests \#7},
+    6/6/9/sicblue/{Diacritization benchmark \#6},
+    7/6/10/sicblue/{SAMER conversion, model 1 \#5},
+    8/7/9/sicblue/{Android plugin shell \#14},
+    9/8/10/sicblue/{Copy baselines, converter \#19},
+    10/8/10/sicblue/{Model 1 diagnosis; Baseet filtered},
+    11/5/9/sicblue/{Action Plan}} {
+    \fill[\c] (\s,\r-0.32) rectangle (\e,\r+0.32);
+    \node[anchor=east] at (\lab,\r) {\t};
+  }
+  % in progress: solid to today, hatched onward
+  \foreach \r/\s/\e/\t in {12/6/16/{Synthetic corpus \#8 \#12}, 13/10/16/{Model 2: mixed corpus, AraBART}} {
+    \fill[figwarm] (\s,\r-0.3) rectangle (10,\r+0.3);
+    \draw[figwarm, line width=0.7pt, fill=figwarm!12] (10,\r-0.3) rectangle (\e,\r+0.3);
+    \node[anchor=east] at (\lab,\r) {\t};
+  }
+  \foreach \r/\s/\e/\t in {14/11/19/{On-device inference, int8}, 15/15/20/{Human evaluation}, 16/18/23/{Final report, slides, pitch}} {
+    \draw[figgrey, dashed, line width=0.6pt, fill=black!5] (\s,\r-0.3) rectangle (\e,\r+0.3);
+    \node[anchor=east] at (\lab,\r) {\t};
+  }
+  % milestones
+  \foreach \d/\t/\a in {9/{AP}/north east, 10/{M1}/north west, 17/{M2}/north,
+                         22/{Submit}/north east, 23/{Pitch}/north west} {
+    \node[fill=black, diamond, inner sep=1.3pt] at (\d,17.4) {};
+    \node[anchor=\a, font=\tiny] at (\d,17.7) {\t};
+  }
+  \node[anchor=east] at (\lab,17.4) {Milestones};
+  % today
+  \draw[figwarm, line width=1pt] (10,0.3) -- (10,16.9);
+  \node[anchor=south, fill=white, inner sep=1pt, text=figwarm, font=\tiny\bfseries] at (10,16.9) {today};
+\end{tikzpicture}}
+
+% ---------------------------------------------------------- architecture --
 \newcommand{\figarchitecture}{%
-\begin{tikzpicture}[
-  font=\footnotesize,
-  box/.style={draw=sicblue, line width=0.7pt, rounded corners=2pt,
-              fill=white, minimum height=9mm, inner xsep=5pt, align=center},
-  model/.style={box, fill=sicpale},
-  flow/.style={-{Stealth[length=4pt]}, draw=sicbody, line width=0.6pt}]
-
-  % top row: what the reader sees
-  \node[box, minimum width=31mm] (host) {Any app\\{\scriptsize message, news, PDF}};
-  \node[box, right=11mm of host, minimum width=33mm] (intent)
+\begin{tikzpicture}[font=\footnotesize]
+  \node[built, minimum width=30mm] (host) {Any app\\{\scriptsize message, web page, PDF}};
+  \node[built, right=9mm of host, minimum width=32mm] (intent)
        {\texttt{PROCESS\_TEXT}\\{\scriptsize menu entry \ar{تبسيط}}};
-  \node[box, right=11mm of intent, minimum width=31mm] (sheet)
-       {Bottom sheet\\{\scriptsize original + simplified}};
+  \node[built, right=9mm of intent, minimum width=30mm] (sheet)
+       {Bottom sheet\\{\scriptsize simplified + original}};
   \draw[flow] (host) -- (intent);
   \draw[flow] (intent) -- (sheet);
 
-  % bottom row: what runs locally, set clear of the label strip above it
-  \node[model, below=26mm of host.west, anchor=west, minimum width=26mm]
+  \node[pending, below=24mm of host.west, anchor=west, minimum width=24mm]
        (strip) {strip diacritics};
-  \node[model, right=5mm of strip, minimum width=29mm] (simp)
-       {simplifier\\{\scriptsize AraT5v2 / AraBART}};
-  \node[model, right=5mm of simp, minimum width=25mm] (diac)
+  \node[chosen, right=4mm of strip, minimum width=29mm] (simp)
+       {simplifier\\{\scriptsize model 1 trained}};
+  \node[chosen, right=4mm of simp, minimum width=25mm] (diac)
        {diacritizer\\{\scriptsize Libtashkeel}};
-  \node[model, right=5mm of diac, minimum width=22mm] (tts)
+  \node[pending, right=4mm of diac, minimum width=23mm] (tts)
        {read-aloud\\{\scriptsize word timings}};
   \draw[flow] (strip) -- (simp);
   \draw[flow] (simp) -- (diac);
   \draw[flow] (diac) -- (tts);
-
   \begin{scope}[on background layer]
-    \node[draw=sicgrey, dashed, line width=0.7pt, rounded corners=3pt,
-          inner xsep=7pt, inner ysep=6pt, fit=(strip)(simp)(diac)(tts)] (dev) {};
+    \node[draw=figgrey, line width=0.6pt, rounded corners=3pt, inner xsep=6pt,
+          inner ysep=6pt, fit=(strip)(simp)(diac)(tts)] (dev) {};
   \end{scope}
-  \node[anchor=south west, font=\scriptsize\itshape, text=sicgrey]
-       at ([yshift=2pt]dev.north west) {on device --- ONNX Runtime Mobile, no network};
+  \node[anchor=north west, font=\scriptsize\itshape, text=black!65]
+       at ([yshift=-1pt]dev.south west) (devlab) {on the device, ONNX Runtime Mobile, no network};
+  \draw[flow] (intent.south) -- ++(0,-6mm) -| (strip.north);
+  \draw[flow] (tts.north) -- ++(0,6mm) -| (sheet.south);
 
-  \draw[flow] (intent.south) -- ++(0,-7mm) -| (strip.north);
-  \draw[flow] (tts.north) -- ++(0,7mm) -| (sheet.south);
+  % legend
+  \node[built, minimum height=3mm, minimum width=6mm, below=3mm of devlab.south west,
+        anchor=north west] (k1) {};
+  \node[right=1mm of k1, font=\scriptsize] (l1) {built and tested};
+  \node[chosen, minimum height=3mm, minimum width=6mm, right=5mm of l1] (k2) {};
+  \node[right=1mm of k2, font=\scriptsize] (l2) {selected or trained, not yet in the app};
+  \node[pending, minimum height=3mm, minimum width=6mm, right=5mm of l2] (k3) {};
+  \node[right=1mm of k3, font=\scriptsize] {not started};
 \end{tikzpicture}}
 
+% --------------------------------------------------------------- pipeline --
 \newcommand{\figpipeline}{%
-\begin{tikzpicture}[
-  font=\footnotesize,
-  stage/.style={draw=sicblue, line width=0.7pt, rounded corners=2pt, fill=white,
-                minimum height=9mm, minimum width=33mm, align=center, inner xsep=4pt},
-  gate/.style={draw=sicwarm, line width=0.9pt, fill=sicpale, rounded corners=2pt,
-               minimum height=9mm, minimum width=33mm, align=center, inner xsep=4pt},
-  locked/.style={draw=sicgrey, line width=0.7pt, dashed, rounded corners=2pt,
-                 minimum height=9mm, minimum width=29mm, align=center},
-  flow/.style={-{Stealth[length=4pt]}, draw=sicbody, line width=0.6pt}]
-
-  \node[stage] (src) {source corpora\\{\scriptsize BAREC, SAMER, Baseet, DAASI}};
-  \node[gate,  below=10mm of src]   (leak)  {leakage check};
-  \node[stage, below=10mm of leak]  (mix)   {training mix\\{\scriptsize $\approx$107k pairs}};
-  \node[stage, below=10mm of mix]   (train) {fine-tuning\\{\scriptsize level tokens}};
-  \node[stage, below=10mm of train] (eval)  {scoring\\{\scriptsize vs.\ copy baseline}};
-
-  \draw[flow] (src)   -- (leak);
-  \draw[flow] (leak)  -- node[right, font=\scriptsize, text=sicwarm, xshift=2pt] {clean only} (mix);
-  \draw[flow] (mix)   -- (train);
+\begin{tikzpicture}[font=\footnotesize, node distance=8mm]
+  \node[built, minimum width=34mm] (src) {source corpora\\{\scriptsize SAMER, BAREC, Baseet, DAASI}};
+  \node[gate, below=of src, minimum width=34mm] (leak) {leakage check\\{\scriptsize exact + 5-gram Jaccard}};
+  \node[built, below=of leak, minimum width=34mm] (train) {fine-tuning\\{\scriptsize model 1 on SAMER}};
+  \node[built, below=of train, minimum width=34mm] (eval) {scoring\\{\scriptsize beside the copy baseline}};
+  \draw[flow] (src) -- (leak);
+  \draw[flow] (leak) -- node[right, font=\scriptsize, text=figwarm] {clean rows only} (train);
   \draw[flow] (train) -- (eval);
 
-  \node[locked, left=30mm of leak] (test)
-       {locked test sets\\{\scriptsize SHA-256 manifest}};
+  \node[built, left=24mm of leak, minimum width=30mm, dash pattern=on 4pt off 2pt]
+       (test) {locked test sets\\{\scriptsize SHA-256 manifest}};
   \draw[flow] (test) -- (leak);
-  \draw[flow] (test.south) |- (eval.west);
+  \draw[flow] (test.south) |- node[pos=0.75, below, font=\scriptsize] {final models only} (eval.west);
 
-  \node[stage, right=30mm of src]  (gen) {LLM generation};
-  \node[gate,  right=30mm of leak] (judge)
-       {judge + classifier\\{\scriptsize + human review}};
-  \draw[flow] (gen) -- (judge);
-  \draw[flow] (judge) |- (mix.east);
+  \node[pending, right=24mm of src, minimum width=30mm] (gen) {LLM generation\\{\scriptsize synthetic pairs}};
+  \node[gate, right=24mm of leak, minimum width=30mm] (judge) {validators\\{\scriptsize + human review}};
+  \draw[flow, figgrey, dashed] (gen) -- (judge);
+  \draw[flow, figgrey, dashed] (judge) |- (train.east);
 \end{tikzpicture}}
 
-% ---------------------------------------------------------------- Figure 3 --
-% The disagreement that drove the recipe change: SARI flattens while copy rate
-% is still falling, and validation loss has already turned.
+% -------------------------------------------------------------------- EDA --
+\newcommand{\figlengths}{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=55mm, font=\footnotesize,
+  xlabel={source sentence length (words)}, ylabel={share of sentences (\%)},
+  symbolic x coords={1--5,6--10,11--15,16--20,21--25,26--30,31--35,36--40,$>$40},
+  xtick=data, ymin=0, ymax=45, grid=major, grid style={black!8},
+  axis x line*=bottom, axis y line*=left,
+  legend style={at={(0.98,0.97)}, anchor=north east, draw=black!25, font=\scriptsize},
+  every axis plot/.append style={line width=1pt, mark size=1.4pt}]
+  \addplot[sicblue, mark=*] coordinates {(1--5,37.17)(6--10,39.41)(11--15,15.58)(16--20,5.31)(21--25,1.49)(26--30,0.66)(31--35,0.15)(36--40,0.11)($>$40,0.10)};
+  \addlegendentry{SAMER train (14,343)}
+  \addplot[figgrey, mark=square*] coordinates {(1--5,29.05)(6--10,22.82)(11--15,17.28)(16--20,12.45)(21--25,7.80)(26--30,4.65)(31--35,2.54)(36--40,1.39)($>$40,2.01)};
+  \addlegendentry{BAREC train (54,845)}
+  \addplot[figwarm, mark=triangle*] coordinates {(1--5,11.25)(6--10,23.92)(11--15,18.08)(16--20,13.45)(21--25,10.36)(26--30,7.78)(31--35,5.40)(36--40,3.76)($>$40,6.00)};
+  \addlegendentry{Baseet, filtered (31,104)}
+  \addplot[black, dashed, mark=o] coordinates {(1--5,19.15)(6--10,25.38)(11--15,27.77)(16--20,18.09)(21--25,6.36)(26--30,2.12)(31--35,0.66)(36--40,0.46)($>$40,0.00)};
+  \addlegendentry{DAASI (1,509)}
+\end{axis}
+\end{tikzpicture}}
+
+% ---------------------------------------------------------- training run --
 \newcommand{\figtraining}{%
 \begin{tikzpicture}
 \begin{axis}[
-  width=0.92\textwidth, height=58mm, font=\footnotesize,
+  width=\linewidth, height=56mm, font=\footnotesize,
   xlabel={training step}, ylabel={copy rate (\%)},
   xmin=100, xmax=3350, ymin=58, ymax=95,
   axis y line*=left, axis x line*=bottom,
-  legend style={at={(0.98,0.98)}, anchor=north east, draw=sicgrey,
-                font=\scriptsize, fill=white},
-  grid=major, grid style={sicpale}]
-  \addplot[sicwarm, line width=1pt, mark=*, mark size=1.1pt] coordinates {
+  legend style={at={(0.02,0.03)}, anchor=south west, draw=black!25, font=\scriptsize},
+  grid=major, grid style={black!8}]
+  \addplot[figwarm, line width=1pt, mark=*, mark size=1.1pt] coordinates {
     (200,91.4)(400,90.2)(600,88.2)(800,85.6)(1000,77.8)(1200,75.2)(1400,68.8)
     (1600,71.8)(1800,70.2)(2000,69.0)(2200,68.6)(2400,67.6)(2600,66.8)
     (2800,63.6)(3000,65.2)(3200,64.8)(3250,64.8)};
-  \addlegendentry{copy rate}
-  \addplot[sicgrey, dashed, line width=0.8pt] coordinates {(100,41.2)(3350,41.2)};
-  \addlegendentry{human rate 41.2\%}
+  \addlegendentry{copy rate (left axis)}
+  \addlegendimage{sicblue, line width=1pt, mark=square*, mark size=1.1pt}
+  \addlegendentry{SARI (right axis)}
 \end{axis}
 \begin{axis}[
-  width=0.92\textwidth, height=58mm, font=\footnotesize,
+  width=\linewidth, height=56mm, font=\footnotesize,
   xmin=100, xmax=3350, ymin=71, ymax=77.5,
-  axis y line*=right, axis x line=none, ylabel={SARI (500-row dev subset)},
-  legend style={at={(0.98,0.70)}, anchor=north east, draw=sicgrey,
-                font=\scriptsize, fill=white}]
+  axis y line*=right, axis x line=none, ylabel={SARI, 500-row dev subset}]
   \addplot[sicblue, line width=1pt, mark=square*, mark size=1.1pt] coordinates {
     (200,72.35)(400,73.69)(600,73.99)(800,74.13)(1000,73.75)(1200,74.17)
     (1400,74.34)(1600,74.87)(1800,75.27)(2000,74.90)(2200,75.29)(2400,75.14)
     (2600,75.61)(2800,75.42)(3000,75.74)(3200,75.56)(3250,75.56)};
-  \addlegendentry{SARI}
-  \draw[sicgrey, line width=0.6pt, dotted] (axis cs:2200,71) -- (axis cs:2200,77.5);
-  \node[font=\scriptsize, text=sicgrey, anchor=south west]
-    at (axis cs:2230,71.1) {validation loss bottoms here};
+  \draw[black!50, line width=0.6pt, dotted] (axis cs:2200,71) -- (axis cs:2200,77.5);
+  \node[font=\scriptsize, text=black!60, anchor=north east, align=right]
+    at (axis cs:2170,77.3) {validation loss\\bottoms here};
+  \draw[black!50, line width=0.6pt, dotted] (axis cs:3000,71) -- (axis cs:3000,77.5);
+  \node[font=\scriptsize, text=black!60, anchor=south east, align=right]
+    at (axis cs:2970,71.2) {checkpoint\\selected};
 \end{axis}
 \end{tikzpicture}}
 
-% ---------------------------------------------------------------- Figure 4 --
-% The comparison the reported numbers were missing.
-\newcommand{\figsari}{%
-\begin{tikzpicture}
-\begin{axis}[
-  width=0.92\textwidth, height=52mm, font=\footnotesize,
-  ybar, bar width=11pt, ymin=0, ymax=80,
-  ylabel={SARI}, symbolic x coords={all rows, changed rows},
-  xtick=data, enlarge x limits=0.45,
-  nodes near coords, nodes near coords style={font=\tiny, /pgf/number format/fixed,
-    /pgf/number format/precision=2},
-  legend style={at={(0.5,-0.18)}, anchor=north, legend columns=3,
-                draw=sicgrey, font=\scriptsize},
-  grid=major, grid style={sicpale}, axis x line*=bottom, axis y line*=left]
-  \addplot[draw=sicgrey, fill=sicgrey!45] coordinates {(all rows,68.92) (changed rows,56.83)};
-  \addlegendentry{copy the input}
-  \addplot[draw=sicblue, fill=sicblue!70] coordinates {(all rows,71.54) (changed rows,61.84)};
-  \addlegendentry{model, beam search}
-  \addplot[draw=sicwarm, fill=sicwarm!70] coordinates {(all rows,62.09) (changed rows,54.60)};
-  \addlegendentry{model, greedy (shipped)}
-\end{axis}
-\end{tikzpicture}}
+% The decoder and behaviour charts are generated with the numbers into results.tex.
 
-% ---------------------------------------------------------------- Figure 5 --
-% Out-of-domain failure, and its cause.
-\newcommand{\figood}{%
-\begin{tikzpicture}
-\begin{axis}[
-  width=0.92\textwidth, height=44mm, font=\footnotesize,
-  xbar, bar width=11pt, xmin=0, xmax=100,
-  xlabel={per cent},
-  symbolic y coords={{rows losing $>$half the sentence}, {source words surviving}},
-  ytick=data, enlarge y limits=0.6,
-  nodes near coords, nodes near coords style={font=\tiny},
-  legend style={at={(0.5,-0.32)}, anchor=north, legend columns=2,
-                draw=sicgrey, font=\scriptsize},
-  grid=major, grid style={sicpale}, axis x line*=bottom, axis y line*=left]
-  \addplot[draw=sicblue, fill=sicblue!70] coordinates {
-    (90,{source words surviving}) (3,{rows losing $>$half the sentence})};
-  \addlegendentry{undiacritized input}
-  \addplot[draw=sicwarm, fill=sicwarm!70] coordinates {
-    (60,{source words surviving}) (38,{rows losing $>$half the sentence})};
-  \addlegendentry{diacritized input}
-\end{axis}
+% --------------------------------------------------------------------- UI --
+\definecolor{appteal}{HTML}{0D5D56}
+\definecolor{appsurf}{HTML}{FCFDF7}
+\newcommand{\phone}[2]{% {name}{position}
+  \node[draw=black!70, line width=1pt, rounded corners=5pt, minimum width=46mm,
+        minimum height=86mm, fill=white] (#1) at #2 {};}
+\newcommand{\figui}{%
+\begin{tikzpicture}[font=\scriptsize]
+  % (a) host app with the selection menu
+  \phone{p1}{(0,0)}
+  \foreach \y in {30,24,18,12,6,0,-6,-12,-18,-24,-30}
+    \fill[black!10] ([xshift=-19mm, yshift=\y mm]p1.center) rectangle ++(38mm,2mm);
+  \fill[sicblue!25] ([xshift=-12mm, yshift=6mm]p1.center) rectangle ++(28mm,2mm);
+  \node[draw=black!30, fill=white, rounded corners=2pt, drop shadow={opacity=0.15},
+        inner sep=3pt, font=\scriptsize] at ([yshift=15mm]p1.center)
+       {\ar{نسخ}\quad\ar{تحديد الكل}\quad\textcolor{appteal}{\bfseries\ar{تبسيط}}};
+  \node[below=2mm of p1, font=\scriptsize\bfseries] {(a) select text in any app};
+  % (b) the bottom sheet
+  \phone{p2}{(58mm,0)}
+  \foreach \y in {30,24,18}
+    \fill[black!10] ([xshift=-19mm, yshift=\y mm]p2.center) rectangle ++(38mm,2mm);
+  \fill[black, opacity=0.35, rounded corners=5pt] (p2.north west) rectangle (p2.south east);
+  \fill[appsurf, rounded corners=6pt] ([yshift=-18mm]p2.north west) rectangle (p2.south east);
+  \fill[black!30, rounded corners=1pt] ([xshift=-3mm, yshift=-20mm]p2.north) rectangle ++(6mm,0.8mm);
+  \node[anchor=north east, text=appteal, font=\scriptsize\bfseries] at ([xshift=-3mm, yshift=-22mm]p2.north east) {\ar{تبسيط بيان}};
+  \node[draw=appteal, line width=0.8pt, rounded corners=3pt, minimum width=40mm,
+        minimum height=19mm, anchor=north] (simp) at ([yshift=-28mm]p2.north) {};
+  \node[anchor=north east, text=appteal, font=\tiny\bfseries] at ([xshift=-2mm, yshift=-1.5mm]simp.north east) {\ar{النص المبسط للقراءة الميسرة}};
+  \foreach \y in {7,11,15}
+    \fill[black!55] ([xshift=-2mm, yshift=-\y mm]simp.north east) rectangle ++(-30mm,1.4mm);
+  \node[draw=black!25, fill=black!4, rounded corners=3pt, minimum width=40mm,
+        minimum height=12mm, anchor=north] (orig) at ([yshift=-2mm]simp.south) {};
+  \node[anchor=north east, text=black!55, font=\tiny] at ([xshift=-2mm, yshift=-1.2mm]orig.north east) {\ar{النص الأصلي}};
+  \foreach \y in {6,9}
+    \fill[black!25] ([xshift=-2mm, yshift=-\y mm]orig.north east) rectangle ++(-34mm,1mm);
+  \node[anchor=north, font=\tiny, text=appteal] at ([yshift=-3mm]orig.south)
+       {\ar{استمع}\qquad\ar{نسخ}\qquad\ar{إعدادات}};
+  \node[below=2mm of p2, font=\scriptsize\bfseries] {(b) result sheet over the app};
+  % typography callout
+  \node[anchor=west, align=left, font=\scriptsize, text width=34mm] (t) at ([xshift=6mm, yshift=4mm]p2.east)
+       {20\,sp text\\line height 1.6 + 10\,sp\\letter spacing 0.04\\right-to-left, \emph{not} justified};
+  \draw[black!50, -{Stealth[length=3pt]}] (t.west) -- ([xshift=1mm]simp.east);
 \end{tikzpicture}}
