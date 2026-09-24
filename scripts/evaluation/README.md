@@ -152,4 +152,7 @@ uv run python scripts/evaluation/dyslexia_features.py --barec-train data/raw/bar
     pred_barec_samer.jsonl pred_barec_L3.jsonl pred_barec_L2.jsonl pred_barec_L1.jsonl
 ```
 Words per sentence, rare, long and ambiguous words (source → output), split rate, copy rate, and
-how many outputs lost more than half their words.
+how many outputs lost more than half their words. A word counts as ambiguous when BAREC's tashkeel
+shows it with 2+ conflicting readings (مِن / مَن, أَن / أَنَّ), each well attested. BAREC's tashkeel is
+partial, so a spelling with fewer marks (هذِه) is merged into the full reading it fits: on BAREC test
+about 6–7% of words are ambiguous.
