@@ -5,7 +5,13 @@ with greedy decoding. Output is the JSONL that score.py reads.
 
 Pipeline:
   make_eval_input.py  ->  predict.py  ->  score.py
-Only the model name / checkpoint path changes between runs.
+Only the model name / checkpoint path and the input prefix change between runs.
+
+The prefix must match the one the model was trained with, or the scores are meaningless:
+  model 1 (SAMER):          --prefix "بسّط: "            (the default)
+  model 2, AraT5v2:         --prefix "بسّط: [SAMER] "    (swap the tag for the test set)
+  model 2, AraBART:         --prefix "بسط: [SAMER] "     (AraBART's tokenizer turns the shadda into <unk>)
+  an untrained checkpoint:  --prefix ""
 """
 
 import argparse
@@ -28,6 +34,9 @@ def main() -> None:
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--max-source-len", type=int, default=512)
     p.add_argument("--max-new-tokens", type=int, default=256)
+    p.add_argument("--prefix", default="بسّط: ", help="Prepended to every source; must match training")
+    p.add_argument("--no-repeat-ngram", type=int, default=4,
+                   help="Block repeated n-grams (stops rare loops on long text); 0 turns it off")
     args = p.parse_args()
 
     with open(args.input, encoding="utf-8") as f:
@@ -38,19 +47,20 @@ def main() -> None:
     print(f"{len(rows)} rows from {args.input}", file=sys.stderr)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Loading {args.model} on {device}", file=sys.stderr)
-    tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False)    
+    print(f"Loading {args.model} on {device}, prefix {args.prefix!r}", file=sys.stderr)
+    tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False)
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model).to(device).eval()
 
     for start in range(0, len(rows), args.batch_size):
         batch = rows[start:start + args.batch_size]
         enc = tokenizer(
-            [r["source"] for r in batch],
+            [args.prefix + r["source"] for r in batch],
             return_tensors="pt", padding=True, truncation=True, max_length=args.max_source_len,
         ).to(device)
         with torch.no_grad():
             out = model.generate(
                 **enc, num_beams=1, do_sample=False, max_new_tokens=args.max_new_tokens,
+                no_repeat_ngram_size=args.no_repeat_ngram,
             )
         for r, text in zip(batch, tokenizer.batch_decode(out, skip_special_tokens=True)):
             r["prediction"] = text.strip()
