@@ -10,8 +10,10 @@ source value -> the output value of:
   words/sent  words per sentence (sentences split on . ! ? ؟ ; ؛ and line breaks)
   rare %      words outside the 5,000 most frequent forms in BAREC train
   long %      words of 7+ letters
-  ambig %     words whose bare (undiacritized) form has 2+ different readings in BAREC's tashkeel,
-              i.e. words a reader can misread without tashkeel
+  ambig %     words a reader can misread without tashkeel: the bare form has 2+ conflicting readings in
+              BAREC's tashkeel, each seen 3+ times and in 10%+ of the word's vowelled occurrences.
+              BAREC's tashkeel is partial, so a spelling with fewer marks (هذِه) is merged into the full
+              reading it fits (هَذِهِ), not counted as a new reading; the case ending is ignored
 and three row counts:
   split %     outputs with more sentences than their source
   copy %      outputs identical to their source (ignoring tashkeel and punctuation)
@@ -37,21 +39,62 @@ def words(text: str) -> list[str]:
     return NON_LETTER.sub(" ", DIAC.sub("", str(text))).split()
 
 
+VOWELS = set("\u064B\u064C\u064D\u064E\u064F\u0650")   # tanween, fatha, damma, kasra (sukun is optional in writing)
+SHADDA = "\u0651"
+
+
+def marks(token: str) -> list[list]:
+    """Per letter: [vowel or None, shadda, annotated]. A letter the annotator left bare fits any reading."""
+    out = []
+    for ch in token:
+        if "\u0621" <= ch <= "\u064A":
+            out.append([None, False, False])
+        elif out and DIAC.match(ch):
+            out[-1][2] = True
+            if ch in VOWELS:
+                out[-1][0] = ch
+            elif ch == SHADDA:
+                out[-1][1] = True
+    if out:
+        out[-1][0] = None        # the last letter's vowel is the case ending: grammar, not a different word
+    return out
+
+
+def conflict(a: list, b: list) -> bool:
+    """Two spellings are different readings only where both are marked and the marks disagree."""
+    return any((va and vb and va != vb) or (ka and kb and sa != sb)
+               for (va, sa, ka), (vb, sb, kb) in zip(a, b))
+
+
+def is_ambiguous(spellings: collections.Counter, min_count: int = 3, min_share: float = 0.10) -> bool:
+    """Merge partial spellings into the readings they fit; ambiguous if 2+ readings are each well attested."""
+    total = sum(spellings.values())
+    readings = []                                                    # [members, count]
+    for tok, n in spellings.most_common():
+        m = marks(tok)
+        for r in readings:
+            if not any(conflict(m, x) for x in r[0]):
+                r[0].append(m)
+                r[1] += n
+                break
+        else:
+            readings.append([[m], n])
+    return sum(n >= min_count and n / total >= min_share for _, n in readings) >= 2
+
+
 def lexicons(barec_train: Path) -> tuple[set, set]:
     with open(barec_train, encoding="utf-8-sig", newline="") as f:
         sents = [row["Sentence"] for row in csv.DictReader(f)]
     freq = collections.Counter(w for s in sents for w in words(s))
     top = {w for w, _ in freq.most_common(5000)}
-    readings = collections.defaultdict(set)
+    spellings = collections.defaultdict(collections.Counter)
     for s in sents:
         if not DIAC.search(s):
             continue
-        for tok in re.sub(r"[^ء-يً-ْٰ\s]", " ", s).split():
-            bare = DIAC.sub("", tok)
-            if len(DIAC.findall(tok)) >= max(1, len(bare) - 2):      # (nearly) fully diacritized tokens only
-                # drop the last letter's marks: case endings are grammar, not a different word
-                readings[bare].add(re.sub(r"[ً-ْٰ]+$", "", tok))
-    return top, {w for w, r in readings.items() if len(r) >= 2}
+        for tok in re.sub(r"[^\u0621-\u064A\u064B-\u0652\u0670\s]", " ", s).split():
+            if DIAC.search(tok):
+                spellings[DIAC.sub("", tok)][tok] += 1
+    return top, {w for w, c in spellings.items() if is_ambiguous(c)}
 
 
 def feats(text: str, top: set, ambig: set) -> dict | None:
