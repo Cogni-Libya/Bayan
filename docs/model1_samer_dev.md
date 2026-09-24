@@ -10,6 +10,11 @@ Seed: `42`
 | SARI | 77.06 |
 | BLEU | 0.7316 |
 | Copy rate | 66.51% |
+
+> **Read with the copy baseline.** Returning every sentence unchanged scores SARI **74.25** on the same
+> 2,983 rows, because 41% of dev is sentences the humans left alone. The model's real gain is on the
+> 1,754 rows people simplified: **63.66 vs 56.21** for copying (+7.46). Added 24 Sep when this file
+> moved from the repo root to `docs/`.
 | Eval loss | 0.4808 (logged for visibility only — not used to select the checkpoint) |
 
 Best checkpoint reached at step 3000 of 3250 (epoch ~9 of 10).
@@ -58,6 +63,7 @@ comparison point for the second model (trained on our synthetic data).
 
 ## Artifacts
 
-* Checkpoint (private): `vn3er/samer-arat5v2-base-simplification` (Hugging Face)
-* Full dev predictions: `results/samer_model_dev_predictions.csv`
-(columns: `ID, original_text, reference, prediction`)
+* Checkpoint: `Congi-libya/samer-arat5v2-base-simplification` (Hugging Face, team org)
+* Training notebook: `scripts/training/model1_training.ipynb`
+* Full dev predictions (`ID, original_text, reference, prediction`): kept on Kaggle, **not in the
+  repo**. They contain SAMER sentences, and SAMER's licence forbids redistributing its text.

@@ -26,6 +26,12 @@ references/03_project_architecture/*.synctex.gz
 data/raw/
 data/processed/
 
+# Model outputs and data exports — SAMER's licence forbids redistributing its text, and prediction
+# files carry the source and reference sentences. Keep them on Kaggle/HF (private) or under data/.
+*_predictions.csv
+pred_*.jsonl
+*.parquet
+
 # Locked test sets — never commit; see data/test_manifest.json for hashes instead.
 data/test_locked/
 
