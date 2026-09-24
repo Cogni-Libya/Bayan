@@ -156,3 +156,26 @@ how many outputs lost more than half their words. A word counts as ambiguous whe
 shows it with 2+ conflicting readings (مِن / مَن, أَن / أَنَّ), each well attested. BAREC's tashkeel is
 partial, so a spelling with fewer marks (هذِه) is merged into the full reading it fits: on BAREC test
 about 6–7% of words are ambiguous.
+
+**4. Bayan Score: the headline number** (no references needed; `bayan_score.py`):
+```bash
+# once: CAMeL Tools' morphology data (about 125 MB), outside the repo
+CAMELTOOLS_DATA=~/camel_data uv run --no-project --python 3.11 --with camel-tools camel_data -i disambig-mle-calima-msa-r13
+
+CAMELTOOLS_DATA=~/camel_data uv run --no-project --python 3.11 --with camel-tools --with torch \
+    --with "transformers==4.57.6" --with sentence-transformers --with sentencepiece --with protobuf --with tiktoken \
+    python scripts/evaluation/bayan_score.py --barec-train data/raw/barec/train.csv \
+    pred_barec_S0.jsonl pred_barec_S1.jsonl pred_barec_S2.jsonl pred_barec_S3.jsonl
+```
+There is no benchmark for dyslexia-friendly Arabic, and SARI rewards matching SAMER's and Baseet's
+editors, whose goal was not dyslexia. The Bayan Score measures the goal directly: the share of
+sentences whose output is **easier for a dyslexic reader and says the same thing**. Easier means short,
+complete sentences at a low reading level, with no rise in the word features shown to affect dyslexic
+readers specifically (rare, long, morphologically dense and ambiguous words). Same meaning means
+similar, entailed, nothing dropped, no number or negation changed. The docstring has every threshold
+and its source; `docs/bayan_score.md` has the validation.
+
+`SCORE (hard)` is the headline: the pass rate on sources that are not easy yet. `score (all)` also
+counts sources that were already easy (copying those is a pass). The last column says why hard rows
+failed. `--details DIR` writes the per-row verdicts. The BAREC files take about 5–10 minutes each on a
+GPU; on a CPU run them in a Kaggle notebook.
