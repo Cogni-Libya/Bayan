@@ -123,3 +123,33 @@ uv run python scripts/evaluation/make_manifest.py     # hashes must match what i
 existing manifest, since a hash only proves two people hold the same bytes — it
 says nothing about where those bytes came from. If you add a locked file, write its
 `source` by hand.
+## Scoring a trained model (model 2 onwards)
+
+Training writes one `pred_<test set>.jsonl` per test file (`id, source, prediction`, style tag
+already removed). The references live in the private evaluation pack (Kaggle dataset
+`bayan-eval-refs`), never in the repo. Three steps turn predictions into the report's tables.
+
+**1. Join predictions to references, then score** (SAMER test, DAASI held-out, BAREC test):
+```bash
+uv run python scripts/evaluation/attach_predictions.py --pred pred_samer.jsonl \
+    --refs refs_samer_test.jsonl --output scored/samer.jsonl
+uv run python scripts/evaluation/score.py scored/samer.jsonl
+```
+An empty prediction is replaced by the source, which is what the app shows.
+
+**2. Baseet's test split, with Baseet's own scorer** (EASSE, pinned):
+```bash
+uv run --python 3.13 --with "easse @ git+https://github.com/feralvam/easse.git@6a4352ec299ed03fda8ee45445ca43d9c7673e89" \
+    --with pandas --with sacrebleu python scripts/evaluation/score_baseet.py --test baseet_test.csv \
+    --pred-L3 pred_baseet_L3.jsonl --pred-L2 pred_baseet_L2.jsonl --pred-L1 pred_baseet_L1.jsonl
+```
+Prints our model, the copy baseline and Baseet's published model, on all rows and on the rows
+whose source isn't in SAMER.
+
+**3. Dyslexia measures** (no references needed):
+```bash
+uv run python scripts/evaluation/dyslexia_features.py --barec-train data/raw/barec/train.csv \
+    pred_barec_samer.jsonl pred_barec_L3.jsonl pred_barec_L2.jsonl pred_barec_L1.jsonl
+```
+Words per sentence, rare, long and ambiguous words (source → output), split rate, copy rate, and
+how many outputs lost more than half their words.
