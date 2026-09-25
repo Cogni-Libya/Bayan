@@ -170,9 +170,10 @@ CAMELTOOLS_DATA=~/camel_data uv run --no-project --python 3.11 --with camel-tool
 There is no benchmark for dyslexia-friendly Arabic, and SARI rewards matching SAMER's and Baseet's
 editors, whose goal was not dyslexia. The Bayan Score measures the goal directly: the share of
 sentences whose output is **easier for a dyslexic reader and says the same thing**. Easier means short,
-complete sentences at a low reading level, with no rise in the word features shown to affect dyslexic
-readers specifically (rare, long, morphologically dense and ambiguous words). Same meaning means
-similar, entailed, nothing dropped, no number or negation changed. The docstring has every threshold
+complete sentences at a low reading level, with no rise in the word features that make reading harder
+(rare, long, morphologically dense and ambiguous words; only density has a dyslexia-specific result). Same meaning means
+similar, entailed, nothing dropped, no number or negation changed (these miss most added or swapped
+details; see the limits in the doc). The docstring has every threshold
 and its source; `docs/bayan_score.md` has the validation.
 
 `SCORE (hard)` is the headline: the pass rate on sources that are not easy yet. `score (all)` also

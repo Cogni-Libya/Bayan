@@ -18,17 +18,21 @@ EASIER
                sentence that SAMER's human editors simplified to L3
   well-formed  every output sentence reads as complete: AraGPT2 gives its closing full stop a log-probability
                >= -4.96 (95% of human L3 sentences pass; a sentence chopped mid-phrase usually fails)
-  lighter      the dyslexia load does not rise. Load = the shares of rare, long, morphologically dense and
-               ambiguous words, each a text feature that affects dyslexic readers specifically:
-                 rare, long   Rello et al. 2013: frequent and short words helped readers with dyslexia, not controls
-                 dense        Arabic morphological density hurt comprehension of children with reading
-                              disabilities, not typical readers (Dyslexia, 2024, doi:10.1002/dys.1761). Counted with CAMeL Tools
+  lighter      the word load does not rise. Load = the shares of rare, long, morphologically dense and
+               ambiguous words:
+                 rare, long   frequent and short words help readers with dyslexia (Rello et al. 2013), but a later
+                              study found the same benefit for typical readers, largest for weaker readers
+                              (Rivero-Contreras et al. 2021): they help everyone, not dyslexic readers only
+                 dense        the one reading-disability-specific result: in Arabic, dense words (many attached
+                              morphemes) lowered comprehension for children with reading disabilities and not for
+                              typical readers (Dyslexia 30(1), 2024, doi:10.1002/dys.1761). Counted with CAMeL Tools
                               (attached morphemes per word, D3 tokenization)
                  ambiguous    words with 2+ readings without tashkeel (dyslexia_features.py)
 SAME MEANING
   LaBSE similarity to the source >= 0.733; at least 87.5% of the source's word count kept; every number kept;
   the same count of negation words; the source entails every output sentence (mDeBERTa-XNLI p >= 0.028) and
-  contradicts none (p <= 0.718)
+  contradicts none (p <= 0.718). These catch dropped content well, but miss most added or swapped details:
+  see "Limits" in docs/bayan_score.md
 
 A source that already meets the target passes when its output keeps meeting it, so copying an easy sentence is
 fine. The headline number is the pass rate on HARD rows: sources that do not meet the target yet.

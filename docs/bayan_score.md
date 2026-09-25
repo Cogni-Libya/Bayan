@@ -27,7 +27,7 @@ A sentence **passes** when its output is both easier and faithful.
 | Short sentences | every output sentence has at most 15 words | Long, compound sentences are a known reading barrier |
 | Reading level | CAMeL Lab's BAREC readability model puts every output sentence at level 10.15 or easier | The model is trained on 69k human-graded sentences; 10.15 is the median level of sentences SAMER's editors simplified to L3 |
 | Complete sentences | AraGPT2 gives each sentence's closing full stop a log-probability of at least −4.96 | Stops "simplifying" by chopping a sentence mid-phrase; 95% of human L3 sentences pass |
-| Lighter load | rare + long + morphologically dense + ambiguous word shares do not rise | Each is a text feature that affects dyslexic readers **specifically**; see the next section |
+| Lighter load | rare + long + morphologically dense + ambiguous word shares do not rise | Each makes reading harder; only density has a dyslexia-specific result. See the next section |
 
 **Same meaning.** Every part must hold:
 - LaBSE similarity to the source ≥ 0.733
@@ -46,18 +46,20 @@ ourselves; the sensitivity check below shows it does not change the ranking.
 
 ## The evidence behind "lighter load"
 
-Each word feature is backed by a study where the effect appeared for readers with dyslexia or reading
-disabilities, and not for typical readers:
+Each word feature is backed by a reading study. Only morphological density has been shown to hurt readers
+with reading disabilities *and not* typical readers; rare and long words slow everyone down, weaker readers
+most:
 
 | Feature | Finding | Source |
 |---|---|---|
-| Rare words | More frequent words made readers with dyslexia read significantly faster; no effect for controls (eye-tracking, 23 + 23) | Rello et al., 2013, [doi:10.1007/978-3-642-40498-6_15](https://doi.org/10.1007/978-3-642-40498-6_15) |
-| Long words | Shorter words improved comprehension for readers with dyslexia; no effect for controls | same study |
-| Morphologically dense words | In Arabic, texts with dense words (many attached morphemes) lowered comprehension for children with reading disabilities, not for typical readers (182 fifth-graders). We count attached morphemes per word with CAMeL Tools | *Dyslexia*, 2024, [doi:10.1002/dys.1761](https://doi.org/10.1002/dys.1761) |
+| Rare words | More frequent words made readers with dyslexia read faster (eye-tracking, 23 + 23). A later study found the same benefit for controls, with no group difference, and the largest gains for readers with smaller vocabularies (20 + 20) | Rello et al., 2013, [doi:10.1007/978-3-642-40498-6_15](https://doi.org/10.1007/978-3-642-40498-6_15); Rivero-Contreras et al., 2021, *Annals of Dyslexia* |
+| Long words | Shorter words improved comprehension for readers with dyslexia (Rello et al.); word length is a general difficulty feature, not a dyslexia-specific one | Rello et al., 2013 |
+| Morphologically dense words | In Arabic, texts with dense words (many attached morphemes) lowered comprehension for children with reading disabilities (11.7 → 15.2 of 30 when unpacked), not for typical readers (182 fifth-graders; one study, and text order was not counterbalanced). We count attached morphemes per word with CAMeL Tools | *Dyslexia*, 2024, [doi:10.1002/dys.1761](https://doi.org/10.1002/dys.1761) |
 | Ambiguous words | Vowels and context affect reading accuracy differently for poor and skilled Arabic readers. We count words with 2+ conflicting readings without tashkeel | Abu-Rabia, 1997, [doi:10.1023/a:1025034220924](https://doi.org/10.1023/a:1025034220924) |
 
-Simplification also helps weaker readers most. In French, 165 second-graders read simplified texts more
-fluently and understood them better, and poor readers gained the most (Gala et al., 2022,
+Simplification also helps weaker readers most. In French, 149 second-graders read simplified texts (split into
+one-verb sentences, active voice, pronouns replaced by their referent) more fluently and understood them better,
+and poor readers gained the most (Javourey-Drevet, Gala et al., 2022,
 [doi:10.1017/s014271642100062x](https://doi.org/10.1017/s014271642100062x)).
 
 ## Validation
@@ -108,7 +110,12 @@ The ranking stays the same (copy 0% < SAMER human 15–16%) when the level targe
 
 - **No dyslexic readers in the loop.** The metric measures text features that research shows dyslexic
   readers are sensitive to, not reading performance. A reader study is the missing step.
-- **Subtle meaning errors slip through.** A swapped content word is caught only 65% of the time.
-- **The reading-level model is not dyslexia-specific.** It is trained on general grade levels; the
-  dyslexia-specific part is the word load.
+- **Subtle meaning errors slip through.** A swapped content word is caught only 65% of the time. On real
+  errors it is weaker still: of 9 meaning errors found by hand in model rewrites (added facts,
+  guessed subjects, changed words), the meaning check caught 2. Similarity and entailment scores catch
+  deletions well but miss insertions and substitutions, as reported for English (Devaraj et al., 2022).
+  The pass rate is therefore an upper bound on faithful, easier outputs.
+- **The reading-level model is not dyslexia-specific**, and it is CAMeL Lab's word-level variant (QWK 76.2);
+  their `readability-arabertv2-d3tok-reg` model reaches 84.4 on BAREC test and is the planned upgrade.
+  The level and the 15-word cap follow BAREC's guidelines (level 10 ≈ grade 4 allows at most 15 words).
 - **The thresholds come from SAMER's literary register.** They may need checking on other kinds of text.
