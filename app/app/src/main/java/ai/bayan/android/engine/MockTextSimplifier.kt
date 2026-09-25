@@ -158,10 +158,10 @@ class MockTextSimplifier : TextSimplifier {
     override fun isModelReady(): Boolean = true
 
     override fun getEngineInfo(): EngineInfo = EngineInfo(
-        name = "AraT5v2-base-1024 int8 ~164MB",
+        name = "Mock (rule-based stand-in)",
         version = "1.0.0-demo",
-        status = "جاهز للاختبار (محرك محاكاة التجربة — جاهز لدمج AraT5 ONNX)",
-        memoryFootprint = "~164 MB (CPU On-Device)",
-        isOnnxReady = true
+        status = "محرك تجريبي قائم على القواعد اللغوية (قيد انتظار دمج نموذج ONNX)",
+        memoryFootprint = "< 1 MB",
+        isOnnxReady = false
     )
 }

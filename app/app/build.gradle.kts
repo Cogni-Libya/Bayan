@@ -64,6 +64,10 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
+    // Background WorkManager & Jetpack DataStore
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // Unit Testing & Robolectric
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.test:core-ktx:1.5.0")
@@ -71,6 +75,8 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.12.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("androidx.fragment:fragment-testing:1.6.2")
+    testImplementation("androidx.work:work-testing:2.9.1")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
     // Android Instrumented Testing
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

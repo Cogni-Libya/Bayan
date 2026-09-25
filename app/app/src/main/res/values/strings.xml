@@ -32,5 +32,24 @@
     <string name="action_copy">⧉ نسخ</string>
     <string name="action_settings">⚙ إعدادات</string>
     <string name="action_disabled_notice">الميزات الصوتية والنسخ المتقدم قيد التطوير</string>
+
+    <!-- Settings Screen Strings -->
+    <string name="settings_title">إعدادات القراءة</string>
+    <string name="settings_preview_title">معاينة حية للنص</string>
+    <string name="settings_preview_sample">بيان لتيسير القراءة وتسهيل فهم النصوص العربية لدعم القراء والباحثين.</string>
+    <string name="settings_strength_title">درجة التبسيط</string>
+    <string name="settings_strength_light">خفيف</string>
+    <string name="settings_strength_medium">متوسط</string>
+    <string name="settings_strength_strong">قوي</string>
+    <!-- Legacy aliases for backward compatibility -->
+    <string name="settings_strength_elementary">@string/settings_strength_strong</string>
+    <string name="settings_strength_advanced">@string/settings_strength_light</string>
+    <string name="settings_font_size_title">حجم الخط</string>
+    <string name="settings_line_spacing_title">تباعد الأسطر</string>
+    <string name="settings_font_family_title">نوع الخط</string>
+    <string name="settings_font_naskh">خط النسخ (Noto Naskh)</string>
+    <string name="settings_font_sans">خط الرقعة الحديث (Noto Sans)</string>
+    <string name="settings_wifi_only_title">التنزيل عبر Wi-Fi فقط</string>
+    <string name="settings_wifi_only_desc">تنزيل نماذج الذكاء الاصطناعي فقط عند الاتصال بشبكة لاسلكية</string>
 </resources>
 

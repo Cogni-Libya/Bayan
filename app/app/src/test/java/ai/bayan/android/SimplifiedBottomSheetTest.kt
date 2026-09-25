@@ -7,6 +7,8 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.testing.launchFragmentInContainer
+import ai.bayan.android.engine.ModelStore
+import ai.bayan.android.engine.ModelStoreProvider
 import ai.bayan.android.engine.SimplifierProvider
 import ai.bayan.android.ui.SimplifiedBottomSheetDialogFragment
 import org.junit.After
@@ -20,13 +22,15 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
+import java.io.File
 
 /**
  * Robolectric automated tests for [SimplifiedBottomSheetDialogFragment].
  *
  * Verifies argument initialization, view binding of original and simplified Arabic text,
  * dyslexia typography specifications (1.6x line multiplier, 10sp extra spacing, 0.04 letter spacing,
- * RTL alignment, unjustified text flow), disabled action buttons, and dismissal callbacks.
+ * RTL alignment, unjustified text flow), enabled/disabled action buttons in Result state,
+ * and dismissal callbacks.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -35,11 +39,23 @@ class SimplifiedBottomSheetTest {
     @Before
     fun setUp() {
         SimplifierProvider.reset()
+        val readyStore = object : ModelStore {
+            override fun isReady(): Boolean = true
+            override suspend fun download(onProgress: (Float) -> Unit) {}
+            override fun modelDir(): File = File("/tmp")
+            override fun getModelFile(): File = File("/tmp/pytorch_model.bin")
+            override fun getPartFile(): File = File("/tmp/pytorch_model.bin.part")
+            override fun getExpectedSha256(): String = ""
+            override fun getDownloadUrl(): String = ""
+            override fun deleteCorruptedFiles() {}
+        }
+        ModelStoreProvider.setInstance(readyStore)
     }
 
     @After
     fun tearDown() {
         SimplifierProvider.reset()
+        ModelStoreProvider.reset()
     }
 
     @Test
@@ -83,7 +99,7 @@ class SimplifiedBottomSheetTest {
 
         scenario.onFragment { fragment ->
             val view = fragment.requireView()
-            val tvOriginal = view.findViewById<TextView>(R.id.tvOriginalText)
+            val tvOriginal = view.findViewById<TextView>(R.id.tvOriginalText) ?: view.findViewById<TextView>(R.id.tvMutedText)
             assertNotNull("tvOriginalText view must be present in layout", tvOriginal)
             assertEquals("Original text view must display captured text", originalArabic, tvOriginal.text.toString())
         }
@@ -105,7 +121,7 @@ class SimplifiedBottomSheetTest {
 
         scenario.onFragment { fragment ->
             val view = fragment.requireView()
-            val tvSimplified = view.findViewById<TextView>(R.id.tvSimplifiedText)
+            val tvSimplified = view.findViewById<TextView>(R.id.tvLargeText) ?: view.findViewById<TextView>(R.id.tvSimplifiedText)
             assertNotNull("tvSimplifiedText view must be present in layout", tvSimplified)
             assertEquals("Simplified text view must display transformed text", expectedSimplified, tvSimplified.text.toString())
         }
@@ -121,9 +137,11 @@ class SimplifiedBottomSheetTest {
             themeResId = R.style.Theme_Bayan
         )
 
+        ShadowLooper.idleMainLooper()
+
         scenario.onFragment { fragment ->
             val view = fragment.requireView()
-            val tvSimplified = view.findViewById<TextView>(R.id.tvSimplifiedText)
+            val tvSimplified = view.findViewById<TextView>(R.id.tvLargeText) ?: view.findViewById<TextView>(R.id.tvSimplifiedText)
             assertNotNull(tvSimplified)
 
             // 1. Generous line spacing multiplier (1.6x)
@@ -178,6 +196,8 @@ class SimplifiedBottomSheetTest {
             themeResId = R.style.Theme_Bayan
         )
 
+        ShadowLooper.idleMainLooper()
+
         scenario.onFragment { fragment ->
             val view = fragment.requireView()
             val btnListen = view.findViewById<Button>(R.id.btnListen)
@@ -191,8 +211,8 @@ class SimplifiedBottomSheetTest {
             assertNotNull("tvDisabledNotice must exist", tvDisabledNotice)
 
             assertFalse("Listen button (▶ استمع) must be disabled in this release", btnListen.isEnabled)
-            assertFalse("Copy button (⧉ نسخ) must be disabled in this release", btnCopy.isEnabled)
-            assertFalse("Settings button (⚙) must be disabled in this release", btnSettings.isEnabled)
+            assertTrue("Copy button (⧉ نسخ) must be enabled in Result state", btnCopy.isEnabled)
+            assertTrue("Settings button (⚙) must be enabled in Result state", btnSettings.isEnabled)
             assertTrue("Feature in development notice must be displayed", tvDisabledNotice.text.isNotBlank())
         }
     }

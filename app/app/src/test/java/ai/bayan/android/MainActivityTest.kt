@@ -3,13 +3,29 @@ package ai.bayan.android
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
+import android.content.DialogInterface
+import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import ai.bayan.android.download.ModelDownloadManager
+import ai.bayan.android.engine.ModelStore
+import ai.bayan.android.engine.ModelStoreProvider
+import ai.bayan.android.engine.SimplificationLevel
 import ai.bayan.android.engine.SimplifierProvider
+import ai.bayan.android.settings.BayanPreferences
+import ai.bayan.android.settings.SettingsRepository
 import ai.bayan.android.ui.SimplifiedBottomSheetDialogFragment
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -19,38 +35,73 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowAlertDialog
+import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowToast
+import java.io.File
 
 /**
  * Robolectric automated tests for [MainActivity].
  *
- * Verifies standalone launcher initialization, ONNX model status card presentation,
- * input box validation (empty/whitespace rejection), clipboard paste functionality,
- * and presentation of [SimplifiedBottomSheetDialogFragment] with user-entered Arabic text.
+ * Verifies standalone launcher initialization, reactive model status card presentation
+ * across 3 states (Not Downloaded, Downloading, Ready), download confirmation dialog,
+ * navigation to SettingsActivity, input validation, and bottom sheet presentation.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class MainActivityTest {
 
+    private lateinit var notReadyStore: ModelStore
+    private lateinit var readyStore: ModelStore
+
     @Before
     fun setUp() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
         SimplifierProvider.reset()
+        ModelStoreProvider.reset()
+
+        notReadyStore = object : ModelStore {
+            override fun isReady(): Boolean = false
+            override suspend fun download(onProgress: (Float) -> Unit) {}
+            override fun modelDir(): File = File(context.filesDir, "models")
+            override fun getModelFile(): File = File(modelDir(), "pytorch_model.bin")
+            override fun getPartFile(): File = File(modelDir(), "pytorch_model.bin.part")
+            override fun getExpectedSha256(): String = "test_sha"
+            override fun getDownloadUrl(): String = "http://localhost/model.bin"
+            override fun deleteCorruptedFiles() {}
+        }
+
+        readyStore = object : ModelStore {
+            override fun isReady(): Boolean = true
+            override suspend fun download(onProgress: (Float) -> Unit) {}
+            override fun modelDir(): File = File(context.filesDir, "models")
+            override fun getModelFile(): File = File(modelDir(), "pytorch_model.bin")
+            override fun getPartFile(): File = File(modelDir(), "pytorch_model.bin.part")
+            override fun getExpectedSha256(): String = "test_sha"
+            override fun getDownloadUrl(): String = "http://localhost/model.bin"
+            override fun deleteCorruptedFiles() {}
+        }
     }
 
     @After
     fun tearDown() {
         SimplifierProvider.reset()
+        ModelStoreProvider.reset()
     }
 
     @Test
-    fun testLauncherInitialization_rendersHeaderAndModelStatusCard() {
+    fun testLauncherInitialization_rendersHeaderAndComponents() {
+        ModelStoreProvider.setInstance(readyStore)
+
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 val tvAppTitle = activity.findViewById<TextView>(R.id.tvAppTitle)
                 val tvAppSubtitle = activity.findViewById<TextView>(R.id.tvAppSubtitle)
+                val btnSettings = activity.findViewById<ImageButton>(R.id.btnSettings)
                 val tvModelStatusName = activity.findViewById<TextView>(R.id.tvModelStatusName)
-                val tvModelStatusDesc = activity.findViewById<TextView>(R.id.tvModelStatusDesc)
                 val tvModelStatusSpecs = activity.findViewById<TextView>(R.id.tvModelStatusSpecs)
 
                 // Header verification
@@ -60,16 +111,121 @@ class MainActivityTest {
                 assertNotNull("App subtitle TextView must be present", tvAppSubtitle)
                 assertEquals(activity.getString(R.string.app_subtitle), tvAppSubtitle.text.toString())
 
-                // Model status card verification
+                assertNotNull("Settings button must be present in header", btnSettings)
+
+                // Model status metadata
                 assertNotNull("Model status name TextView must be present", tvModelStatusName)
                 val engineInfo = SimplifierProvider.getInstance().getEngineInfo()
                 assertEquals("Model name must match engine specification", engineInfo.name, tvModelStatusName.text.toString())
 
-                assertNotNull("Model status desc TextView must be present", tvModelStatusDesc)
-                assertEquals("Model status must report ready state", engineInfo.status, tvModelStatusDesc.text.toString())
-
                 assertNotNull("Model specs TextView must be present", tvModelStatusSpecs)
                 assertEquals(activity.getString(R.string.model_status_specs), tvModelStatusSpecs.text.toString())
+            }
+        }
+    }
+
+    @Test
+    fun testModelStatusCard_whenModelMissing_showsNotDownloadedState() {
+        ModelStoreProvider.setInstance(notReadyStore)
+
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val tvModelStatusDesc = activity.findViewById<TextView>(R.id.tvModelStatusDesc)
+                val btnDownloadModel = activity.findViewById<MaterialButton>(R.id.btnDownloadModel)
+                val progressBar = activity.findViewById<LinearProgressIndicator>(R.id.progressBarModelDownload)
+
+                assertNotNull("Status description must be present", tvModelStatusDesc)
+                assertTrue(
+                    "Status desc must indicate model is not downloaded",
+                    tvModelStatusDesc.text.toString().contains("غير محمل")
+                )
+
+                assertEquals(
+                    "Download button must be visible when model is not downloaded",
+                    View.VISIBLE,
+                    btnDownloadModel.visibility
+                )
+                assertEquals(
+                    "Progress bar must be hidden when model is not downloaded",
+                    View.GONE,
+                    progressBar.visibility
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testModelStatusCard_whenModelReady_showsReadyState() {
+        ModelStoreProvider.setInstance(readyStore)
+
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val tvModelStatusDesc = activity.findViewById<TextView>(R.id.tvModelStatusDesc)
+                val btnDownloadModel = activity.findViewById<MaterialButton>(R.id.btnDownloadModel)
+                val progressBar = activity.findViewById<LinearProgressIndicator>(R.id.progressBarModelDownload)
+
+                assertNotNull("Status description must be present", tvModelStatusDesc)
+                assertTrue(
+                    "Status desc must indicate model is ready",
+                    tvModelStatusDesc.text.toString().contains("جاهز")
+                )
+
+                assertEquals(
+                    "Download button must be hidden when model is ready",
+                    View.GONE,
+                    btnDownloadModel.visibility
+                )
+                assertEquals(
+                    "Progress bar must be hidden when model is ready",
+                    View.GONE,
+                    progressBar.visibility
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testDownloadButtonClick_showsConfirmationDialog() {
+        ModelStoreProvider.setInstance(notReadyStore)
+
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val btnDownloadModel = activity.findViewById<MaterialButton>(R.id.btnDownloadModel)
+                assertEquals("Download button must be visible initially", View.VISIBLE, btnDownloadModel.visibility)
+
+                btnDownloadModel.performClick()
+
+                // Check that confirmation dialog is displayed
+                val dialog = ShadowAlertDialog.getLatestDialog()
+                assertNotNull("Confirmation dialog must be presented on download click", dialog)
+
+                val shadowDialog = Shadows.shadowOf(dialog)
+                assertEquals("تنزيل نموذج الذكاء الاصطناعي", shadowDialog.title)
+                assertTrue(
+                    "Dialog message must mention model size (~62 MB)",
+                    shadowDialog.message.toString().contains("62")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testSettingsButtonClick_launchesSettingsActivity() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val btnSettings = activity.findViewById<ImageButton>(R.id.btnSettings)
+                assertNotNull("Settings button must be present", btnSettings)
+
+                btnSettings.performClick()
+
+                val shadowActivity = Shadows.shadowOf(activity)
+                val nextIntent = shadowActivity.nextStartedActivity
+                assertNotNull("Intent to launch SettingsActivity must be started", nextIntent)
+                assertEquals(
+                    "Launched intent must target SettingsActivity",
+                    "ai.bayan.android.settings.SettingsActivity",
+                    nextIntent.component?.className
+                )
             }
         }
     }
@@ -199,6 +355,44 @@ class MainActivityTest {
                     toastText
                 )
                 assertEquals("EditText should remain blank", "", etInputText.text.toString())
+            }
+        }
+    }
+
+    @Test
+    fun testDownloadConfirmationDialog_positiveClick_enqueuesWorkWithWifiOnlyConstraintFromSettings() {
+        ModelStoreProvider.setInstance(notReadyStore)
+
+        val fakeRepo = object : SettingsRepository {
+            override val preferencesFlow: Flow<BayanPreferences> = MutableStateFlow(
+                BayanPreferences(wifiOnlyDownload = true)
+            )
+            override suspend fun updateSimplificationLevel(level: SimplificationLevel) {}
+            override suspend fun updateFontSize(fontSizeSp: Float) {}
+            override suspend fun updateLineSpacing(multiplier: Float) {}
+            override suspend fun updateFontFamily(fontFamily: String) {}
+            override suspend fun updateWifiOnlyDownload(wifiOnly: Boolean) {}
+        }
+
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                activity.settingsRepositoryOverride = fakeRepo
+                val btnDownloadModel = activity.findViewById<MaterialButton>(R.id.btnDownloadModel)
+                btnDownloadModel.performClick()
+
+                val dialog = ShadowAlertDialog.getLatestDialog() as? androidx.appcompat.app.AlertDialog
+                assertNotNull("Confirmation dialog must be visible", dialog)
+
+                val positiveButton = dialog?.getButton(DialogInterface.BUTTON_POSITIVE)
+                assertNotNull("Positive 'تنزيل' button must exist", positiveButton)
+                positiveButton?.performClick()
+
+                ShadowLooper.idleMainLooper()
+
+                val workInfos = WorkManager.getInstance(activity)
+                    .getWorkInfosForUniqueWork(ModelDownloadManager.WORK_NAME)
+                    .get()
+                assertTrue("Work must be enqueued", workInfos.isNotEmpty())
             }
         }
     }

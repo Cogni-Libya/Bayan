@@ -53,11 +53,10 @@ class MockTextSimplifierTest {
     fun testGetEngineInfo_reportsAccurateMetadata() {
         val info: EngineInfo = simplifier.getEngineInfo()
         assertNotNull("EngineInfo must not be null", info)
-        assertEquals("AraT5v2-base-1024 int8 ~164MB", info.name)
+        assertEquals("Mock (rule-based stand-in)", info.name)
         assertEquals("1.0.0-demo", info.version)
-        assertTrue("Status must indicate readiness for testing", info.status.contains("جاهز للاختبار"))
-        assertEquals("~164 MB (CPU On-Device)", info.memoryFootprint)
-        assertTrue("isOnnxReady flag must be true", info.isOnnxReady)
+        assertEquals("< 1 MB", info.memoryFootprint)
+        assertFalse("isOnnxReady flag must be false for rule-based stand-in mock", info.isOnnxReady)
     }
 
     @Test

@@ -32,5 +32,24 @@
     <string name="action_copy">⧉ Copy</string>
     <string name="action_settings">⚙ Settings</string>
     <string name="action_disabled_notice">Audio playback and advanced copy are under development</string>
+
+    <!-- Settings Screen Strings -->
+    <string name="settings_title">Reading Settings</string>
+    <string name="settings_preview_title">Live Text Preview</string>
+    <string name="settings_preview_sample">Bayan facilitates reading and understanding Arabic text to support readers and researchers.</string>
+    <string name="settings_strength_title">Simplification Strength</string>
+    <string name="settings_strength_light">Light (Advanced)</string>
+    <string name="settings_strength_medium">Medium (Standard)</string>
+    <string name="settings_strength_strong">Strong (Elementary)</string>
+    <!-- Legacy aliases for backward compatibility -->
+    <string name="settings_strength_elementary">@string/settings_strength_strong</string>
+    <string name="settings_strength_advanced">@string/settings_strength_light</string>
+    <string name="settings_font_size_title">Font Size</string>
+    <string name="settings_line_spacing_title">Line Spacing</string>
+    <string name="settings_font_family_title">Font Family</string>
+    <string name="settings_font_naskh">Noto Naskh Arabic</string>
+    <string name="settings_font_sans">Noto Sans Arabic</string>
+    <string name="settings_wifi_only_title">Wi-Fi Only Download</string>
+    <string name="settings_wifi_only_desc">Download AI models only when connected to unmetered Wi-Fi</string>
 </resources>
 
