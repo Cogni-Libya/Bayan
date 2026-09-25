@@ -8,8 +8,8 @@ Design choices, and why:
   - The checkpoint is chosen on the 600 changed rows of select_dev.jsonl; its 300 unchanged rows are
     only logged. On a set full of unchanged rows, a model that copies its input scores highest.
   - SARI is computed against the raw reference text, not tokenizer-decoded labels.
-  - Every source starts with a style tag ([SAMER], [DAASI], [BASEET-L1/L2/L3]). The tag is part of the
-    input only; it is removed before any metric and from the saved predictions.
+  - Every source starts with a strength tag ([S0] minimal, [S1]-[S3] light to strong, [SA] everyday
+    style). The tag is part of the input only; it is removed before any metric and from the saved predictions.
   - group_by_length=False: in transformers 4.46 True also shuffles the evaluation set, so every
     prediction would be scored against another row's reference. compute_metrics stops the run if
     the evaluation labels are ever out of order.
