@@ -165,6 +165,14 @@ class CamelReadability:
         """5-level scale (BAREC's own 19 -> 5 map) of the most likely 19-level class."""
         return LEVEL19_TO_5[probs.argmax(axis=-1)]
 
+    @staticmethod
+    def expected_level(probs: np.ndarray) -> np.ndarray:
+        """E[level] = sum_k k * P(level=k), on the native 19-level scale -- a continuous readability
+        estimate from the model's full softmax, richer than the argmax (`levels()`) or binary
+        P(easy) (`p_easy()`) collapses. Treats the 19 levels as equally-spaced integers, which is an
+        assumption (BAREC's levels are ordinal, not verified interval-scaled)."""
+        return probs @ np.arange(1, N_LEVELS + 1)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Fetch and cache the CAMeL readability model, then score two example sentences.")

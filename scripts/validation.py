@@ -259,18 +259,30 @@ def score_equivalence(
 
 
 def score_readability(
-    readability: CamelReadability, originals: list[str], simplified: list[str], show_progress: bool = False
+    readability: CamelReadability, originals: list[str], simplified: list[str], show_progress: bool = False,
+    batch_size: int | None = None,
 ) -> dict[str, np.ndarray]:
-    """Per pair: P(easy) of the original and of the simplified text, d_logit, and the simplified text's
-    5-level level. Every distinct text is scored once, on its own."""
+    """Per pair: P(easy) of the original and of the simplified text, d_logit, the simplified text's
+    5-level level, and each text's continuous expected 19-level value plus the delta between them
+    (readability_lead -- how hard the original was and how many levels it moved, on the model's own
+    native scale; see CamelReadability.expected_level for why this is richer than the P(easy)/argmax
+    fields above). Every distinct text is scored once, on its own.
+
+    batch_size: None keeps CamelReadability's own default (1 on CPU -- right for the live pipeline,
+    where a single request's latency matters more than aggregate throughput). Pass a larger value
+    (e.g. 32) for bulk/offline scoring of many already-generated pairs, where throughput dominates
+    and CPU-batched ONNX inference amortizes per-call tokenization/dispatch overhead."""
     texts = list(dict.fromkeys(originals + simplified))
-    probs = readability.predict_probs(texts, show_progress=show_progress)
+    probs = readability.predict_probs(texts, batch_size=batch_size, show_progress=show_progress)
     p_easy, levels = readability.p_easy(probs), readability.levels(probs)
+    expected_level = readability.expected_level(probs)
     index = {t: i for i, t in enumerate(texts)}
     o = np.array([index[t] for t in originals], dtype=int)
     s = np.array([index[t] for t in simplified], dtype=int)
     return {"p_easy_original": p_easy[o], "p_easy_simplified": p_easy[s],
-            "d_logit": _logit(p_easy[s]) - _logit(p_easy[o]), "predicted_level": levels[s]}
+            "d_logit": _logit(p_easy[s]) - _logit(p_easy[o]), "predicted_level": levels[s],
+            "expected_level_original": expected_level[o], "expected_level_simplified": expected_level[s],
+            "readability_lead": expected_level[o] - expected_level[s]}
 
 
 def score_candidates(
