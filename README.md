@@ -35,7 +35,7 @@ All figures are verified in [`references/01_problem_motivation/`](references/01_
 
 | Stage | What it does | Status of the decision |
 |---|---|---|
-| **1. Simplify (core)** | Shorten and restructure sentences, replace rare words, keep meaning | **Primary focus.** Fine-tune one or more pretrained Arabic encoder-decoder (seq2seq) Transformers; AraT5v2 is the current candidate |
+| **1. Simplify (core)** | Shorten and restructure sentences, replace rare words, keep meaning | **Primary focus.** Fine-tuned Arabic encoder-decoder (seq2seq) Transformers: model 1 (AraT5v2 on SAMER) and two model-2 candidates (AraT5v2, AraBART) with a strength tag; the choice waits on the evaluation (#30) |
 | 2. Diacritize | Restore full tashkeel on the simplified text | **Secondary.** Decided: **Libtashkeel** (`text2tashkeel`) — MIT, ~45 MB, exports to ONNX. Must never alter base letters |
 | 3. Read aloud | TTS with word-by-word highlighting | **Secondary.** Ready model: **Nabra-7M-Distill** |
 
@@ -69,6 +69,10 @@ No large, open, parallel Arabic simplification corpus exists, so Bayan builds on
   non-commercial use. What is **not** allowed is redistributing the corpus, so SAMER text must never be committed,
   pasted into an issue, or included in any deliverable. Its official train split is the basis of our first model;
   its official test split is one of the two locked test sets.
+- **Model 2 training data** (private Kaggle dataset `marwanelamami13/bayan-model2-data`, 22,733 pairs): SAMER L5→L3
+  (14,343), DAASI train (1,502) and Baseet (6,888, filtered for meaning). Every source starts with a strength tag —
+  `[S0]` minimal, `[S1]`–`[S3]` light to strong, `[SA]` everyday/administrative style — so one model covers every
+  strength. The tag is part of the input only; the app sends it and never shows it.
 - **Diacritization check data:** Tashkeela.
 - **Leakage:** both training sets were checked against both locked test sets on 2026-09-21 and are clean. See
   [`scripts/evaluation/README.md`](scripts/evaluation/README.md).
@@ -78,7 +82,9 @@ No large, open, parallel Arabic simplification corpus exists, so Bayan builds on
 | Component | Result | Implication |
 |---|---|---|
 | Readability classifier (easy/hard, 800-sentence held-out set) | MARBERT 86.8–87.5% (best of those tried); ensemble 84.8% | MARBERT was **replaced by CAMeL AraBERT** (#17): on SAMER it ranks the human-simplified version higher 80.1% of the time (sentence pairs) and 76.9% (word swaps), against about 76% and 72–74% for MARBERT. CAMeL now gates the data, so evaluate with a different model or with human review |
-| Equivalence validator (DSPy MIPROv2, 25 held-out pairs) | Rejected **nothing** (0 true negatives) | **Must be fixed before full-scale generation** |
+| Equivalence validator (DSPy MIPROv2, 25 held-out pairs) | 84% accuracy at threshold 0.70, up from 64% at the original guess of 0.8 | Directional only: 25 pairs is small; revisit with more annotations |
+| Model 1: AraT5v2 on SAMER (dev, 2,983 rows) | SARI 77.06 vs 74.25 for copying; on the 1,754 rows people changed, 63.66 vs 56.21 (+7.46) | Beats copying, but makes conservative one-word edits and at least one meaning error; see [`docs/model1_samer_dev.md`](docs/model1_samer_dev.md) |
+| Model 2: AraT5v2 vs AraBART (`select_dev`, 600 changed SAMER rows) | SARI 66.58 vs 64.71; AraBART generates 3.6× faster than AraT5v2 (292.8 vs 80.8 sentences/s on a T4, measured against model 1, same architecture) | Test-set scores come from #30; see [`scripts/training/model2/README.md`](scripts/training/model2/README.md) |
 | BERTScore as equivalence signal | r = −0.014 with human labels | Don't rely on it |
 
 ## 5. Key insights from the literature review (2026-09-17)
@@ -106,13 +112,16 @@ Same test inputs and one scoring script for every system:
 - **Test sets:** two locked splits, both upstream and unmodified — the BAREC test split (7,286 rows) and the SAMER
   test split (3,277 rows). They live in `data/test_locked/`, which git ignores; only `data/test_manifest.json` with
   their row counts and SHA-256 hashes is committed, so everyone can prove they scored the same data.
+  Model 2 is also scored on DAASI's held-out set (350 rows) and Baseet's test split (3,430 rows, with Baseet's own scorer).
   BAREC has no reference simplifications, so it carries the reference-free metrics and doubles as the
   out-of-domain check — SAMER splits by chapter, not by novel, so its test set is fully in-domain.
 - **Metrics:** SARI (pinned, fixed Arabic normalization) · BLEU (secondary) · readability drop (independent CAMeL BAREC model) ·
   meaning preservation (judge independent of the generator) · level-control checks · error-based human evaluation · DER/WER for stage 2.
 - **Leakage:** never score on rows a model trained on.
 
-Details: [`references/02_text_simplification/evaluation_and_benchmarking.md`](references/02_text_simplification/evaluation_and_benchmarking.md).
+How to score a trained model: [`scripts/evaluation/README.md`](scripts/evaluation/README.md) ("Scoring a trained model");
+the protocol for the report's tables is issue #30. Background:
+[`references/02_text_simplification/evaluation_and_benchmarking.md`](references/02_text_simplification/evaluation_and_benchmarking.md).
 
 ## 7. Repository layout
 
@@ -121,8 +130,10 @@ Bayan/
 ├── README.md                      # This file
 ├── CONTRIBUTING.md                # Team workflow: branches, PRs, reviews
 ├── .github/                       # CODEOWNERS, PR and issue templates
+├── app/                           # Android plugin (PROCESS_TEXT); see app/COMPATIBILITY.md
 ├── deliverables/                  # SIC capstone deliverables (action plan, WBS, report, slides, demo)
-├── docs/decisions/                # Decision records — what we chose, and why
+├── docs/                          # Model results, the diacritization comparison
+│   └── decisions/                 # Decision records — what we chose, and why
 ├── references/                    # Literature review, benchmarks, and the project's reference architecture
 │   ├── INDEX.md                   # Start here
 │   ├── 00_project_brief/          # Original idea brief (historical)
@@ -131,6 +142,7 @@ Bayan/
 │   └── 03_project_architecture/   # Pipeline architecture & execution plan (LaTeX)
 ├── scripts/                       # Data pipeline, classifiers, DSPy validator optimization
 │   ├── compiled/                  # Compiled DSPy programs
+│   ├── training/                  # model1_training.ipynb; model2/ (train.py, sari.py, both notebooks)
 │   └── evaluation/                # Scoring, leakage check, test-set manifest (+ fixtures/)
 ├── data/                          # README + human annotations (raw/processed data are git-ignored)
 │   └── test_manifest.json         # Hashes of the locked test sets; the sets themselves are never committed
@@ -183,8 +195,8 @@ Never push to `main` — every change goes through a reviewed pull request. See 
 
 ## 11. Open items
 
-- Train the three stage-1 base models on SAMER and pick an architecture.
-- Fix and validate the equivalence judge on real negatives.
+- Score both model-2 candidates on the test sets (#30) and pick one for the app.
+- Validate the equivalence judge on more annotated pairs, including real negatives.
 - Export the simplifier to ONNX and quantize it to int8, then measure size and latency on a real phone.
 - Prove the SentencePiece tokenizer and the KV-cached decode loop work under ONNX Runtime Mobile —
   the two hardest parts of the app, and neither depends on a trained Bayan checkpoint.

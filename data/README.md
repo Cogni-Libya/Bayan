@@ -29,6 +29,20 @@ for f in train dev test; do
 done
 ```
 
+## Model 2 data (private Kaggle datasets)
+
+Both hold SAMER text, so they stay private and never enter the repo (SAMER's licence forbids
+redistribution). Ask Marwan for access.
+
+- [`marwanelamami13/bayan-model2-data`](https://www.kaggle.com/datasets/marwanelamami13/bayan-model2-data) --
+  what `scripts/training/model2/train.py` reads: `train.jsonl` (22,733 tagged pairs: SAMER, DAASI,
+  Baseet), `select_dev.jsonl` (900 SAMER dev rows; the checkpoint is picked on the 600 changed ones),
+  and nine `test_*.jsonl` files holding sources only. Its README lists the tags and how Baseet was filtered.
+- [`marwanelamami13/bayan-eval-refs`](https://www.kaggle.com/datasets/marwanelamami13/bayan-eval-refs) --
+  the references for those test files (`refs_samer_test`, `refs_daasi_heldout`, `refs_barec_test`,
+  `baseet_test.csv`) and AraBART's predictions. Used by the steps in `scripts/evaluation/README.md`
+  ("Scoring a trained model").
+
 ## Processed (`data/processed/`)
 
 The cleaned corpus (columns kept, level 5 dropped) is no longer a standalone file --
