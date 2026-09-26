@@ -70,6 +70,16 @@ produce:
   the "Pilot Pair Review" Claude Artifact's shared database (not live; re-pull for a fresher
   snapshot). Read by `optimize_equivalence_validator.py` to build MIPROv2 training/held-out
   data; real ground truth, not regenerable.
+- `readability_compare_inputs/samer_train.parquet` / `samer_test.parquet` -- full-sentence SAMER
+  pairs in the official splits' own `Novel`/`Chapter`/`L5`/`L4`/`L3` structure (test: 3,277 rows,
+  1,678 where `L5 != L3`). `EASE_W_CAMEL_LOGIT`/`EASE_W_MEAN_AOA` in
+  `barec_simplification_pipeline.py` are fit on **train** only, by `fit_ease_score_weights.py`
+  (8,310 pairs where `L5 != L3`). `samer_test` is locked (`data/test_manifest.json`) and is not used
+  for fitting.
+- `readability_compare_inputs/samer_pairs.parquet` -- **not** a full-sentence dataset: every one of
+  its 7,754 rows is a single-word-substitution pair (`orig_word`/`new_word`, identical word count on
+  both sides). Useful as a word-choice eval (which of two words is the easier substitute), not for
+  sentence-level readability or reranking.
 
 Also not under `data/`: `models/level_classifier_bert_marbert_onnx_int8/` (the former production
 quantized MARBERT weights, ~164MB, replaced by CAMeL AraBERT in #17; no code loads it any more) is
