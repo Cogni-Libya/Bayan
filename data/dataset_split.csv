@@ -33,7 +33,7 @@ ID,split,stratum,barec_split
 30101130007,test,13-14|Social Sciences|generated,train
 10101160144,train,13-14|Arts & Humanities|generated,train
 20300500008,train,13-14|Arts & Humanities|generated,train
-30200730005,test,12-13|Social Sciences|generated,train
+30200730005,dev,12-13|Social Sciences|generated,train
 30100880037,test,13-14|Arts & Humanities|generated,train
 10500270035,train,13-14|Arts & Humanities|generated,train
 20500460006,train,13-14|Arts & Humanities|generated,train
@@ -68,14 +68,14 @@ ID,split,stratum,barec_split
 10102890040,train,12-13|Arts & Humanities|generated,train
 30400170057,train,12-13|Social Sciences|generated,train
 10500380027,train,13-14|Arts & Humanities|generated,train
-10300610054,train,12-13|Arts & Humanities|generated,train
+10300610054,dev,12-13|Arts & Humanities|generated,train
 30400040078,train,12-13|Social Sciences|generated,train
 10100670025,train,13-14|Arts & Humanities|generated,train
 10500200029,train,13-14|Arts & Humanities|generated,train
 30500110099,train,12-13|Social Sciences|generated,dev
 20400050048,train,13-14|Arts & Humanities|generated,train
 30300300027,train,12-13|Arts & Humanities|generated,train
-10600220001,dev,13-14|Arts & Humanities|generated,train
+10600220001,test,13-14|Arts & Humanities|generated,train
 20100280014,train,12-13|Social Sciences|generated,train
 20500320017,train,13-14|Arts & Humanities|generated,train
 30200540017,train,12-13|Social Sciences|generated,train
@@ -113,7 +113,7 @@ ID,split,stratum,barec_split
 30300020011,train,12-13|Arts & Humanities|generated,train
 30500040068,train,13-14|Arts & Humanities|generated,train
 10400180037,test,12-13|Arts & Humanities|generated,train
-20700070003,train,12-13|Arts & Humanities|generated,dev
+20700070003,dev,12-13|Arts & Humanities|generated,dev
 10500470023,test,12-13|Arts & Humanities|generated,train
 10102800018,train,12-13|Arts & Humanities|generated,train
 20300540116,train,12-13|Arts & Humanities|generated,train
@@ -133,7 +133,6 @@ ID,split,stratum,barec_split
 10500440013,train,12-13|Arts & Humanities|generated,train
 20400370034,test,12-13|Arts & Humanities|generated,train
 20300310020,train,12-13|Arts & Humanities|generated,train
-10400350062,train,12-13|Social Sciences|generated,train
 30300300037,train,12-13|Arts & Humanities|generated,train
 20800120015,train,12-13|Arts & Humanities|generated,dev
 30500120029,dev,12-13|Arts & Humanities|generated,train
@@ -193,7 +192,7 @@ ID,split,stratum,barec_split
 30101580014,train,12-13|STEM|generated,train
 20100460003,train,12-13|Social Sciences|generated,train
 20101650028,train,12-13|Social Sciences|generated,train
-20400480079,dev,13-14|Social Sciences|generated,dev
+20400480079,train,13-14|Social Sciences|generated,dev
 20100240020,train,12-13|Arts & Humanities|generated,train
 20300060018,dev,12-13|Arts & Humanities|generated,dev
 20700360002,train,12-13|Arts & Humanities|generated,train
@@ -214,7 +213,7 @@ ID,split,stratum,barec_split
 10102760001,train,12-13|Arts & Humanities|generated,train
 30101170039,train,13-14|Social Sciences|generated,train
 10400470038,train,12-13|Social Sciences|generated,dev
-20300310004,dev,13-14|Arts & Humanities|generated,train
+20300310004,test,13-14|Arts & Humanities|generated,train
 10101520016,train,12-13|Arts & Humanities|generated,train
 10600020004,train,13-14|Arts & Humanities|generated,train
 10400110189,train,12-13|Social Sciences|generated,dev
@@ -223,7 +222,7 @@ ID,split,stratum,barec_split
 30300540051,train,12-13|Arts & Humanities|generated,train
 20100060001,train,14-15|Social Sciences|generated,dev
 20300530049,dev,14-15|Social Sciences|generated,train
-30400080028,dev,14-15|Social Sciences|generated,train
+30400080028,train,14-15|Social Sciences|generated,train
 30200210003,test,14-15|STEM|generated,train
 20100620028,train,14-15|Social Sciences|generated,train
 20101440006,test,14-15|STEM|generated,train
@@ -274,7 +273,7 @@ ID,split,stratum,barec_split
 20101040008,train,15+|STEM|generated,train
 20200980007,train,15+|Arts & Humanities|generated,train
 20400390068,train,14-15|Arts & Humanities|generated,train
-30300270043,dev,15+|STEM|generated,train
+30300270043,test,15+|STEM|generated,train
 20100650014,test,14-15|Social Sciences|generated,train
 30500210040,train,14-15|Social Sciences|generated,train
 20300010009,train,14-15|Social Sciences|generated,dev
@@ -309,11 +308,11 @@ ID,split,stratum,barec_split
 20101460032,train,14-15|STEM|generated,train
 30100780003,train,15+|Arts & Humanities|generated,train
 10102110078,train,14-15|Arts & Humanities|generated,train
-30101410022,train,14-15|Arts & Humanities|generated,train
+30101410022,dev,14-15|Arts & Humanities|generated,train
 20400570048,train,14-15|Social Sciences|generated,train
 20200960020,train,14-15|Arts & Humanities|generated,train
 20200860011,train,14-15|Arts & Humanities|generated,train
-30200970014,train,14-15|STEM|generated,train
+30200970014,dev,14-15|STEM|generated,train
 10200990017,train,14-15|Social Sciences|generated,train
 30101190035,train,14-15|Social Sciences|generated,train
 10101130031,train,15+|Arts & Humanities|generated,train
@@ -370,7 +369,7 @@ ID,split,stratum,barec_split
 30500190023,dev,14-15|Social Sciences|generated,train
 20101020004,train,14-15|Arts & Humanities|generated,train
 10400130013,dev,14-15|Arts & Humanities|generated,train
-30900080006,dev,15+|Arts & Humanities|generated,train
+30900080006,train,15+|Arts & Humanities|generated,train
 20101740026,train,14-15|Arts & Humanities|generated,train
 30101020038,test,14-15|STEM|generated,train
 30300260011,train,14-15|Social Sciences|generated,train
@@ -407,7 +406,7 @@ ID,split,stratum,barec_split
 20101550004,train,14-15|STEM|generated,train
 10102000008,train,12-13|Arts & Humanities|generated,train
 20101560017,test,14-15|Social Sciences|generated,train
-30100030025,dev,14-15|Social Sciences|generated,dev
+30100030025,train,14-15|Social Sciences|generated,dev
 10101190015,train,12-13|Arts & Humanities|generated,train
 20500710019,dev,12-13|Arts & Humanities|generated,train
 30300020036,train,13-14|Arts & Humanities|generated,train
@@ -443,18 +442,18 @@ ID,split,stratum,barec_split
 10200740005,train,14-15|STEM|generated,train
 30100080026,train,14-15|Arts & Humanities|generated,dev
 30300410020,train,12-13|Arts & Humanities|generated,train
-20101310012,train,15+|Social Sciences|generated,train
+20101310012,dev,15+|Social Sciences|generated,train
 30500040034,train,15+|Arts & Humanities|generated,train
 30101490016,train,12-13|Arts & Humanities|generated,train
 20101180028,train,12-13|Arts & Humanities|generated,train
 30300070024,train,12-13|STEM|generated,train
-10200880003,dev,12-13|Social Sciences|generated,train
+10200880003,train,12-13|Social Sciences|generated,train
 20100570013,train,12-13|Arts & Humanities|generated,train
 20100590002,train,13-14|Arts & Humanities|generated,train
 21100050005,train,13-14|Arts & Humanities|generated,train
 20100170005,train,15+|Social Sciences|generated,train
 20300340007,test,14-15|Social Sciences|generated,train
-30300060033,train,12-13|Arts & Humanities|generated,dev
+30300060033,dev,12-13|Arts & Humanities|generated,dev
 30101580064,train,14-15|STEM|generated,train
 20900070025,test,12-13|Arts & Humanities|generated,train
 10100820103,test,14-15|Arts & Humanities|generated,train
@@ -610,7 +609,7 @@ ID,split,stratum,barec_split
 30400010052,train,14-15|Social Sciences|generated,train
 10101170049,train,12-13|Arts & Humanities|generated,train
 20400320059,train,12-13|Arts & Humanities|generated,dev
-10400150067,test,12-13|Arts & Humanities|generated,train
+10400150067,dev,12-13|Arts & Humanities|generated,train
 20100480030,train,14-15|Social Sciences|generated,train
 30500050039,train,13-14|Arts & Humanities|generated,train
 30200150008,train,14-15|STEM|generated,train
@@ -684,10 +683,10 @@ ID,split,stratum,barec_split
 30500110059,train,14-15|Social Sciences|generated,dev
 20400520075,train,13-14|Arts & Humanities|generated,train
 10300310004,train,12-13|Arts & Humanities|generated,train
-21100130020,dev,15+|Arts & Humanities|generated,train
+21100130020,train,15+|Arts & Humanities|generated,train
 20600240007,train,14-15|STEM|generated,train
 10400420066,train,12-13|Arts & Humanities|generated,train
-30200480003,dev,13-14|Social Sciences|generated,train
+30200480003,train,13-14|Social Sciences|generated,train
 30101550133,train,12-13|Arts & Humanities|generated,train
 20101370022,train,15+|Social Sciences|generated,train
 20700350014,train,12-13|Arts & Humanities|generated,train
@@ -849,7 +848,7 @@ ID,split,stratum,barec_split
 10100430026,train,12-13|Arts & Humanities|generated,train
 10100420007,train,12-13|Arts & Humanities|generated,train
 10100410025,train,12-13|Arts & Humanities|generated,train
-10100410036,dev,13-14|Arts & Humanities|generated,train
+10100410036,test,13-14|Arts & Humanities|generated,train
 10100410042,test,12-13|Arts & Humanities|generated,train
 10100410064,train,12-13|Arts & Humanities|generated,train
 10100410030,dev,12-13|Arts & Humanities|generated,train
@@ -1046,7 +1045,7 @@ ID,split,stratum,barec_split
 10100680030,train,14-15|Arts & Humanities|generated,train
 10100670084,train,12-13|Arts & Humanities|generated,train
 10100680022,train,14-15|Arts & Humanities|generated,train
-10100690054,train,12-13|Arts & Humanities|generated,train
+10100690054,dev,12-13|Arts & Humanities|generated,train
 10100680025,train,12-13|Arts & Humanities|generated,train
 10100690050,train,12-13|Arts & Humanities|generated,train
 10100690063,test,12-13|Arts & Humanities|generated,train
@@ -1100,7 +1099,7 @@ ID,split,stratum,barec_split
 10100730006,test,14-15|Arts & Humanities|generated,train
 10100730013,train,14-15|Arts & Humanities|generated,train
 10100730023,train,12-13|Arts & Humanities|generated,train
-10100760014,train,12-13|Arts & Humanities|generated,train
+10100760014,dev,12-13|Arts & Humanities|generated,train
 10100760051,train,12-13|Arts & Humanities|generated,train
 10100720025,train,12-13|Arts & Humanities|generated,train
 10100760038,train,12-13|Arts & Humanities|generated,train
@@ -1140,7 +1139,7 @@ ID,split,stratum,barec_split
 10100810031,dev,12-13|Arts & Humanities|generated,train
 10100810090,train,12-13|Arts & Humanities|generated,train
 10100810094,dev,12-13|Arts & Humanities|generated,train
-10100810033,dev,12-13|Arts & Humanities|generated,train
+10100810033,test,12-13|Arts & Humanities|generated,train
 10100810102,dev,14-15|Arts & Humanities|generated,train
 10100820010,train,12-13|Arts & Humanities|generated,train
 10100810015,train,12-13|Arts & Humanities|generated,train
@@ -1172,7 +1171,7 @@ ID,split,stratum,barec_split
 10100820008,train,12-13|Arts & Humanities|generated,train
 10100820007,train,12-13|Arts & Humanities|generated,train
 10100820029,train,12-13|Arts & Humanities|generated,train
-10100820066,dev,12-13|Arts & Humanities|generated,train
+10100820066,test,12-13|Arts & Humanities|generated,train
 10100820054,train,13-14|Arts & Humanities|generated,train
 10100820053,train,13-14|Arts & Humanities|generated,train
 10100830026,train,12-13|Arts & Humanities|generated,train
@@ -1229,9 +1228,9 @@ ID,split,stratum,barec_split
 10100880038,train,12-13|Arts & Humanities|generated,train
 10100880008,train,12-13|Arts & Humanities|generated,train
 10100880039,train,12-13|Arts & Humanities|generated,train
-10100880022,train,12-13|Arts & Humanities|generated,train
+10100880022,dev,12-13|Arts & Humanities|generated,train
 10100880019,train,12-13|Arts & Humanities|generated,train
-10100880030,dev,12-13|Arts & Humanities|generated,train
+10100880030,test,12-13|Arts & Humanities|generated,train
 10100880016,train,14-15|Arts & Humanities|generated,train
 10100880013,train,12-13|Arts & Humanities|generated,train
 10100880015,train,12-13|Arts & Humanities|generated,train
@@ -1302,7 +1301,7 @@ ID,split,stratum,barec_split
 10100930012,train,12-13|Arts & Humanities|generated,train
 10100930035,train,14-15|Arts & Humanities|generated,train
 10100930044,train,12-13|Arts & Humanities|generated,train
-10100930051,train,12-13|Arts & Humanities|generated,train
+10100930051,dev,12-13|Arts & Humanities|generated,train
 10100960005,train,12-13|Arts & Humanities|generated,train
 10100930049,train,12-13|Arts & Humanities|generated,train
 10100930039,train,12-13|Arts & Humanities|generated,train
@@ -1336,7 +1335,7 @@ ID,split,stratum,barec_split
 10100970041,train,14-15|Arts & Humanities|generated,train
 10100980020,test,13-14|Arts & Humanities|generated,train
 10100980034,train,12-13|Arts & Humanities|generated,train
-10100980032,train,12-13|Arts & Humanities|generated,train
+10100980032,dev,12-13|Arts & Humanities|generated,train
 10101000022,train,14-15|Arts & Humanities|generated,train
 10100970031,train,12-13|Arts & Humanities|generated,train
 10101000013,train,12-13|Arts & Humanities|generated,train
@@ -1424,7 +1423,7 @@ ID,split,stratum,barec_split
 10101120015,train,13-14|Arts & Humanities|generated,train
 10101090008,dev,12-13|Arts & Humanities|generated,train
 10101100014,test,12-13|Arts & Humanities|generated,train
-10101120019,dev,12-13|Arts & Humanities|generated,train
+10101120019,test,12-13|Arts & Humanities|generated,train
 10101120017,train,13-14|Arts & Humanities|generated,train
 10101110005,train,12-13|Arts & Humanities|generated,train
 10101120016,test,12-13|Arts & Humanities|generated,train
@@ -1444,7 +1443,7 @@ ID,split,stratum,barec_split
 10101130003,train,12-13|Arts & Humanities|generated,train
 10101110007,test,14-15|Arts & Humanities|generated,train
 10101120029,train,12-13|Arts & Humanities|generated,train
-10101130022,train,12-13|Arts & Humanities|generated,train
+10101130022,dev,12-13|Arts & Humanities|generated,train
 10101130004,train,12-13|Arts & Humanities|generated,train
 10101140013,train,12-13|Arts & Humanities|generated,train
 10101120033,train,14-15|Arts & Humanities|generated,train
@@ -1473,7 +1472,7 @@ ID,split,stratum,barec_split
 10101150040,train,12-13|Arts & Humanities|generated,train
 10101150078,train,12-13|Arts & Humanities|generated,train
 10101150068,test,12-13|Arts & Humanities|generated,train
-10101150065,train,12-13|Arts & Humanities|generated,train
+10101150065,dev,12-13|Arts & Humanities|generated,train
 10101150037,train,13-14|Arts & Humanities|generated,train
 10101150061,test,12-13|Arts & Humanities|generated,train
 10101150009,train,14-15|Arts & Humanities|generated,train
@@ -1485,10 +1484,10 @@ ID,split,stratum,barec_split
 10101150064,train,12-13|Arts & Humanities|generated,train
 10101150042,train,12-13|Arts & Humanities|generated,train
 10101150097,train,12-13|Arts & Humanities|generated,train
-10101150080,train,12-13|Arts & Humanities|generated,train
+10101150080,dev,12-13|Arts & Humanities|generated,train
 10101150043,test,13-14|Arts & Humanities|generated,train
 10101150110,dev,12-13|Arts & Humanities|generated,train
-10101150117,train,12-13|Arts & Humanities|generated,train
+10101150117,dev,12-13|Arts & Humanities|generated,train
 10101150092,test,12-13|Arts & Humanities|generated,train
 10101150126,train,14-15|Arts & Humanities|generated,train
 10101150057,train,14-15|Arts & Humanities|generated,train
@@ -1592,7 +1591,7 @@ ID,split,stratum,barec_split
 10101170131,train,15+|Arts & Humanities|generated,train
 10101170097,train,13-14|Arts & Humanities|generated,train
 10101170129,train,12-13|Arts & Humanities|generated,train
-10101170096,dev,13-14|Arts & Humanities|generated,train
+10101170096,test,13-14|Arts & Humanities|generated,train
 10101170128,train,12-13|Arts & Humanities|generated,train
 10101170174,dev,12-13|Arts & Humanities|generated,train
 10101180002,dev,12-13|Arts & Humanities|generated,train
@@ -1626,7 +1625,7 @@ ID,split,stratum,barec_split
 10101170147,train,14-15|Arts & Humanities|generated,train
 10101180038,train,12-13|Arts & Humanities|generated,train
 10101190028,train,12-13|Arts & Humanities|generated,train
-10101200007,dev,15+|Arts & Humanities|generated,train
+10101200007,train,15+|Arts & Humanities|generated,train
 10101200028,train,12-13|Arts & Humanities|generated,train
 10101180037,train,12-13|Arts & Humanities|generated,train
 10101180066,test,12-13|Arts & Humanities|generated,train
@@ -1686,7 +1685,7 @@ ID,split,stratum,barec_split
 10101220037,train,12-13|Arts & Humanities|generated,train
 10101220039,train,13-14|Arts & Humanities|generated,train
 10101220017,train,13-14|Arts & Humanities|generated,train
-10101220038,train,12-13|Arts & Humanities|generated,train
+10101220038,dev,12-13|Arts & Humanities|generated,train
 10101220003,train,12-13|Arts & Humanities|generated,train
 10101220047,train,13-14|Arts & Humanities|generated,train
 10101210035,train,14-15|Arts & Humanities|generated,train
@@ -1788,7 +1787,7 @@ ID,split,stratum,barec_split
 10101290093,train,12-13|Arts & Humanities|generated,train
 10101300002,dev,12-13|Arts & Humanities|generated,train
 10101290088,dev,12-13|Arts & Humanities|generated,train
-10101360003,train,12-13|Arts & Humanities|generated,train
+10101360003,dev,12-13|Arts & Humanities|generated,train
 10101290072,train,12-13|Arts & Humanities|generated,train
 10101300006,train,12-13|Arts & Humanities|generated,train
 10101310003,train,12-13|Arts & Humanities|generated,train
@@ -1818,7 +1817,7 @@ ID,split,stratum,barec_split
 10101350011,train,12-13|Arts & Humanities|generated,train
 10101330020,train,14-15|Arts & Humanities|generated,train
 10101350016,train,12-13|Arts & Humanities|generated,train
-10101400019,test,12-13|Arts & Humanities|generated,train
+10101400019,train,12-13|Arts & Humanities|generated,train
 10101400002,train,14-15|Arts & Humanities|generated,train
 10101390024,train,12-13|Arts & Humanities|generated,train
 10101390032,train,12-13|Arts & Humanities|generated,train
@@ -1882,7 +1881,7 @@ ID,split,stratum,barec_split
 10101410025,train,14-15|Arts & Humanities|generated,train
 10101430027,train,12-13|Arts & Humanities|generated,train
 10101430029,train,14-15|Arts & Humanities|generated,train
-10101450011,train,12-13|Arts & Humanities|generated,train
+10101450011,dev,12-13|Arts & Humanities|generated,train
 10101430034,train,14-15|Arts & Humanities|generated,train
 10101430035,test,12-13|Arts & Humanities|generated,train
 10101430045,train,12-13|Arts & Humanities|generated,train
@@ -1983,7 +1982,7 @@ ID,split,stratum,barec_split
 10101520017,test,12-13|Arts & Humanities|generated,train
 10101520040,train,12-13|Arts & Humanities|generated,train
 10101520041,train,13-14|Arts & Humanities|generated,train
-10101520079,train,12-13|Arts & Humanities|generated,train
+10101520079,dev,12-13|Arts & Humanities|generated,train
 10101520027,train,12-13|Arts & Humanities|generated,train
 10101520077,dev,12-13|Arts & Humanities|generated,train
 10101520010,train,12-13|Arts & Humanities|generated,train
@@ -2074,7 +2073,7 @@ ID,split,stratum,barec_split
 10101570025,train,13-14|Arts & Humanities|generated,train
 10101580008,train,12-13|Arts & Humanities|generated,train
 10101570042,train,12-13|Arts & Humanities|generated,train
-10101570057,train,12-13|Arts & Humanities|generated,train
+10101570057,dev,12-13|Arts & Humanities|generated,train
 10101570058,train,14-15|Arts & Humanities|generated,train
 10101570029,train,14-15|Arts & Humanities|generated,train
 10101570046,train,12-13|Arts & Humanities|generated,train
@@ -2088,7 +2087,7 @@ ID,split,stratum,barec_split
 10101580032,train,13-14|Arts & Humanities|generated,train
 10101580031,train,12-13|Arts & Humanities|generated,train
 10101580030,test,13-14|Arts & Humanities|generated,train
-10101620003,test,12-13|Arts & Humanities|generated,train
+10101620003,train,12-13|Arts & Humanities|generated,train
 10101580040,train,12-13|Arts & Humanities|generated,train
 10101580045,train,14-15|Arts & Humanities|generated,train
 10101580051,train,13-14|Arts & Humanities|generated,train
@@ -2101,7 +2100,7 @@ ID,split,stratum,barec_split
 10101600014,train,12-13|Arts & Humanities|generated,train
 10101580038,train,14-15|Arts & Humanities|generated,train
 10101580049,train,12-13|Arts & Humanities|generated,train
-10101610030,dev,12-13|Arts & Humanities|generated,train
+10101610030,train,12-13|Arts & Humanities|generated,train
 10101610013,train,12-13|Arts & Humanities|generated,train
 10101580034,train,14-15|Arts & Humanities|generated,train
 10101580048,dev,12-13|Arts & Humanities|generated,train
@@ -2153,7 +2152,7 @@ ID,split,stratum,barec_split
 10101700006,train,14-15|Arts & Humanities|generated,train
 10101700008,train,14-15|Arts & Humanities|generated,train
 10101700004,train,14-15|Arts & Humanities|generated,train
-10101730023,dev,12-13|Arts & Humanities|generated,train
+10101730023,train,12-13|Arts & Humanities|generated,train
 10101700012,train,14-15|Arts & Humanities|generated,train
 10101700030,test,12-13|Arts & Humanities|generated,train
 10101700010,test,14-15|Arts & Humanities|generated,train
@@ -2185,7 +2184,7 @@ ID,split,stratum,barec_split
 10101700032,train,12-13|Arts & Humanities|generated,train
 10101700037,train,15+|Arts & Humanities|generated,train
 10101720002,dev,12-13|Arts & Humanities|generated,train
-10101770019,train,12-13|Arts & Humanities|generated,train
+10101770019,dev,12-13|Arts & Humanities|generated,train
 10101740021,dev,12-13|Arts & Humanities|generated,train
 10101700036,test,12-13|Arts & Humanities|generated,train
 10101750015,test,12-13|Arts & Humanities|generated,train
@@ -2216,7 +2215,7 @@ ID,split,stratum,barec_split
 10101790011,train,12-13|Arts & Humanities|generated,train
 10101790013,train,12-13|Arts & Humanities|generated,train
 10101760010,train,12-13|Arts & Humanities|generated,train
-10101820007,train,12-13|Arts & Humanities|generated,train
+10101820007,dev,12-13|Arts & Humanities|generated,train
 10101790008,train,12-13|Arts & Humanities|generated,train
 10101790002,train,14-15|Arts & Humanities|generated,train
 10101780031,train,12-13|Arts & Humanities|generated,train
@@ -2239,7 +2238,7 @@ ID,split,stratum,barec_split
 10101830028,train,12-13|Arts & Humanities|generated,train
 10101840006,test,12-13|Arts & Humanities|generated,train
 10101800006,train,12-13|Arts & Humanities|generated,train
-10101840017,train,12-13|Arts & Humanities|generated,train
+10101840017,dev,12-13|Arts & Humanities|generated,train
 10101840018,train,12-13|Arts & Humanities|generated,train
 10101840014,train,12-13|Arts & Humanities|generated,train
 10101840027,test,12-13|Arts & Humanities|generated,train
@@ -2269,7 +2268,7 @@ ID,split,stratum,barec_split
 10101850013,train,12-13|Arts & Humanities|generated,train
 10101860029,test,12-13|Arts & Humanities|generated,train
 10101860041,train,12-13|Arts & Humanities|generated,train
-10101850014,train,12-13|Arts & Humanities|generated,train
+10101850014,dev,12-13|Arts & Humanities|generated,train
 10101840040,train,12-13|Arts & Humanities|generated,train
 10101860020,train,13-14|Arts & Humanities|generated,train
 10101870030,train,13-14|Arts & Humanities|generated,train
@@ -2301,13 +2300,13 @@ ID,split,stratum,barec_split
 10101870043,train,14-15|Arts & Humanities|generated,train
 10101870040,train,14-15|Arts & Humanities|generated,train
 10101910014,train,12-13|Arts & Humanities|generated,train
-10101890006,dev,12-13|Arts & Humanities|generated,train
+10101890006,test,12-13|Arts & Humanities|generated,train
 10101930032,train,12-13|Arts & Humanities|generated,train
 10101930017,train,12-13|Arts & Humanities|generated,train
 10101930033,train,12-13|Arts & Humanities|generated,train
 10101930034,dev,12-13|Arts & Humanities|generated,train
 10101890012,train,12-13|Arts & Humanities|generated,train
-10101910009,train,12-13|Arts & Humanities|generated,train
+10101910009,dev,12-13|Arts & Humanities|generated,train
 10101910001,dev,12-13|Arts & Humanities|generated,train
 10101910008,train,13-14|Arts & Humanities|generated,train
 10101910013,train,12-13|Arts & Humanities|generated,train
@@ -2380,7 +2379,7 @@ ID,split,stratum,barec_split
 10101980045,test,13-14|Arts & Humanities|generated,train
 10101970087,train,14-15|Arts & Humanities|generated,train
 10101970076,train,13-14|Arts & Humanities|generated,train
-10101990012,train,12-13|Arts & Humanities|generated,train
+10101990012,dev,12-13|Arts & Humanities|generated,train
 10101990023,test,12-13|Arts & Humanities|generated,train
 10101990008,train,14-15|Arts & Humanities|generated,train
 10101990004,test,12-13|Arts & Humanities|generated,train
@@ -2476,7 +2475,7 @@ ID,split,stratum,barec_split
 10102060012,train,13-14|Arts & Humanities|generated,train
 10102060006,train,14-15|Arts & Humanities|generated,train
 10102070063,train,14-15|Arts & Humanities|generated,train
-10102070057,train,12-13|Arts & Humanities|generated,train
+10102070057,dev,12-13|Arts & Humanities|generated,train
 10102070029,train,14-15|Arts & Humanities|generated,train
 10102090009,train,12-13|Arts & Humanities|generated,train
 10102070027,train,14-15|Arts & Humanities|generated,train
@@ -2513,7 +2512,7 @@ ID,split,stratum,barec_split
 10102110047,train,13-14|Arts & Humanities|generated,train
 10102110049,train,12-13|Arts & Humanities|generated,train
 10102110046,train,14-15|Arts & Humanities|generated,train
-10102110095,test,12-13|Arts & Humanities|generated,train
+10102110095,train,12-13|Arts & Humanities|generated,train
 10102110045,train,14-15|Arts & Humanities|generated,train
 10102110079,train,14-15|Arts & Humanities|generated,train
 10102110062,dev,12-13|Arts & Humanities|generated,train
@@ -2579,7 +2578,7 @@ ID,split,stratum,barec_split
 10102160016,train,14-15|Arts & Humanities|generated,train
 10102170002,train,12-13|Arts & Humanities|generated,train
 10102200011,train,12-13|Arts & Humanities|generated,train
-10102200016,dev,15+|Arts & Humanities|generated,train
+10102200016,train,15+|Arts & Humanities|generated,train
 10102200017,test,12-13|Arts & Humanities|generated,train
 10102160031,train,12-13|Arts & Humanities|generated,train
 10102160028,train,12-13|Arts & Humanities|generated,train
@@ -2623,7 +2622,7 @@ ID,split,stratum,barec_split
 10102610006,test,12-13|Arts & Humanities|generated,train
 10102570033,train,12-13|Arts & Humanities|generated,train
 10102210041,train,14-15|Arts & Humanities|generated,train
-10102640002,train,12-13|Arts & Humanities|generated,train
+10102640002,test,12-13|Arts & Humanities|generated,train
 10102600008,train,12-13|Arts & Humanities|generated,train
 10102600007,train,12-13|Arts & Humanities|generated,train
 10102600015,test,13-14|Arts & Humanities|generated,train
@@ -2656,7 +2655,7 @@ ID,split,stratum,barec_split
 10102620026,train,12-13|Arts & Humanities|generated,train
 10102640029,train,12-13|Arts & Humanities|generated,train
 10102640023,train,14-15|Arts & Humanities|generated,train
-10102640035,train,12-13|Arts & Humanities|generated,train
+10102640035,dev,12-13|Arts & Humanities|generated,train
 10102620033,train,12-13|Arts & Humanities|generated,train
 10102640031,train,13-14|Arts & Humanities|generated,train
 10102640024,train,12-13|Arts & Humanities|generated,train
@@ -2687,7 +2686,7 @@ ID,split,stratum,barec_split
 10102660012,dev,12-13|Arts & Humanities|generated,train
 10102650041,train,14-15|Arts & Humanities|generated,train
 10102650053,train,12-13|Arts & Humanities|generated,train
-10102650047,train,13-14|Arts & Humanities|generated,train
+10102650047,dev,13-14|Arts & Humanities|generated,train
 10102650080,train,12-13|Arts & Humanities|generated,train
 10102650060,test,13-14|Arts & Humanities|generated,train
 10102650035,train,13-14|Arts & Humanities|generated,train
@@ -2705,7 +2704,7 @@ ID,split,stratum,barec_split
 10102650071,test,12-13|Arts & Humanities|generated,train
 10102660024,train,12-13|Arts & Humanities|generated,train
 10102660025,train,12-13|Arts & Humanities|generated,train
-10102690002,train,12-13|Arts & Humanities|generated,train
+10102690002,test,12-13|Arts & Humanities|generated,train
 10102670014,train,12-13|Arts & Humanities|generated,train
 10102650072,train,14-15|Arts & Humanities|generated,train
 10102680017,train,12-13|Arts & Humanities|generated,train
@@ -2742,7 +2741,7 @@ ID,split,stratum,barec_split
 10102720002,train,12-13|Arts & Humanities|generated,train
 10102700044,train,12-13|Arts & Humanities|generated,train
 10102700006,train,12-13|Arts & Humanities|generated,train
-10102720039,test,12-13|Arts & Humanities|generated,train
+10102720039,train,12-13|Arts & Humanities|generated,train
 10102700023,test,14-15|Arts & Humanities|generated,train
 10102710013,test,13-14|Arts & Humanities|generated,train
 10102700009,train,12-13|Arts & Humanities|generated,train
@@ -2926,7 +2925,7 @@ ID,split,stratum,barec_split
 10200330005,train,12-13|Arts & Humanities|generated,train
 10200330011,train,12-13|Arts & Humanities|generated,train
 10200320020,test,12-13|Arts & Humanities|generated,train
-10200330010,train,12-13|Arts & Humanities|generated,train
+10200330010,dev,12-13|Arts & Humanities|generated,train
 10200330007,train,12-13|Arts & Humanities|generated,train
 10200330014,train,12-13|Arts & Humanities|generated,train
 10200340009,test,14-15|Arts & Humanities|generated,train
@@ -2948,7 +2947,7 @@ ID,split,stratum,barec_split
 10200350016,train,12-13|Arts & Humanities|generated,train
 10200340006,train,14-15|Arts & Humanities|generated,train
 10200350004,train,14-15|Arts & Humanities|generated,train
-10200360001,train,12-13|Arts & Humanities|generated,train
+10200360001,dev,12-13|Arts & Humanities|generated,train
 10200360007,train,13-14|Arts & Humanities|generated,train
 10200340020,test,14-15|Arts & Humanities|generated,train
 10200360020,test,12-13|Arts & Humanities|generated,train
@@ -2978,12 +2977,12 @@ ID,split,stratum,barec_split
 10200420014,train,13-14|Arts & Humanities|generated,train
 10200440015,train,13-14|Arts & Humanities|generated,train
 10200430002,train,12-13|Arts & Humanities|generated,train
-10200440009,train,12-13|Arts & Humanities|generated,train
+10200440009,dev,12-13|Arts & Humanities|generated,train
 10200450016,train,13-14|Arts & Humanities|generated,train
 10200480009,train,12-13|Arts & Humanities|generated,train
 10200470019,train,12-13|Arts & Humanities|generated,train
 10200470012,test,13-14|Arts & Humanities|generated,train
-10200480001,train,12-13|Arts & Humanities|generated,train
+10200480001,dev,12-13|Arts & Humanities|generated,train
 10200480005,train,13-14|Arts & Humanities|generated,train
 10200480006,train,12-13|Arts & Humanities|generated,train
 10200460008,train,12-13|Arts & Humanities|generated,train
@@ -3117,7 +3116,7 @@ ID,split,stratum,barec_split
 10200760007,train,12-13|STEM|generated,train
 10200760002,train,14-15|STEM|generated,train
 10200760003,train,14-15|STEM|generated,train
-10200760006,train,13-14|STEM|generated,train
+10200760006,dev,13-14|STEM|generated,train
 10200760005,dev,14-15|STEM|generated,train
 10200760009,dev,12-13|STEM|generated,train
 10200760017,train,12-13|STEM|generated,train
@@ -3268,7 +3267,7 @@ ID,split,stratum,barec_split
 10300110037,test,12-13|Arts & Humanities|generated,train
 10300110081,dev,14-15|Arts & Humanities|generated,train
 10300110015,train,13-14|Arts & Humanities|generated,train
-10300110084,dev,13-14|Arts & Humanities|generated,train
+10300110084,test,13-14|Arts & Humanities|generated,train
 10300110063,train,12-13|Arts & Humanities|generated,train
 10300110061,train,12-13|Arts & Humanities|generated,train
 10300110012,train,12-13|Arts & Humanities|generated,train
@@ -3365,7 +3364,7 @@ ID,split,stratum,barec_split
 10300170024,train,12-13|Arts & Humanities|generated,train
 10300170021,dev,13-14|Arts & Humanities|generated,train
 10300150060,train,12-13|Arts & Humanities|generated,train
-10300170023,train,12-13|Arts & Humanities|generated,train
+10300170023,dev,12-13|Arts & Humanities|generated,train
 10300170043,train,13-14|Arts & Humanities|generated,train
 10300170020,train,13-14|Arts & Humanities|generated,train
 10300170022,test,13-14|Arts & Humanities|generated,train
@@ -3374,7 +3373,7 @@ ID,split,stratum,barec_split
 10300180031,train,12-13|Arts & Humanities|generated,train
 10300170042,train,13-14|Arts & Humanities|generated,train
 10300170050,train,13-14|Arts & Humanities|generated,train
-10300180046,train,12-13|Arts & Humanities|generated,train
+10300180046,dev,12-13|Arts & Humanities|generated,train
 10300180055,train,12-13|Arts & Humanities|generated,train
 10300170027,train,12-13|Arts & Humanities|generated,train
 10300180064,train,12-13|Arts & Humanities|generated,train
@@ -3392,7 +3391,7 @@ ID,split,stratum,barec_split
 10300190048,train,12-13|Arts & Humanities|generated,train
 10300190004,train,12-13|Arts & Humanities|generated,train
 10300190067,train,12-13|Arts & Humanities|generated,train
-10300190018,dev,13-14|Arts & Humanities|generated,train
+10300190018,test,13-14|Arts & Humanities|generated,train
 10300190015,train,12-13|Arts & Humanities|generated,train
 10300190058,dev,13-14|Arts & Humanities|generated,train
 10300190029,train,12-13|Arts & Humanities|generated,train
@@ -3488,11 +3487,11 @@ ID,split,stratum,barec_split
 10300240052,train,12-13|Arts & Humanities|generated,train
 10300260014,train,12-13|Arts & Humanities|generated,train
 10300240037,train,12-13|Arts & Humanities|generated,train
-10300260006,train,12-13|Arts & Humanities|generated,train
+10300260006,dev,12-13|Arts & Humanities|generated,train
 10300260011,train,12-13|Arts & Humanities|generated,train
 10300240059,test,12-13|Arts & Humanities|generated,train
 10300260015,train,12-13|Arts & Humanities|generated,train
-10300260025,train,12-13|Arts & Humanities|generated,train
+10300260025,dev,12-13|Arts & Humanities|generated,train
 10300260029,train,12-13|Arts & Humanities|generated,train
 10300260017,train,12-13|Arts & Humanities|generated,train
 10300260021,train,12-13|Arts & Humanities|generated,train
@@ -3563,7 +3562,7 @@ ID,split,stratum,barec_split
 10300290010,train,12-13|Arts & Humanities|generated,train
 10300290058,dev,12-13|Arts & Humanities|generated,train
 10300290013,train,14-15|Arts & Humanities|generated,train
-10300290042,train,12-13|Arts & Humanities|generated,train
+10300290042,dev,12-13|Arts & Humanities|generated,train
 10300290050,test,13-14|Arts & Humanities|generated,train
 10300300019,train,13-14|Arts & Humanities|generated,train
 10300300013,test,12-13|Arts & Humanities|generated,train
@@ -3584,7 +3583,7 @@ ID,split,stratum,barec_split
 10300300031,dev,12-13|Arts & Humanities|generated,train
 10300300032,test,14-15|Arts & Humanities|generated,train
 10300310011,dev,13-14|Arts & Humanities|generated,train
-10300300024,train,12-13|Arts & Humanities|generated,train
+10300300024,dev,12-13|Arts & Humanities|generated,train
 10300300026,train,12-13|Arts & Humanities|generated,train
 10300300040,train,12-13|Arts & Humanities|generated,train
 10300300036,train,12-13|Arts & Humanities|generated,train
@@ -3598,7 +3597,7 @@ ID,split,stratum,barec_split
 10300310020,train,13-14|Arts & Humanities|generated,train
 10300310010,train,13-14|Arts & Humanities|generated,train
 10300300049,train,13-14|Arts & Humanities|generated,train
-10300310003,dev,12-13|Arts & Humanities|generated,train
+10300310003,test,12-13|Arts & Humanities|generated,train
 10300310027,test,12-13|Arts & Humanities|generated,train
 10300310053,train,13-14|Arts & Humanities|generated,train
 10300310028,train,12-13|Arts & Humanities|generated,train
@@ -3666,7 +3665,7 @@ ID,split,stratum,barec_split
 10300340039,train,12-13|Arts & Humanities|generated,train
 10300340014,dev,12-13|Arts & Humanities|generated,train
 10300340027,train,12-13|Arts & Humanities|generated,train
-10300340037,train,12-13|Arts & Humanities|generated,train
+10300340037,dev,12-13|Arts & Humanities|generated,train
 10300340052,train,12-13|Arts & Humanities|generated,train
 10300330050,train,14-15|Arts & Humanities|generated,train
 10300340049,train,13-14|Arts & Humanities|generated,train
@@ -3675,7 +3674,7 @@ ID,split,stratum,barec_split
 10300350003,train,12-13|Arts & Humanities|generated,train
 10300350004,train,12-13|Arts & Humanities|generated,train
 10300340047,train,13-14|Arts & Humanities|generated,train
-10300340022,train,12-13|Arts & Humanities|generated,train
+10300340022,dev,12-13|Arts & Humanities|generated,train
 10300350008,dev,12-13|Arts & Humanities|generated,train
 10300340051,train,13-14|Arts & Humanities|generated,train
 10300330047,test,12-13|Arts & Humanities|generated,train
@@ -3838,7 +3837,7 @@ ID,split,stratum,barec_split
 10300440027,train,12-13|Arts & Humanities|generated,train
 10300440028,train,12-13|Arts & Humanities|generated,train
 10300440021,train,12-13|Arts & Humanities|generated,train
-10300450007,dev,12-13|Arts & Humanities|generated,train
+10300450007,test,12-13|Arts & Humanities|generated,train
 10300440029,train,12-13|Arts & Humanities|generated,train
 10300450008,train,12-13|Arts & Humanities|generated,train
 10300440030,train,12-13|Arts & Humanities|generated,train
@@ -3961,7 +3960,7 @@ ID,split,stratum,barec_split
 10300510019,train,12-13|Arts & Humanities|generated,train
 10300520053,train,13-14|Arts & Humanities|generated,train
 10300520050,train,12-13|Arts & Humanities|generated,train
-10300540013,dev,12-13|Arts & Humanities|generated,train
+10300540013,test,12-13|Arts & Humanities|generated,train
 10300540018,test,12-13|Arts & Humanities|generated,train
 10300540012,train,13-14|Arts & Humanities|generated,train
 10300540015,dev,13-14|Arts & Humanities|generated,train
@@ -4023,7 +4022,7 @@ ID,split,stratum,barec_split
 10300570020,train,13-14|Arts & Humanities|generated,train
 10300570011,train,12-13|Arts & Humanities|generated,train
 10300570022,train,12-13|Arts & Humanities|generated,train
-10300560028,train,12-13|Arts & Humanities|generated,train
+10300560028,dev,12-13|Arts & Humanities|generated,train
 10300570050,train,12-13|Arts & Humanities|generated,train
 10300560010,train,13-14|Arts & Humanities|generated,train
 10300560011,train,13-14|Arts & Humanities|generated,train
@@ -4148,7 +4147,7 @@ ID,split,stratum,barec_split
 10400060023,train,14-15|Arts & Humanities|generated,train
 10400060026,train,12-13|Arts & Humanities|generated,train
 10400060033,test,12-13|Arts & Humanities|generated,train
-10400060028,train,12-13|Arts & Humanities|generated,train
+10400060028,dev,12-13|Arts & Humanities|generated,train
 10400060037,test,12-13|Arts & Humanities|generated,train
 10400060069,train,12-13|Arts & Humanities|generated,train
 10400060066,train,12-13|Arts & Humanities|generated,train
@@ -4164,7 +4163,7 @@ ID,split,stratum,barec_split
 10400060030,train,12-13|Arts & Humanities|generated,train
 10400060138,train,13-14|Arts & Humanities|generated,train
 10400070025,train,12-13|Arts & Humanities|generated,train
-10400070104,dev,12-13|Arts & Humanities|generated,train
+10400070104,test,12-13|Arts & Humanities|generated,train
 10400070031,train,12-13|Arts & Humanities|generated,train
 10400070053,train,12-13|Arts & Humanities|generated,train
 10400070026,dev,12-13|Arts & Humanities|generated,train
@@ -4207,9 +4206,8 @@ ID,split,stratum,barec_split
 10400150021,train,12-13|Arts & Humanities|generated,train
 10400150015,train,12-13|Arts & Humanities|generated,train
 10400130174,train,12-13|Arts & Humanities|generated,train
-10400130065,train,12-13|Arts & Humanities|generated,train
 10400130014,dev,12-13|Arts & Humanities|generated,train
-10400170007,dev,14-15|Arts & Humanities|generated,train
+10400170007,train,14-15|Arts & Humanities|generated,train
 10400130064,train,12-13|Arts & Humanities|generated,train
 10400130139,train,12-13|Arts & Humanities|generated,train
 10400130012,train,12-13|Arts & Humanities|generated,train
@@ -4222,9 +4220,8 @@ ID,split,stratum,barec_split
 10400150026,train,12-13|Arts & Humanities|generated,train
 10400150042,train,12-13|Arts & Humanities|generated,train
 10400150130,test,12-13|Arts & Humanities|generated,train
-10400170008,dev,12-13|Arts & Humanities|generated,train
+10400170008,train,12-13|Arts & Humanities|generated,train
 10400170014,train,12-13|Arts & Humanities|generated,train
-10400150045,dev,12-13|Arts & Humanities|generated,train
 10400150107,train,12-13|Arts & Humanities|generated,train
 10400150164,test,14-15|Arts & Humanities|generated,train
 10400170013,train,14-15|Arts & Humanities|generated,train
@@ -4268,7 +4265,7 @@ ID,split,stratum,barec_split
 10400190026,train,12-13|Arts & Humanities|generated,train
 10400190034,dev,12-13|Arts & Humanities|generated,train
 10400180101,dev,13-14|Arts & Humanities|generated,train
-10400190059,dev,12-13|Arts & Humanities|generated,train
+10400190059,train,12-13|Arts & Humanities|generated,train
 10400180104,train,13-14|Arts & Humanities|generated,train
 10400180093,train,13-14|Arts & Humanities|generated,train
 10400190054,train,14-15|Arts & Humanities|generated,train
@@ -4318,7 +4315,7 @@ ID,split,stratum,barec_split
 10400240006,train,12-13|Arts & Humanities|generated,train
 10400240073,dev,14-15|Arts & Humanities|generated,train
 10400240065,test,12-13|Arts & Humanities|generated,train
-10400240081,train,12-13|Arts & Humanities|generated,train
+10400240081,test,12-13|Arts & Humanities|generated,train
 10400240022,test,12-13|Arts & Humanities|generated,train
 10400240018,train,14-15|Arts & Humanities|generated,train
 10400240024,train,12-13|Arts & Humanities|generated,train
@@ -4384,7 +4381,7 @@ ID,split,stratum,barec_split
 10400290049,train,14-15|Arts & Humanities|generated,train
 10400290089,train,12-13|Arts & Humanities|generated,train
 10400290057,train,12-13|Arts & Humanities|generated,train
-10400290121,dev,13-14|Arts & Humanities|generated,train
+10400290121,test,13-14|Arts & Humanities|generated,train
 10400290119,train,12-13|Arts & Humanities|generated,train
 10400290094,test,12-13|Arts & Humanities|generated,train
 10400290133,train,12-13|Arts & Humanities|generated,train
@@ -4395,7 +4392,7 @@ ID,split,stratum,barec_split
 10400290123,train,12-13|Arts & Humanities|generated,train
 10400290122,train,13-14|Arts & Humanities|generated,train
 10400300033,train,12-13|Arts & Humanities|generated,train
-10400290135,train,12-13|Arts & Humanities|generated,train
+10400290135,dev,12-13|Arts & Humanities|generated,train
 10400300058,train,12-13|Arts & Humanities|generated,train
 10400300024,train,13-14|Arts & Humanities|generated,train
 10400300036,train,13-14|Arts & Humanities|generated,train
@@ -4431,7 +4428,7 @@ ID,split,stratum,barec_split
 10400350011,train,13-14|Social Sciences|generated,train
 10400350013,train,12-13|Social Sciences|generated,train
 10400350036,train,12-13|Social Sciences|generated,train
-10400350034,dev,13-14|Social Sciences|generated,train
+10400350034,train,13-14|Social Sciences|generated,train
 10400350054,train,12-13|Social Sciences|generated,train
 10400350032,train,12-13|Social Sciences|generated,train
 10400350031,train,12-13|Social Sciences|generated,train
@@ -4453,7 +4450,7 @@ ID,split,stratum,barec_split
 10400360075,test,14-15|Arts & Humanities|generated,train
 10400350066,train,14-15|Social Sciences|generated,train
 10400360064,train,12-13|Arts & Humanities|generated,train
-10400360072,dev,12-13|Arts & Humanities|generated,train
+10400360072,train,12-13|Arts & Humanities|generated,train
 10400360010,test,12-13|Arts & Humanities|generated,train
 10400360081,train,12-13|Arts & Humanities|generated,train
 10400360012,train,14-15|Arts & Humanities|generated,train
@@ -4489,7 +4486,7 @@ ID,split,stratum,barec_split
 10400370003,train,13-14|Arts & Humanities|generated,train
 10400380030,test,12-13|Arts & Humanities|generated,train
 10400370015,train,14-15|Arts & Humanities|generated,train
-10400380061,train,12-13|Arts & Humanities|generated,train
+10400380061,dev,12-13|Arts & Humanities|generated,train
 10400370014,train,14-15|Arts & Humanities|generated,train
 10400380062,train,12-13|Arts & Humanities|generated,train
 10400380033,train,12-13|Arts & Humanities|generated,train
@@ -4543,7 +4540,7 @@ ID,split,stratum,barec_split
 10400400097,train,13-14|Arts & Humanities|generated,train
 10400400160,train,13-14|Arts & Humanities|generated,train
 10400410021,train,12-13|Arts & Humanities|generated,train
-10400400154,train,12-13|Arts & Humanities|generated,train
+10400400154,dev,12-13|Arts & Humanities|generated,train
 10400400176,train,13-14|Arts & Humanities|generated,train
 10400410010,dev,12-13|Arts & Humanities|generated,train
 10400400173,train,12-13|Arts & Humanities|generated,train
@@ -4558,9 +4555,9 @@ ID,split,stratum,barec_split
 10400410047,train,12-13|Arts & Humanities|generated,train
 10400410044,train,12-13|Arts & Humanities|generated,train
 10400400180,train,14-15|Arts & Humanities|generated,train
-10400410034,train,12-13|Arts & Humanities|generated,train
+10400410034,dev,12-13|Arts & Humanities|generated,train
 10400410038,train,12-13|Arts & Humanities|generated,train
-10400410062,train,12-13|Arts & Humanities|generated,train
+10400410062,dev,12-13|Arts & Humanities|generated,train
 10400410070,test,12-13|Arts & Humanities|generated,train
 10400410097,train,12-13|Arts & Humanities|generated,train
 10400410108,train,14-15|Arts & Humanities|generated,train
@@ -4605,7 +4602,7 @@ ID,split,stratum,barec_split
 10400420058,train,14-15|Arts & Humanities|generated,train
 10400420101,train,12-13|Arts & Humanities|generated,train
 10400420049,train,12-13|Arts & Humanities|generated,train
-10400420064,train,12-13|Arts & Humanities|generated,train
+10400420064,dev,12-13|Arts & Humanities|generated,train
 10400420091,train,12-13|Arts & Humanities|generated,train
 10400420096,test,12-13|Arts & Humanities|generated,train
 10400420102,train,12-13|Arts & Humanities|generated,train
@@ -4622,7 +4619,7 @@ ID,split,stratum,barec_split
 10400420116,train,14-15|Arts & Humanities|generated,train
 10400420143,train,12-13|Arts & Humanities|generated,train
 10400420129,train,12-13|Arts & Humanities|generated,train
-10400420124,train,12-13|Arts & Humanities|generated,train
+10400420124,dev,12-13|Arts & Humanities|generated,train
 10400420126,test,12-13|Arts & Humanities|generated,train
 10400420127,train,14-15|Arts & Humanities|generated,train
 10400420107,train,12-13|Arts & Humanities|generated,train
@@ -4643,7 +4640,7 @@ ID,split,stratum,barec_split
 10400440010,train,12-13|Social Sciences|generated,train
 10400440021,dev,14-15|Social Sciences|generated,train
 10400440012,train,14-15|Social Sciences|generated,train
-10400440031,train,15+|Social Sciences|generated,train
+10400440031,dev,15+|Social Sciences|generated,train
 10400420145,train,12-13|Arts & Humanities|generated,train
 10400440032,train,12-13|Social Sciences|generated,train
 10400440080,train,12-13|Social Sciences|generated,train
@@ -4653,7 +4650,7 @@ ID,split,stratum,barec_split
 10400420144,train,12-13|Arts & Humanities|generated,train
 10400440033,dev,15+|Social Sciences|generated,train
 10400440046,train,14-15|Social Sciences|generated,train
-10400450026,dev,12-13|Social Sciences|generated,train
+10400450026,train,12-13|Social Sciences|generated,train
 10400440042,test,14-15|Social Sciences|generated,train
 10400440049,train,14-15|Social Sciences|generated,train
 10400440052,test,14-15|Social Sciences|generated,train
@@ -4680,7 +4677,7 @@ ID,split,stratum,barec_split
 10400440103,test,12-13|Social Sciences|generated,train
 10400440107,train,12-13|Social Sciences|generated,train
 10400450056,train,12-13|Social Sciences|generated,train
-10400450020,dev,12-13|Social Sciences|generated,train
+10400450020,train,12-13|Social Sciences|generated,train
 10400440109,test,15+|Social Sciences|generated,train
 10400450006,dev,14-15|Social Sciences|generated,train
 10400440111,train,12-13|Social Sciences|generated,train
@@ -4939,14 +4936,14 @@ ID,split,stratum,barec_split
 10500280015,train,14-15|Arts & Humanities|generated,train
 10500280012,test,13-14|Arts & Humanities|generated,train
 10500270047,train,13-14|Arts & Humanities|generated,train
-10500280028,dev,12-13|Arts & Humanities|generated,train
-10500270048,dev,12-13|Arts & Humanities|generated,train
+10500280028,test,12-13|Arts & Humanities|generated,train
+10500270048,test,12-13|Arts & Humanities|generated,train
 10500280017,train,13-14|Arts & Humanities|generated,train
 10500270051,train,12-13|Arts & Humanities|generated,train
 10500270045,train,13-14|Arts & Humanities|generated,train
 10500280013,dev,12-13|Arts & Humanities|generated,train
 10500280018,train,12-13|Arts & Humanities|generated,train
-10500280008,train,12-13|Arts & Humanities|generated,train
+10500280008,dev,12-13|Arts & Humanities|generated,train
 10500280009,train,12-13|Arts & Humanities|generated,train
 10500290010,train,12-13|Arts & Humanities|generated,train
 10500280024,train,13-14|Arts & Humanities|generated,train
@@ -5123,7 +5120,7 @@ ID,split,stratum,barec_split
 10500400008,train,12-13|Arts & Humanities|generated,train
 10500400045,train,13-14|Arts & Humanities|generated,train
 10500400039,train,12-13|Arts & Humanities|generated,train
-10500400051,train,12-13|Arts & Humanities|generated,train
+10500400051,dev,12-13|Arts & Humanities|generated,train
 10500400047,train,12-13|Arts & Humanities|generated,train
 10500400040,dev,13-14|Arts & Humanities|generated,train
 10500410039,train,13-14|Arts & Humanities|generated,train
@@ -5150,7 +5147,7 @@ ID,split,stratum,barec_split
 10500420021,train,14-15|Arts & Humanities|generated,train
 10500420029,train,14-15|Arts & Humanities|generated,train
 10500430020,train,12-13|Arts & Humanities|generated,train
-10500420022,dev,13-14|Arts & Humanities|generated,train
+10500420022,test,13-14|Arts & Humanities|generated,train
 10500420028,train,14-15|Arts & Humanities|generated,train
 10500420017,test,14-15|Arts & Humanities|generated,train
 10500420033,train,12-13|Arts & Humanities|generated,train
@@ -5199,7 +5196,7 @@ ID,split,stratum,barec_split
 10500460017,train,13-14|Arts & Humanities|generated,train
 10500470006,train,12-13|Arts & Humanities|generated,train
 10500460029,dev,12-13|Arts & Humanities|generated,train
-10500460036,train,12-13|Arts & Humanities|generated,train
+10500460036,dev,12-13|Arts & Humanities|generated,train
 10500460015,train,14-15|Arts & Humanities|generated,train
 10500480015,dev,12-13|Arts & Humanities|generated,train
 10500460035,test,12-13|Arts & Humanities|generated,train
@@ -5225,7 +5222,7 @@ ID,split,stratum,barec_split
 10500500013,test,12-13|Arts & Humanities|generated,train
 10500500007,train,12-13|Arts & Humanities|generated,train
 10500500049,train,12-13|Arts & Humanities|generated,train
-10500500040,train,13-14|Arts & Humanities|generated,train
+10500500040,dev,13-14|Arts & Humanities|generated,train
 10500470026,dev,14-15|Arts & Humanities|generated,train
 10500500020,train,12-13|Arts & Humanities|generated,train
 10500500008,train,12-13|Arts & Humanities|generated,train
@@ -5272,7 +5269,7 @@ ID,split,stratum,barec_split
 10500540021,train,12-13|Arts & Humanities|generated,train
 10500540041,train,12-13|Arts & Humanities|generated,train
 10500530045,train,12-13|Arts & Humanities|generated,train
-10500550012,train,12-13|Arts & Humanities|generated,train
+10500550012,dev,12-13|Arts & Humanities|generated,train
 10500540028,train,12-13|Arts & Humanities|generated,train
 10500560011,train,13-14|Arts & Humanities|generated,train
 10500540052,train,13-14|Arts & Humanities|generated,train
@@ -5379,14 +5376,14 @@ ID,split,stratum,barec_split
 10600020014,train,12-13|Arts & Humanities|generated,train
 10600020010,train,12-13|Arts & Humanities|generated,train
 10500600016,train,12-13|Arts & Humanities|generated,train
-10600020016,train,12-13|Arts & Humanities|generated,train
+10600020016,dev,12-13|Arts & Humanities|generated,train
 10500610015,train,12-13|Arts & Humanities|generated,train
 10500610029,test,12-13|Arts & Humanities|generated,train
-10600020021,train,12-13|Arts & Humanities|generated,train
+10600020021,dev,12-13|Arts & Humanities|generated,train
 10600020028,train,12-13|Arts & Humanities|generated,train
-10600020020,dev,12-13|Arts & Humanities|generated,train
+10600020020,train,12-13|Arts & Humanities|generated,train
 10500610037,train,14-15|Arts & Humanities|generated,train
-10600020026,train,12-13|Arts & Humanities|generated,train
+10600020026,dev,12-13|Arts & Humanities|generated,train
 10600020024,train,13-14|Arts & Humanities|generated,train
 10500610030,train,12-13|Arts & Humanities|generated,train
 10600030007,dev,12-13|Arts & Humanities|generated,train
@@ -5414,7 +5411,7 @@ ID,split,stratum,barec_split
 10600140001,train,13-14|Arts & Humanities|generated,train
 10600150007,train,12-13|Arts & Humanities|generated,train
 10600130001,train,12-13|Arts & Humanities|generated,train
-10600150013,test,12-13|Arts & Humanities|generated,train
+10600150013,train,12-13|Arts & Humanities|generated,train
 10600090006,train,12-13|Arts & Humanities|generated,train
 10600150006,train,13-14|Arts & Humanities|generated,train
 10600150002,train,12-13|Arts & Humanities|generated,train
@@ -5429,7 +5426,7 @@ ID,split,stratum,barec_split
 10600180003,train,13-14|Arts & Humanities|generated,train
 10600230003,dev,12-13|Arts & Humanities|generated,train
 10600200002,train,13-14|Arts & Humanities|generated,train
-10600220003,dev,13-14|Arts & Humanities|generated,train
+10600220003,test,13-14|Arts & Humanities|generated,train
 10600190006,train,12-13|Arts & Humanities|generated,train
 10600190005,test,13-14|Arts & Humanities|generated,train
 10600200009,test,13-14|Arts & Humanities|generated,train
@@ -5468,7 +5465,7 @@ ID,split,stratum,barec_split
 10600330004,train,12-13|Arts & Humanities|generated,train
 10600330025,train,12-13|Arts & Humanities|generated,train
 10600330026,train,12-13|Arts & Humanities|generated,train
-10600330024,test,12-13|Arts & Humanities|generated,train
+10600330024,train,12-13|Arts & Humanities|generated,train
 10600330005,train,12-13|Arts & Humanities|generated,train
 10600310002,train,12-13|Arts & Humanities|generated,train
 10600320001,train,14-15|Arts & Humanities|generated,train
@@ -5483,32 +5480,32 @@ ID,split,stratum,barec_split
 10600360001,train,12-13|Arts & Humanities|generated,train
 10600360009,train,12-13|Arts & Humanities|generated,train
 10600360006,train,12-13|Arts & Humanities|generated,train
-10600360013,test,12-13|Arts & Humanities|generated,train
+10600360013,train,12-13|Arts & Humanities|generated,train
 10600340002,train,12-13|Arts & Humanities|generated,train
 10600340012,train,12-13|Arts & Humanities|generated,train
 10600370028,train,13-14|Arts & Humanities|generated,train
-10600370013,dev,13-14|Arts & Humanities|generated,train
-10600360014,dev,12-13|Arts & Humanities|generated,train
-10600370032,test,13-14|Arts & Humanities|generated,train
+10600370013,train,13-14|Arts & Humanities|generated,train
+10600360014,train,12-13|Arts & Humanities|generated,train
+10600370032,train,13-14|Arts & Humanities|generated,train
 10600360010,train,12-13|Arts & Humanities|generated,train
 10600390006,train,12-13|Arts & Humanities|generated,train
 10600450014,train,13-14|Arts & Humanities|generated,train
 10600510007,dev,12-13|Arts & Humanities|generated,train
 10600420015,train,12-13|Arts & Humanities|generated,train
-10600510018,train,12-13|Arts & Humanities|generated,train
+10600510018,dev,12-13|Arts & Humanities|generated,train
 10600400004,train,13-14|Arts & Humanities|generated,train
 10600440011,train,12-13|Arts & Humanities|generated,train
-10600510011,test,12-13|Arts & Humanities|generated,train
+10600510011,dev,12-13|Arts & Humanities|generated,train
 10600420003,train,13-14|Arts & Humanities|generated,train
-10600510014,train,12-13|Arts & Humanities|generated,train
+10600510014,dev,12-13|Arts & Humanities|generated,train
 10600430007,train,12-13|Arts & Humanities|generated,train
-10600430017,dev,13-14|Arts & Humanities|generated,train
+10600430017,train,13-14|Arts & Humanities|generated,train
 10600410008,train,12-13|Arts & Humanities|generated,train
 10600380003,train,12-13|Arts & Humanities|generated,train
 10600430013,train,13-14|Arts & Humanities|generated,train
 10600380008,train,12-13|Arts & Humanities|generated,train
-10600510012,train,12-13|Arts & Humanities|generated,train
-10600510013,test,12-13|Arts & Humanities|generated,train
+10600510012,dev,12-13|Arts & Humanities|generated,train
+10600510013,dev,12-13|Arts & Humanities|generated,train
 10600430006,train,13-14|Arts & Humanities|generated,train
 10600430011,train,12-13|Arts & Humanities|generated,train
 10600510003,train,13-14|Arts & Humanities|generated,train
@@ -5581,7 +5578,7 @@ ID,split,stratum,barec_split
 20100080030,train,14-15|Arts & Humanities|generated,train
 20100080028,train,14-15|Arts & Humanities|generated,train
 20100080036,train,14-15|Arts & Humanities|generated,train
-20100080001,test,15+|Arts & Humanities|generated,train
+20100080001,dev,15+|Arts & Humanities|generated,train
 20100090025,train,12-13|Arts & Humanities|generated,train
 20100090005,train,14-15|Arts & Humanities|generated,train
 20100080020,train,13-14|Arts & Humanities|generated,train
@@ -5595,7 +5592,7 @@ ID,split,stratum,barec_split
 20100090019,train,12-13|Arts & Humanities|generated,train
 20100090015,train,12-13|Arts & Humanities|generated,train
 20100090002,train,12-13|Arts & Humanities|generated,train
-20100090010,dev,12-13|Arts & Humanities|generated,train
+20100090010,test,12-13|Arts & Humanities|generated,train
 20100080011,test,14-15|Arts & Humanities|generated,train
 20100090001,train,14-15|Arts & Humanities|generated,train
 20100090037,train,12-13|Arts & Humanities|generated,train
@@ -5656,7 +5653,7 @@ ID,split,stratum,barec_split
 20100190028,train,14-15|Social Sciences|generated,train
 20100190023,test,14-15|Social Sciences|generated,train
 20100210011,train,12-13|Social Sciences|generated,train
-20100210008,dev,14-15|Social Sciences|generated,train
+20100210008,train,14-15|Social Sciences|generated,train
 20100190030,train,13-14|Social Sciences|generated,train
 20100190031,train,14-15|Social Sciences|generated,train
 20100210015,train,14-15|Social Sciences|generated,train
@@ -5688,7 +5685,7 @@ ID,split,stratum,barec_split
 20100210024,train,14-15|Social Sciences|generated,train
 20100240017,train,12-13|Arts & Humanities|generated,train
 20100210028,test,14-15|Social Sciences|generated,train
-20100240026,dev,15+|Arts & Humanities|generated,train
+20100240026,train,15+|Arts & Humanities|generated,train
 20100210029,train,14-15|Social Sciences|generated,train
 20100240013,test,14-15|Arts & Humanities|generated,train
 20100240019,train,12-13|Arts & Humanities|generated,train
@@ -5743,7 +5740,7 @@ ID,split,stratum,barec_split
 20100280035,train,12-13|Social Sciences|generated,train
 20100280024,train,14-15|Social Sciences|generated,train
 20100280029,train,14-15|Social Sciences|generated,train
-20100280040,dev,13-14|Social Sciences|generated,train
+20100280040,train,13-14|Social Sciences|generated,train
 20100280038,train,14-15|Social Sciences|generated,train
 20100280034,train,14-15|Social Sciences|generated,train
 20100300015,train,13-14|Social Sciences|generated,train
@@ -5767,7 +5764,7 @@ ID,split,stratum,barec_split
 20100280031,train,14-15|Social Sciences|generated,train
 20100310026,train,14-15|Arts & Humanities|generated,train
 20100340001,dev,12-13|STEM|generated,train
-20100310013,test,15+|Arts & Humanities|generated,train
+20100310013,dev,15+|Arts & Humanities|generated,train
 20100310016,train,15+|Arts & Humanities|generated,train
 20100310028,dev,13-14|Arts & Humanities|generated,train
 20100310030,train,14-15|Arts & Humanities|generated,train
@@ -5886,15 +5883,15 @@ ID,split,stratum,barec_split
 20100400013,dev,14-15|Social Sciences|generated,train
 20100400008,train,14-15|Social Sciences|generated,train
 20100410018,train,12-13|Social Sciences|generated,train
-20100400027,dev,14-15|Social Sciences|generated,train
+20100400027,train,14-15|Social Sciences|generated,train
 20100410001,test,12-13|Social Sciences|generated,train
 20100400022,train,14-15|Social Sciences|generated,train
 20100410009,test,14-15|Social Sciences|generated,train
 20100400020,train,15+|Social Sciences|generated,train
-20100410019,dev,13-14|Social Sciences|generated,train
+20100410019,train,13-14|Social Sciences|generated,train
 20100400011,train,15+|Social Sciences|generated,train
 20100410023,train,14-15|Social Sciences|generated,train
-20100410005,dev,14-15|Social Sciences|generated,train
+20100410005,train,14-15|Social Sciences|generated,train
 20100410020,test,13-14|Social Sciences|generated,train
 20100400006,train,15+|Social Sciences|generated,train
 20100410024,test,14-15|Social Sciences|generated,train
@@ -5944,7 +5941,7 @@ ID,split,stratum,barec_split
 20100430034,train,14-15|Arts & Humanities|generated,train
 20100440004,train,12-13|Social Sciences|generated,train
 20100420027,test,12-13|Arts & Humanities|generated,train
-20100450005,dev,14-15|Arts & Humanities|generated,train
+20100450005,train,14-15|Arts & Humanities|generated,train
 20100430025,train,13-14|Arts & Humanities|generated,train
 20100430036,dev,14-15|Arts & Humanities|generated,train
 20100440015,train,12-13|Social Sciences|generated,train
@@ -5979,8 +5976,8 @@ ID,split,stratum,barec_split
 20100460021,train,14-15|Social Sciences|generated,train
 20100460017,train,14-15|Social Sciences|generated,train
 20100460019,train,14-15|Social Sciences|generated,train
-20100450002,dev,12-13|Arts & Humanities|generated,train
-20100470009,train,12-13|Arts & Humanities|generated,train
+20100450002,test,12-13|Arts & Humanities|generated,train
+20100470009,dev,12-13|Arts & Humanities|generated,train
 20100460037,train,13-14|Social Sciences|generated,train
 20100460018,test,12-13|Social Sciences|generated,train
 20100440011,train,15+|Social Sciences|generated,train
@@ -6017,7 +6014,7 @@ ID,split,stratum,barec_split
 20100480024,train,12-13|Social Sciences|generated,train
 20100480002,test,15+|Social Sciences|generated,train
 20100480023,train,14-15|Social Sciences|generated,train
-20100480018,dev,12-13|Social Sciences|generated,train
+20100480018,train,12-13|Social Sciences|generated,train
 20100480014,train,14-15|Social Sciences|generated,train
 20100480020,test,12-13|Social Sciences|generated,train
 20100470014,test,13-14|Arts & Humanities|generated,train
@@ -6258,7 +6255,7 @@ ID,split,stratum,barec_split
 20100660025,train,14-15|Arts & Humanities|generated,train
 20100660015,train,15+|Arts & Humanities|generated,train
 20100660027,train,14-15|Arts & Humanities|generated,train
-20100650018,dev,14-15|Social Sciences|generated,train
+20100650018,train,14-15|Social Sciences|generated,train
 20100670006,train,14-15|Social Sciences|generated,train
 20100670002,dev,12-13|Social Sciences|generated,train
 20100660008,dev,14-15|Arts & Humanities|generated,train
@@ -6326,7 +6323,7 @@ ID,split,stratum,barec_split
 20100710007,train,12-13|Social Sciences|generated,train
 20100700034,train,14-15|STEM|generated,train
 20100710001,train,12-13|Social Sciences|generated,train
-20100710006,dev,12-13|Social Sciences|generated,train
+20100710006,train,12-13|Social Sciences|generated,train
 20100710009,train,15+|Social Sciences|generated,train
 20100710010,train,14-15|Social Sciences|generated,train
 20100710012,test,14-15|Social Sciences|generated,train
@@ -6361,7 +6358,7 @@ ID,split,stratum,barec_split
 20100730025,train,14-15|Social Sciences|generated,train
 20100730018,train,15+|Social Sciences|generated,train
 20100730019,train,14-15|Social Sciences|generated,train
-20100730038,train,15+|Social Sciences|generated,train
+20100730038,dev,15+|Social Sciences|generated,train
 20100730017,train,15+|Social Sciences|generated,train
 20100730030,train,12-13|Social Sciences|generated,train
 20100730037,test,12-13|Social Sciences|generated,train
@@ -6485,7 +6482,7 @@ ID,split,stratum,barec_split
 20100810026,train,14-15|Social Sciences|generated,train
 20100810017,train,14-15|Social Sciences|generated,train
 20100810018,train,14-15|Social Sciences|generated,train
-20100820020,dev,12-13|Social Sciences|generated,train
+20100820020,train,12-13|Social Sciences|generated,train
 20100820004,train,12-13|Social Sciences|generated,train
 20100820017,test,12-13|Social Sciences|generated,train
 20100830002,train,12-13|Social Sciences|generated,train
@@ -6505,7 +6502,7 @@ ID,split,stratum,barec_split
 20100830009,train,14-15|Social Sciences|generated,train
 20100830006,train,14-15|Social Sciences|generated,train
 20100830018,train,12-13|Social Sciences|generated,train
-20100830005,train,15+|Social Sciences|generated,train
+20100830005,dev,15+|Social Sciences|generated,train
 20100840005,train,12-13|Social Sciences|generated,train
 20100820028,train,14-15|Social Sciences|generated,train
 20100830026,dev,12-13|Social Sciences|generated,train
@@ -6540,7 +6537,7 @@ ID,split,stratum,barec_split
 20100840036,train,14-15|Social Sciences|generated,train
 20100840048,train,14-15|Social Sciences|generated,train
 20100850003,train,13-14|Social Sciences|generated,train
-20100850022,test,13-14|Social Sciences|generated,train
+20100850022,dev,13-14|Social Sciences|generated,train
 20100840052,train,12-13|Social Sciences|generated,train
 20100840049,train,14-15|Social Sciences|generated,train
 20100850012,test,14-15|Social Sciences|generated,train
@@ -6649,7 +6646,7 @@ ID,split,stratum,barec_split
 20100900004,train,14-15|Social Sciences|generated,train
 20100900026,test,12-13|Social Sciences|generated,train
 20100900006,train,14-15|Social Sciences|generated,train
-20100900025,dev,13-14|Social Sciences|generated,train
+20100900025,train,13-14|Social Sciences|generated,train
 20100910005,train,12-13|STEM|generated,train
 20100900009,train,14-15|Social Sciences|generated,train
 20100910012,train,14-15|STEM|generated,train
@@ -6744,7 +6741,7 @@ ID,split,stratum,barec_split
 20100980011,train,14-15|STEM|generated,train
 20100970022,train,14-15|Social Sciences|generated,train
 20100990010,train,14-15|STEM|generated,train
-20100990018,train,14-15|STEM|generated,train
+20100990018,dev,14-15|STEM|generated,train
 20101000010,test,14-15|STEM|generated,train
 20100990014,train,14-15|STEM|generated,train
 20100990022,dev,12-13|STEM|generated,train
@@ -6785,7 +6782,7 @@ ID,split,stratum,barec_split
 20101010057,train,15+|Arts & Humanities|generated,train
 20101010040,train,14-15|Arts & Humanities|generated,train
 20101010038,train,15+|Arts & Humanities|generated,train
-20101030010,test,12-13|STEM|generated,train
+20101030010,train,12-13|STEM|generated,train
 20101020007,train,14-15|Arts & Humanities|generated,train
 20101010044,test,14-15|Arts & Humanities|generated,train
 20101010042,train,14-15|Arts & Humanities|generated,train
@@ -6808,17 +6805,17 @@ ID,split,stratum,barec_split
 20101020013,train,15+|Arts & Humanities|generated,train
 20101020041,test,14-15|Arts & Humanities|generated,train
 20101040007,train,14-15|STEM|generated,train
-20101040024,train,14-15|STEM|generated,train
+20101040024,test,14-15|STEM|generated,train
 20101030021,train,14-15|STEM|generated,train
 20101030018,dev,14-15|STEM|generated,train
 20101030020,train,14-15|STEM|generated,train
 20101030017,train,14-15|STEM|generated,train
 20101030025,train,14-15|STEM|generated,train
-20101040019,train,14-15|STEM|generated,train
+20101040019,dev,14-15|STEM|generated,train
 20101030026,train,14-15|STEM|generated,train
 20101040014,train,15+|STEM|generated,train
 20101040011,train,14-15|STEM|generated,train
-20101040018,dev,14-15|STEM|generated,train
+20101040018,train,14-15|STEM|generated,train
 20101040013,train,14-15|STEM|generated,train
 20101040004,test,14-15|STEM|generated,train
 20101040015,train,14-15|STEM|generated,train
@@ -6837,12 +6834,12 @@ ID,split,stratum,barec_split
 20101050003,train,12-13|STEM|generated,train
 20101050020,train,14-15|STEM|generated,train
 20101050023,test,15+|STEM|generated,train
-20101050014,train,14-15|STEM|generated,train
+20101050014,dev,14-15|STEM|generated,train
 20101060008,train,12-13|STEM|generated,train
 20101050032,dev,14-15|STEM|generated,train
 20101050027,train,14-15|STEM|generated,train
 20101060004,train,14-15|STEM|generated,train
-20101050029,test,14-15|STEM|generated,train
+20101050029,dev,14-15|STEM|generated,train
 20101050017,dev,14-15|STEM|generated,train
 20101060022,dev,12-13|STEM|generated,train
 20101060030,train,14-15|STEM|generated,train
@@ -6858,7 +6855,7 @@ ID,split,stratum,barec_split
 20101070006,train,12-13|Social Sciences|generated,train
 20101070001,train,12-13|Social Sciences|generated,train
 20101070002,train,15+|Social Sciences|generated,train
-20101060002,test,14-15|STEM|generated,train
+20101060002,dev,14-15|STEM|generated,train
 20101070016,train,15+|Social Sciences|generated,train
 20101060023,train,12-13|STEM|generated,train
 20101070019,train,15+|Social Sciences|generated,train
@@ -6916,7 +6913,7 @@ ID,split,stratum,barec_split
 20101110016,train,14-15|Social Sciences|generated,train
 20101090041,train,14-15|Arts & Humanities|generated,train
 20101110009,test,14-15|Social Sciences|generated,train
-20101110017,dev,14-15|Social Sciences|generated,train
+20101110017,train,14-15|Social Sciences|generated,train
 20101110013,train,14-15|Social Sciences|generated,train
 20101110027,train,14-15|Social Sciences|generated,train
 20101110022,train,14-15|Social Sciences|generated,train
@@ -7095,7 +7092,7 @@ ID,split,stratum,barec_split
 20101200021,train,12-13|Social Sciences|generated,train
 20101200037,dev,12-13|Social Sciences|generated,train
 20101200036,train,12-13|Social Sciences|generated,train
-20101210010,dev,12-13|Social Sciences|generated,train
+20101210010,train,12-13|Social Sciences|generated,train
 20101200009,train,15+|Social Sciences|generated,train
 20101200015,test,14-15|Social Sciences|generated,train
 20101200032,train,13-14|Social Sciences|generated,train
@@ -7144,7 +7141,7 @@ ID,split,stratum,barec_split
 20101230016,train,12-13|Social Sciences|generated,train
 20101230027,train,12-13|Social Sciences|generated,train
 20101240021,train,12-13|Arts & Humanities|generated,train
-20101240023,train,14-15|Arts & Humanities|generated,train
+20101240023,dev,14-15|Arts & Humanities|generated,train
 20101240008,dev,14-15|Arts & Humanities|generated,train
 20101230011,train,12-13|Social Sciences|generated,train
 20101230019,train,12-13|Social Sciences|generated,train
@@ -7185,7 +7182,7 @@ ID,split,stratum,barec_split
 20101250013,train,12-13|Social Sciences|generated,train
 20101250048,dev,14-15|Social Sciences|generated,train
 20101250030,train,12-13|Social Sciences|generated,train
-20101250049,dev,13-14|Social Sciences|generated,train
+20101250049,train,13-14|Social Sciences|generated,train
 20101250047,test,12-13|Social Sciences|generated,train
 20101250034,train,12-13|Social Sciences|generated,train
 20101260005,train,13-14|Social Sciences|generated,train
@@ -7255,7 +7252,7 @@ ID,split,stratum,barec_split
 20101310006,train,14-15|Social Sciences|generated,train
 20101320011,train,14-15|Arts & Humanities|generated,train
 20101320019,train,13-14|Arts & Humanities|generated,train
-20101320023,train,12-13|Arts & Humanities|generated,train
+20101320023,dev,12-13|Arts & Humanities|generated,train
 20101310001,train,14-15|Social Sciences|generated,train
 20101310019,train,14-15|Social Sciences|generated,train
 20101320027,train,12-13|Arts & Humanities|generated,train
@@ -7263,7 +7260,7 @@ ID,split,stratum,barec_split
 20101320001,dev,14-15|Arts & Humanities|generated,train
 20101320026,train,13-14|Arts & Humanities|generated,train
 20101330014,train,14-15|Social Sciences|generated,train
-20101320017,dev,15+|Arts & Humanities|generated,train
+20101320017,train,15+|Arts & Humanities|generated,train
 20101320020,train,15+|Arts & Humanities|generated,train
 20101330006,train,14-15|Social Sciences|generated,train
 20101330007,test,14-15|Social Sciences|generated,train
@@ -7342,7 +7339,7 @@ ID,split,stratum,barec_split
 20101370024,train,14-15|Social Sciences|generated,train
 20101380014,train,12-13|Social Sciences|generated,train
 20101380008,train,12-13|Social Sciences|generated,train
-20101380005,test,13-14|Social Sciences|generated,train
+20101380005,dev,13-14|Social Sciences|generated,train
 20101380029,train,12-13|Social Sciences|generated,train
 20101380019,train,12-13|Social Sciences|generated,train
 20101380009,train,15+|Social Sciences|generated,train
@@ -7387,7 +7384,7 @@ ID,split,stratum,barec_split
 20101400027,train,15+|Social Sciences|generated,train
 20101420013,train,12-13|Arts & Humanities|generated,train
 20101420011,train,12-13|Arts & Humanities|generated,train
-20101420012,train,12-13|Arts & Humanities|generated,train
+20101420012,dev,12-13|Arts & Humanities|generated,train
 20101420004,train,14-15|Arts & Humanities|generated,train
 20101420021,train,12-13|Arts & Humanities|generated,train
 20101420018,train,14-15|Arts & Humanities|generated,train
@@ -7414,7 +7411,7 @@ ID,split,stratum,barec_split
 20101440009,train,14-15|STEM|generated,train
 20101430006,train,14-15|Social Sciences|generated,train
 20101440005,train,14-15|STEM|generated,train
-20101440002,dev,15+|STEM|generated,train
+20101440002,test,15+|STEM|generated,train
 20101430029,train,15+|Social Sciences|generated,train
 20101440001,train,14-15|STEM|generated,train
 20101440014,train,13-14|STEM|generated,train
@@ -7451,7 +7448,7 @@ ID,split,stratum,barec_split
 20101440030,train,14-15|STEM|generated,train
 20101450029,train,15+|Social Sciences|generated,train
 20101460005,train,14-15|STEM|generated,train
-20101450028,dev,14-15|Social Sciences|generated,train
+20101450028,train,14-15|Social Sciences|generated,train
 20101460003,train,14-15|STEM|generated,train
 20101460002,train,14-15|STEM|generated,train
 20101460013,train,14-15|STEM|generated,train
@@ -7473,7 +7470,7 @@ ID,split,stratum,barec_split
 20101460019,train,14-15|STEM|generated,train
 20101470001,train,12-13|Social Sciences|generated,train
 20101460022,train,14-15|STEM|generated,train
-20101460018,train,14-15|STEM|generated,train
+20101460018,dev,14-15|STEM|generated,train
 20101460021,train,14-15|STEM|generated,train
 20101470009,train,15+|Social Sciences|generated,train
 20101470016,train,14-15|Social Sciences|generated,train
@@ -7584,7 +7581,7 @@ ID,split,stratum,barec_split
 20101540010,train,15+|Arts & Humanities|generated,train
 20101540022,dev,15+|Arts & Humanities|generated,train
 20101540008,train,12-13|Arts & Humanities|generated,train
-20101540007,train,12-13|Arts & Humanities|generated,train
+20101540007,dev,12-13|Arts & Humanities|generated,train
 20101540018,train,14-15|Arts & Humanities|generated,train
 20101530017,train,14-15|Social Sciences|generated,train
 20101540015,dev,15+|Arts & Humanities|generated,train
@@ -7626,7 +7623,7 @@ ID,split,stratum,barec_split
 20101570010,train,14-15|Social Sciences|generated,train
 20101570022,train,14-15|Social Sciences|generated,train
 20101570026,train,15+|Social Sciences|generated,train
-20101570027,train,15+|Social Sciences|generated,train
+20101570027,dev,15+|Social Sciences|generated,train
 20101570030,train,15+|Social Sciences|generated,train
 20101570024,train,14-15|Social Sciences|generated,train
 20101580002,dev,12-13|Social Sciences|generated,train
@@ -7674,9 +7671,9 @@ ID,split,stratum,barec_split
 20101590006,test,14-15|Social Sciences|generated,train
 20101590027,dev,12-13|Social Sciences|generated,train
 20101600001,train,14-15|Social Sciences|generated,train
-20101600003,dev,12-13|Social Sciences|generated,train
+20101600003,train,12-13|Social Sciences|generated,train
 20101590025,train,14-15|Social Sciences|generated,train
-20101600018,train,15+|Social Sciences|generated,train
+20101600018,dev,15+|Social Sciences|generated,train
 20101590018,train,14-15|Social Sciences|generated,train
 20101600004,train,12-13|Social Sciences|generated,train
 20101600009,train,14-15|Social Sciences|generated,train
@@ -7846,7 +7843,7 @@ ID,split,stratum,barec_split
 20101710004,train,14-15|Arts & Humanities|generated,train
 20101710009,test,14-15|Arts & Humanities|generated,train
 20101700045,train,12-13|Arts & Humanities|generated,train
-20101710016,test,15+|Arts & Humanities|generated,train
+20101710016,dev,15+|Arts & Humanities|generated,train
 20101710014,train,15+|Arts & Humanities|generated,train
 20101720005,train,14-15|Social Sciences|generated,train
 20101710020,train,12-13|Arts & Humanities|generated,train
@@ -7868,7 +7865,7 @@ ID,split,stratum,barec_split
 20101720015,train,14-15|Social Sciences|generated,train
 20101720014,train,14-15|Social Sciences|generated,train
 20101710012,train,14-15|Arts & Humanities|generated,train
-20101710017,test,15+|Arts & Humanities|generated,train
+20101710017,dev,15+|Arts & Humanities|generated,train
 20101720020,train,14-15|Social Sciences|generated,train
 20101730002,train,14-15|STEM|generated,train
 20101720018,dev,14-15|Social Sciences|generated,train
@@ -7888,7 +7885,7 @@ ID,split,stratum,barec_split
 20101730028,train,12-13|STEM|generated,train
 20101730029,test,14-15|STEM|generated,train
 20101740007,train,15+|Arts & Humanities|generated,train
-20101740009,test,15+|Arts & Humanities|generated,train
+20101740009,dev,15+|Arts & Humanities|generated,train
 20101750019,train,12-13|Social Sciences|generated,train
 20101730022,train,14-15|STEM|generated,train
 20101740008,train,13-14|Arts & Humanities|generated,train
@@ -8019,12 +8016,12 @@ ID,split,stratum,barec_split
 20200370001,train,14-15|Arts & Humanities|generated,train
 20200370007,train,12-13|Arts & Humanities|generated,train
 20200360017,test,14-15|Arts & Humanities|generated,train
-20200350009,dev,15+|Arts & Humanities|generated,train
+20200350009,train,15+|Arts & Humanities|generated,train
 20200370010,test,12-13|Arts & Humanities|generated,train
 20200360018,train,14-15|Arts & Humanities|generated,train
 20200370011,train,12-13|Arts & Humanities|generated,train
 20200370006,train,12-13|Arts & Humanities|generated,train
-20200370005,train,12-13|Arts & Humanities|generated,train
+20200370005,dev,12-13|Arts & Humanities|generated,train
 20200370002,train,14-15|Arts & Humanities|generated,train
 20200370009,train,12-13|Arts & Humanities|generated,train
 20200370008,train,12-13|Arts & Humanities|generated,train
@@ -8033,7 +8030,7 @@ ID,split,stratum,barec_split
 20200410007,train,14-15|Arts & Humanities|generated,train
 20200400018,train,15+|Arts & Humanities|generated,train
 20200400012,train,14-15|Arts & Humanities|generated,train
-20200410008,dev,15+|Arts & Humanities|generated,train
+20200410008,train,15+|Arts & Humanities|generated,train
 20200410013,test,13-14|Arts & Humanities|generated,train
 20200410019,train,13-14|Arts & Humanities|generated,train
 20200380010,train,12-13|Arts & Humanities|generated,train
@@ -8113,7 +8110,7 @@ ID,split,stratum,barec_split
 20200510017,train,14-15|Social Sciences|generated,train
 20200520004,train,14-15|Social Sciences|generated,train
 20200510018,train,14-15|Social Sciences|generated,train
-20200510019,train,15+|Social Sciences|generated,train
+20200510019,dev,15+|Social Sciences|generated,train
 20200520012,train,12-13|Social Sciences|generated,train
 20200520005,test,12-13|Social Sciences|generated,train
 20200510020,train,12-13|Social Sciences|generated,train
@@ -8152,7 +8149,7 @@ ID,split,stratum,barec_split
 20200560017,train,14-15|Social Sciences|generated,train
 20200560009,dev,14-15|Social Sciences|generated,train
 20200560012,train,12-13|Social Sciences|generated,train
-20200560015,dev,12-13|Social Sciences|generated,train
+20200560015,train,12-13|Social Sciences|generated,train
 20200560013,train,13-14|Social Sciences|generated,train
 20200570015,train,12-13|Social Sciences|generated,train
 20200570004,train,13-14|Social Sciences|generated,train
@@ -8232,7 +8229,7 @@ ID,split,stratum,barec_split
 20200640016,train,14-15|Social Sciences|generated,train
 20200640013,dev,12-13|Social Sciences|generated,train
 20200640006,dev,14-15|Social Sciences|generated,train
-20200630015,dev,15+|Social Sciences|generated,train
+20200630015,test,15+|Social Sciences|generated,train
 20200650004,train,12-13|Social Sciences|generated,train
 20200620020,train,14-15|Social Sciences|generated,train
 20200640018,train,12-13|Social Sciences|generated,train
@@ -8368,7 +8365,7 @@ ID,split,stratum,barec_split
 20200800006,train,14-15|Arts & Humanities|generated,train
 20200800009,train,12-13|Arts & Humanities|generated,train
 20200810006,test,12-13|Arts & Humanities|generated,train
-20200810007,dev,12-13|Arts & Humanities|generated,train
+20200810007,test,12-13|Arts & Humanities|generated,train
 20200810009,test,14-15|Arts & Humanities|generated,train
 20200810011,train,12-13|Arts & Humanities|generated,train
 20200810015,train,14-15|Arts & Humanities|generated,train
@@ -8378,7 +8375,7 @@ ID,split,stratum,barec_split
 20200810020,train,14-15|Arts & Humanities|generated,train
 20200810010,test,15+|Arts & Humanities|generated,train
 20200810014,train,14-15|Arts & Humanities|generated,train
-20200810019,dev,14-15|Arts & Humanities|generated,train
+20200810019,test,14-15|Arts & Humanities|generated,train
 20200820002,train,12-13|Arts & Humanities|generated,train
 20200820005,train,13-14|Arts & Humanities|generated,train
 20200830009,train,12-13|Arts & Humanities|generated,train
@@ -8399,7 +8396,7 @@ ID,split,stratum,barec_split
 20200840002,train,12-13|Arts & Humanities|generated,train
 20200830016,train,12-13|Arts & Humanities|generated,train
 20200830017,train,14-15|Arts & Humanities|generated,train
-20200830020,train,12-13|Arts & Humanities|generated,train
+20200830020,dev,12-13|Arts & Humanities|generated,train
 20200830014,train,12-13|Arts & Humanities|generated,train
 20200840005,test,14-15|Arts & Humanities|generated,train
 20200840007,train,12-13|Arts & Humanities|generated,train
@@ -8443,7 +8440,7 @@ ID,split,stratum,barec_split
 20200890018,train,12-13|Arts & Humanities|generated,train
 20200890016,train,12-13|Arts & Humanities|generated,train
 20200890002,train,14-15|Arts & Humanities|generated,train
-20200890017,train,13-14|Arts & Humanities|generated,train
+20200890017,dev,13-14|Arts & Humanities|generated,train
 20200890005,train,12-13|Arts & Humanities|generated,train
 20200900013,train,14-15|Arts & Humanities|generated,train
 20200900004,train,12-13|Arts & Humanities|generated,train
@@ -8473,7 +8470,7 @@ ID,split,stratum,barec_split
 20200940004,train,12-13|Arts & Humanities|generated,train
 20200940016,train,13-14|Arts & Humanities|generated,train
 20200950002,train,13-14|Arts & Humanities|generated,train
-20200940019,train,12-13|Arts & Humanities|generated,train
+20200940019,dev,12-13|Arts & Humanities|generated,train
 20200950001,train,12-13|Arts & Humanities|generated,train
 20200950019,train,15+|Arts & Humanities|generated,train
 20200950004,train,12-13|Arts & Humanities|generated,train
@@ -8486,7 +8483,7 @@ ID,split,stratum,barec_split
 20200950007,train,12-13|Arts & Humanities|generated,train
 20200950015,train,13-14|Arts & Humanities|generated,train
 20200950018,train,14-15|Arts & Humanities|generated,train
-20200950020,test,15+|Arts & Humanities|generated,train
+20200950020,dev,15+|Arts & Humanities|generated,train
 20200950006,train,12-13|Arts & Humanities|generated,train
 20200960001,train,14-15|Arts & Humanities|generated,train
 20200960014,train,14-15|Arts & Humanities|generated,train
@@ -8629,7 +8626,7 @@ ID,split,stratum,barec_split
 20201180012,dev,14-15|STEM|generated,train
 20201180011,test,14-15|STEM|generated,train
 20201170008,train,13-14|STEM|generated,train
-20201180007,test,14-15|STEM|generated,train
+20201180007,dev,14-15|STEM|generated,train
 20201180016,train,14-15|STEM|generated,train
 20201170012,train,14-15|STEM|generated,train
 20201190014,train,12-13|STEM|generated,train
@@ -8803,7 +8800,7 @@ ID,split,stratum,barec_split
 20201400011,train,12-13|STEM|generated,train
 20201410001,train,14-15|STEM|generated,train
 20201410004,train,14-15|STEM|generated,train
-20201410007,train,14-15|STEM|generated,train
+20201410007,dev,14-15|STEM|generated,train
 20201400018,dev,14-15|STEM|generated,train
 20201410005,train,14-15|STEM|generated,train
 20201410009,train,13-14|STEM|generated,train
@@ -8820,13 +8817,13 @@ ID,split,stratum,barec_split
 20201420013,test,14-15|STEM|generated,train
 20201420008,train,14-15|STEM|generated,train
 20201410015,test,14-15|STEM|generated,train
-20201410017,train,14-15|STEM|generated,train
+20201410017,dev,14-15|STEM|generated,train
 20201430002,test,12-13|STEM|generated,train
 20201420018,train,12-13|STEM|generated,train
 20201420019,test,12-13|STEM|generated,train
 20201410018,train,12-13|STEM|generated,train
 20201420009,dev,13-14|STEM|generated,train
-20201410019,test,14-15|STEM|generated,train
+20201410019,dev,14-15|STEM|generated,train
 20201420016,train,12-13|STEM|generated,train
 20201430009,test,12-13|STEM|generated,train
 20201430003,dev,12-13|STEM|generated,train
@@ -8838,7 +8835,7 @@ ID,split,stratum,barec_split
 20201440001,train,12-13|STEM|generated,train
 20201430006,train,12-13|STEM|generated,train
 20201430017,train,12-13|STEM|generated,train
-20201440002,train,13-14|STEM|generated,train
+20201440002,dev,13-14|STEM|generated,train
 20201440008,train,12-13|STEM|generated,train
 20201430001,train,14-15|STEM|generated,train
 20201440018,train,12-13|STEM|generated,train
@@ -8925,7 +8922,7 @@ ID,split,stratum,barec_split
 20300150021,train,14-15|Arts & Humanities|generated,train
 20300150044,train,12-13|Arts & Humanities|generated,train
 20300150007,train,14-15|Arts & Humanities|generated,train
-20300150037,train,12-13|Arts & Humanities|generated,train
+20300150037,dev,12-13|Arts & Humanities|generated,train
 20300150041,dev,14-15|Arts & Humanities|generated,train
 20300150012,train,12-13|Arts & Humanities|generated,train
 20300150061,train,14-15|Arts & Humanities|generated,train
@@ -8968,7 +8965,7 @@ ID,split,stratum,barec_split
 20300170020,train,12-13|Arts & Humanities|generated,train
 20300170013,dev,12-13|Arts & Humanities|generated,train
 20300170022,train,13-14|Arts & Humanities|generated,train
-20300170019,test,15+|Arts & Humanities|generated,train
+20300170019,dev,15+|Arts & Humanities|generated,train
 20300170016,train,12-13|Arts & Humanities|generated,train
 20300170023,train,12-13|Arts & Humanities|generated,train
 20300170052,train,12-13|Arts & Humanities|generated,train
@@ -9158,7 +9155,7 @@ ID,split,stratum,barec_split
 20300280003,train,15+|Arts & Humanities|generated,train
 20300280010,train,13-14|Arts & Humanities|generated,train
 20300270039,dev,12-13|Social Sciences|generated,train
-20300270021,dev,14-15|Social Sciences|generated,train
+20300270021,test,14-15|Social Sciences|generated,train
 20300270036,train,12-13|Social Sciences|generated,train
 20300280005,train,13-14|Arts & Humanities|generated,train
 20300280004,train,13-14|Arts & Humanities|generated,train
@@ -9365,7 +9362,7 @@ ID,split,stratum,barec_split
 20300380017,train,12-13|Arts & Humanities|generated,train
 20300380025,train,12-13|Arts & Humanities|generated,train
 20300380008,train,12-13|Arts & Humanities|generated,train
-20300380031,train,12-13|Arts & Humanities|generated,train
+20300380031,dev,12-13|Arts & Humanities|generated,train
 20300380026,train,14-15|Arts & Humanities|generated,train
 20300380023,train,13-14|Arts & Humanities|generated,train
 20300390016,train,12-13|Social Sciences|generated,train
@@ -9381,7 +9378,7 @@ ID,split,stratum,barec_split
 20300390013,train,14-15|Social Sciences|generated,train
 20300390014,train,14-15|Social Sciences|generated,train
 20300390015,train,12-13|Social Sciences|generated,train
-20300390020,train,15+|Social Sciences|generated,train
+20300390020,dev,15+|Social Sciences|generated,train
 20300390018,train,15+|Social Sciences|generated,train
 20300390022,train,12-13|Social Sciences|generated,train
 20300390012,train,14-15|Social Sciences|generated,train
@@ -9449,9 +9446,9 @@ ID,split,stratum,barec_split
 20300430044,dev,13-14|Arts & Humanities|generated,train
 20300460012,train,14-15|Social Sciences|generated,train
 20300460016,train,14-15|Social Sciences|generated,train
-20300460013,dev,14-15|Social Sciences|generated,train
+20300460013,train,14-15|Social Sciences|generated,train
 20300460004,train,14-15|Social Sciences|generated,train
-20300460005,dev,12-13|Social Sciences|generated,train
+20300460005,train,12-13|Social Sciences|generated,train
 20300430034,dev,13-14|Arts & Humanities|generated,train
 20300430032,train,13-14|Arts & Humanities|generated,train
 20300460026,train,14-15|Social Sciences|generated,train
@@ -9468,7 +9465,7 @@ ID,split,stratum,barec_split
 20300460028,train,14-15|Social Sciences|generated,train
 20300470041,train,12-13|Arts & Humanities|generated,train
 20300460024,train,14-15|Social Sciences|generated,train
-20300470002,dev,12-13|Arts & Humanities|generated,train
+20300470002,test,12-13|Arts & Humanities|generated,train
 20300470062,train,14-15|Arts & Humanities|generated,train
 20300470055,test,12-13|Arts & Humanities|generated,train
 20300470003,train,13-14|Arts & Humanities|generated,train
@@ -9492,7 +9489,7 @@ ID,split,stratum,barec_split
 20300470034,train,14-15|Arts & Humanities|generated,train
 20300470086,train,12-13|Arts & Humanities|generated,train
 20300480014,train,12-13|Arts & Humanities|generated,train
-20300480065,dev,14-15|Arts & Humanities|generated,train
+20300480065,train,14-15|Arts & Humanities|generated,train
 20300470082,dev,13-14|Arts & Humanities|generated,train
 20300480021,train,12-13|Arts & Humanities|generated,train
 20300470078,train,13-14|Arts & Humanities|generated,train
@@ -9582,10 +9579,10 @@ ID,split,stratum,barec_split
 20300530037,train,12-13|Social Sciences|generated,train
 20300530057,train,14-15|Social Sciences|generated,train
 20300530044,train,14-15|Social Sciences|generated,train
-20300530060,dev,15+|Social Sciences|generated,train
+20300530060,test,15+|Social Sciences|generated,train
 20300530024,train,15+|Social Sciences|generated,train
 20300530062,train,15+|Social Sciences|generated,train
-20300530042,dev,12-13|Social Sciences|generated,train
+20300530042,train,12-13|Social Sciences|generated,train
 20300540080,train,12-13|Arts & Humanities|generated,train
 20300540025,train,12-13|Arts & Humanities|generated,train
 20300540051,train,12-13|Arts & Humanities|generated,train
@@ -9609,7 +9606,7 @@ ID,split,stratum,barec_split
 20300550007,train,14-15|Arts & Humanities|generated,train
 20300540115,train,13-14|Arts & Humanities|generated,train
 20300550013,test,12-13|Arts & Humanities|generated,train
-20300550015,train,12-13|Arts & Humanities|generated,train
+20300550015,dev,12-13|Arts & Humanities|generated,train
 20300550034,train,14-15|Arts & Humanities|generated,train
 20300550021,train,13-14|Arts & Humanities|generated,train
 20300550011,train,12-13|Arts & Humanities|generated,train
@@ -9618,7 +9615,7 @@ ID,split,stratum,barec_split
 20300550014,train,12-13|Arts & Humanities|generated,train
 20300550010,train,15+|Arts & Humanities|generated,train
 20300550020,train,15+|Arts & Humanities|generated,train
-20300550032,test,15+|Arts & Humanities|generated,train
+20300550032,dev,15+|Arts & Humanities|generated,train
 20300550061,train,15+|Arts & Humanities|generated,train
 20300550038,train,13-14|Arts & Humanities|generated,train
 20300550053,train,15+|Arts & Humanities|generated,train
@@ -9672,7 +9669,7 @@ ID,split,stratum,barec_split
 20300580002,dev,13-14|Social Sciences|generated,train
 20300570026,train,15+|Arts & Humanities|generated,train
 20300580015,test,12-13|Social Sciences|generated,train
-20300580009,dev,15+|Social Sciences|generated,train
+20300580009,test,15+|Social Sciences|generated,train
 20300570033,train,15+|Arts & Humanities|generated,train
 20300570036,train,14-15|Arts & Humanities|generated,train
 20300580020,train,14-15|Social Sciences|generated,train
@@ -9794,7 +9791,7 @@ ID,split,stratum,barec_split
 20400010137,train,14-15|Arts & Humanities|generated,train
 20400020051,train,14-15|Arts & Humanities|generated,train
 20400020019,train,12-13|Arts & Humanities|generated,train
-20400020070,dev,14-15|Arts & Humanities|generated,train
+20400020070,test,14-15|Arts & Humanities|generated,train
 20400020023,train,13-14|Arts & Humanities|generated,train
 20400030064,dev,12-13|Arts & Humanities|generated,train
 20400030026,train,12-13|Arts & Humanities|generated,train
@@ -9813,15 +9810,15 @@ ID,split,stratum,barec_split
 20400030021,train,13-14|Arts & Humanities|generated,train
 20400040011,train,13-14|Arts & Humanities|generated,train
 20400040005,train,12-13|Arts & Humanities|generated,train
-20400040012,dev,15+|Arts & Humanities|generated,train
+20400040012,train,15+|Arts & Humanities|generated,train
 20400040015,test,13-14|Arts & Humanities|generated,train
 20400030041,train,12-13|Arts & Humanities|generated,train
 20400040004,test,12-13|Arts & Humanities|generated,train
 20400040016,dev,15+|Arts & Humanities|generated,train
-20400040017,dev,15+|Arts & Humanities|generated,train
+20400040017,train,15+|Arts & Humanities|generated,train
 20400040019,test,14-15|Arts & Humanities|generated,train
 20400040018,test,15+|Arts & Humanities|generated,train
-20400040010,test,15+|Arts & Humanities|generated,train
+20400040010,dev,15+|Arts & Humanities|generated,train
 20400040021,train,15+|Arts & Humanities|generated,train
 20400040036,train,12-13|Arts & Humanities|generated,train
 20400040026,train,12-13|Arts & Humanities|generated,train
@@ -9842,7 +9839,7 @@ ID,split,stratum,barec_split
 20400040084,train,12-13|Arts & Humanities|generated,train
 20400040047,train,12-13|Arts & Humanities|generated,train
 20400040043,train,12-13|Arts & Humanities|generated,train
-20400040042,dev,12-13|Arts & Humanities|generated,train
+20400040042,test,12-13|Arts & Humanities|generated,train
 20400040081,train,12-13|Arts & Humanities|generated,train
 20400040071,train,12-13|Arts & Humanities|generated,train
 20400040094,train,12-13|Arts & Humanities|generated,train
@@ -9905,7 +9902,7 @@ ID,split,stratum,barec_split
 20400060064,train,12-13|Arts & Humanities|generated,train
 20400060091,train,12-13|Arts & Humanities|generated,train
 20400090007,train,14-15|Social Sciences|generated,train
-20400090003,dev,14-15|Social Sciences|generated,train
+20400090003,train,14-15|Social Sciences|generated,train
 20400090022,train,14-15|Social Sciences|generated,train
 20400060079,train,13-14|Arts & Humanities|generated,train
 20400090023,train,12-13|Social Sciences|generated,train
@@ -9974,7 +9971,7 @@ ID,split,stratum,barec_split
 20400100020,train,15+|Social Sciences|generated,train
 20400100031,train,12-13|Social Sciences|generated,train
 20400100025,train,12-13|Social Sciences|generated,train
-20400110003,test,13-14|Social Sciences|generated,train
+20400110003,dev,13-14|Social Sciences|generated,train
 20400100014,train,14-15|Social Sciences|generated,train
 20400100018,train,14-15|Social Sciences|generated,train
 20400090106,train,14-15|Social Sciences|generated,train
@@ -10041,7 +10038,7 @@ ID,split,stratum,barec_split
 20400140009,train,12-13|Arts & Humanities|generated,train
 20400140024,train,12-13|Arts & Humanities|generated,train
 20400140025,train,12-13|Arts & Humanities|generated,train
-20400140027,test,15+|Arts & Humanities|generated,train
+20400140027,dev,15+|Arts & Humanities|generated,train
 20400140060,test,14-15|Arts & Humanities|generated,train
 20400140018,test,12-13|Arts & Humanities|generated,train
 20400140023,test,13-14|Arts & Humanities|generated,train
@@ -10050,7 +10047,7 @@ ID,split,stratum,barec_split
 20400140029,train,15+|Arts & Humanities|generated,train
 20400140045,train,15+|Arts & Humanities|generated,train
 20400130231,train,12-13|Arts & Humanities|generated,train
-20400140044,dev,15+|Arts & Humanities|generated,train
+20400140044,train,15+|Arts & Humanities|generated,train
 20400140038,train,13-14|Arts & Humanities|generated,train
 20400140035,train,15+|Arts & Humanities|generated,train
 20400140047,train,12-13|Arts & Humanities|generated,train
@@ -10065,11 +10062,11 @@ ID,split,stratum,barec_split
 20400150014,train,14-15|Arts & Humanities|generated,train
 20400150072,test,12-13|Arts & Humanities|generated,train
 20400150073,test,12-13|Arts & Humanities|generated,train
-20400150094,test,13-14|Arts & Humanities|generated,train
+20400150094,train,13-14|Arts & Humanities|generated,train
 20400150009,test,14-15|Arts & Humanities|generated,train
 20400150011,test,12-13|Arts & Humanities|generated,train
 20400150013,train,13-14|Arts & Humanities|generated,train
-20400150108,train,14-15|Arts & Humanities|generated,train
+20400150108,test,14-15|Arts & Humanities|generated,train
 20400150008,train,15+|Arts & Humanities|generated,train
 20400150107,train,15+|Arts & Humanities|generated,train
 20400150095,train,14-15|Arts & Humanities|generated,train
@@ -10198,7 +10195,7 @@ ID,split,stratum,barec_split
 20400210058,train,12-13|Social Sciences|generated,train
 20400220014,train,12-13|Social Sciences|generated,train
 20400210040,train,14-15|Social Sciences|generated,train
-20400220019,test,12-13|Social Sciences|generated,train
+20400220019,train,12-13|Social Sciences|generated,train
 20400220015,train,15+|Social Sciences|generated,train
 20400210042,train,12-13|Social Sciences|generated,train
 20400210039,train,14-15|Social Sciences|generated,train
@@ -10215,9 +10212,9 @@ ID,split,stratum,barec_split
 20400220032,train,15+|Social Sciences|generated,train
 20400210036,train,14-15|Social Sciences|generated,train
 20400220026,test,12-13|Social Sciences|generated,train
-20400220039,dev,15+|Social Sciences|generated,train
+20400220039,test,15+|Social Sciences|generated,train
 20400220027,test,14-15|Social Sciences|generated,train
-20400220053,dev,15+|Social Sciences|generated,train
+20400220053,train,15+|Social Sciences|generated,train
 20400220048,train,14-15|Social Sciences|generated,train
 20400220054,dev,14-15|Social Sciences|generated,train
 20400250001,train,12-13|Arts & Humanities|generated,train
@@ -10230,7 +10227,7 @@ ID,split,stratum,barec_split
 20400250042,train,12-13|Arts & Humanities|generated,train
 20400220041,train,14-15|Social Sciences|generated,train
 20400220057,dev,15+|Social Sciences|generated,train
-20400250030,test,12-13|Arts & Humanities|generated,train
+20400250030,train,12-13|Arts & Humanities|generated,train
 20400250066,train,14-15|Arts & Humanities|generated,train
 20400250018,train,14-15|Arts & Humanities|generated,train
 20400250014,train,12-13|Arts & Humanities|generated,train
@@ -10258,12 +10255,12 @@ ID,split,stratum,barec_split
 20400260021,train,14-15|Arts & Humanities|generated,train
 20400260048,train,14-15|Arts & Humanities|generated,train
 20400260052,train,13-14|Arts & Humanities|generated,train
-20400260126,test,13-14|Arts & Humanities|generated,train
+20400260126,dev,13-14|Arts & Humanities|generated,train
 20400260119,train,13-14|Arts & Humanities|generated,train
-20400260129,test,13-14|Arts & Humanities|generated,train
+20400260129,train,13-14|Arts & Humanities|generated,train
 20400260090,test,12-13|Arts & Humanities|generated,train
 20400260081,dev,13-14|Arts & Humanities|generated,train
-20400260130,train,13-14|Arts & Humanities|generated,train
+20400260130,dev,13-14|Arts & Humanities|generated,train
 20400260077,dev,13-14|Arts & Humanities|generated,train
 20400260028,train,14-15|Arts & Humanities|generated,train
 20400290007,train,14-15|Arts & Humanities|generated,train
@@ -10328,7 +10325,7 @@ ID,split,stratum,barec_split
 20400310048,train,12-13|Arts & Humanities|generated,train
 20400310053,train,12-13|Arts & Humanities|generated,train
 20400310039,train,12-13|Arts & Humanities|generated,train
-20400310012,train,12-13|Arts & Humanities|generated,train
+20400310012,dev,12-13|Arts & Humanities|generated,train
 20400310063,train,12-13|Arts & Humanities|generated,train
 20400310035,train,14-15|Arts & Humanities|generated,train
 20400310073,train,12-13|Arts & Humanities|generated,train
@@ -10347,7 +10344,7 @@ ID,split,stratum,barec_split
 20400330037,train,13-14|Social Sciences|generated,train
 20400330036,train,14-15|Social Sciences|generated,train
 20400310082,dev,14-15|Arts & Humanities|generated,train
-20400330049,train,12-13|Social Sciences|generated,train
+20400330049,dev,12-13|Social Sciences|generated,train
 20400310083,dev,12-13|Arts & Humanities|generated,train
 20400330050,dev,12-13|Social Sciences|generated,train
 20400310074,train,14-15|Arts & Humanities|generated,train
@@ -10376,8 +10373,8 @@ ID,split,stratum,barec_split
 20400340050,train,12-13|Social Sciences|generated,train
 20400330057,train,15+|Social Sciences|generated,train
 20400340011,train,14-15|Social Sciences|generated,train
-20400340055,dev,12-13|Social Sciences|generated,train
-20400350006,dev,12-13|Social Sciences|generated,train
+20400340055,train,12-13|Social Sciences|generated,train
+20400350006,train,12-13|Social Sciences|generated,train
 20400340035,train,14-15|Social Sciences|generated,train
 20400340058,test,12-13|Social Sciences|generated,train
 20400350012,dev,12-13|Social Sciences|generated,train
@@ -10402,7 +10399,7 @@ ID,split,stratum,barec_split
 20400350053,dev,12-13|Social Sciences|generated,train
 20400350008,train,14-15|Social Sciences|generated,train
 20400350047,train,13-14|Social Sciences|generated,train
-20400350043,dev,14-15|Social Sciences|generated,train
+20400350043,train,14-15|Social Sciences|generated,train
 20400350030,train,14-15|Social Sciences|generated,train
 20400350014,train,13-14|Social Sciences|generated,train
 20400350062,train,14-15|Social Sciences|generated,train
@@ -10437,7 +10434,7 @@ ID,split,stratum,barec_split
 20400370054,train,14-15|Arts & Humanities|generated,train
 20400370052,train,13-14|Arts & Humanities|generated,train
 20400380009,train,14-15|Arts & Humanities|generated,train
-20400380007,train,12-13|Arts & Humanities|generated,train
+20400380007,dev,12-13|Arts & Humanities|generated,train
 20400370026,train,14-15|Arts & Humanities|generated,train
 20400370067,train,13-14|Arts & Humanities|generated,train
 20400370058,train,13-14|Arts & Humanities|generated,train
@@ -10471,7 +10468,7 @@ ID,split,stratum,barec_split
 20400380095,train,13-14|Arts & Humanities|generated,train
 20400390009,train,14-15|Arts & Humanities|generated,train
 20400380094,train,15+|Arts & Humanities|generated,train
-20400390012,dev,15+|Arts & Humanities|generated,train
+20400390012,train,15+|Arts & Humanities|generated,train
 20400380093,train,14-15|Arts & Humanities|generated,train
 20400390021,train,12-13|Arts & Humanities|generated,train
 20400390007,train,15+|Arts & Humanities|generated,train
@@ -10493,13 +10490,13 @@ ID,split,stratum,barec_split
 20400390035,train,15+|Arts & Humanities|generated,train
 20400390032,train,15+|Arts & Humanities|generated,train
 20400390037,train,14-15|Arts & Humanities|generated,train
-20400390034,test,15+|Arts & Humanities|generated,train
+20400390034,dev,15+|Arts & Humanities|generated,train
 20400390023,train,13-14|Arts & Humanities|generated,train
 20400390050,train,12-13|Arts & Humanities|generated,train
 20400390040,train,12-13|Arts & Humanities|generated,train
 20400390054,test,12-13|Arts & Humanities|generated,train
 20400390067,train,12-13|Arts & Humanities|generated,train
-20400390072,train,12-13|Arts & Humanities|generated,train
+20400390072,test,12-13|Arts & Humanities|generated,train
 20400390036,train,15+|Arts & Humanities|generated,train
 20400390086,test,12-13|Arts & Humanities|generated,train
 20400390088,train,15+|Arts & Humanities|generated,train
@@ -10520,7 +10517,7 @@ ID,split,stratum,barec_split
 20400410033,train,12-13|Arts & Humanities|generated,train
 20400390075,train,15+|Arts & Humanities|generated,train
 20400410072,train,12-13|Arts & Humanities|generated,train
-20400410071,test,14-15|Arts & Humanities|generated,train
+20400410071,train,14-15|Arts & Humanities|generated,train
 20400410083,train,12-13|Arts & Humanities|generated,train
 20400410058,train,12-13|Arts & Humanities|generated,train
 20400410044,train,12-13|Arts & Humanities|generated,train
@@ -10545,7 +10542,7 @@ ID,split,stratum,barec_split
 20400410116,test,13-14|Arts & Humanities|generated,train
 20400420045,train,12-13|Arts & Humanities|generated,train
 20400410158,train,13-14|Arts & Humanities|generated,train
-20400420047,train,14-15|Arts & Humanities|generated,train
+20400420047,test,14-15|Arts & Humanities|generated,train
 20400410093,train,15+|Arts & Humanities|generated,train
 20400420034,train,14-15|Arts & Humanities|generated,train
 20400420016,train,14-15|Arts & Humanities|generated,train
@@ -10570,7 +10567,7 @@ ID,split,stratum,barec_split
 20400420089,test,14-15|Arts & Humanities|generated,train
 20400430011,train,12-13|Arts & Humanities|generated,train
 20400420169,train,12-13|Arts & Humanities|generated,train
-20400420170,test,12-13|Arts & Humanities|generated,train
+20400420170,train,12-13|Arts & Humanities|generated,train
 20400420171,test,12-13|Arts & Humanities|generated,train
 20400430032,train,12-13|Arts & Humanities|generated,train
 20400430004,train,12-13|Arts & Humanities|generated,train
@@ -10584,7 +10581,7 @@ ID,split,stratum,barec_split
 20400430038,test,14-15|Arts & Humanities|generated,train
 20400430042,train,12-13|Arts & Humanities|generated,train
 20400420097,train,14-15|Arts & Humanities|generated,train
-20400420144,train,12-13|Arts & Humanities|generated,train
+20400420144,dev,12-13|Arts & Humanities|generated,train
 20400420147,train,14-15|Arts & Humanities|generated,train
 20400430020,train,12-13|Arts & Humanities|generated,train
 20400430034,train,14-15|Arts & Humanities|generated,train
@@ -10610,7 +10607,7 @@ ID,split,stratum,barec_split
 20400430090,train,12-13|Arts & Humanities|generated,train
 20400430081,train,13-14|Arts & Humanities|generated,train
 20400440004,train,12-13|Arts & Humanities|generated,train
-20400440010,dev,13-14|Arts & Humanities|generated,train
+20400440010,test,13-14|Arts & Humanities|generated,train
 20400430104,train,12-13|Arts & Humanities|generated,train
 20400440005,train,12-13|Arts & Humanities|generated,train
 20400440025,train,12-13|Arts & Humanities|generated,train
@@ -10631,8 +10628,8 @@ ID,split,stratum,barec_split
 20400430110,train,12-13|Arts & Humanities|generated,train
 20400440047,train,12-13|Arts & Humanities|generated,train
 20400440041,test,12-13|Arts & Humanities|generated,train
-20400440130,dev,12-13|Arts & Humanities|generated,train
-20400440046,dev,12-13|Arts & Humanities|generated,train
+20400440130,train,12-13|Arts & Humanities|generated,train
+20400440046,train,12-13|Arts & Humanities|generated,train
 20400440067,train,13-14|Arts & Humanities|generated,train
 20400440073,train,12-13|Arts & Humanities|generated,train
 20400440053,train,13-14|Arts & Humanities|generated,train
@@ -10644,7 +10641,7 @@ ID,split,stratum,barec_split
 20400440079,train,12-13|Arts & Humanities|generated,train
 20400440086,train,13-14|Arts & Humanities|generated,train
 20400440111,train,14-15|Arts & Humanities|generated,train
-20400440110,train,12-13|Arts & Humanities|generated,train
+20400440110,test,12-13|Arts & Humanities|generated,train
 20400440096,train,14-15|Arts & Humanities|generated,train
 20400440137,dev,12-13|Arts & Humanities|generated,train
 20400440109,train,12-13|Arts & Humanities|generated,train
@@ -10655,7 +10652,7 @@ ID,split,stratum,barec_split
 20400440117,train,12-13|Arts & Humanities|generated,train
 20400440135,train,14-15|Arts & Humanities|generated,train
 20400440125,train,14-15|Arts & Humanities|generated,train
-20400450030,dev,12-13|Social Sciences|generated,train
+20400450030,train,12-13|Social Sciences|generated,train
 20400440139,train,12-13|Arts & Humanities|generated,train
 20400450033,train,12-13|Social Sciences|generated,train
 20400450035,train,12-13|Social Sciences|generated,train
@@ -10705,7 +10702,7 @@ ID,split,stratum,barec_split
 20400470069,train,13-14|Social Sciences|generated,train
 20400470068,train,15+|Social Sciences|generated,train
 20400470054,train,12-13|Social Sciences|generated,train
-20400470018,train,15+|Social Sciences|generated,train
+20400470018,dev,15+|Social Sciences|generated,train
 20400470038,train,14-15|Social Sciences|generated,train
 20400470056,train,13-14|Social Sciences|generated,train
 20400470060,test,12-13|Social Sciences|generated,train
@@ -10726,7 +10723,7 @@ ID,split,stratum,barec_split
 20400470087,train,12-13|Social Sciences|generated,train
 20400470076,train,14-15|Social Sciences|generated,train
 20400470111,train,12-13|Social Sciences|generated,train
-20400490003,train,14-15|Arts & Humanities|generated,train
+20400490003,test,14-15|Arts & Humanities|generated,train
 20400470116,train,13-14|Social Sciences|generated,train
 20400470092,dev,14-15|Social Sciences|generated,train
 20400470110,train,12-13|Social Sciences|generated,train
@@ -10736,7 +10733,7 @@ ID,split,stratum,barec_split
 20400490010,train,13-14|Arts & Humanities|generated,train
 20400470089,train,13-14|Social Sciences|generated,train
 20400470112,train,14-15|Social Sciences|generated,train
-20400490043,train,12-13|Arts & Humanities|generated,train
+20400490043,dev,12-13|Arts & Humanities|generated,train
 20400490012,train,13-14|Arts & Humanities|generated,train
 20400490026,train,12-13|Arts & Humanities|generated,train
 20400470108,train,12-13|Social Sciences|generated,train
@@ -10757,10 +10754,10 @@ ID,split,stratum,barec_split
 20400490015,train,12-13|Arts & Humanities|generated,train
 20400490053,train,12-13|Arts & Humanities|generated,train
 20400490041,train,14-15|Arts & Humanities|generated,train
-20400500045,dev,12-13|Arts & Humanities|generated,train
-20400500046,train,12-13|Arts & Humanities|generated,train
+20400500045,test,12-13|Arts & Humanities|generated,train
+20400500046,test,12-13|Arts & Humanities|generated,train
 20400500006,train,15+|Arts & Humanities|generated,train
-20400500009,test,15+|Arts & Humanities|generated,train
+20400500009,dev,15+|Arts & Humanities|generated,train
 20400500007,test,14-15|Arts & Humanities|generated,train
 20400500015,train,15+|Arts & Humanities|generated,train
 20400500010,train,13-14|Arts & Humanities|generated,train
@@ -10774,17 +10771,17 @@ ID,split,stratum,barec_split
 20400500029,train,15+|Arts & Humanities|generated,train
 20400500011,train,15+|Arts & Humanities|generated,train
 20400500047,dev,12-13|Arts & Humanities|generated,train
-20400520013,dev,14-15|Arts & Humanities|generated,train
+20400520013,train,14-15|Arts & Humanities|generated,train
 20400500037,train,14-15|Arts & Humanities|generated,train
 20400520014,train,12-13|Arts & Humanities|generated,train
 20400500038,train,14-15|Arts & Humanities|generated,train
 20400500014,train,14-15|Arts & Humanities|generated,train
 20400500026,train,15+|Arts & Humanities|generated,train
-20400500042,test,15+|Arts & Humanities|generated,train
+20400500042,dev,15+|Arts & Humanities|generated,train
 20400490009,train,15+|Arts & Humanities|generated,train
 20400500033,train,15+|Arts & Humanities|generated,train
 20400500044,train,12-13|Arts & Humanities|generated,train
-20400500043,test,15+|Arts & Humanities|generated,train
+20400500043,dev,15+|Arts & Humanities|generated,train
 20400520009,train,14-15|Arts & Humanities|generated,train
 20400500035,test,15+|Arts & Humanities|generated,train
 20400500039,dev,15+|Arts & Humanities|generated,train
@@ -10814,7 +10811,7 @@ ID,split,stratum,barec_split
 20400520071,train,14-15|Arts & Humanities|generated,train
 20400520076,test,13-14|Arts & Humanities|generated,train
 20400520057,train,12-13|Arts & Humanities|generated,train
-20400540006,train,12-13|Arts & Humanities|generated,train
+20400540006,test,12-13|Arts & Humanities|generated,train
 20400520080,train,13-14|Arts & Humanities|generated,train
 20400530029,train,13-14|Social Sciences|generated,train
 20400530033,train,12-13|Social Sciences|generated,train
@@ -10839,7 +10836,7 @@ ID,split,stratum,barec_split
 20400540042,test,12-13|Arts & Humanities|generated,train
 20400540062,train,12-13|Arts & Humanities|generated,train
 20400540049,train,12-13|Arts & Humanities|generated,train
-20400540008,dev,12-13|Arts & Humanities|generated,train
+20400540008,test,12-13|Arts & Humanities|generated,train
 20400540038,dev,12-13|Arts & Humanities|generated,train
 20400530095,train,13-14|Social Sciences|generated,train
 20400540067,test,12-13|Arts & Humanities|generated,train
@@ -10870,7 +10867,7 @@ ID,split,stratum,barec_split
 20400570053,test,12-13|Social Sciences|generated,train
 20400570059,test,12-13|Social Sciences|generated,train
 20400570005,train,12-13|Social Sciences|generated,train
-20400570060,dev,12-13|Social Sciences|generated,train
+20400570060,train,12-13|Social Sciences|generated,train
 20400570009,train,14-15|Social Sciences|generated,train
 20400570052,train,14-15|Social Sciences|generated,train
 20400570001,train,12-13|Social Sciences|generated,train
@@ -10891,7 +10888,7 @@ ID,split,stratum,barec_split
 20400570076,test,14-15|Social Sciences|generated,train
 20400570090,dev,12-13|Social Sciences|generated,train
 20400570068,train,12-13|Social Sciences|generated,train
-20400580047,train,12-13|Social Sciences|generated,train
+20400580047,test,12-13|Social Sciences|generated,train
 20400580003,train,12-13|Social Sciences|generated,train
 20400570080,train,12-13|Social Sciences|generated,train
 20400570081,test,12-13|Social Sciences|generated,train
@@ -10907,7 +10904,7 @@ ID,split,stratum,barec_split
 20400580058,train,12-13|Social Sciences|generated,train
 20400580051,dev,12-13|Social Sciences|generated,train
 20400580008,train,13-14|Social Sciences|generated,train
-20400570097,dev,13-14|Social Sciences|generated,train
+20400570097,train,13-14|Social Sciences|generated,train
 20400580055,test,12-13|Social Sciences|generated,train
 20400570078,train,14-15|Social Sciences|generated,train
 20400580057,train,14-15|Social Sciences|generated,train
@@ -10920,7 +10917,7 @@ ID,split,stratum,barec_split
 20400580094,train,12-13|Social Sciences|generated,train
 20400580068,test,14-15|Social Sciences|generated,train
 20400580028,train,14-15|Social Sciences|generated,train
-20400580073,dev,12-13|Social Sciences|generated,train
+20400580073,train,12-13|Social Sciences|generated,train
 20400580082,train,13-14|Social Sciences|generated,train
 20400580084,train,13-14|Social Sciences|generated,train
 20400580097,train,12-13|Social Sciences|generated,train
@@ -11033,7 +11030,7 @@ ID,split,stratum,barec_split
 20500230010,train,14-15|Arts & Humanities|generated,train
 20500240006,train,15+|Arts & Humanities|generated,train
 20500230016,test,12-13|Arts & Humanities|generated,train
-20500250006,test,15+|Arts & Humanities|generated,train
+20500250006,train,15+|Arts & Humanities|generated,train
 20500240009,train,14-15|Arts & Humanities|generated,train
 20500220011,train,14-15|Arts & Humanities|generated,train
 20500230014,dev,12-13|Arts & Humanities|generated,train
@@ -11061,7 +11058,7 @@ ID,split,stratum,barec_split
 20500260018,dev,14-15|Arts & Humanities|generated,train
 20500270009,train,12-13|Arts & Humanities|generated,train
 20500260019,train,14-15|Arts & Humanities|generated,train
-20500260012,train,14-15|Arts & Humanities|generated,train
+20500260012,dev,14-15|Arts & Humanities|generated,train
 20500270018,train,12-13|Arts & Humanities|generated,train
 20500270008,train,14-15|Arts & Humanities|generated,train
 20500280020,test,12-13|Arts & Humanities|generated,train
@@ -11538,7 +11535,7 @@ ID,split,stratum,barec_split
 20600330005,train,14-15|STEM|generated,train
 20600330007,train,15+|STEM|generated,train
 20600330002,dev,14-15|STEM|generated,train
-20600330006,test,14-15|STEM|generated,train
+20600330006,dev,14-15|STEM|generated,train
 20600320005,train,14-15|STEM|generated,train
 20600290006,dev,14-15|STEM|generated,train
 20600350009,test,12-13|Arts & Humanities|generated,train
@@ -11629,13 +11626,13 @@ ID,split,stratum,barec_split
 20600450016,train,12-13|STEM|generated,train
 20600450004,train,14-15|STEM|generated,train
 20600450018,train,12-13|STEM|generated,train
-20600450024,test,14-15|STEM|generated,train
+20600450024,dev,14-15|STEM|generated,train
 20600450023,train,14-15|STEM|generated,train
 20600460005,train,12-13|Arts & Humanities|generated,train
 20600450015,train,14-15|STEM|generated,train
 20600460006,train,14-15|Arts & Humanities|generated,train
 20600450025,train,12-13|STEM|generated,train
-20600480001,dev,14-15|Social Sciences|generated,train
+20600480001,test,14-15|Social Sciences|generated,train
 20600460014,train,13-14|Arts & Humanities|generated,train
 20600460002,train,12-13|Arts & Humanities|generated,train
 20600450027,test,14-15|STEM|generated,train
@@ -11645,7 +11642,7 @@ ID,split,stratum,barec_split
 20600480012,train,14-15|Social Sciences|generated,train
 20600480007,train,14-15|Social Sciences|generated,train
 20600470004,test,14-15|STEM|generated,train
-20600450019,test,14-15|STEM|generated,train
+20600450019,dev,14-15|STEM|generated,train
 20600470005,train,14-15|STEM|generated,train
 20600520001,train,14-15|Social Sciences|generated,train
 20600520004,train,12-13|Social Sciences|generated,train
@@ -11660,11 +11657,11 @@ ID,split,stratum,barec_split
 20600530006,train,12-13|Social Sciences|generated,train
 20600480002,dev,14-15|Social Sciences|generated,train
 20600550004,train,14-15|Social Sciences|generated,train
-20600520003,train,15+|Social Sciences|generated,train
+20600520003,dev,15+|Social Sciences|generated,train
 20600530008,train,14-15|Social Sciences|generated,train
 20600530014,train,14-15|Social Sciences|generated,train
 20600520009,train,14-15|Social Sciences|generated,train
-20600530013,dev,12-13|Social Sciences|generated,train
+20600530013,train,12-13|Social Sciences|generated,train
 20600550011,train,14-15|Social Sciences|generated,train
 20600530011,train,14-15|Social Sciences|generated,train
 20600530009,train,14-15|Social Sciences|generated,train
@@ -11713,7 +11710,7 @@ ID,split,stratum,barec_split
 20600640027,train,14-15|Social Sciences|generated,train
 20600650004,train,14-15|Social Sciences|generated,train
 20600650003,train,12-13|Social Sciences|generated,train
-20600650007,test,12-13|Social Sciences|generated,train
+20600650007,dev,12-13|Social Sciences|generated,train
 20600650008,train,14-15|Social Sciences|generated,train
 20600660006,dev,12-13|Social Sciences|generated,train
 20600660001,train,14-15|Social Sciences|generated,train
@@ -11791,14 +11788,14 @@ ID,split,stratum,barec_split
 20700240009,train,12-13|Arts & Humanities|generated,train
 20700270005,train,13-14|Arts & Humanities|generated,train
 20700260002,train,14-15|Arts & Humanities|generated,train
-20700300001,train,12-13|Arts & Humanities|generated,train
+20700300001,dev,12-13|Arts & Humanities|generated,train
 20700250006,train,12-13|Arts & Humanities|generated,train
 20700270007,train,14-15|Arts & Humanities|generated,train
 20700290004,train,14-15|Arts & Humanities|generated,train
 20700270006,train,14-15|Arts & Humanities|generated,train
 20700270008,test,12-13|Arts & Humanities|generated,train
 20700310001,train,12-13|Arts & Humanities|generated,train
-20700290009,train,13-14|Arts & Humanities|generated,train
+20700290009,dev,13-14|Arts & Humanities|generated,train
 20700290005,train,12-13|Arts & Humanities|generated,train
 20700300012,train,13-14|Arts & Humanities|generated,train
 20700290002,train,14-15|Arts & Humanities|generated,train
@@ -11939,7 +11936,7 @@ ID,split,stratum,barec_split
 20700680002,train,12-13|Arts & Humanities|generated,train
 20700690006,train,12-13|Arts & Humanities|generated,train
 20700680008,test,14-15|Arts & Humanities|generated,train
-20700730007,train,12-13|Arts & Humanities|generated,train
+20700730007,dev,12-13|Arts & Humanities|generated,train
 20700700011,train,12-13|Arts & Humanities|generated,train
 20700720007,train,13-14|Arts & Humanities|generated,train
 20700700012,train,12-13|Arts & Humanities|generated,train
@@ -11947,7 +11944,7 @@ ID,split,stratum,barec_split
 20700710002,train,12-13|Arts & Humanities|generated,train
 20700700009,test,12-13|Arts & Humanities|generated,train
 20700720001,train,12-13|Arts & Humanities|generated,train
-20700700003,dev,12-13|Arts & Humanities|generated,train
+20700700003,test,12-13|Arts & Humanities|generated,train
 20700730008,train,12-13|Arts & Humanities|generated,train
 20700740001,train,12-13|Arts & Humanities|generated,train
 20700720003,test,12-13|Arts & Humanities|generated,train
@@ -11990,7 +11987,7 @@ ID,split,stratum,barec_split
 20700820004,train,12-13|Arts & Humanities|generated,train
 20700800023,train,12-13|Arts & Humanities|generated,train
 20700830005,train,12-13|Arts & Humanities|generated,train
-20700830009,train,12-13|Arts & Humanities|generated,train
+20700830009,dev,12-13|Arts & Humanities|generated,train
 20700830019,train,12-13|Arts & Humanities|generated,train
 20700820012,train,12-13|Arts & Humanities|generated,train
 20700820005,train,12-13|Arts & Humanities|generated,train
@@ -12028,7 +12025,7 @@ ID,split,stratum,barec_split
 20800030025,train,12-13|Arts & Humanities|generated,train
 20800030068,train,12-13|Arts & Humanities|generated,train
 20700860006,train,12-13|Arts & Humanities|generated,train
-20800030094,dev,12-13|Arts & Humanities|generated,train
+20800030094,test,12-13|Arts & Humanities|generated,train
 20800040038,train,12-13|Arts & Humanities|generated,train
 20800040036,train,12-13|Arts & Humanities|generated,train
 20800040035,dev,12-13|Arts & Humanities|generated,train
@@ -12054,7 +12051,7 @@ ID,split,stratum,barec_split
 20800060034,train,12-13|Arts & Humanities|generated,train
 20800060053,train,12-13|Arts & Humanities|generated,train
 20800050086,test,12-13|Arts & Humanities|generated,train
-20800060050,train,14-15|Arts & Humanities|generated,train
+20800060050,dev,14-15|Arts & Humanities|generated,train
 20800050088,train,12-13|Arts & Humanities|generated,train
 20800060071,dev,12-13|Arts & Humanities|generated,train
 20800040061,train,13-14|Arts & Humanities|generated,train
@@ -12068,7 +12065,7 @@ ID,split,stratum,barec_split
 20800060035,train,14-15|Arts & Humanities|generated,train
 20800080024,train,14-15|Arts & Humanities|generated,train
 20800050092,test,14-15|Arts & Humanities|generated,train
-20800080006,train,12-13|Arts & Humanities|generated,train
+20800080006,dev,12-13|Arts & Humanities|generated,train
 20800080055,train,12-13|Arts & Humanities|generated,train
 20800080079,train,12-13|Arts & Humanities|generated,train
 20800080033,train,12-13|Arts & Humanities|generated,train
@@ -12239,7 +12236,7 @@ ID,split,stratum,barec_split
 20900110038,train,12-13|Arts & Humanities|generated,train
 20900120011,train,12-13|Arts & Humanities|generated,train
 20900110034,train,14-15|Arts & Humanities|generated,train
-20900120003,train,12-13|Arts & Humanities|generated,train
+20900120003,dev,12-13|Arts & Humanities|generated,train
 20900110023,test,13-14|Arts & Humanities|generated,train
 20900110014,train,13-14|Arts & Humanities|generated,train
 20900120042,train,12-13|Arts & Humanities|generated,train
@@ -12335,7 +12332,7 @@ ID,split,stratum,barec_split
 21100040002,train,14-15|Arts & Humanities|generated,train
 21100040003,train,12-13|Arts & Humanities|generated,train
 21100010007,train,14-15|Arts & Humanities|generated,train
-21100030013,test,15+|Arts & Humanities|generated,train
+21100030013,dev,15+|Arts & Humanities|generated,train
 21100050016,train,12-13|Arts & Humanities|generated,train
 21100040001,train,13-14|Arts & Humanities|generated,train
 21100030005,dev,12-13|Arts & Humanities|generated,train
@@ -12401,7 +12398,7 @@ ID,split,stratum,barec_split
 30100210010,test,14-15|STEM|generated,train
 30100170019,dev,14-15|Arts & Humanities|generated,train
 30100210016,train,14-15|STEM|generated,train
-30100210059,dev,15+|STEM|generated,train
+30100210059,train,15+|STEM|generated,train
 30100360054,train,12-13|Arts & Humanities|generated,train
 30100360040,test,13-14|Arts & Humanities|generated,train
 30100360123,train,15+|Arts & Humanities|generated,train
@@ -12421,174 +12418,6 @@ ID,split,stratum,barec_split
 30100570003,train,14-15|STEM|generated,train
 30100570004,train,12-13|STEM|generated,train
 30100550046,train,12-13|Social Sciences|generated,train
-30300500007,train,12-13|STEM|identity,train
-30100490020,train,12-13|STEM|identity,train
-30300270008,train,12-13|STEM|identity,train
-30101660001,train,12-13|STEM|identity,train
-20101340039,train,12-13|STEM|identity,train
-30300450040,train,12-13|STEM|identity,train
-20101340021,train,12-13|STEM|identity,train
-30100490045,train,12-13|STEM|identity,train
-30100860021,train,12-13|STEM|identity,train
-10200680012,train,12-13|STEM|identity,train
-30100490004,train,12-13|STEM|identity,train
-30100680004,train,12-13|STEM|identity,train
-30100570010,train,12-13|STEM|identity,train
-20600370008,train,12-13|STEM|identity,train
-30100900004,train,12-13|STEM|identity,train
-30300090020,train,12-13|STEM|identity,train
-20100700016,test,12-13|STEM|identity,train
-30100650026,train,12-13|STEM|identity,train
-10200600007,test,12-13|STEM|identity,train
-30100490035,train,12-13|STEM|identity,train
-10200770017,test,12-13|STEM|identity,train
-30300310030,train,12-13|STEM|identity,train
-30101660031,train,12-13|STEM|identity,train
-10200700027,train,12-13|STEM|identity,train
-30100650034,train,12-13|STEM|identity,train
-10200810002,train,12-13|STEM|identity,train
-10200650004,train,12-13|STEM|identity,train
-10200650010,train,12-13|STEM|identity,train
-20100040029,dev,12-13|STEM|identity,dev
-10200810005,test,12-13|STEM|identity,train
-30300450056,train,12-13|STEM|identity,train
-10200770013,train,12-13|STEM|identity,train
-30100490041,train,12-13|STEM|identity,train
-10200780020,dev,12-13|STEM|identity,train
-10200700014,train,12-13|STEM|identity,train
-20201430018,train,12-13|STEM|identity,train
-20201420002,test,12-13|STEM|identity,train
-10200770001,train,12-13|STEM|identity,train
-30200970004,train,12-13|STEM|identity,train
-20201420001,train,12-13|STEM|identity,train
-30200980006,dev,12-13|STEM|identity,train
-10200620009,train,12-13|STEM|identity,train
-20201300012,train,12-13|STEM|identity,train
-20201420007,dev,12-13|STEM|identity,train
-10200610020,train,12-13|STEM|identity,train
-10400090015,train,12-13|Social Sciences|identity,train
-10400090075,train,12-13|Social Sciences|identity,train
-10400090076,train,12-13|Social Sciences|identity,train
-10400090081,train,12-13|Social Sciences|identity,train
-10400090083,train,12-13|Social Sciences|identity,train
-10400090084,train,12-13|Social Sciences|identity,train
-10400090085,dev,12-13|Social Sciences|identity,train
-10400090086,train,12-13|Social Sciences|identity,train
-10400090105,train,12-13|Social Sciences|identity,train
-10400090106,train,12-13|Social Sciences|identity,train
-10400090107,test,12-13|Social Sciences|identity,train
-10400090108,test,12-13|Social Sciences|identity,train
-10400090169,train,12-13|Social Sciences|identity,train
-20100900008,train,12-13|Social Sciences|identity,train
-20400340028,train,12-13|Social Sciences|identity,train
-20400450046,train,12-13|Social Sciences|identity,train
-30100960009,train,12-13|Social Sciences|identity,train
-10400100053,train,12-13|Social Sciences|identity,dev
-10400100059,train,12-13|Social Sciences|identity,dev
-10400100075,train,12-13|Social Sciences|identity,dev
-10400120106,train,12-13|Social Sciences|identity,dev
-20400240027,train,12-13|Social Sciences|identity,dev
-30100150052,dev,12-13|Social Sciences|identity,dev
-10201020006,train,12-13|Social Sciences|identity,train
-10201060011,train,12-13|Social Sciences|identity,train
-10400220036,train,12-13|Social Sciences|identity,dev
-10201070006,test,12-13|Social Sciences|identity,train
-10201080015,train,12-13|Social Sciences|identity,train
-10201010020,train,12-13|Social Sciences|identity,train
-10201080003,dev,12-13|Social Sciences|identity,train
-10201060007,train,12-13|Social Sciences|identity,train
-10200880015,train,12-13|Social Sciences|identity,train
-10400230026,train,12-13|Social Sciences|identity,train
-10200880012,train,12-13|Social Sciences|identity,train
-10201060014,train,12-13|Social Sciences|identity,train
-10201030010,train,12-13|Social Sciences|identity,train
-10201050015,train,12-13|Social Sciences|identity,train
-10201080010,train,12-13|Social Sciences|identity,train
-10201080016,train,12-13|Social Sciences|identity,train
-10400210010,train,12-13|Social Sciences|identity,train
-10201080006,test,12-13|Social Sciences|identity,train
-10201030018,train,12-13|Social Sciences|identity,train
-10201070007,dev,12-13|Social Sciences|identity,train
-10201070016,dev,12-13|Social Sciences|identity,train
-10200840002,train,12-13|Social Sciences|identity,train
-10200890003,train,12-13|Social Sciences|identity,train
-10400090145,train,12-13|Social Sciences|identity,train
-20101590012,test,12-13|Social Sciences|identity,train
-20101210031,train,12-13|Social Sciences|identity,train
-20101500013,train,12-13|Social Sciences|identity,train
-20400340041,train,12-13|Social Sciences|identity,train
-20101330013,test,12-13|Social Sciences|identity,train
-20101620010,train,12-13|Social Sciences|identity,train
-20101210012,train,12-13|Social Sciences|identity,train
-20600340008,test,12-13|Social Sciences|identity,train
-20201090003,train,12-13|Social Sciences|identity,train
-20300290012,dev,12-13|Social Sciences|identity,train
-20101640002,train,12-13|Social Sciences|identity,train
-20101680010,train,12-13|Social Sciences|identity,train
-20101210015,train,12-13|Social Sciences|identity,train
-20101560007,dev,12-13|Social Sciences|identity,train
-20400340019,train,12-13|Social Sciences|identity,train
-20101390017,test,12-13|Social Sciences|identity,train
-20101680027,test,12-13|Social Sciences|identity,train
-20400330024,train,12-13|Social Sciences|identity,train
-20400530098,train,12-13|Social Sciences|identity,train
-20101620009,train,12-13|Social Sciences|identity,train
-20101470014,test,12-13|Social Sciences|identity,train
-20101500003,dev,12-13|Social Sciences|identity,train
-30100160041,train,12-13|Social Sciences|identity,train
-30100110035,train,12-13|Social Sciences|identity,train
-20600060002,train,12-13|Social Sciences|identity,train
-10200820011,train,12-13|Social Sciences|identity,train
-30101290042,train,12-13|Social Sciences|identity,train
-10400230008,dev,12-13|Social Sciences|identity,train
-20101210023,train,12-13|Social Sciences|identity,train
-20100810006,train,12-13|Social Sciences|identity,train
-10200900011,train,12-13|Social Sciences|identity,train
-20100820008,test,12-13|Social Sciences|identity,train
-20100410010,train,12-13|Social Sciences|identity,train
-10201010001,train,12-13|Social Sciences|identity,train
-20101510020,train,12-13|Social Sciences|identity,train
-10200950012,train,12-13|Social Sciences|identity,train
-10200980010,train,12-13|Social Sciences|identity,train
-10200980008,train,12-13|Social Sciences|identity,train
-10200980001,train,12-13|Social Sciences|identity,train
-10200850003,train,12-13|Social Sciences|identity,train
-10200990007,train,12-13|Social Sciences|identity,train
-20101200004,train,12-13|Social Sciences|identity,train
-20100950007,train,12-13|Social Sciences|identity,train
-20101250022,train,12-13|Social Sciences|identity,train
-10200930012,dev,12-13|Social Sciences|identity,train
-20100410007,train,12-13|Social Sciences|identity,train
-10200980003,train,12-13|Social Sciences|identity,train
-20101510002,train,12-13|Social Sciences|identity,train
-10200970020,train,12-13|Social Sciences|identity,train
-10200980002,train,12-13|Social Sciences|identity,train
-20101210030,train,12-13|Social Sciences|identity,train
-20200570005,test,12-13|Social Sciences|identity,train
-10200980009,train,12-13|Social Sciences|identity,train
-20200590002,train,12-13|Social Sciences|identity,train
-10200990008,train,12-13|Social Sciences|identity,train
-10200950014,train,12-13|Social Sciences|identity,train
-20200530004,train,12-13|Social Sciences|identity,train
-20200590019,train,12-13|Social Sciences|identity,train
-10200990002,test,12-13|Social Sciences|identity,train
-10200860017,train,12-13|Social Sciences|identity,train
-10200960003,test,12-13|Social Sciences|identity,train
-10200960012,train,12-13|Social Sciences|identity,train
-10200960018,train,12-13|Social Sciences|identity,train
-20200570011,train,12-13|Social Sciences|identity,train
-10200990005,train,12-13|Social Sciences|identity,train
-10200940019,train,12-13|Social Sciences|identity,train
-20101560010,dev,12-13|Social Sciences|identity,train
-30200420010,train,12-13|Social Sciences|identity,train
-20101390010,train,12-13|Social Sciences|identity,train
-10200980011,train,12-13|Social Sciences|identity,train
-10200980014,train,12-13|Social Sciences|identity,train
-10200960006,train,12-13|Social Sciences|identity,train
-10200980005,train,12-13|Social Sciences|identity,train
-30200510014,train,12-13|Social Sciences|identity,train
-30200510015,train,12-13|Social Sciences|identity,train
-30200510016,train,12-13|Social Sciences|identity,train
 10100320018,train,12-13|Arts & Humanities|identity,train
 10100330101,train,12-13|Arts & Humanities|identity,train
 10100330120,train,12-13|Arts & Humanities|identity,train
@@ -12596,9 +12425,9 @@ ID,split,stratum,barec_split
 10101030029,train,12-13|Arts & Humanities|identity,train
 10101030033,train,12-13|Arts & Humanities|identity,train
 10101030035,train,12-13|Arts & Humanities|identity,train
-10101030039,test,12-13|Arts & Humanities|identity,train
-10101030041,dev,12-13|Arts & Humanities|identity,train
-10101030045,dev,12-13|Arts & Humanities|identity,train
+10101030039,train,12-13|Arts & Humanities|identity,train
+10101030041,train,12-13|Arts & Humanities|identity,train
+10101030045,train,12-13|Arts & Humanities|identity,train
 10101030047,train,12-13|Arts & Humanities|identity,train
 10101050049,train,12-13|Arts & Humanities|identity,train
 10101170118,train,12-13|Arts & Humanities|identity,train
@@ -12624,7 +12453,7 @@ ID,split,stratum,barec_split
 10102070061,train,12-13|Arts & Humanities|identity,train
 10102070078,test,12-13|Arts & Humanities|identity,train
 10102680044,train,12-13|Arts & Humanities|identity,train
-10102790011,train,12-13|Arts & Humanities|identity,train
+10102790011,dev,12-13|Arts & Humanities|identity,train
 10300110003,train,12-13|Arts & Humanities|identity,train
 10300110035,train,12-13|Arts & Humanities|identity,train
 10300170001,test,12-13|Arts & Humanities|identity,train
@@ -12679,6 +12508,7 @@ ID,split,stratum,barec_split
 10400250043,train,12-13|Arts & Humanities|identity,train
 10400050193,train,12-13|Arts & Humanities|identity,train
 10100330143,train,12-13|Arts & Humanities|identity,train
+10400170061,train,12-13|Arts & Humanities|identity,train
 10500580011,train,12-13|Arts & Humanities|identity,train
 10100390054,train,12-13|Arts & Humanities|identity,train
 10300240054,train,12-13|Arts & Humanities|identity,train
@@ -12702,7 +12532,6 @@ ID,split,stratum,barec_split
 20100590032,train,12-13|Arts & Humanities|identity,train
 10101030052,train,12-13|Arts & Humanities|identity,train
 10300570071,train,12-13|Arts & Humanities|identity,train
-10400280073,train,12-13|Arts & Humanities|identity,train
 10500030008,train,12-13|Arts & Humanities|identity,train
 10500500037,train,12-13|Arts & Humanities|identity,train
 10500030039,train,12-13|Arts & Humanities|identity,train
@@ -12716,15 +12545,15 @@ ID,split,stratum,barec_split
 10300280014,test,12-13|Arts & Humanities|identity,train
 10400050078,train,12-13|Arts & Humanities|identity,train
 10500120040,dev,12-13|Arts & Humanities|identity,train
+10500160024,dev,12-13|Arts & Humanities|identity,train
 10101220050,train,12-13|Arts & Humanities|identity,train
 10500030027,train,12-13|Arts & Humanities|identity,train
 10500450060,train,12-13|Arts & Humanities|identity,train
 10100390064,dev,12-13|Arts & Humanities|identity,train
-10300540029,train,12-13|Arts & Humanities|identity,train
+10300540029,dev,12-13|Arts & Humanities|identity,train
 10300260039,train,12-13|Arts & Humanities|identity,train
 10500200034,train,12-13|Arts & Humanities|identity,train
-10400250058,test,12-13|Arts & Humanities|identity,train
-10100350006,train,12-13|Arts & Humanities|identity,train
+10100390060,train,12-13|Arts & Humanities|identity,train
 20900130009,train,12-13|Arts & Humanities|identity,train
 10500130043,train,12-13|Arts & Humanities|identity,train
 20300540023,train,12-13|Arts & Humanities|identity,train
@@ -12742,30 +12571,34 @@ ID,split,stratum,barec_split
 20800080002,train,12-13|Arts & Humanities|identity,train
 10100360077,train,12-13|Arts & Humanities|identity,train
 20200390002,train,12-13|Arts & Humanities|identity,train
+20200390020,dev,12-13|Arts & Humanities|identity,train
 10100360053,train,12-13|Arts & Humanities|identity,train
-10500530049,train,12-13|Arts & Humanities|identity,train
 21000030013,dev,12-13|Arts & Humanities|identity,train
-10100490022,train,12-13|Arts & Humanities|identity,train
 10100670011,train,12-13|Arts & Humanities|identity,train
 20900090025,train,12-13|Arts & Humanities|identity,train
+10100490022,dev,12-13|Arts & Humanities|identity,train
 20800030057,test,12-13|Arts & Humanities|identity,train
-20300370017,train,12-13|Arts & Humanities|identity,train
+20300370017,dev,12-13|Arts & Humanities|identity,train
 21000030029,test,12-13|Arts & Humanities|identity,train
 21100130002,test,12-13|Arts & Humanities|identity,train
 20400020036,train,12-13|Arts & Humanities|identity,train
 20700190007,train,12-13|Arts & Humanities|identity,train
 20200280013,train,12-13|Arts & Humanities|identity,train
+10100970005,test,12-13|Arts & Humanities|identity,train
 10101180075,train,12-13|Arts & Humanities|identity,train
+10500530049,train,12-13|Arts & Humanities|identity,train
 20700530005,train,12-13|Arts & Humanities|identity,train
 10100410069,train,12-13|Arts & Humanities|identity,train
 20900130008,train,12-13|Arts & Humanities|identity,train
 10101020047,train,12-13|Arts & Humanities|identity,train
-10100370018,dev,12-13|Arts & Humanities|identity,train
+10101180049,train,12-13|Arts & Humanities|identity,train
+10100370018,test,12-13|Arts & Humanities|identity,train
 20900130024,train,12-13|Arts & Humanities|identity,train
 10100990017,train,12-13|Arts & Humanities|identity,train
 20300240016,train,12-13|Arts & Humanities|identity,train
 21100020008,train,12-13|Arts & Humanities|identity,train
 20400310077,train,12-13|Arts & Humanities|identity,train
+20900130030,train,12-13|Arts & Humanities|identity,train
 20300380029,train,12-13|Arts & Humanities|identity,train
 20800150001,train,12-13|Arts & Humanities|identity,train
 20200380013,test,12-13|Arts & Humanities|identity,train
@@ -12777,8 +12610,10 @@ ID,split,stratum,barec_split
 20200380019,train,12-13|Arts & Humanities|identity,train
 20101740022,train,12-13|Arts & Humanities|identity,train
 20900040007,train,12-13|Arts & Humanities|identity,train
-20900130030,train,12-13|Arts & Humanities|identity,train
+10101160119,train,12-13|Arts & Humanities|identity,train
+10101180014,train,12-13|Arts & Humanities|identity,train
 10100370004,train,12-13|Arts & Humanities|identity,train
+10101150111,test,12-13|Arts & Humanities|identity,train
 20400540039,train,12-13|Arts & Humanities|identity,train
 20300360065,test,12-13|Arts & Humanities|identity,train
 30100170006,train,12-13|Arts & Humanities|identity,train
@@ -12788,7 +12623,7 @@ ID,split,stratum,barec_split
 20300430019,train,12-13|Arts & Humanities|identity,train
 20900080005,train,12-13|Arts & Humanities|identity,train
 20200390008,train,12-13|Arts & Humanities|identity,train
-20300350009,train,12-13|Arts & Humanities|identity,train
+20300350009,dev,12-13|Arts & Humanities|identity,train
 10100980030,train,12-13|Arts & Humanities|identity,train
 20800170060,train,12-13|Arts & Humanities|identity,train
 20900120063,train,12-13|Arts & Humanities|identity,train
@@ -12799,14 +12634,8 @@ ID,split,stratum,barec_split
 20101480019,train,12-13|Arts & Humanities|identity,train
 20700660014,train,12-13|Arts & Humanities|identity,train
 20300180021,train,12-13|Arts & Humanities|identity,train
+10101170113,train,12-13|Arts & Humanities|identity,train
 20300160018,train,12-13|Arts & Humanities|identity,train
-20200390007,dev,12-13|Arts & Humanities|identity,train
-20400540085,train,12-13|Arts & Humanities|identity,train
-10500530037,train,12-13|Arts & Humanities|identity,train
-20300320041,train,12-13|Arts & Humanities|identity,train
-20900080029,train,12-13|Arts & Humanities|identity,train
-20300540038,train,12-13|Arts & Humanities|identity,train
-10500580036,test,12-13|Arts & Humanities|identity,train
 10500260013,train,12-13|Arts & Humanities|identity,train
 20900050006,train,12-13|Arts & Humanities|identity,train
 20200820017,train,12-13|Arts & Humanities|identity,train
@@ -12825,7 +12654,7 @@ ID,split,stratum,barec_split
 20200450020,train,12-13|Arts & Humanities|identity,train
 21100110008,train,12-13|Arts & Humanities|identity,train
 20200430009,train,12-13|Arts & Humanities|identity,train
-20300490046,train,12-13|Arts & Humanities|identity,train
+20300490046,dev,12-13|Arts & Humanities|identity,train
 20200930005,test,12-13|Arts & Humanities|identity,train
 20400020031,train,12-13|Arts & Humanities|identity,train
 20200910018,test,12-13|Arts & Humanities|identity,train
@@ -12836,6 +12665,7 @@ ID,split,stratum,barec_split
 20200430015,test,12-13|Arts & Humanities|identity,train
 20200410012,train,12-13|Arts & Humanities|identity,train
 20300520012,dev,12-13|Arts & Humanities|identity,train
+30101010004,train,12-13|Arts & Humanities|identity,train
 20300120031,test,12-13|Arts & Humanities|identity,train
 20200440018,train,12-13|Arts & Humanities|identity,train
 20300200028,test,12-13|Arts & Humanities|identity,train
@@ -12859,7 +12689,7 @@ ID,split,stratum,barec_split
 20200960017,train,12-13|Arts & Humanities|identity,train
 20700640004,train,12-13|Arts & Humanities|identity,train
 30101410063,train,12-13|Arts & Humanities|identity,train
-20200970003,dev,12-13|Arts & Humanities|identity,train
+20200970003,test,12-13|Arts & Humanities|identity,train
 20900050029,train,12-13|Arts & Humanities|identity,train
 20200820020,dev,12-13|Arts & Humanities|identity,train
 20200840017,train,12-13|Arts & Humanities|identity,train
@@ -12869,29 +12699,28 @@ ID,split,stratum,barec_split
 20200960004,train,12-13|Arts & Humanities|identity,train
 20200470002,train,12-13|Arts & Humanities|identity,train
 30100880003,train,12-13|Arts & Humanities|identity,train
-20200430020,train,12-13|Arts & Humanities|identity,train
+20200430020,dev,12-13|Arts & Humanities|identity,train
 20200960008,dev,12-13|Arts & Humanities|identity,train
 20200450019,test,12-13|Arts & Humanities|identity,train
 30100720008,train,12-13|Arts & Humanities|identity,train
 20800170003,test,12-13|Arts & Humanities|identity,train
 20200470009,train,12-13|Arts & Humanities|identity,train
-20200840001,train,12-13|Arts & Humanities|identity,train
+20200840001,dev,12-13|Arts & Humanities|identity,train
 20400290047,train,12-13|Arts & Humanities|identity,train
-20200440010,dev,12-13|Arts & Humanities|identity,train
+20200440010,test,12-13|Arts & Humanities|identity,train
 20500730020,dev,12-13|Arts & Humanities|identity,train
-20200920006,dev,12-13|Arts & Humanities|identity,train
+20200920006,test,12-13|Arts & Humanities|identity,train
 20900110030,train,12-13|Arts & Humanities|identity,train
-30101010004,train,12-13|Arts & Humanities|identity,train
 20700740007,train,12-13|Arts & Humanities|identity,train
 20200830012,train,12-13|Arts & Humanities|identity,train
 20400030006,dev,12-13|Arts & Humanities|identity,train
+20300180008,test,12-13|Arts & Humanities|identity,train
 20800070105,train,12-13|Arts & Humanities|identity,train
 20400420109,train,12-13|Arts & Humanities|identity,train
 20200450008,train,12-13|Arts & Humanities|identity,train
 20200970018,train,12-13|Arts & Humanities|identity,train
 20200470017,test,12-13|Arts & Humanities|identity,train
 20400040099,dev,12-13|Arts & Humanities|identity,train
-20300180008,test,12-13|Arts & Humanities|identity,train
 20200920011,train,12-13|Arts & Humanities|identity,train
 10500400038,dev,12-13|Arts & Humanities|identity,train
 20200460012,train,12-13|Arts & Humanities|identity,train
@@ -12904,12 +12733,13 @@ ID,split,stratum,barec_split
 20200410016,train,12-13|Arts & Humanities|identity,train
 20200920014,train,12-13|Arts & Humanities|identity,train
 10200510010,train,12-13|Arts & Humanities|identity,train
+10500470012,train,12-13|Arts & Humanities|identity,train
 20200450016,test,12-13|Arts & Humanities|identity,train
 20200920015,test,12-13|Arts & Humanities|identity,train
 20200960009,train,12-13|Arts & Humanities|identity,train
 10200540004,train,12-13|Arts & Humanities|identity,train
 20200460014,train,12-13|Arts & Humanities|identity,train
-10200530016,train,12-13|Arts & Humanities|identity,train
+10200530016,dev,12-13|Arts & Humanities|identity,train
 20200860002,train,12-13|Arts & Humanities|identity,train
 10500020019,train,12-13|Arts & Humanities|identity,train
 20200870018,train,12-13|Arts & Humanities|identity,train
@@ -12946,7 +12776,6 @@ ID,split,stratum,barec_split
 20200920017,train,12-13|Arts & Humanities|identity,train
 10200050002,train,12-13|Arts & Humanities|identity,dev
 10200510014,train,12-13|Arts & Humanities|identity,train
-10500470012,train,12-13|Arts & Humanities|identity,train
 20200850017,train,12-13|Arts & Humanities|identity,train
 20200720019,dev,12-13|Arts & Humanities|identity,train
 10200320008,test,12-13|Arts & Humanities|identity,train
@@ -12972,23 +12801,191 @@ ID,split,stratum,barec_split
 20200880002,train,12-13|Arts & Humanities|identity,train
 20200780008,train,12-13|Arts & Humanities|identity,train
 10400130016,train,12-13|Arts & Humanities|identity,train
-20200920019,train,12-13|Arts & Humanities|identity,train
+20200920019,dev,12-13|Arts & Humanities|identity,train
 10200290005,train,12-13|Arts & Humanities|identity,train
 20200850006,train,12-13|Arts & Humanities|identity,train
 20200870015,train,12-13|Arts & Humanities|identity,train
 10200500015,train,12-13|Arts & Humanities|identity,train
+10200050005,dev,12-13|Arts & Humanities|identity,dev
+10500460020,dev,12-13|Arts & Humanities|identity,train
 20200870012,train,12-13|Arts & Humanities|identity,train
 10200580003,train,12-13|Arts & Humanities|identity,train
 20200960018,train,12-13|Arts & Humanities|identity,train
-10500460020,dev,12-13|Arts & Humanities|identity,train
 10200570010,train,12-13|Arts & Humanities|identity,train
 10500150006,train,12-13|Arts & Humanities|identity,train
-10200300004,train,12-13|Arts & Humanities|identity,train
+30300500007,train,12-13|STEM|identity,train
+30100490020,dev,12-13|STEM|identity,train
+30300270008,train,12-13|STEM|identity,train
+30101660001,train,12-13|STEM|identity,train
+20101340039,train,12-13|STEM|identity,train
+30300450040,train,12-13|STEM|identity,train
+20101340021,train,12-13|STEM|identity,train
+30100490045,train,12-13|STEM|identity,train
+30100860021,train,12-13|STEM|identity,train
+10200680012,train,12-13|STEM|identity,train
+30100490004,train,12-13|STEM|identity,train
+30100680004,train,12-13|STEM|identity,train
+30100570010,train,12-13|STEM|identity,train
+20600370008,train,12-13|STEM|identity,train
+30100900004,dev,12-13|STEM|identity,train
+30300090020,train,12-13|STEM|identity,train
+20100700016,test,12-13|STEM|identity,train
+30100650026,train,12-13|STEM|identity,train
+10200600007,test,12-13|STEM|identity,train
+30100490035,train,12-13|STEM|identity,train
+10200770017,test,12-13|STEM|identity,train
+30300310030,train,12-13|STEM|identity,train
+30101660031,train,12-13|STEM|identity,train
+10200700027,train,12-13|STEM|identity,train
+30100650034,train,12-13|STEM|identity,train
+10200810002,train,12-13|STEM|identity,train
+10200650004,train,12-13|STEM|identity,train
+10200650010,train,12-13|STEM|identity,train
+20100040029,dev,12-13|STEM|identity,dev
+10200810005,test,12-13|STEM|identity,train
+30300450056,dev,12-13|STEM|identity,train
+10200770013,train,12-13|STEM|identity,train
+30100490041,train,12-13|STEM|identity,train
+10200780020,test,12-13|STEM|identity,train
+10200700014,train,12-13|STEM|identity,train
+20201430018,train,12-13|STEM|identity,train
+20201420002,test,12-13|STEM|identity,train
+10200770001,train,12-13|STEM|identity,train
+30200970004,train,12-13|STEM|identity,train
+20201420001,train,12-13|STEM|identity,train
+30200980006,dev,12-13|STEM|identity,train
+10200620009,train,12-13|STEM|identity,train
+20201300012,train,12-13|STEM|identity,train
+20201420007,dev,12-13|STEM|identity,train
+10200610020,train,12-13|STEM|identity,train
+10400090015,train,12-13|Social Sciences|identity,train
+10400090075,train,12-13|Social Sciences|identity,train
+10400090076,train,12-13|Social Sciences|identity,train
+10400090081,train,12-13|Social Sciences|identity,train
+10400090083,train,12-13|Social Sciences|identity,train
+10400090084,train,12-13|Social Sciences|identity,train
+10400090085,test,12-13|Social Sciences|identity,train
+10400090086,train,12-13|Social Sciences|identity,train
+10400090105,train,12-13|Social Sciences|identity,train
+10400090106,train,12-13|Social Sciences|identity,train
+10400090107,test,12-13|Social Sciences|identity,train
+10400090108,test,12-13|Social Sciences|identity,train
+10400090169,train,12-13|Social Sciences|identity,train
+20100900008,dev,12-13|Social Sciences|identity,train
+20400340028,train,12-13|Social Sciences|identity,train
+20400450046,train,12-13|Social Sciences|identity,train
+30100960009,train,12-13|Social Sciences|identity,train
+10400100053,train,12-13|Social Sciences|identity,dev
+10400100059,train,12-13|Social Sciences|identity,dev
+10400100075,train,12-13|Social Sciences|identity,dev
+10400120106,train,12-13|Social Sciences|identity,dev
+20400240027,train,12-13|Social Sciences|identity,dev
+30100150052,train,12-13|Social Sciences|identity,dev
+10201020006,train,12-13|Social Sciences|identity,train
+10201060011,dev,12-13|Social Sciences|identity,train
+10400220036,train,12-13|Social Sciences|identity,dev
+10201070006,test,12-13|Social Sciences|identity,train
+10201080015,train,12-13|Social Sciences|identity,train
+10201010020,train,12-13|Social Sciences|identity,train
+10201080003,dev,12-13|Social Sciences|identity,train
+10201060007,train,12-13|Social Sciences|identity,train
+10200880015,train,12-13|Social Sciences|identity,train
+10400230026,train,12-13|Social Sciences|identity,train
+10200880012,train,12-13|Social Sciences|identity,train
+10201060014,train,12-13|Social Sciences|identity,train
+10201030010,train,12-13|Social Sciences|identity,train
+10201050015,train,12-13|Social Sciences|identity,train
+10201080010,train,12-13|Social Sciences|identity,train
+10201080016,train,12-13|Social Sciences|identity,train
+10400210010,train,12-13|Social Sciences|identity,train
+10201080006,test,12-13|Social Sciences|identity,train
+10201030018,train,12-13|Social Sciences|identity,train
+10201070007,dev,12-13|Social Sciences|identity,train
+10201070016,test,12-13|Social Sciences|identity,train
+10200840002,train,12-13|Social Sciences|identity,train
+10200890003,train,12-13|Social Sciences|identity,train
+10400090145,train,12-13|Social Sciences|identity,train
+20101590012,test,12-13|Social Sciences|identity,train
+20101210031,train,12-13|Social Sciences|identity,train
+20101500013,train,12-13|Social Sciences|identity,train
+20400340041,train,12-13|Social Sciences|identity,train
+20101330013,test,12-13|Social Sciences|identity,train
+20101620010,train,12-13|Social Sciences|identity,train
+20101210012,train,12-13|Social Sciences|identity,train
+20600340008,test,12-13|Social Sciences|identity,train
+20201090003,train,12-13|Social Sciences|identity,train
+20300290012,dev,12-13|Social Sciences|identity,train
+20101640002,train,12-13|Social Sciences|identity,train
+20101680010,train,12-13|Social Sciences|identity,train
+20101210015,dev,12-13|Social Sciences|identity,train
+20101560007,test,12-13|Social Sciences|identity,train
+20400340019,train,12-13|Social Sciences|identity,train
+20101390017,test,12-13|Social Sciences|identity,train
+20101680027,test,12-13|Social Sciences|identity,train
+20101560004,train,12-13|Social Sciences|identity,train
+20400330024,train,12-13|Social Sciences|identity,train
+20400530098,train,12-13|Social Sciences|identity,train
+20101620009,train,12-13|Social Sciences|identity,train
+20101470014,test,12-13|Social Sciences|identity,train
+20101500003,test,12-13|Social Sciences|identity,train
+30100160041,train,12-13|Social Sciences|identity,train
+30100110035,dev,12-13|Social Sciences|identity,train
+10200820011,train,12-13|Social Sciences|identity,train
+30101290042,train,12-13|Social Sciences|identity,train
+10400230008,dev,12-13|Social Sciences|identity,train
+20101210023,train,12-13|Social Sciences|identity,train
+20100810006,train,12-13|Social Sciences|identity,train
+10200900011,train,12-13|Social Sciences|identity,train
+20100820008,test,12-13|Social Sciences|identity,train
+20100410010,train,12-13|Social Sciences|identity,train
+10201010001,train,12-13|Social Sciences|identity,train
+10200950012,dev,12-13|Social Sciences|identity,train
+20101510020,train,12-13|Social Sciences|identity,train
+10200980010,train,12-13|Social Sciences|identity,train
+10200980008,train,12-13|Social Sciences|identity,train
+10200980001,train,12-13|Social Sciences|identity,train
+10200850003,train,12-13|Social Sciences|identity,train
+10200990007,train,12-13|Social Sciences|identity,train
+20101200004,train,12-13|Social Sciences|identity,train
+20100950007,train,12-13|Social Sciences|identity,train
+20101250022,train,12-13|Social Sciences|identity,train
+10200930012,dev,12-13|Social Sciences|identity,train
+20100410007,train,12-13|Social Sciences|identity,train
+10200980003,train,12-13|Social Sciences|identity,train
+20101510002,train,12-13|Social Sciences|identity,train
+10200970020,train,12-13|Social Sciences|identity,train
+10200980002,train,12-13|Social Sciences|identity,train
+20101210030,train,12-13|Social Sciences|identity,train
+20200570005,test,12-13|Social Sciences|identity,train
+10200980009,train,12-13|Social Sciences|identity,train
+20200590002,train,12-13|Social Sciences|identity,train
+10200990008,train,12-13|Social Sciences|identity,train
+10200950014,train,12-13|Social Sciences|identity,train
+20200530004,train,12-13|Social Sciences|identity,train
+20200590019,train,12-13|Social Sciences|identity,train
+10200990002,test,12-13|Social Sciences|identity,train
+10200860017,train,12-13|Social Sciences|identity,train
+10200960003,test,12-13|Social Sciences|identity,train
+10200960012,train,12-13|Social Sciences|identity,train
+10200960018,train,12-13|Social Sciences|identity,train
+20200570011,train,12-13|Social Sciences|identity,train
+10200990005,train,12-13|Social Sciences|identity,train
+10200940019,train,12-13|Social Sciences|identity,train
+20101560010,test,12-13|Social Sciences|identity,train
+30200420010,train,12-13|Social Sciences|identity,train
+20101390010,dev,12-13|Social Sciences|identity,train
+10200980011,train,12-13|Social Sciences|identity,train
+10200980014,train,12-13|Social Sciences|identity,train
+10200960006,train,12-13|Social Sciences|identity,train
+10200980005,train,12-13|Social Sciences|identity,train
+30200510014,train,12-13|Social Sciences|identity,train
+30200510015,train,12-13|Social Sciences|identity,train
+30200510016,train,12-13|Social Sciences|identity,train
 31000030024,train,13-14|Arts & Humanities|scripture,dev
 30700170007,train,13-14|Arts & Humanities|scripture,train
 30600100016,train,12-13|Arts & Humanities|scripture,dev
 30800250006,train,13-14|Arts & Humanities|scripture,dev
-31000560001,test,12-13|Arts & Humanities|scripture,train
+31000560001,dev,12-13|Arts & Humanities|scripture,train
 30600130012,train,12-13|Arts & Humanities|scripture,train
 31000620002,test,12-13|Arts & Humanities|scripture,train
 30700030021,train,12-13|Arts & Humanities|scripture,train
@@ -13005,13 +13002,13 @@ ID,split,stratum,barec_split
 30600160001,train,14-15|Arts & Humanities|scripture,train
 31000070048,train,12-13|Arts & Humanities|scripture,dev
 31000730005,train,12-13|Arts & Humanities|scripture,train
-31000390007,dev,14-15|Arts & Humanities|scripture,train
+31000390007,train,14-15|Arts & Humanities|scripture,train
 31000030032,train,12-13|Arts & Humanities|scripture,dev
 30600140030,train,12-13|Arts & Humanities|scripture,train
 30800400001,train,14-15|Arts & Humanities|scripture,train
 31000390004,train,14-15|Arts & Humanities|scripture,train
 31000070069,train,14-15|Arts & Humanities|scripture,dev
-30600060032,dev,12-13|Arts & Humanities|scripture,train
+30600060032,train,12-13|Arts & Humanities|scripture,train
 31000700009,test,12-13|Arts & Humanities|scripture,train
 30700010019,train,12-13|Arts & Humanities|scripture,dev
 30700150006,train,12-13|Arts & Humanities|scripture,train
@@ -13023,11 +13020,11 @@ ID,split,stratum,barec_split
 31000070031,train,12-13|Arts & Humanities|scripture,dev
 30600160034,train,12-13|Arts & Humanities|scripture,train
 31000210003,train,12-13|Arts & Humanities|scripture,train
-31000590013,dev,12-13|Arts & Humanities|scripture,train
+31000590013,train,12-13|Arts & Humanities|scripture,train
 30600050024,train,12-13|Arts & Humanities|scripture,train
 30800380011,train,14-15|Arts & Humanities|scripture,train
 31000720001,train,12-13|Arts & Humanities|scripture,train
-31000550004,test,12-13|Arts & Humanities|scripture,train
+31000550004,train,12-13|Arts & Humanities|scripture,train
 30800160011,train,13-14|Arts & Humanities|scripture,dev
 30700080013,train,13-14|Arts & Humanities|scripture,train
 30700140017,train,14-15|Arts & Humanities|scripture,dev
@@ -13038,7 +13035,7 @@ ID,split,stratum,barec_split
 30700020025,train,14-15|Arts & Humanities|scripture,train
 30700140005,train,12-13|Arts & Humanities|scripture,dev
 30700030010,train,14-15|Arts & Humanities|scripture,train
-31000740006,test,12-13|Arts & Humanities|scripture,train
+31000740006,train,12-13|Arts & Humanities|scripture,train
 30600060007,train,13-14|Arts & Humanities|scripture,train
 31000750001,train,12-13|Arts & Humanities|scripture,train
 31000070014,train,12-13|Arts & Humanities|scripture,dev
@@ -13049,16 +13046,16 @@ ID,split,stratum,barec_split
 30600040039,train,14-15|Arts & Humanities|scripture,train
 30600120002,train,12-13|Arts & Humanities|scripture,train
 31000070054,train,14-15|Arts & Humanities|scripture,dev
-30600150017,train,15+|Arts & Humanities|scripture,train
-30700020030,test,12-13|Arts & Humanities|scripture,train
-31000170003,dev,12-13|Arts & Humanities|scripture,train
+30600150017,test,15+|Arts & Humanities|scripture,train
+30700020030,dev,12-13|Arts & Humanities|scripture,train
+31000170003,train,12-13|Arts & Humanities|scripture,train
 30600030005,train,12-13|Arts & Humanities|scripture,train
 30600020002,train,15+|Arts & Humanities|scripture,train
 30700190012,train,12-13|Arts & Humanities|scripture,train
 30600010012,train,12-13|Arts & Humanities|scripture,dev
-30800360001,train,15+|Arts & Humanities|scripture,train
+30800360001,test,15+|Arts & Humanities|scripture,train
 30700020022,train,14-15|Arts & Humanities|scripture,train
-30700160001,dev,14-15|Arts & Humanities|scripture,train
+30700160001,train,14-15|Arts & Humanities|scripture,train
 30600050020,train,12-13|Arts & Humanities|scripture,train
 30800290009,train,14-15|Arts & Humanities|scripture,train
 30700170009,test,13-14|Arts & Humanities|scripture,train
@@ -13066,11 +13063,11 @@ ID,split,stratum,barec_split
 31000680001,train,12-13|Arts & Humanities|scripture,train
 31000740010,train,12-13|Arts & Humanities|scripture,train
 30600150011,train,14-15|Arts & Humanities|scripture,train
-30800160004,train,13-14|Arts & Humanities|scripture,dev
+30800160004,dev,13-14|Arts & Humanities|scripture,dev
 31000660002,train,12-13|Arts & Humanities|scripture,train
-31000050021,train,13-14|Arts & Humanities|scripture,dev
+31000050021,dev,13-14|Arts & Humanities|scripture,dev
 31000450002,train,12-13|Arts & Humanities|scripture,train
 30600150005,train,15+|Arts & Humanities|scripture,train
 30700010023,dev,12-13|Arts & Humanities|scripture,dev
 30700100025,train,12-13|Arts & Humanities|scripture,train
-30700040017,test,14-15|Arts & Humanities|scripture,train
+30700040017,dev,14-15|Arts & Humanities|scripture,train

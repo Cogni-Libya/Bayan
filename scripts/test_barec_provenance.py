@@ -47,12 +47,15 @@ def test_filter_barec_excludes_train_test_duplicate():
     assert KNOWN_TEST_ID not in kept_ids, "test-split rows must never survive a train/dev filter"
 
 
-def test_311_train_test_duplicates_pinned():
+def test_315_train_test_duplicates_pinned():
     """is_duplicate_across_splits flags ANY other split (train/dev overlap counts too, and that's
     correct for the general-purpose flag -- filter_barec re-checks test specifically for exclusion).
-    This test validates against the team's documented train-vs-test-specific figure directly, by
-    unique normalized text (not row count -- BAREC repeats generic headings like "الفصل الأول"
-    dozens of times within a single split, which inflates a row-count comparison)."""
+    This test validates against the team's documented train-vs-test figure directly, by unique
+    normalized text (not row count -- BAREC repeats generic headings like "الفصل الأول" dozens of
+    times within a single split, which inflates a row-count comparison). 311 in the original
+    scripts/evaluation/README.md count; 315 once normalize() also strips em/en-dash (a real gap
+    found in review -- those dashes appear in real BAREC sentences and were silently surviving
+    normalization, letting 4 more genuine duplicates through undetected)."""
     from check_leakage import normalize as _normalize
 
     train = pl.read_csv("data/raw/barec/train.csv", encoding="utf8-lossy")
@@ -60,7 +63,7 @@ def test_311_train_test_duplicates_pinned():
     train_norms = {_normalize(s) for s in train["Sentence"].to_list()}
     test_norms = {_normalize(s) for s in test["Sentence"].to_list()}
     n_dup = len(train_norms & test_norms)
-    assert n_dup == 311, f"expected the documented 311 train/test duplicates, got {n_dup}"
+    assert n_dup == 315, f"expected 315 train/test duplicates (post dash-fix), got {n_dup}"
 
 
 if __name__ == "__main__":

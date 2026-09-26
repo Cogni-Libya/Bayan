@@ -40,8 +40,10 @@ _ARABIC_DIACRITICS = re.compile(
     r"[ؐ-ًؚ-ٟۖ-ۜ۟-۪ۨ-ۭࣔ-ࣣ࣡-ࣿ]"
 )
 
-# Arabic punctuation not covered by string.punctuation
-_ARABIC_PUNCTUATION = "،؛؟«»ـ"
+# Arabic punctuation and typographic dashes not covered by string.punctuation (ASCII-only) --
+# em-dash and en-dash appear in real BAREC sentences (46 and 34 times in the test split alone) and
+# were silently surviving normalization, letting near-duplicate matches slip past undetected.
+_ARABIC_PUNCTUATION = "،؛؟«»ـ—–"
 
 _ALEF_VARIANTS = re.compile(r"[أإآ]")
 

@@ -1,12 +1,22 @@
 """Grouped, stratified, deterministic train/dev/test split for the synthetic simplification export.
 
 Design:
-- Group by source: every row for one source ID goes to one split (non-negotiable).
+- Group by normalized TEXT, not just source ID: BAREC repeats sentences under different IDs, so
+  grouping by ID alone lets the same underlying sentence land in two different splits (a real bug
+  found in review -- fixed here by assigning one split per unique normalized text, then propagating
+  it to every ID that shares that text).
 - Stratum key: level bucket x Domain x pair_type (tier/eq/lead are NOT in the key -- crossing them
   in would create sparse cells that destroy balance; they're verified afterward instead).
-- Assignment: hash(source_id + SALT) -> deterministic bucket, so the rule is reproducible anywhere
-  and stable under growth -- a source is assigned once, forever, regardless of what gets appended
-  to the pool later.
+- Assignment: a FROZEN per-stratum hash-bucket THRESHOLD, not a recomputed target count. The
+  earlier version computed `target_count = round(TARGET * current_stratum_share)` fresh on every
+  run and took the "first N by hash" -- since stratum_share depends on the current pool size, N
+  moves every time the pool grows, and a source that was in test today can slide into train
+  tomorrow even though its own hash never changed. Fixed by converting the target into a bucket
+  THRESHOLD once, persisting it to data/dataset_split_thresholds.json, and reusing that exact
+  threshold on every future run for strata that already have one -- a source's fate then depends
+  only on (its own fixed hash, a threshold that never changes for its stratum), which is what
+  "frozen" actually requires. Only brand-new strata (one that's never been seen before) get a
+  fresh threshold computed and then frozen in turn.
 - Fixed ABSOLUTE dev/test sizes (not proportions): this dataset gets rebuilt as new batches land,
   and proportional splits would silently regrow dev/test on every resume, changing what eval numbers
   mean between experiments. Only train grows from here.
@@ -16,13 +26,14 @@ Design:
   its own, so dev is not purely inherited from BAREC-dev either; both dev and test are hash-holdouts
   from the combined BAREC-train + BAREC-dev accepted pool.
 
-The frozen rule (SALT, thresholds, stratum definitions) lives in this file, committed with the code.
-The resulting ID -> split assignment is written to data/dataset_split.csv (small, no sentence text,
-committable) so it doesn't need re-deriving by hand and can be diffed/audited directly.
+The frozen thresholds live in data/dataset_split_thresholds.json, committed with the code, alongside
+this file's SALT. The resulting ID -> split assignment is written to data/dataset_split.csv (small,
+no sentence text, committable) so it doesn't need re-deriving by hand and can be diffed/audited.
 """
 from __future__ import annotations
 
 import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -31,19 +42,23 @@ import polars as pl
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from barec_provenance import annotate_barec_provenance, filter_barec
+from check_leakage import normalize as normalize_text  # one shared "same sentence" definition
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SALT = "bayan-split-v1"  # bump the suffix (v2, v3, ...) if the split ever needs a deliberate reset;
-# never change in place, since that would silently reassign every source's split.
+SALT = "bayan-split-v1"  # bump the suffix (v2, v3, ...) for a deliberate reset; never change in
+# place, since that would silently reassign every source's split.
 TARGET_DEV = 1200
 TARGET_TEST = 1500
+THRESHOLDS_PATH = PROJECT_ROOT / "data" / "dataset_split_thresholds.json"
+HASH_SPACE = 10_000  # bucket resolution -- fine enough that rounding a target proportion to an
+# integer bucket threshold doesn't visibly distort small strata.
 
 LEVEL_BUCKETS = [(0, 13, "12-13"), (13, 14, "13-14"), (14, 15, "14-15"), (15, 99, "15+")]
 
 
-def _bucket_of(row_id: int) -> int:
-    h = hashlib.sha256(f"{SALT}:{row_id}".encode()).hexdigest()
-    return int(h[:8], 16) % 10_000  # finer than mod 100 -- lets thresholds hit exact absolute counts
+def _bucket_of(key: str) -> int:
+    h = hashlib.sha256(f"{SALT}:{key}".encode()).hexdigest()
+    return int(h[:8], 16) % HASH_SPACE
 
 
 def _level_bucket(level19: float) -> str:
@@ -53,68 +68,101 @@ def _level_bucket(level19: float) -> str:
     return "15+"
 
 
+def _load_thresholds() -> dict:
+    if THRESHOLDS_PATH.exists():
+        return json.loads(THRESHOLDS_PATH.read_text())
+    return {}
+
+
 def build_split(provisional_path: Path, barec_dir: Path) -> pl.DataFrame:
     df = pl.read_parquet(provisional_path)
     df = filter_barec(df, include=("train", "dev"), on_conflict="exclude")
     df = annotate_barec_provenance(df)
 
-    # Bring in Domain and the gold 19-level for stratification (not in the provisional export).
     splits = {name: pl.read_csv(barec_dir / f"{name}.csv", encoding="utf8-lossy")
               .select("ID", "Domain", "Readability_Level_19") for name in ("train", "dev")}
     meta = pl.concat(splits.values())
     df = df.join(meta, on="ID", how="left")
-    # Identity/scripture rows: Domain still resolves (they're real BAREC sources); level bucket only
-    # matters for stratification balance, not correctness, so a null here just falls into its own
-    # (small) stratum rather than crashing the join.
     df = df.with_columns(
         pl.col("Readability_Level_19").fill_null(pl.col("source_level") * 4).alias("Readability_Level_19"),
         pl.col("Domain").fill_null("Unknown").alias("Domain"),
     )
-
     df = df.with_columns(
         pl.col("Readability_Level_19").map_elements(_level_bucket, return_dtype=pl.Utf8).alias("level_bucket"),
-        pl.col("ID").map_elements(_bucket_of, return_dtype=pl.Int64).alias("hash_bucket"),
+        pl.col("original_text").map_elements(normalize_text, return_dtype=pl.Utf8).alias("norm_text"),
     )
     df = df.with_columns(
         (pl.col("level_bucket") + "|" + pl.col("Domain") + "|" + pl.col("pair_type")).alias("stratum")
     )
 
-    n_total = df.shape[0]
-    strata = df["stratum"].value_counts().to_dicts()
-    stratum_share = {s["stratum"]: s["count"] / n_total for s in strata}
+    # One row per unique normalized text: canonical_id = min(ID) sharing that text, its own
+    # barec_split governs test-eligibility for the whole group, and its hash decides the whole
+    # group's split -- every ID sharing that text inherits the same split, closing the bug where
+    # the same sentence under different IDs could land on both sides of the split.
+    groups = (
+        df.group_by("norm_text")
+        .agg(
+            pl.col("ID").min().alias("canonical_id"),
+            pl.col("ID").alias("member_ids"),
+            pl.col("stratum").first(),
+            pl.col("barec_split").first(),
+        )
+        .with_columns(pl.col("canonical_id").cast(pl.Utf8).map_elements(_bucket_of, return_dtype=pl.Int64).alias("hash_bucket"))
+    )
 
-    # Per-stratum target counts, proportional to each stratum's share of the eligible pool, summing
-    # (by construction) to the global TARGET_DEV / TARGET_TEST.
-    test_target = {s: round(TARGET_TEST * stratum_share[s]) for s in stratum_share}
-    dev_target = {s: round(TARGET_DEV * stratum_share[s]) for s in stratum_share}
+    thresholds = _load_thresholds()
+    n_groups = groups.shape[0]
+    stratum_counts = groups["stratum"].value_counts().to_dicts()
+    stratum_share = {s["stratum"]: s["count"] / n_groups for s in stratum_counts}
 
-    split_labels = []
-    test_eligible = df["barec_split"] == "train"  # test only ever draws from BAREC-train-sourced rows
-    for stratum in df["stratum"].unique().to_list():
-        stratum_mask = df["stratum"] == stratum
-        stratum_df = df.filter(stratum_mask)
+    updated = False
+    for stratum in stratum_share:
+        if stratum not in thresholds:
+            # Brand-new stratum: compute a fresh threshold now, from the current pool, and freeze it.
+            test_frac = TARGET_TEST * stratum_share[stratum] / max(stratum_counts_by_name(stratum_counts, stratum), 1)
+            dev_frac = TARGET_DEV * stratum_share[stratum] / max(stratum_counts_by_name(stratum_counts, stratum), 1)
+            thresholds[stratum] = {
+                "test_threshold": min(round(test_frac * HASH_SPACE), HASH_SPACE),
+                "dev_width": min(round(dev_frac * HASH_SPACE), HASH_SPACE),
+            }
+            updated = True
+    if updated or not THRESHOLDS_PATH.exists():
+        THRESHOLDS_PATH.write_text(json.dumps(thresholds, indent=2, ensure_ascii=False, sort_keys=True))
 
-        test_pool = stratum_df.filter(pl.col("barec_split") == "train").sort("hash_bucket")
-        test_ids = set(test_pool["ID"].to_list()[: test_target.get(stratum, 0)])
+    def _assign(row: dict) -> str:
+        th = thresholds[row["stratum"]]
+        if row["barec_split"] == "train" and row["hash_bucket"] < th["test_threshold"]:
+            return "test"
+        if row["hash_bucket"] < th["test_threshold"] + th["dev_width"]:
+            return "dev"
+        return "train"
 
-        remaining = stratum_df.filter(~pl.col("ID").is_in(test_ids)).sort("hash_bucket")
-        dev_ids = set(remaining["ID"].to_list()[: dev_target.get(stratum, 0)])
+    groups = groups.with_columns(
+        pl.struct(["stratum", "barec_split", "hash_bucket"]).map_elements(_assign, return_dtype=pl.Utf8).alias("split")
+    )
 
-        for row_id in stratum_df["ID"].to_list():
-            if row_id in test_ids:
-                split_labels.append((row_id, "test"))
-            elif row_id in dev_ids:
-                split_labels.append((row_id, "dev"))
-            else:
-                split_labels.append((row_id, "train"))
+    id_to_split = {}
+    for row in groups.iter_rows(named=True):
+        for member_id in row["member_ids"]:
+            id_to_split[member_id] = row["split"]
 
-    split_df = pl.DataFrame(split_labels, schema=["ID", "split"], orient="row")
+    split_df = pl.DataFrame({"ID": list(id_to_split.keys()), "split": list(id_to_split.values())})
     return df.join(split_df, on="ID", how="left")
+
+
+def stratum_counts_by_name(stratum_counts: list[dict], stratum: str) -> int:
+    for s in stratum_counts:
+        if s["stratum"] == stratum:
+            return s["count"]
+    return 1
 
 
 def verify_split(df: pl.DataFrame) -> None:
     print(f"split sizes: {df['split'].value_counts().sort('split')}")
     assert df.filter(pl.col("ID").is_duplicated()).shape[0] == 0, "a source ID appears more than once in the export"
+
+    cross = df.group_by("norm_text").agg(pl.col("split").n_unique().alias("n")).filter(pl.col("n") > 1)
+    assert cross.shape[0] == 0, f"{cross.shape[0]} source texts appear in more than one split"
 
     for covariate in ("equivalence_score", "readability_lead", "ease_score"):
         vals = df.filter(pl.col(covariate).is_not_null())

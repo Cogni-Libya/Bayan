@@ -138,18 +138,21 @@ def acceptance_tier(equivalent: bool, readability_passed: bool, equivalence_scor
 
 
 # Reranking among already-valid candidates (see simplify_and_validate's ranking rule): fitted by
-# logistic regression on 1,678 real SAMER full-sentence human-simplification pairs (L5 vs L3 of the
-# same underlying sentence, data/processed/readability_compare_inputs/samer_test.parquet -- the
-# official SAMER test split), predicting which of a pair's two texts is the easier one from CAMeL
-# logit(P(easy)) and mean AoA. Held-out (5-fold CV) recall at a ~10% reversed-pair false-accept
-# rate: CAMeL alone 59.0%, this combination 78.4%. Word length was tested as a third feature and
-# dropped -- paired-bootstrap delta for adding it was +0.23pp, 95% CI [-2.6pp, +3.2pp], not
-# significant. Full derivation and data provenance: pipeline_architecture.tex Section 4.
-EASE_W_CAMEL_LOGIT = 0.1134
-EASE_W_MEAN_AOA = -0.6186
-EASE_INTERCEPT = 1.8605
-EASE_FORMULA_VERSION = "samer_fullsentence_2feat_v2"  # bump whenever the weights above change --
-# logged per row so an audit or ablation can tell which formula version produced a given result.
+# logistic regression on 8,310 real SAMER full-sentence human-simplification pairs (L5 vs L3 of the
+# same underlying sentence, data/processed/readability_compare_inputs/samer_train.parquet --
+# `scripts/fit_ease_score_weights.py`), predicting which of a pair's two texts is the easier one
+# from CAMeL logit(P(easy)) and mean AoA. Held-out (5-fold CV) recall at a ~10% reversed-pair
+# false-accept rate: CAMeL alone 59.6%, this combination 75.1%. Fit on SAMER's TRAIN split, not
+# test -- an earlier version of this formula was fit on samer_test.parquet, which is the project's
+# own locked eval set (data/test_manifest.json); found and fixed in review. Full derivation and
+# data provenance: pipeline_architecture.tex Section 4.
+EASE_W_CAMEL_LOGIT = 0.1121
+EASE_W_MEAN_AOA = -0.5777
+EASE_INTERCEPT = 1.7292
+EASE_FORMULA_VERSION = "samer_train_2feat_v3"  # bump whenever the weights above change -- logged
+# per row so an audit or ablation can tell which formula version produced a given result. v2 (this
+# constant's prior value, "samer_fullsentence_2feat_v2") was fit on the locked SAMER test split;
+# retired, not reused.
 
 # Reranking: generate this many candidate simplifications per hard sentence and keep the
 # best-scoring one, instead of generating once and gating pass/fail -- informed by the TSAR 2025
@@ -859,7 +862,14 @@ def main() -> None:
     # because it's assessed as easy. Only non-scripture hard-band sentences reach the generator.
     scripture_sample = sample.filter(is_scripture)
     easy_sample = sample.filter(~is_scripture & pl.col("Readability_Level_5").is_in(EASY_LEVELS))
-    hard_sample = sample.filter(~is_scripture & pl.col("Readability_Level_5").is_in(HARD_LEVELS))
+    # ~ barec_split != "test": BAREC-test is the project's own locked eval set (data/test_manifest.json).
+    # Excluded here, at the sampling stage, not just at export -- generating from it still means
+    # sending its sentences to a third-party API and spending real money on rows that get thrown
+    # away regardless. barec_split labels every row (see load_and_clean_barec); this is one
+    # deliberate policy choice made with that label, not a silent filter baked into the loader.
+    hard_sample = sample.filter(
+        ~is_scripture & pl.col("Readability_Level_5").is_in(HARD_LEVELS) & (pl.col("barec_split") != "test")
+    )
     print(
         f"  {args.sample_fraction:.1%} stratified sample: {sample.shape[0]} sentences "
         f"({easy_sample.shape[0]} easy / {hard_sample.shape[0]} hard / "

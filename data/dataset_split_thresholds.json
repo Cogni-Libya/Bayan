@@ -1,0 +1,78 @@
+{
+  "12-13|Arts & Humanities|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "12-13|Arts & Humanities|identity": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "12-13|Arts & Humanities|scripture": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "12-13|STEM|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "12-13|STEM|identity": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "12-13|Social Sciences|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "12-13|Social Sciences|identity": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "13-14|Arts & Humanities|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "13-14|Arts & Humanities|scripture": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "13-14|STEM|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "13-14|Social Sciences|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "14-15|Arts & Humanities|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "14-15|Arts & Humanities|scripture": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "14-15|STEM|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "14-15|Social Sciences|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "15+|Arts & Humanities|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "15+|Arts & Humanities|scripture": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "15+|STEM|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  },
+  "15+|Social Sciences|generated": {
+    "dev_width": 934,
+    "test_threshold": 1167
+  }
+}
