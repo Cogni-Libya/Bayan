@@ -17,9 +17,10 @@ Design:
   only on (its own fixed hash, a threshold that never changes for its stratum), which is what
   "frozen" actually requires. Only brand-new strata (one that's never been seen before) get a
   fresh threshold computed and then frozen in turn.
-- Fixed ABSOLUTE dev/test sizes (not proportions): this dataset gets rebuilt as new batches land,
-  and proportional splits would silently regrow dev/test on every resume, changing what eval numbers
-  mean between experiments. Only train grows from here.
+- The thresholds freeze each row's split, not the split sizes: a row already assigned never moves,
+  but new batches add to dev and test as well as train. Because a new stratum's threshold is
+  TARGET * share / count = TARGET / n_groups, every stratum seen so far has the same thresholds, so
+  in practice this is one global cut (about 11.7% test, 9.3% dev at the first freeze).
 - Test draws ONLY from BAREC-train-sourced rows. BAREC-test is already the project's own locked eval
   set (data/test_manifest.json) -- generating our test split from it would conflate two different
   evaluation instruments. BAREC-dev holds only 111 accepted pairs, far short of a usable dev size on
@@ -96,11 +97,13 @@ def build_split(provisional_path: Path, barec_dir: Path) -> pl.DataFrame:
     )
 
     # One row per unique normalized text: canonical_id = min(ID) sharing that text, its own
-    # barec_split governs test-eligibility for the whole group, and its hash decides the whole
-    # group's split -- every ID sharing that text inherits the same split, closing the bug where
+    # barec_split governs test-eligibility for the whole group (sorted by ID first, so .first() is
+    # the canonical row's value on every run, not whichever row polars happens to see first), and
+    # its hash decides the whole group's split -- every ID sharing that text inherits the same split, closing the bug where
     # the same sentence under different IDs could land on both sides of the split.
     groups = (
-        df.group_by("norm_text")
+        df.sort("ID")
+        .group_by("norm_text", maintain_order=True)
         .agg(
             pl.col("ID").min().alias("canonical_id"),
             pl.col("ID").alias("member_ids"),

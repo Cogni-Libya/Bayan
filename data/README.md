@@ -56,24 +56,16 @@ produce:
   the "Pilot Pair Review" Claude Artifact's shared database (not live; re-pull for a fresher
   snapshot). Read by `optimize_equivalence_validator.py` to build MIPROv2 training/held-out
   data; real ground truth, not regenerable.
-- `readability_compare_inputs/samer_test.parquet` -- the real, full-sentence SAMER evaluation
-  set: the official test split's own `Novel`/`Chapter`/`L5`/`L4`/`L3` structure (3,277 rows;
-  1,678 where `L5 != L3`, i.e. where a genuine simplification exists at that gap). This is the
-  correct artifact for "does this signal rank a real human simplification above its harder
-  source" -- confirmed by genuine word-count variance between L5 and L3 (ratio SD 0.056).
-  Used to fit and validate `EASE_W_CAMEL_LOGIT`/`EASE_W_MEAN_AOA` in
-  `barec_simplification_pipeline.py` (see `pipeline_architecture.tex` Section 4).
-- `readability_compare_inputs/samer_pairs.parquet` -- **not** a full-sentence dataset despite
-  an earlier session describing it that way: every one of its 7,754 rows is a *minimal
-  single-word-substitution* pair (built by `build_samer_minimal_pairs.py`; every row carries
-  `orig_word`/`new_word`, and word count is byte-identical between `original_text` and
-  `modified_text` on literally every row -- confirmed by a zero-variance ratio check). Real
-  data, not wrong -- just a different, narrower task: which of two candidate *words* is the
-  easier substitute, not which of two *sentences* reads easier. Legitimate as a lexical
-  word-choice eval (AoA discriminates it well; word length carries a real but
-  sentence-rewriting-irrelevant residual-difficulty signal there -- a suppression effect, not
-  noise). Do not use for sentence-level readability/reranking validation; that mistake is what
-  produced the wrong `ease_score` formula version this file note exists to prevent recurring.
+- `readability_compare_inputs/samer_train.parquet` / `samer_test.parquet` -- full-sentence SAMER
+  pairs in the official splits' own `Novel`/`Chapter`/`L5`/`L4`/`L3` structure (test: 3,277 rows,
+  1,678 where `L5 != L3`). `EASE_W_CAMEL_LOGIT`/`EASE_W_MEAN_AOA` in
+  `barec_simplification_pipeline.py` are fit on **train** only, by `fit_ease_score_weights.py`
+  (8,310 pairs where `L5 != L3`). `samer_test` is locked (`data/test_manifest.json`) and is not used
+  for fitting.
+- `readability_compare_inputs/samer_pairs.parquet` -- **not** a full-sentence dataset: every one of
+  its 7,754 rows is a single-word-substitution pair (`orig_word`/`new_word`, identical word count on
+  both sides). Useful as a word-choice eval (which of two words is the easier substitute), not for
+  sentence-level readability or reranking.
 
 Also not under `data/`: `models/level_classifier_bert_marbert_onnx_int8/` (the former production
 quantized MARBERT weights, ~164MB, replaced by CAMeL AraBERT in #17; no code loads it any more) is

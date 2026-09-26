@@ -1,7 +1,7 @@
 """Word-level lexical difficulty for Arabic text: LLM age-of-acquisition (AoA) ratings plus corpus frequency.
 
-AoA table: data/processed/word_aoa/word_aoa_llm.parquet, written by rate_words_llm.py (DeepSeek ratings, 1 = learned
-earliest ... 7 = latest; validated against the Kalimah human norms, Spearman +0.71, and against SAMER's human word
+AoA table: data/processed/word_aoa/word_aoa_llm.parquet, rated by rate_words_llm.py and built by build_word_aoa_table.py
+(DeepSeek ratings, 1 = learned earliest ... 7 = latest; validated against the Kalimah human norms, Spearman +0.71, and against SAMER's human word
 levels, +0.62). Words missing from the table get an AoA imputed from their frequency, using a quadratic fit of AoA on
 Zipf frequency over the rated vocabulary (skipping unrated words instead drops the hard, rare ones and hurts).
 
@@ -56,7 +56,7 @@ def stems(tok: str) -> list[str]:
 class LexicalScorer:
     def __init__(self, aoa_path: Path = AOA_PATH, s2l_path: Path = S2L_PATH):
         if not aoa_path.exists():
-            raise FileNotFoundError(f"{aoa_path} not found; create it with rate_words_llm.py")
+            raise FileNotFoundError(f"{aoa_path} not found; create it with rate_words_llm.py, then build_word_aoa_table.py")
         t = pl.read_parquet(aoa_path)
         self.aoa = dict(zip(t["word"].to_list(), t["aoa_llm"].to_list()))
         self.s2l = {}

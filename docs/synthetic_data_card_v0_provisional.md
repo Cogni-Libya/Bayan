@@ -66,28 +66,34 @@ five are fixed in this version; see "Review fixes" below for what changed and wh
   10% reversed-pair false-accept rate: CAMeL alone 59.6%, combined 75.1%.
   **Superseded v2** (`samer_fullsentence_2feat_v2`) was fit on `samer_test.parquet` — SAMER's own
   **locked** eval split (`data/test_manifest.json`) — found in review; refitting on train data was
-  verified against the original methodology first (recovered from the session record and confirmed
-  by exactly reproducing its documented test-split numbers, 59.0%/70.4%/78.4%, to within rounding)
-  before trusting the train-split result.
+  verified against the original methodology first (the refit script reproduces the documented
+  test-split numbers, 59.0%/70.4%/78.4%, to within rounding) before trusting the train-split result.
+  **Scope of the refit**: `assemble_provisional_export.py` does not re-rank. Each row keeps the
+  candidate chosen when it was generated, and the rows in this export were generated while v2 was
+  in place. v3 applies to future generation. The two weight sets differ by under 7%, so few winners
+  would change, but re-ranking the stored candidates with v3 is listed under open items.
 
 ## Counts
 
-Provisional export, 13,072 rows after BAREC-test-split exclusion (see below):
+Published export, 13,072 rows after BAREC-test-split exclusion (see below):
 
 | pair_type | count |
 |---|---|
-| generated | 12,768 (tier A 7,494 / tier B 5,274, `readability_lead<=0` quarantine already excluded: 718 rows) |
-| identity | ~600 (~5%, selected by lowest mean AoA within the easy band, domain- and length-matched to the generated set — not by BAREC level, which is only the floor/pool) |
-| scripture | ~100 |
+| generated | 12,419 (tier A 7,298 / tier B 5,121; `readability_lead<=0` quarantine already excluded: 718 rows) |
+| identity | 563 (selected by lowest mean AoA within the easy band, domain- and length-matched to the generated set — not by BAREC level, which is only the floor/pool) |
+| scripture | 90 |
+
+Before the BAREC-test exclusion the assembled pool held 13,470 rows (generated 12,768, identity
+600, scripture 100); 398 were removed, as described under "BAREC test-split exclusion".
 
 After the train/dev/test split (`scripts/dataset_split.py`, stratified by level bucket x Domain x
 pair_type, frozen per-stratum hash-bucket thresholds, salt `bayan-split-v1`):
 
 | split | count | notes |
 |---|---|---|
-| train | 10,327 | grows with every future batch resume |
-| dev | 1,233 | frozen; new sources do not enter this split |
-| test | 1,512 | frozen; drawn only from BAREC-train-sourced rows (BAREC-test is the project's own locked eval set, `data/test_manifest.json` — never touched) |
+| train | 10,327 | |
+| dev | 1,233 | existing rows never move |
+| test | 1,512 | existing rows never move; drawn only from BAREC-train-sourced rows (BAREC-test is the project's own locked eval set, `data/test_manifest.json` — never touched) |
 
 **Provenance deviation, stated plainly**: the default assumption going into this (inherit BAREC's
 own train/dev boundary — our dev ⊆ BAREC-dev) turned out not to be viable. BAREC-dev contributed
@@ -108,6 +114,16 @@ from the current pool size on every run, which let a source's split silently dri
 grew; fixed and verified (simulated pool growth of +2,000 rows: 0/13,072 existing IDs moved). The
 resulting ID→split→stratum mapping is also committed verbatim at `data/dataset_split.csv` so it
 never needs re-deriving by hand. Bump `SALT` (never edit it in place) for a deliberate reset.
+
+The thresholds freeze each row's split, not the split sizes. Every stratum currently has the same
+thresholds (test 1167, dev 934 of 10,000 buckets), so in practice this is one global cut: about
+11.7% of new BAREC-train groups go to test and about 9.3% of new groups go to dev. Dev and test
+grow as batches land; rows already assigned never move.
+
+**Changed since the first upload (25 Sep)**: re-splitting with text grouping and frozen
+thresholds moved 316 rows between splits (train→dev 125, dev→train 74, dev→test 50, test→dev 34,
+test→train 19, train→test 14), and the dash fix changed which rows are excluded. Numbers from
+the two versions are not comparable.
 
 Split balance verified: standardized mean difference train-vs-dev/test on
 equivalence_score/readability_lead/ease_score all < 0.032 (bar: < 0.1); a gradient-boosted classifier
@@ -158,18 +174,24 @@ all resolved here:
 4. **Counts inconsistency and session-narrative wording in this card** — fixed (this rewrite); the
    companion GitHub issue's "private" language also corrected to reflect the later, deliberate
    decision to publish openly.
-5. **Not reproducible from a fresh clone** — fixed: `rate_words_llm.py` (the AoA table builder) and
-   `assemble_provisional_export.py` (the actual export assembly, previously only a scratch script)
-   are both now committed.
+5. **Not reproducible from a fresh clone** — `rate_words_llm.py` (the AoA ratings),
+   `build_word_aoa_table.py` (ratings → `word_aoa_llm.parquet`) and `assemble_provisional_export.py`
+   (the export assembly) are now committed. The ratings themselves are costed, non-deterministic
+   API calls, so the rated table is not bit-for-bit reproducible; see open items.
 
 Also fixed: the `normalize()` dash gap noted above, and BAREC-test sentences no longer being sent to
 DeepSeek during generation (previously dropped only at export, after real API spend on rows that
 were always going to be discarded).
 
-**Not yet addressed** (flagged in review, lower priority than the five above): ~780 generated pairs
-come from very short (<=3 word) sources, mostly headings — real, but not judged a merge-blocker.
+**Not yet addressed** (flagged in review, lower priority than the five above): 596 generated pairs
+come from very short (<=3 word) sources, mostly headings, and 15 generated targets are copies of
+their source — real, but not judged a merge-blocker.
 
 ## Known open items (why this is v0, not final)
+
+- Re-rank the stored candidates with the v3 `ease_score` formula (see "Acceptance thresholds").
+- Publish `word_aoa_llm.parquet` (and the word list it rates) next to this data, so
+  `LexicalScorer` works from a fresh clone without re-buying the ratings.
 
 - Relabel of the accepted pairs (4 strata, ~300-500 labels) not yet incorporated.
 - `readability_lead` quarantine (718 rows) removed but not reviewed for recoverability.
