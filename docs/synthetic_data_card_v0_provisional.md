@@ -50,8 +50,22 @@ five are fixed in this version; see "Review fixes" below for what changed and wh
   repo-wide (licensed source text can't be redistributed via git). The actual pair data ships on
   HF, public (BAREC's licence permits it) — see counts and hashes below; only code + this card go
   in the PR.
+- **HF upload history**: every upload to `Congi-libya/bayan-simplification-corpus` is a real, separate
+  git commit on the HF side (`HfApi.list_repo_commits()`), so re-uploading to correct a mistake never
+  destroys the earlier version — it stays fetchable at its own commit hash via `revision=<hash>`. The
+  original upload (`ease_score` fit on SAMER's locked test split, since superseded — see "Acceptance
+  thresholds") is still reachable at `revision="2b309204cb"`; the train-fit correction landed at
+  `ab1d615e68`, and the counts/wording fix from this review at `9496e7c77e`. The current upload is
+  what `main` (no `revision` pin) resolves to.
 
 ## Acceptance thresholds and their calibration history
+
+**What this card claims about SAMER**: SAMER (the corpus and lexicon) is used only internally, to fit
+and validate the `ease_score` formula below — it is not part of this export, is not uploaded to HF,
+and is never redistributed, per its own licence. Every SAMER file this pipeline reads lives under
+`data/processed/readability_compare_inputs/` (gitignored, fetched locally) and none of BAREC's or the
+generated pairs' content is derived from SAMER text; SAMER only supplies the (original, easier)
+sentence pairs used to check that `ease_score` orders real simplifications correctly.
 
 - `EQUIVALENCE_THRESHOLD = 0.70` — swept on a 25-pair held-out annotated set (84% accuracy at
   0.70-0.75 vs. 64% at a naive 0.8 guess); picked the lower/safer edge of that plateau. Small n,
@@ -66,12 +80,34 @@ five are fixed in this version; see "Review fixes" below for what changed and wh
   10% reversed-pair false-accept rate: CAMeL alone 59.6%, combined 75.1%.
   **Superseded v2** (`samer_fullsentence_2feat_v2`) was fit on `samer_test.parquet` — SAMER's own
   **locked** eval split (`data/test_manifest.json`) — found in review; refitting on train data was
-  verified against the original methodology first (the refit script reproduces the documented
-  test-split numbers, 59.0%/70.4%/78.4%, to within rounding) before trusting the train-split result.
+  verified against the original methodology first, by re-running it on `samer_test`: CAMeL alone
+  reproduces **exactly** (59.00% vs. the documented 59.0%), while AoA alone (69.85% vs. 70.4%) and
+  combined (77.89% vs. 78.4%) are both consistently ~0.5pp lower. CAMeL-alone matching exactly while
+  only the AoA-involving numbers shift, in the same direction, isolates the small gap to the AoA
+  lexicon table itself (`word_aoa_llm.parquet` — since regenerated via the now-committed
+  `build_word_aoa_table.py`, which didn't exist as a committed step when 70.4%/78.4% were first
+  produced) rather than to the CV/threshold methodology, which reproduces bit-for-bit. This was
+  confirmed before trusting the train-split result below.
   **Scope of the refit**: `assemble_provisional_export.py` does not re-rank. Each row keeps the
   candidate chosen when it was generated, and the rows in this export were generated while v2 was
-  in place. v3 applies to future generation. The two weight sets differ by under 7%, so few winners
-  would change, but re-ranking the stored candidates with v3 is listed under open items.
+  in place. v3 applies to future generation.
+  **Measured, not assumed**: re-ranking all 16,288 checkpoint rows' candidates with v3 instead of v2
+  changes the winning candidate for 121 rows (0.74%), 28 of those (23%) by a margin under 0.01
+  (noise-level, both candidates near-tied either way); median margin of a real change is 0.022. The
+  tier transition matrix below (old tier under v2 vs. what the new winner's tier would be under v3)
+  shows **tier C is completely untouched** — every row that fails the equivalence/readability gate
+  under v2 still fails it under v3, because those gates don't depend on `ease_score` at all; only
+  which already-passing candidate wins A vs. B can move, and only 45 rows do (21 A→B, 24 B→A). There
+  is no "ease_score threshold" for tier C to re-derive.
+
+  |       | v3: A | v3: B | v3: C |
+  |---|---|---|---|
+  | **v2: A** | 7,943 | 21 | 0 |
+  | **v2: B** | 24 | 5,498 | 0 |
+  | **v2: C** | 0 | 0 | 2,802 |
+
+  Re-ranking the stored candidates with v3 (rather than only using it for future generation) is
+  listed under open items below.
 
 ## Counts
 
@@ -85,6 +121,25 @@ Published export, 13,072 rows after BAREC-test-split exclusion (see below):
 
 Before the BAREC-test exclusion the assembled pool held 13,470 rows (generated 12,768, identity
 600, scripture 100); 398 were removed, as described under "BAREC test-split exclusion".
+
+**Full waterfall, checkpoint to published** (every row of the 16,288-row hard-band generation
+checkpoint accounted for — this is the number to check against, not the 13,470 or 13,072
+subtotals, which are two different downstream stages):
+
+| stage | rows | note |
+|---|---|---|
+| generation checkpoint | 16,288 | every hard-band source DeepSeek attempted, before any gate |
+| − tier C (rejected) | −2,802 | fails equivalence gate, readability gate, or both |
+| = tier A + B | 13,486 | both gates pass |
+| − quarantined | −718 | passes the binary gate but `readability_lead <= 0` |
+| = clean generated pairs | 12,768 | |
+| + identity pairs | +600 | easy-band sources, no generation |
+| + scripture pairs | +100 | preserved verbatim |
+| = provisional pool | 13,470 | pre-BAREC-test-exclusion |
+| − BAREC-test-sourced rows | −398 | see "BAREC test-split exclusion" below |
+| = **published export** | **13,072** | generated 12,419 / identity 563 / scripture 90 |
+
+Reproduce this table with `scripts/check_export_counts.py` (see "Review fixes" for what it checks).
 
 After the train/dev/test split (`scripts/dataset_split.py`, stratified by level bucket x Domain x
 pair_type, frozen per-stratum hash-bucket thresholds, salt `bayan-split-v1`):
@@ -183,9 +238,17 @@ Also fixed: the `normalize()` dash gap noted above, and BAREC-test sentences no 
 DeepSeek during generation (previously dropped only at export, after real API spend on rows that
 were always going to be discarded).
 
-**Not yet addressed** (flagged in review, lower priority than the five above): 596 generated pairs
-come from very short (<=3 word) sources, mostly headings, and 15 generated targets are copies of
-their source — real, but not judged a merge-blocker.
+**Not yet addressed** (flagged in review, lower priority than the five above): 596 *generated* pairs
+(scoped to `pair_type == "generated"`; the raw whitespace-token count across all pair types is higher
+since identity/scripture sources are short by construction) come from very short (<=3 word) sources,
+mostly headings, and 15 generated targets are copies of their source — real, but not judged a
+merge-blocker. All counts on this page, including this one, are reproducible with
+`scripts/check_export_counts.py`, which also reports: 149 distinct source texts appear more than
+once in the published export (BAREC's own internal repetition — fine, since every occurrence of the
+same text is guaranteed to land in the same split, see "Reproducibility" above) and 33 published
+rows have a source text that also appears in a different BAREC split (train/dev overlap; BAREC-test
+overlap is separately and specifically excluded, see above — this flag is the general-purpose one
+from `barec_provenance.py`, not a leakage finding).
 
 ## Known open items (why this is v0, not final)
 

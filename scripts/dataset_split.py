@@ -94,6 +94,27 @@ def _load_thresholds() -> dict:
     return data
 
 
+def _group_by_canonical_text(df: pl.DataFrame) -> pl.DataFrame:
+    """One row per unique normalized text: canonical_id = min(ID) sharing that text, its own
+    barec_split governs test-eligibility for the whole group (sorted by ID first, so .first() is
+    the canonical row's value on every run, not whichever row polars happens to see first), and its
+    hash decides the whole group's split -- every ID sharing that text inherits the same split,
+    closing the bug where the same sentence under different IDs could land on both sides of the
+    split. Split out from build_split so this specific invariant (not the threshold math around it)
+    is directly testable -- see test_dataset_split.py."""
+    return (
+        df.sort("ID")
+        .group_by("norm_text", maintain_order=True)
+        .agg(
+            pl.col("ID").min().alias("canonical_id"),
+            pl.col("ID").alias("member_ids"),
+            pl.col("stratum").first(),
+            pl.col("barec_split").first(),
+        )
+        .with_columns(pl.col("canonical_id").cast(pl.Utf8).map_elements(_bucket_of, return_dtype=pl.Int64).alias("hash_bucket"))
+    )
+
+
 def build_split(provisional_path: Path, barec_dir: Path) -> pl.DataFrame:
     df = pl.read_parquet(provisional_path)
     df = filter_barec(df, include=("train", "dev"), on_conflict="exclude")
@@ -115,22 +136,7 @@ def build_split(provisional_path: Path, barec_dir: Path) -> pl.DataFrame:
         (pl.col("level_bucket") + "|" + pl.col("Domain") + "|" + pl.col("pair_type")).alias("stratum")
     )
 
-    # One row per unique normalized text: canonical_id = min(ID) sharing that text, its own
-    # barec_split governs test-eligibility for the whole group (sorted by ID first, so .first() is
-    # the canonical row's value on every run, not whichever row polars happens to see first), and
-    # its hash decides the whole group's split -- every ID sharing that text inherits the same split, closing the bug where
-    # the same sentence under different IDs could land on both sides of the split.
-    groups = (
-        df.sort("ID")
-        .group_by("norm_text", maintain_order=True)
-        .agg(
-            pl.col("ID").min().alias("canonical_id"),
-            pl.col("ID").alias("member_ids"),
-            pl.col("stratum").first(),
-            pl.col("barec_split").first(),
-        )
-        .with_columns(pl.col("canonical_id").cast(pl.Utf8).map_elements(_bucket_of, return_dtype=pl.Int64).alias("hash_bucket"))
-    )
+    groups = _group_by_canonical_text(df)
 
     thresholds = _load_thresholds()
     n_groups = groups.shape[0]
