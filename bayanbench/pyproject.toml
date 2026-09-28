@@ -1,0 +1,27 @@
+[project]
+name = "bayanbench"
+version = "1.0.0"
+description = "BayanBench: evaluation suite for dyslexia-friendly Arabic rewriting"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["huggingface_hub>=0.24"]
+
+[project.optional-dependencies]
+# reading level (CAMeL BAREC readability model)
+ease = ["torch>=2.1", "transformers>=4.46"]
+# run a Hugging Face seq2seq model the way the app runs it
+predict = ["torch>=2.1", "transformers>=4.46", "sentencepiece", "protobuf"]
+# judge with an API (Gemini) or any OpenAI-compatible server
+judge = ["google-genai>=1.30", "openai>=1.40"]
+all = ["bayanbench[ease,predict,judge]"]
+dev = ["pytest"]
+
+[project.scripts]
+bayanbench = "bayanbench.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
