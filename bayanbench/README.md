@@ -50,7 +50,8 @@ logged on the leaderboard.
   protected text, house rules, hard words, reading level). Same outputs, same numbers, anywhere.
 - **Judge tier**: track pass rates that need a meaning / Arabic-quality verdict. Verdicts are shared data in the data
   repo, keyed by the (selection, output) pair. Scoring never calls a judge: outputs already judged score at once,
-  outputs nobody has judged yet are reported as **pending**, never guessed.
+  outputs nobody has judged yet are reported as **pending**, never guessed. A judge-tier rate is shown only once 90%
+  of its items are judged; below that it reads "incomplete (n of N judged)".
 
 ## Getting pending outputs judged
 

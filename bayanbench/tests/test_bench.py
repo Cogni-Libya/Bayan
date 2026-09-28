@@ -65,3 +65,12 @@ def test_verdicts_pending_and_accepted_judges(data):
     write_jsonl(data / "verdicts" / "v.jsonl", [dict(rec, judge_id="t:judge")])
     a1 = score(items, preds, Verdicts(data))["sets"]["core"]["judge"]["A1"]
     assert a1["pending"] == 0 and a1["rate"][0] == 100
+
+
+def test_incomplete_judge_rate_is_not_shown(data):
+    from bayanbench.scoring import fmt
+    items = load_items(data, "dev")
+    preds = {i: ("زار الوفد المدينة سنة 2020، ولم يقابل الوزير." if i == "A1-x1" else it["source"]) for i, it in items.items()}
+    res = score(items, preds, Verdicts(data))
+    assert res["sets"]["core"]["judge"]["A1"]["complete"] is False
+    assert "incomplete (0 of 1 judged)" in fmt(res)

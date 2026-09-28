@@ -1,10 +1,14 @@
 """Score one predictions file: every measure of both tiers, per item set, with a 95% interval clustered by document,
 and optionally the paired difference against a baseline predictions file on the same items. No composite score.
 
-Judge-tier rates use only items that have an accepted verdict; the rest are counted as pending, never guessed."""
+Judge-tier rates use only items that have an accepted verdict; the rest are counted as pending, never guessed. A rate
+is shown only when at least 90% of its items are judged: which outputs got judged first is not random (copies of the
+selection never need a judge, for one), so a rate over a small judged part would be biased."""
 from .data import SETS, item_set
 from .measures import CODE, JUDGE, code_measures, judge_tracks
 from .stats import ci, paired
+
+COMPLETE = 0.9          # share of items that must have a verdict before a judge-tier rate is shown
 
 
 def per_item(items, preds, verdicts, lex=None, levels=None):
@@ -52,6 +56,7 @@ def score(items, preds, verdicts=None, lex=None, levels=None, baseline=None, set
                 e = {"rate": list(ci(list(got.values()))), "n": len(got)}
                 if tier == "judge":
                     e["pending"] = pending
+                    e["complete"] = len(got) >= COMPLETE * (len(got) + pending)
                 if base is not None:
                     b, _ = _collect(base, tier, name, s)
                     (d, lo, hi), n = paired(got, b)
@@ -73,6 +78,8 @@ def fmt(res, title="", baseline_name=None):
             for name, e in block[tier].items():
                 m, lo, hi = e["rate"]
                 cell = f"{m:5.1f} [{lo:3.0f}-{hi:3.0f}]" if m == m else "    —"
+                if tier == "judge" and not e["complete"]:
+                    cell = f"incomplete ({e['n']} of {e['n'] + e['pending']} judged)"
                 extra = f"n={e['n']}"
                 if e.get("pending"):
                     extra += f", pending {e['pending']}"
