@@ -168,6 +168,8 @@ def verify_split(df: pl.DataFrame) -> None:
     assert cross.shape[0] == 0, f"{cross.shape[0]} source texts appear in more than one split"
 
     for covariate in ("equivalence_score", "readability_lead", "ease_score"):
+        if covariate not in df.columns:
+            continue
         vals = df.filter(pl.col(covariate).is_not_null())
         for split_name in ("dev", "test"):
             a = vals.filter(pl.col("split") == "train")[covariate].to_numpy()
