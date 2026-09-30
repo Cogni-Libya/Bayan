@@ -1,0 +1,573 @@
+package ai.bayan.android.ui.process
+
+import android.content.Intent
+import android.graphics.Color as AndroidColor
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.net.Uri
+import android.os.Bundle
+import androidx.compose.material.icons.rounded.PictureInPictureAlt
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.unit.Velocity
+import ai.bayan.android.speech.SpeechState
+import ai.bayan.android.ui.theme.colors
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.ui.text.style.TextOverflow
+import ai.bayan.android.speech.ReadAloud
+import ai.bayan.android.speech.ReadingService
+import ai.bayan.android.ui.components.FollowReading
+import ai.bayan.android.ui.components.ListenIconToggle
+import ai.bayan.android.ui.theme.ContentDirection
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.PredictiveBackHandler
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import kotlinx.coroutines.delay
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import ai.bayan.android.AppContainer
+import ai.bayan.android.BayanApp
+import ai.bayan.android.MainActivity
+import ai.bayan.android.R
+import ai.bayan.android.data.Settings
+import ai.bayan.android.model.ModelCatalog
+import ai.bayan.android.ui.SimplifySession
+import ai.bayan.android.ui.SimplifyState
+import ai.bayan.android.ui.appViewModel
+import ai.bayan.android.ui.components.LocalAppContainer
+import ai.bayan.android.ui.components.AutoRead
+import ai.bayan.android.ui.components.OriginalToggle
+import ai.bayan.android.ui.components.ReaderActions
+import ai.bayan.android.ui.components.ReaderText
+import ai.bayan.android.ui.components.UnchangedNote
+import ai.bayan.android.ui.components.spokenRange
+import ai.bayan.android.ui.home.NoticeCard
+import ai.bayan.android.ui.isBusy
+import ai.bayan.android.ui.theme.BayanTheme
+import ai.bayan.android.ui.theme.isDark
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+/** "تبسيط" in any app's text-selection menu: simplifies the selection in a panel over that app. */
+class ProcessTextActivity : ComponentActivity() {
+    /** The selection being simplified; a new selection while the panel is open replaces it. */
+    private val selection = MutableStateFlow("")
+
+    /** The media controls are a notification: ask once (Android 13+), then minimize whatever the answer. */
+    private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { minimizeNow() }
+
+    /** Asking for "Display over other apps" before the first minimize. */
+    private val askFloating = MutableStateFlow(false)
+    private val overlaySettings = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { minimizeWithNotifications() }
+
+    private fun minimize() {
+        val app = (application as BayanApp).container
+        if (!android.provider.Settings.canDrawOverlays(this) && !app.overlay.floatingDeclined) askFloating.value = true
+        else minimizeWithNotifications()
+    }
+
+    private fun allowFloating() {
+        askFloating.value = false
+        overlaySettings.launch(Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+    }
+
+    private fun declineFloating() {
+        askFloating.value = false
+        (application as BayanApp).container.overlay.floatingDeclined = true
+        minimizeWithNotifications()
+    }
+
+    private fun minimizeWithNotifications() {
+        val needsPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        if (needsPermission) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS) else minimizeNow()
+    }
+
+    private fun minimizeNow() {
+        val app = (application as BayanApp).container
+        app.overlay.setMinimized(true)
+        startForegroundService(Intent(this, ReadingService::class.java))
+        finish()
+    }
+    private var readOnly = true
+
+    private fun receive(intent: Intent): Boolean {
+        val app = (application as BayanApp).container
+        if (intent.action == ACTION_RESUME) {
+            // Reopened from the media controls: show the selection that is being read.
+            readOnly = true
+            selection.value = app.overlay.text ?: return false
+            return true
+        }
+        val text = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString().orEmpty()
+        if (text.isBlank()) return false
+        readOnly = intent.getBooleanExtra(Intent.EXTRA_PROCESS_TEXT_READONLY, true)
+        selection.value = text
+        return true
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        receive(intent)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val app = (application as BayanApp).container
+        if (!receive(intent)) { finish(); return }
+        app.overlay.setMinimized(false)
+
+        setContent {
+            val text by selection.collectAsStateWithLifecycle()
+            val settings by app.settings.settings.collectAsStateWithLifecycle(null)
+            val s = settings ?: return@setContent
+            val dark = s.themeMode.isDark()
+            DisposableEffect(dark) {
+                val style = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT) { dark }
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+                onDispose {}
+            }
+            CompositionLocalProvider(LocalAppContainer provides app) {
+                BayanTheme(s.themeMode) {
+                    ProcessTextOverlay(
+                        text = text,
+                        canReplace = !readOnly,
+                        onReplace = { result ->
+                            setResult(RESULT_OK, Intent().putExtra(Intent.EXTRA_PROCESS_TEXT, result))
+                            finish()
+                        },
+                        onOpenApp = {
+                            startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                            finish()
+                        },
+                        onMinimize = ::minimize,
+                        onDismiss = ::finish,
+                    )
+                    val asking by askFloating.collectAsStateWithLifecycle()
+                    if (asking) {
+                        AlertDialog(
+                            onDismissRequest = ::declineFloating,
+                            icon = { Icon(Icons.Rounded.PictureInPictureAlt, null) },
+                            title = { Text(stringResource(R.string.floating_title)) },
+                            text = { Text(stringResource(R.string.floating_body)) },
+                            confirmButton = { TextButton(onClick = ::allowFloating) { Text(stringResource(R.string.floating_allow)) } },
+                            dismissButton = { TextButton(onClick = ::declineFloating) { Text(stringResource(R.string.floating_not_now)) } },
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        val app = (application as BayanApp).container
+        // Closed (not minimized): stop reading and forget the selection.
+        if (isFinishing && !app.overlay.minimized.value) app.overlay.close()
+        super.onDestroy()
+    }
+
+    companion object {
+        const val ACTION_RESUME = "ai.bayan.android.RESUME_READING"
+    }
+}
+
+@Composable
+private fun ProcessTextOverlay(
+    text: String,
+    canReplace: Boolean,
+    onReplace: (String) -> Unit,
+    onOpenApp: () -> Unit,
+    onMinimize: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val app = LocalAppContainer.current
+    val overlay = app.overlay
+    LaunchedEffect(text) { overlay.open(text) }
+    val state by overlay.simplify.state.collectAsStateWithLifecycle()
+    val settings by app.settings.settings.collectAsStateWithLifecycle(Settings())
+    val scope = rememberCoroutineScope()
+    val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current
+
+    // The entrance: the edge light rises from the bottom, then the panel springs up.
+    val reveal = remember { Animatable(0f) }
+    val enter = remember { Animatable(0f) }
+    var closing by remember { mutableStateOf(false) }
+    var dragY by remember { mutableFloatStateOf(0f) }
+    /** Only a finger moves the panel: the automatic scrolling that follows the spoken word must not. */
+    var fingerDown by remember { mutableStateOf(false) }
+    var backProgress by remember { mutableFloatStateOf(0f) }
+    var panel by remember { mutableStateOf<Rect?>(null) }
+    var showOriginal by rememberSaveable { mutableStateOf(false) }
+    val working = state.isBusy || state is SimplifyState.Idle
+
+    // What is being read; the same key the media controls use once the panel is minimized.
+    val key = overlay.key(state, showOriginal)
+    val readable = when (val st = state) {
+        is SimplifyState.Running -> st.partial.take(st.committed)
+        is SimplifyState.Done -> if (showOriginal) st.source else st.result
+        else -> ""
+    }
+    val complete = state is SimplifyState.Done
+    FollowReading(key, readable, complete, settings.speechRate)
+    AutoRead(settings.autoRead, key, readable, settings.speechRate)
+
+    LaunchedEffect(Unit) {
+        haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+        launch { reveal.animateTo(1f, tween(750, easing = FastOutSlowInEasing)) }
+        delay(110)
+        enter.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow))
+    }
+    LaunchedEffect(state is SimplifyState.Done) {
+        if (state is SimplifyState.Done) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+    }
+    val close: () -> Unit = {
+        if (!closing) {
+            closing = true
+            scope.launch { enter.animateTo(0f, tween(220)); onDismiss() }
+        }
+    }
+    val springBack: () -> Unit = {
+        scope.launch { animate(dragY, 0f, animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)) { v, _ -> dragY = v } }
+    }
+    /** Back to the app the text came from; reading carries on with the system's media controls. */
+    val minimize: () -> Unit = {
+        if (!closing) {
+            closing = true
+            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+            scope.launch { enter.animateTo(0f, tween(220)); onMinimize() }
+        }
+    }
+    PredictiveBackHandler(enabled = !closing) { events ->
+        try {
+            events.collect { backProgress = it.progress }
+            close()
+        } catch (e: CancellationException) {
+            backProgress = 0f
+            throw e
+        }
+    }
+
+    // While Bayan works the whole screen glows; once the text is ready the light gives way to it.
+    val settle = tween<Float>(1100)
+    val quiet = closing
+    val edge by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(300) else settle, label = "edge")
+    val aurora by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(500) else settle, label = "aurora")
+    val border by animateFloatAsState(if (closing) 0f else if (working) 1f else 0.3f, settle, label = "border")
+    val scrim = 0.4f
+
+    // Dragging anywhere on the panel: it follows the finger and shrinks a little as it goes down.
+    // A short pull (or a fling) collapses it to a few lines; a long pull closes it; dragging up expands it again.
+    val minimizeAt = with(density) { 72.dp.toPx() }
+    val closeAt = with(density) { 260.dp.toPx() }
+    val settleDrag: (Float) -> Unit = { velocity ->
+        val y = dragY
+        when {
+            y > closeAt || velocity > 4000f -> close()
+            y > minimizeAt || velocity > 1000f -> minimize()
+            else -> springBack()
+        }
+    }
+    val dragState = rememberDraggableState { delta ->
+        dragY = (dragY + delta).coerceAtLeast(0f)
+    }
+    // The text scrolls first; once it is at the top, a downward drag moves the panel instead.
+    val panelScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (fingerDown && dragY > 0f && available.y < 0f) {
+                    val used = maxOf(available.y, -dragY)
+                    dragY += used
+                    return Offset(0f, used)
+                }
+                return Offset.Zero
+            }
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (fingerDown && source == NestedScrollSource.UserInput && available.y > 0f) {
+                    dragY += available.y
+                    return Offset(0f, available.y)
+                }
+                return Offset.Zero
+            }
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (dragY > 0f) { settleDrag(available.y); return available }
+                return Velocity.Zero
+            }
+        }
+    }
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val maxPanel = maxHeight * 0.82f
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = reveal.value.coerceIn(0f, 1f) * (if (closing) enter.value else 1f) }
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = scrim))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = close,
+                ),
+        )
+        OverlayGlow(
+            reveal = reveal.value,
+            edge = edge,
+            aurora = aurora * enter.value.coerceIn(0f, 1f),
+            border = border * enter.value.coerceIn(0f, 1f),
+            panel = panel,
+            working = working,
+        )
+
+        Column(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .safeDrawingPadding()
+                .imePadding()
+                .padding(12.dp)
+                .widthIn(max = 640.dp)
+                .fillMaxWidth()
+                .graphicsLayer {
+                    val e = enter.value
+                    val pull = (dragY / closeAt).coerceIn(0f, 1f)
+                    val shrink = (1f - 0.1f * pull) * (1f - 0.08f * backProgress)
+                    transformOrigin = TransformOrigin(0.5f, 1f)
+                    translationY = dragY.coerceAtLeast(0f) * 0.85f + (1f - e) * with(density) { 180.dp.toPx() }
+                    scaleX = (0.88f + 0.12f * e) * shrink
+                    scaleY = (0.88f + 0.12f * e) * shrink
+                    alpha = e.coerceIn(0f, 1f) * (1f - 0.3f * pull)
+                }
+                .onGloballyPositioned { panel = it.boundsInRoot() }
+                .clip(RoundedCornerShape(32.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                .heightIn(max = maxPanel)
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        fingerDown = true
+                        do {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                        } while (event.changes.any { it.pressed })
+                        fingerDown = false
+                    }
+                }
+                .nestedScroll(panelScroll)
+                .draggable(dragState, Orientation.Vertical, onDragStopped = { settleDrag(it) })
+                .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
+        ) {
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+                PanelTopBar(onMinimize = minimize)
+                PanelContent(state, settings, key, showOriginal, { showOriginal = it }, canReplace, onReplace, onOpenApp)
+            }
+        }
+    }
+}
+
+/** The expanded panel's top row: the drag handle, with minimize (⌄) beside it, as on a "Now playing" screen. */
+@Composable
+private fun PanelTopBar(onMinimize: () -> Unit) {
+    Box(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)) {
+        IconButton(onClick = onMinimize, modifier = Modifier.align(Alignment.CenterStart)) {
+            Icon(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.sheet_minimize))
+        }
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .size(width = 32.dp, height = 4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)),
+        )
+    }
+}
+
+
+/**
+ * The panel below its handle: the text scrolls on its own, and the controls stay pinned under it however long the
+ * selection is. While streaming the view follows the newest words; while reading aloud, the word being spoken.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ColumnScope.PanelContent(
+    state: SimplifyState,
+    settings: Settings,
+    key: String,
+    showOriginal: Boolean,
+    onShowOriginal: (Boolean) -> Unit,
+    canReplace: Boolean,
+    onReplace: (String) -> Unit,
+    onOpenApp: () -> Unit,
+    reveal: Boolean = true,
+) {
+    val scroll = rememberScrollState()
+    val highlight = if (settings.highlightWhileReading) spokenRange(key) else null
+    val fade = MaterialTheme.colorScheme.surfaceContainerLow
+
+    Box(Modifier.weight(1f, fill = false)) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(scroll).padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            when (state) {
+                SimplifyState.Idle, SimplifyState.LoadingModel -> ThinkingLines(Modifier.padding(horizontal = 8.dp, vertical = 12.dp))
+                is SimplifyState.Running ->
+                    if (state.partial.isEmpty()) ThinkingLines(Modifier.padding(horizontal = 8.dp, vertical = 12.dp))
+                    else ReaderText(state.partial, settings.reader, highlight = highlight, reveal = reveal, follow = true)
+                is SimplifyState.Done -> {
+                    ReaderText(
+                        if (showOriginal) state.source else state.result,
+                        settings.reader,
+                        highlight = highlight,
+                        reveal = reveal && !showOriginal,
+                        follow = highlight != null,
+                    )
+                    UnchangedNote(state.source, state.result)
+                }
+                is SimplifyState.NeedsModel -> NoticeCard(
+                    icon = Icons.Rounded.Download,
+                    title = stringResource(R.string.home_needs_model_title),
+                    body = stringResource(R.string.sheet_needs_model_body),
+                    action = stringResource(R.string.sheet_open_app),
+                    onAction = onOpenApp,
+                )
+                is SimplifyState.Failed -> NoticeCard(
+                    icon = Icons.Rounded.ErrorOutline,
+                    title = stringResource(R.string.home_failed_title),
+                    body = state.message ?: stringResource(R.string.home_failed_body),
+                    error = true,
+                )
+            }
+        }
+        // A soft edge where more text continues below the pinned controls.
+        if (scroll.canScrollForward) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .background(Brush.verticalGradient(listOf(fade.copy(alpha = 0f), fade))),
+            )
+        }
+    }
+
+    // Pinned controls.
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        when (state) {
+            is SimplifyState.Running -> {
+                val committed = state.partial.take(state.committed)
+                if (committed.isNotEmpty()) ReaderActions(committed, key, settings.speechRate, complete = false)
+            }
+            is SimplifyState.Done -> {
+                OriginalToggle(showOriginal, onShowOriginal, Modifier.fillMaxWidth())
+                ReaderActions(if (showOriginal) state.source else state.result, key, settings.speechRate)
+                if (canReplace) {
+                    Button(onClick = { onReplace(state.result) }, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Rounded.SwapHoriz, null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.sheet_replace))
+                    }
+                }
+            }
+            else -> Unit
+        }
+    }
+}

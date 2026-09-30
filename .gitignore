@@ -39,6 +39,8 @@ data/test_locked/
 # and scripts/optimize_*.py; see the level-classifier-benchmark memory note for how each one
 # was produced. Never belongs in git history.
 models/
+# ...but not Kotlin packages named models (the app's model-picker screen).
+!app/app/src/main/java/**/models/
 # Claude Code local state (worktrees, session files)
 .claude/
 
