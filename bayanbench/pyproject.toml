@@ -1,6 +1,6 @@
 [project]
 name = "bayanbench"
-version = "1.0.0"
+version = "2.0.0.dev0"
 description = "BayanBench: evaluation suite for dyslexia-friendly Arabic rewriting"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -11,9 +11,11 @@ dependencies = ["huggingface_hub>=0.24"]
 ease = ["torch>=2.1", "transformers>=4.46"]
 # run a Hugging Face seq2seq model the way the app runs it
 predict = ["torch>=2.1", "transformers>=4.46", "sentencepiece", "protobuf"]
-# judge with an API (Gemini) or any OpenAI-compatible server
+# score meaning with the open scorer (Gemma 4 31B int4 on vLLM; a 44 GB+ GPU)
+meaning = ["vllm>=0.11"]
+# v1: judge with an API (Gemini) or any OpenAI-compatible server
 judge = ["google-genai>=1.30", "openai>=1.40"]
-all = ["bayanbench[ease,predict,judge]"]
+all = ["bayanbench[ease,predict,meaning,judge]"]
 dev = ["pytest"]
 
 [project.scripts]

@@ -1,8 +1,13 @@
-"""bayanbench: score dyslexia-friendly Arabic rewriting.
+"""bayanbench: score dyslexia-friendly Arabic rewriting (v2: meaning from an open scorer, simpler as changes).
 
   bayanbench verify                                      check the benchmark data against its checksums
   bayanbench predict --model ID --prefix "بسط: " --split dev -o preds_dev.jsonl
   bayanbench score preds_dev.jsonl [--baseline other.jsonl] [--samer DIR] [--json out.json]
+  bayanbench meaning-pending preds_dev.jsonl -o pending.jsonl   outputs the meaning scorer has not scored yet
+  bayanbench meaning pending.jsonl -o my_scores.jsonl            score them (vLLM, a 44 GB+ GPU)
+
+v1 judge tier (Gemini 3.1 Pro verdicts), an optional extra:
+  bayanbench score preds_dev.jsonl --gemini
   bayanbench pending preds_dev.jsonl -o pending.jsonl    outputs no accepted judge has seen yet
   bayanbench judge pending.jsonl --backend gemini --model ID -o my_verdicts.jsonl
   bayanbench validate-judge my_verdicts_on_validation.jsonl
@@ -37,7 +42,10 @@ def cmd_verify(a):
     print(f"BayanBench data {m['version']} at {d}")
     for f in m["files"]:
         print(f"  {'OK ' if f not in bad else 'BAD'} {f}")
-    print("accepted judges:", ", ".join(m["accepted_judges"]))
+    from .meaning import config
+    c = config(d)
+    print("meaning scorer:", c["scorer"], "| threshold:", c["same_threshold"] if c["same_threshold"] is not None else "not frozen yet")
+    print("v1 accepted judges:", ", ".join(m.get("accepted_judges", [])))
     if bad:
         raise SystemExit(f"{len(bad)} files do not match manifest.json")
 
@@ -69,25 +77,61 @@ def _ease(a, d, items, preds_list):
 
 
 def cmd_score(a):
+    from .meaning import Scores, config
     from .scoring import fmt, pending_summary, score
-    from .verdicts import Verdicts
     d = data_dir(a.data, a.revision)
     items = load_items(d, a.split)
     preds = load_predictions(a.preds, items)
     base = load_predictions(a.baseline, items) if a.baseline else None
     lex, levels = _ease(a, d, items, [preds] + ([base] if base else []))
-    v = Verdicts(d, extra=a.verdicts or [], accepted=a.accept_judge or None)
-    res = score(items, preds, v, lex, levels, baseline=base, sets=a.set or SETS)
+    cfg, notes = config(d), []
+    if a.meaning_threshold is not None or a.contradict_threshold is not None or a.simpler_min:
+        notes.append("thresholds set on the command line: your own analysis, not the official score")
+    if a.meaning_threshold is not None:
+        cfg["same_threshold"] = a.meaning_threshold
+    if a.contradict_threshold is not None:
+        cfg["contradict_threshold"] = a.contradict_threshold
+    if a.simpler_min:
+        cw, lv = a.simpler_min.split(",")
+        cfg["simpler_min"] = {"clause_words": float(cw), "levels": float(lv)}
+    if cfg["same_threshold"] is None:
+        notes.append("meaning kept: the threshold is not frozen yet (#48); P(same meaning) only")
+    joint = bool(a.joint and cfg["same_threshold"] is not None and cfg["simpler_min"])
+    if a.joint and not joint:
+        notes.append("joint rate: needs a frozen threshold and minimum change (or --meaning-threshold and --simpler-min)")
+    sc = None if a.no_meaning else Scores(d, extra=a.meaning_scores or [])
+    v = None
+    if a.gemini:
+        from .verdicts import Verdicts
+        v = Verdicts(d, extra=a.verdicts or [], accepted=a.accept_judge or None)
+    res = score(items, preds, sc, lex, levels, baseline=base, sets=a.set or SETS, cfg=cfg, verdicts=v, joint=joint)
+    m = manifest(d)
     res.update({"split": a.split, "predictions": str(a.preds), "baseline": str(a.baseline) if a.baseline else None,
-                "data_version": manifest(d)["version"], "accepted_judges": sorted(v.accepted), "bayanbench": __version__,
+                "data_version": m["version"], "bayanbench": __version__, "meaning": cfg,
+                "accepted_judges": sorted(v.accepted) if v else None,
                 "hard_words_measured": lex is not None, "reading_level_measured": levels is not None})
-    print(fmt(res, f"BayanBench {manifest(d)['version']}, {a.split}: {a.preds}  (rate % [95% interval])",
-              Path(a.baseline).stem if a.baseline else None))
-    pend = pending_summary(res)
-    if any(pend.values()):
-        print(f"\njudge tier incomplete: {pend} item-measures pending. `bayanbench pending` lists the outputs to judge.")
+    print(fmt(res, f"BayanBench {m['version']}, {a.split}: {a.preds}  (rate % or mean [95% interval])",
+              Path(a.baseline).stem if a.baseline else None, notes))
+    pend = {s: p for s, p in pending_summary(res).items() if any(p.values())}
+    if pend:
+        print(f"\npending item-measures: {pend}. `bayanbench meaning-pending` lists the outputs to score.")
     if a.json:
         Path(a.json).write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def cmd_meaning_pending(a):
+    from .meaning import Scores
+    d = data_dir(a.data, a.revision)
+    items = load_items(d, a.split)
+    pend = Scores(d, extra=a.meaning_scores or []).pending(items, load_predictions(a.preds, items))
+    write_jsonl(a.out, pend)
+    log(f"{len(pend)} outputs without a meaning score -> {a.out}")
+
+
+def cmd_meaning(a):
+    from .meaning import MODEL, run
+    run(read_jsonl(a.pairs), a.out, model=a.model or MODEL, questions=tuple(a.questions.split(",")),
+        gpu_util=a.gpu_util, log=log)
 
 
 def cmd_pending(a):
@@ -141,17 +185,37 @@ def main(argv=None):
     sp.add_argument("--samer", help="your licensed SAMER corpus folder (for the hard-word measures; read once, cached)")
     sp.add_argument("--no-samer", action="store_true", help="skip the hard-word measures")
     sp.add_argument("--no-level", action="store_true", help="skip the reading-level measures (no torch needed)")
-    sp.add_argument("--verdicts", action="append", help="extra verdict files to read (only accepted judges count)")
-    sp.add_argument("--accept-judge", action="append", help="count this judge too (your own analysis; not for the leaderboard)")
+    sp.add_argument("--meaning-scores", action="append", help="extra meaning score files (records name their scorer)")
+    sp.add_argument("--no-meaning", action="store_true", help="skip the meaning measures")
+    sp.add_argument("--meaning-threshold", type=float, help="P(same) threshold for 'meaning kept' (analysis only)")
+    sp.add_argument("--contradict-threshold", type=float, help="P(contradict) over which a flagged pair fails (analysis only)")
+    sp.add_argument("--simpler-min", help="CLAUSE_WORDS,LEVELS: minimum change that counts as simpler (analysis only)")
+    sp.add_argument("--joint", action="store_true", help="also show the joint rate: meaning kept and simpler")
+    sp.add_argument("--gemini", action="store_true", help="also show the v1 judge tier (Gemini verdicts)")
+    sp.add_argument("--verdicts", action="append", help="--gemini: extra verdict files to read (only accepted judges count)")
+    sp.add_argument("--accept-judge", action="append", help="--gemini: count this judge too (your own analysis)")
     sp.add_argument("--json", help="also write the full result as JSON")
     sp.set_defaults(fn=cmd_score)
 
-    sp = sub.add_parser("pending", help="outputs that no accepted judge has seen yet"); common(sp)
+    sp = sub.add_parser("meaning-pending", help="outputs the meaning scorer has not scored yet"); common(sp)
+    sp.add_argument("preds"); sp.add_argument("-o", "--out", required=True)
+    sp.add_argument("--meaning-scores", action="append", help="extra score files to take into account")
+    sp.set_defaults(fn=cmd_meaning_pending)
+
+    sp = sub.add_parser("meaning", help="score pending outputs for meaning (vLLM, a 44 GB+ GPU)")
+    sp.add_argument("pairs", help="file from `bayanbench meaning-pending`")
+    sp.add_argument("-o", "--out", required=True, help="score file to append to (resumable)")
+    sp.add_argument("--model", help="default: the official scorer, google/gemma-4-31B-it-qat-w4a16-ct")
+    sp.add_argument("--questions", default="same,added,missing,contradict")
+    sp.add_argument("--gpu-util", type=float, default=0.88)
+    sp.set_defaults(fn=cmd_meaning)
+
+    sp = sub.add_parser("pending", help="v1: outputs that no accepted Gemini judge has seen yet"); common(sp)
     sp.add_argument("preds"); sp.add_argument("-o", "--out", required=True)
     sp.add_argument("--verdicts", action="append", help="extra verdict files to take into account")
     sp.set_defaults(fn=cmd_pending)
 
-    sp = sub.add_parser("judge", help="judge pending outputs (needs judge access)"); common(sp, False)
+    sp = sub.add_parser("judge", help="v1: judge pending outputs with Gemini (needs judge access)"); common(sp, False)
     sp.add_argument("pairs", help="file from `bayanbench pending` (or judge/validation.jsonl to validate a judge)")
     sp.add_argument("--backend", required=True, choices=["gemini", "openai", "agy"])
     sp.add_argument("--model", required=True)
@@ -161,7 +225,7 @@ def main(argv=None):
     sp.add_argument("--workers", type=int, default=2)
     sp.set_defaults(fn=cmd_judge)
 
-    sp = sub.add_parser("validate-judge", help="how far a judge's verdicts agree with known answers"); common(sp, False)
+    sp = sub.add_parser("validate-judge", help="v1: how far a judge's verdicts agree with known answers"); common(sp, False)
     sp.add_argument("verdicts", help="that judge's verdicts on judge/validation.jsonl")
     sp.set_defaults(fn=cmd_validate_judge)
 

@@ -29,6 +29,30 @@ PROBES = {   # A2 "hard spots": what a sentence contains that a careless rewrite
 }
 def probes(t): return [k for k, p in PROBES.items() if p.search(norm(t))]
 
+# ---- v2 flags: possible meaning changes code can spot, routed to the meaning scorer's "contradict" question ----
+# Limits are compared by what they mean, not how they are written, so «لا يقل عن» -> «على الأقل» is no change and
+# «على الأكثر» -> «على الأقل» is one.
+_A, _Y, _E = "[أإآا]", "[ىي]", r"(?=[\s،,.؛;:!?؟»)\]]|$)"      # alef forms, final yaa forms, end of word
+LIMITS = {
+    "at least": re.compile(rf"على\s+ال{_A}قل{_E}|لا\s+[يت]قل{_E}|(?:^|\s)[وك]?(?:ال)?حد\s+(?:ال)?{_A}دن{_Y}{_E}"),
+    "at most": re.compile(rf"على\s+ال{_A}كثر{_E}|لا\s+[يت]زيد{_E}|(?:^|\s)[وك]?(?:ال)?حد\s+(?:ال)?{_A}قص{_Y}{_E}"),
+    "more than": re.compile(rf"(?:^|\s)[و]?{_A}كثر\s+من{_E}"),
+    "less than": re.compile(rf"(?:^|\s)[و]?{_A}قل\s+من{_E}"),
+    "only": re.compile(rf"(?:^|\s)[و]?(?:فقط|[إا]لا|سو{_Y}){_E}"),
+}
+def limits(t): n = norm(t); return sorted(k for k, p in LIMITS.items() for _ in p.finditer(n))
+
+# conditions; bare «إن» is left out: unvowelled, it is far more often the emphatic «إنّ» than the conditional «إنْ»
+CONDITION = re.compile(rf"(?:^|\s)[وف]?(إذا|اذا|لو|لولا|كلما|متى|مهما|ما\s+لم|بشرط|شريطة){_E}")
+def conditions(t): return len(CONDITION.findall(norm(t)))
+
+def punct_only(source, output):
+    """The output has the source's words in the source's order: only punctuation (or tashkeel) changed. Such an edit
+    can shorten the longest clause (a comma counts as a clause boundary) without simplifying anything."""
+    return words(source) == words(output)
+
+FULL_STOP = "mid-sentence full stop"
+
 def end_mark(t):
     m = END.search(t.strip())
     return re.sub(r"[»\"')\]\s]", "", m.group(0))[-1:] if m else ""
@@ -45,7 +69,7 @@ def _breaks(source, output):
     if not src_inner and re.search(r"(?<![.\d\s])\.(?!\.)\s+\S", out[:-1]):
         # a full stop inside the output where the source had none, except after a one-letter abbreviation
         for m in re.finditer(r"(\S+)\.(?!\.)\s+\S", out[:-1]):
-            if len(strip(m.group(1))) > 1 and not m.group(1)[-1].isdigit(): br.append("mid-sentence full stop"); break
+            if len(strip(m.group(1))) > 1 and not m.group(1)[-1].isdigit(): br.append(FULL_STOP); break
     if MARKS.search(out): br.append("tashkeel")
     if re.search(r"،\s*(لأن|إذ)\s", norm(out)): br.append("، before لأن/إذ (needs ؛)")
     if re.search(r"(?:^|\s)[و]?لو\s[^.؟!]*?،\s*ف\S", norm(out)) and not re.search(r"(?:^|\s)[و]?لو\s[^.؟!]*?،\s*ف\S", norm(source)):
