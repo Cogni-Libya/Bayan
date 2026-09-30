@@ -1,9 +1,4 @@
-# Add project specific ProGuard rules here.
-# By default, the flags in this file are appended to flags specified
-# in C:\Users\Gigabyte\AppData\Local\Android\Sdk/tools/proguard/proguard-android.txt
-# You can edit the include path and order by changing the proguardFiles
-# directive in build.gradle.
 
-# Keep data models used in engine and serialization
--keep class ai.bayan.android.engine.** { *; }
-
+# Native code looks these classes and fields up by name (JNI).
+-keep class com.k2fsa.sherpa.onnx.** { *; }
+-keep class ai.onnxruntime.** { *; }
