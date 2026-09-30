@@ -1,6 +1,6 @@
 # Meaning judge: a local meaning-preservation scorer for Arabic simplification
 
-**Models (private, Hugging Face):**
+**Models (public, Hugging Face; SAMER-derived training data used with the corpus authors' permission):**
 [`Congi-libya/bayan-meaning-judge-e2b`](https://huggingface.co/Congi-libya/bayan-meaning-judge-e2b) (bf16, reference) ·
 [`-w8a8`](https://huggingface.co/Congi-libya/bayan-meaning-judge-e2b-w8a8) (int8, fastest) ·
 [`-w4a16`](https://huggingface.co/Congi-libya/bayan-meaning-judge-e2b-w4a16) (int4 weights, smallest)
