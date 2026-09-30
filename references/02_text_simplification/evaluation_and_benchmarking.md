@@ -127,3 +127,41 @@ evaluate with a different model, for example CAMeLBERT, or with human review.)
 4. **Leakage check:** no test sentence (or source document) may appear in training data, and scores must
    never be computed on rows the model trained on.
 5. **Report everything,** including results where a baseline wins.
+
+## 5. What we built from this: BayanBench (27–28 Sep 2026)
+
+The protocol above was implemented as **BayanBench** and run on model 2's test split on 28 Sep. The full design,
+results and limits are in the final report (Sections 2.5 and 3.3); the points that changed our evaluation are
+recorded here with the sources they rest on.
+
+1. **Reference-based scores reward inaction on copy-heavy sets.** Copying scores SARI 77.5 on SAMER test,
+   because 48.8% of its pairs are unchanged. Always report the copy baseline and split scores by whether a
+   human changed the sentence. SARI correlates only r = 0.36 with human simplicity judgements
+   (Alva-Manchego, Scarton & Specia, 2021, *Computational Linguistics* 47(4), doi:10.1162/coli_a_00418).
+2. **Score behaviours, not agreement with one editor.** Separate tracks for meaning, ease, restraint, correct
+   Arabic, real selections and protected text, scored separately and never averaged, as CheckList-style
+   behavioural tests (Ribeiro et al., 2020, *ACL*). Meaning errors follow the insertion / deletion /
+   substitution taxonomy of Devaraj et al. (2022, *ACL*, doi:10.18653/v1/2022.acl-long.506) and SALSA
+   (Heineman et al., 2023, *EMNLP*, doi:10.18653/v1/2023.emnlp-main.211).
+3. **Measure ease with more than one instrument.** Clause length (no clause over 15 words), word familiarity
+   (SAMER lexicon levels 4–5) and the CAMeL BAREC readability model. Word frequency is the best-supported
+   adaptation for readers with dyslexia (Rivero-Contreras et al., 2021, *Annals of Dyslexia*,
+   doi:10.1007/s11881-021-00217-1). The clause measure credits added commas as well as split sentences, so it
+   must be read next to the content measures.
+4. **Split by document and cluster the intervals.** Sentences from one document pass or fail together, so
+   95% intervals come from a bootstrap over whole documents (Miller, 2024, arXiv:2411.00640), and a
+   comparison counts only when the paired difference's interval excludes zero.
+5. **Test outside the training corpus.** Scores fall away from BAREC test: model 2 (AraT5v2, `[S2]`) fixes
+   long clauses in 58.9% of core items but 39.1% of held-out news/legal and 40.4% of text published after
+   every corpus we use.
+6. **Code checks miss substitutions.** Numbers, negations and kept words catch deletions, but not a reversal
+   such as «على الأكثر» → «على الأقل» (at most → at least), which passes every code check. Meaning therefore
+   needs a judge tier, and the judge must be validated first: planted errors, self-consistency, and
+   acceptance thresholds fixed before any candidate is tested. LLM judges favour outputs close to data they
+   wrote or approved (Li et al., 2026, *ICLR*, "Preference leakage").
+7. **Benchmark hygiene:** a construct definition, a negative definition (what is out of scope), a locked test
+   split and a benchmark card, following Bean et al. (2025, *NeurIPS D&B*, "Measuring what matters") and
+   BetterBench (Reuel et al., 2024, *NeurIPS D&B*).
+8. **Evaluate the deployed format, not only the checkpoint.** The app's int8 bundles, run through the app's
+   own decoding loop, behave differently from the PyTorch model: they send no strength tag and simplify
+   less, and int8 pushes AraT5v2 toward copying.

@@ -84,6 +84,21 @@ validator currently rejects nothing and must be fixed before full-scale generati
 
 ---
 
+## Key insights from the 27–30 Sep evaluation round
+
+1. **SARI on SAMER rewards doing nothing.** Copying scores 77.5 on SAMER test; model 1 beats copying on the
+   rows a human changed and still loses overall. Report the copy baseline and the changed/unchanged split.
+2. **A public corpus was contaminated:** 9.3% of Baseet's rows overlap the SAMER and BAREC test sets.
+   Run the leakage check on every training file.
+3. **BayanBench** scores what a reader needs, track by track: model 2 makes text easier (long clauses fixed
+   in 51–55% of items, hard words reduced in 41–44%) and keeps most content, but lacks restraint (easy text
+   left unchanged in 9–11%) and rewrites protected text. See
+   [`02_text_simplification/evaluation_and_benchmarking.md`](02_text_simplification/evaluation_and_benchmarking.md) §5.
+4. **The deployed format matters:** the app's bundles send no strength tag and simplify less than the tagged
+   model; int8 pushes AraT5v2 toward copying and barely moves AraBART.
+5. **The phone is fast enough:** on a Snapdragon 870 the first token appears in 177–318 ms, and later
+   sentences start within 85 ms, because output streams.
+
 ## Key verified facts
 
 | Topic | Fact | Source |

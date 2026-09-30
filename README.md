@@ -35,9 +35,9 @@ All figures are verified in [`references/01_problem_motivation/`](references/01_
 
 | Stage | What it does | Status of the decision |
 |---|---|---|
-| **1. Simplify (core)** | Shorten and restructure sentences, replace rare words, keep meaning | **Primary focus.** Fine-tuned Arabic encoder-decoder (seq2seq) Transformers: model 1 (AraT5v2 on SAMER) and two model-2 candidates (AraT5v2, AraBART) with a strength tag; the choice waits on the evaluation (#30) |
-| 2. Diacritize | Restore full tashkeel on the simplified text | **Secondary.** Decided: **Libtashkeel** (`text2tashkeel`) — MIT, ~45 MB, exports to ONNX. Must never alter base letters |
-| 3. Read aloud | TTS with word-by-word highlighting | **Secondary.** Ready model: **Nabra-7M-Distill** |
+| **1. Simplify (core)** | Shorten and restructure sentences, replace rare words, keep meaning | **Primary focus.** Fine-tuned Arabic encoder-decoder (seq2seq) Transformers: model 1 (AraT5v2 on SAMER) and model 2 (AraT5v2 and AraBART, one model per architecture with a strength tag). Both model-2 models run in the app as int8 ONNX bundles |
+| 2. Diacritize | Restore full tashkeel on the simplified text | **Secondary.** Selected: **Libtashkeel** (`text2tashkeel`): MIT, 4.8 MB, exports to ONNX, changed no base letters in the benchmark. Not in the current app build |
+| 3. Read aloud | TTS with word-by-word highlighting | **Secondary.** In the app: **Nabra-7M-Distill** (int8, 8.7 MB) through sherpa-onnx, the spoken word highlighted; three Piper voices as optional downloads |
 
 Order matters: simplify → diacritize → read aloud, because diacritics depend on the final wording.
 An optional runtime quality gate shows the original text when a simplification is judged unfaithful.
@@ -46,7 +46,9 @@ An optional runtime quality gate shows the original text when a simplification i
 
 Bayan ships as an **Android plugin**, not a separate app. It registers a `PROCESS_TEXT` intent, so "تبسيط"
 appears in the text-selection menu of any app on the phone: the reader selects hard Arabic text where they
-meet it, and a bottom sheet returns the simplified version and can read it aloud. **All inference runs on the
+meet it, and a panel over the same app streams the simplified version sentence by sentence and can read it
+aloud. The panel can float over the page or shrink to a bar while reading continues. The app is built with
+Jetpack Compose and Material 3 Expressive and follows the system's dynamic colours rather than a design of its own. **All inference runs on the
 device** — no server, no network, and the text never leaves the phone.
 
 That constrains every model choice: ONNX Runtime Mobile only, nothing that needs Python at runtime or a GPU,
@@ -72,7 +74,9 @@ No large, open, parallel Arabic simplification corpus exists, so Bayan builds on
 - **Model 2 training data** (private Kaggle dataset `marwanelamami13/bayan-model2-data`, 22,733 pairs): SAMER L5→L3
   (14,343), DAASI train (1,502) and Baseet (6,888, filtered for meaning). Every source starts with a strength tag —
   `[S0]` minimal, `[S1]`–`[S3]` light to strong, `[SA]` everyday/administrative style — so one model covers every
-  strength. The tag is part of the input only; the app sends it and never shows it.
+  strength. The tag is part of the input only and is never shown. **Known gap:** the int8 bundles in the
+  current app send the bare prefix without a tag, and BayanBench shows this weakens simplification (long
+  clauses are fixed in 43.9% of items by the shipped AraBART bundle and in 55.1% by the same model with `[S2]`); the fix is to send `[S2]`.
 - **Diacritization check data:** Tashkeela.
 - **Leakage:** both training sets were checked against both locked test sets on 2026-09-21 and are clean. See
   [`scripts/evaluation/README.md`](scripts/evaluation/README.md).
@@ -84,7 +88,9 @@ No large, open, parallel Arabic simplification corpus exists, so Bayan builds on
 | Readability classifier (easy/hard, 800-sentence held-out set) | MARBERT 86.8–87.5% (best of those tried); ensemble 84.8% | MARBERT was **replaced by CAMeL AraBERT** (#17): on SAMER it ranks the human-simplified version higher 80.1% of the time (sentence pairs) and 76.9% (word swaps), against about 76% and 72–74% for MARBERT. CAMeL now gates the data, so evaluate with a different model or with human review |
 | Equivalence validator (DSPy MIPROv2, 25 held-out pairs) | 84% accuracy at threshold 0.70, up from 64% at the original guess of 0.8 | Directional only: 25 pairs is small; revisit with more annotations |
 | Model 1: AraT5v2 on SAMER (dev, 2,983 rows) | SARI 77.06 vs 74.25 for copying; on the 1,754 rows people changed, 63.66 vs 56.21 (+7.46) | Beats copying, but makes conservative one-word edits and at least one meaning error; see [`docs/model1_samer_dev.md`](docs/model1_samer_dev.md) |
-| Model 2: AraT5v2 vs AraBART (`select_dev`, 600 changed SAMER rows) | SARI 66.58 vs 64.71; AraBART generates 3.6× faster than AraT5v2 (292.8 vs 80.8 sentences/s on a T4, measured against model 1, same architecture) | Test-set scores come from #30; see [`scripts/training/model2/README.md`](scripts/training/model2/README.md) |
+| Model 2: AraT5v2 vs AraBART (`select_dev`, 600 changed SAMER rows) | SARI 66.58 vs 64.71; AraBART generates 3.6× faster than AraT5v2 (292.8 vs 80.8 sentences/s on a T4, measured against model 1, same architecture) | Selection score only; the test evaluation is BayanBench (next row). See [`scripts/training/model2/README.md`](scripts/training/model2/README.md) |
+| Model 2 on BayanBench test (1,250 items, code tier, `[S2]`), AraT5v2 / AraBART | Long-clause items with no clause over 15 words: 50.8% / 55.1% (copying: 0%). Fewer hard words: 41.2% / 44.0%. At least 60% of source words kept: 88.2% / 81.7%. Easy text left unchanged: 9.4% / 11.4%. Numbers kept: 76.3% / 74.0%; negations kept: 79.3% / 80.6% | Easier and mostly faithful, but no restraint: it edits easy text, rewrites protected scripture (letters kept in 4.4%) and completes cut-off selections. Full tables and intervals in the final report |
+| On the device (int8 ONNX) | AraBART 222 MB, AraT5v2 471 MB. Laptop CPU per sentence (median / p90): 0.10 / 0.24 s vs 0.20 / 0.43 s. Xiaomi Mi 11X (Snapdragon 870), AraT5v2: cold load 2.6–7.3 s, first token 177–318 ms (first sentence) and 55–85 ms (later ones) | AraBART fits the 250 MB budget; quantisation moves it by less than 2 points on every code measure, while it pushes AraT5v2 toward copying |
 | BERTScore as equivalence signal | r = −0.014 with human labels | Don't rely on it |
 
 ## 5. Key insights from the literature review (2026-09-17)
@@ -120,7 +126,16 @@ Same test inputs and one scoring script for every system:
 - **Leakage:** never score on rows a model trained on.
 
 How to score a trained model: [`scripts/evaluation/README.md`](scripts/evaluation/README.md) ("Scoring a trained model");
-the protocol for the report's tables is issue #30. Background:
+the protocol for the report's tables is issue #30.
+
+**BayanBench** is the task-specific benchmark: 1,981 items (dev 731 / test 1,250, split by document) in four
+sets (core BAREC test, held-out news and legal, outside text published after every corpus, written medicine
+sentences) and tracks for meaning, ease, restraint, correct Arabic, real selections, protected text and the
+phone. A deterministic **code tier** runs anywhere; a **judge tier** (Gemini 3.1 Pro, fixed checklist) stores
+verdicts as shared data, so nobody waits on a judge. Every rate has a 95% interval from a bootstrap over whole
+documents, and the test split is run once per final model. The package (`verify`, `predict`, `score`,
+`pending`, `judge`, `validate-judge`) is on branch `feat/bayanbench`; its data is the private HF dataset
+`Congi-libya/bayanbench-data`. Background:
 [`references/02_text_simplification/evaluation_and_benchmarking.md`](references/02_text_simplification/evaluation_and_benchmarking.md).
 
 ## 7. Repository layout
@@ -130,7 +145,7 @@ Bayan/
 ├── README.md                      # This file
 ├── CONTRIBUTING.md                # Team workflow: branches, PRs, reviews
 ├── .github/                       # CODEOWNERS, PR and issue templates
-├── app/                           # Android plugin (PROCESS_TEXT); see app/COMPATIBILITY.md
+├── app/                           # Android app (Compose, Material 3 Expressive, PROCESS_TEXT, on-device ONNX); licences in app/licenses/
 ├── deliverables/                  # SIC capstone deliverables (action plan, WBS, report, slides, demo)
 ├── docs/                          # Model results, the diacritization comparison
 │   └── decisions/                 # Decision records — what we chose, and why
@@ -195,10 +210,11 @@ Never push to `main` — every change goes through a reviewed pull request. See 
 
 ## 11. Open items
 
-- Score both model-2 candidates on the test sets (#30) and pick one for the app.
+- Send the strength tag (`[S2]`) from the app's bundles.
+- Keep scripture and poetry away from the model (return them unchanged, with their tashkeel), keep a
+  cut-off selection's ending, and map Persian-range digits before decoding.
+- Fill BayanBench's judge tier for the final models, and run its blind human rating (100 items).
 - Validate the equivalence judge on more annotated pairs, including real negatives.
-- Export the simplifier to ONNX and quantize it to int8, then measure size and latency on a real phone.
-- Prove the SentencePiece tokenizer and the KV-cached decode loop work under ONNX Runtime Mobile —
-  the two hardest parts of the app, and neither depends on a trained Bayan checkpoint.
+- Signed release build (#31 Part 2).
 - Name who presents at the final pitch and who writes the slides.
 - Find dyslexic readers / schools for user testing.

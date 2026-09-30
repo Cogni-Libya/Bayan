@@ -147,4 +147,24 @@ and simplifies it in place — with no copying, no pasting, and no separate app 
       including the four build decisions: on-device · tokenizer inside the ONNX graph · greedy
       decoding, no beam search · model downloaded on first run
 - [x] Action Plan updated (v6)
-- [ ] Measured load time and per-sentence latency on a real phone, recorded in §1
+- [x] Measured load time and per-sentence latency on a real phone (§8)
+
+---
+
+## 8. Outcome (30 Sep 2026)
+
+The decision held: Bayan runs as a `PROCESS_TEXT` plugin with every model on the device. What the build
+changed, measured on a Xiaomi Mi 11X (Snapdragon 870, Android 13, 6 GB RAM):
+
+| Decision | As built |
+|---|---|
+| On-device | Yes. int8 ONNX bundles run by ONNX Runtime; read-aloud through sherpa-onnx |
+| Tokenizer inside the ONNX graph | **Changed:** SentencePiece is implemented in Kotlin (`engine/SentencePieceTokenizer.kt`), so the app needs no onnxruntime-extensions and passes strings to the engine either way |
+| Greedy decoding | Yes, with a KV cache, a 3-gram repetition block and a 256-token cap; tokens stream to the screen as they are decoded |
+| Download on first run | Yes, from `Congi-libya/bayan-onnx`, resumable, every file checked by SHA-256, Wi-Fi-only by default |
+| ≤ 250 MB | AraBART int8 **222 MB** fits. AraT5v2 int8 is 471 MB: vocabulary pruning was not needed for AraBART and was not done for AraT5v2 |
+| Bottom sheet without the overlay permission | Yes, for the result. An optional floating panel, which does need the permission, keeps reading while the reader returns to the page |
+
+Latency (AraT5v2 bundle, from the app's logs over six runs): cold model load 2.6–7.3 s; first token
+177–318 ms for a paragraph's first sentence and 55–85 ms for later ones; whole sentence 0.48–2.24 s. On a
+laptop CPU with the same loop AraBART is 1.9× faster than AraT5v2, so its phone latency should be lower.
