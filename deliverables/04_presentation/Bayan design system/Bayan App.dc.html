@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="styles.css">
+<style>body{margin:0;background:#E9E4D6}textarea::placeholder{color:var(--ink-4)}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;gap:48px;justify-content:center;align-items:flex-start;padding:48px 32px;box-sizing:border-box;font-family:var(--font-ui);color:#282824">
+
+  <div style="width:260px;display:grid;gap:20px;padding-top:24px">
+    <img src="assets/logo/bayan-horizontal-light.svg" alt="Bayan" style="height:40px;justify-self:start">
+    <div style="font:400 15px/1.5 var(--font-ui);color:#4A4842;text-wrap:pretty">Android prototype. Offline, no accounts. The main entry point is the text-selection menu.</div>
+    <div style="display:grid;gap:4px">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="7">
+        <button onClick="{{ n.go }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:{{ n.bg }};color:{{ n.fg }};font:500 14px/1.3 var(--font-ui)">
+          <span style="font:500 12px/1 var(--font-mono);opacity:.6;width:18px">{{ n.num }}</span>{{ n.label }}
+        </button>
+      </sc-for>
+    </div>
+    <div style="font:400 13px/1.5 var(--font-ui);color:#6F6B5E;text-wrap:pretty">In the sheet, tap play to watch the word highlight, and try the tashkeel and "Original" toggles. The Tweaks panel switches dark mode.</div>
+  </div>
+
+  <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ deviceDark }}" hint-size="412px,892px">
+    <div data-theme="{{ theme }}" dir="rtl" lang="ar" style="height:100%;position:relative;overflow:hidden;background:var(--surface-page);color:var(--text-primary);font-family:var(--font-ui)">
+
+      <sc-if value="{{ isOnb1 }}" hint-placeholder-val="{{ true }}">
+        <div style="height:100%;display:flex;flex-direction:column;padding:24px 24px 28px;box-sizing:border-box">
+          <div style="display:flex;gap:6px;justify-content:center"><div style="width:24px;height:6px;border-radius:3px;background:var(--ink-1)"></div><div style="width:6px;height:6px;border-radius:3px;background:var(--paper-4)"></div><div style="width:6px;height:6px;border-radius:3px;background:var(--paper-4)"></div></div>
+          <div style="flex:1;display:grid;place-items:center;align-content:center;gap:28px;text-align:center">
+            <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><img src="assets/logo/bayan-stacked-light.svg" alt="بيان" style="height:176px"></sc-if><sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><img src="assets/logo/bayan-stacked-dark.svg" alt="بيان" style="height:176px"></sc-if>
+            <div style="display:grid;gap:12px">
+              <div style="font:500 34px/1.3 var(--font-display)">اقرأ بوضوح</div>
+              <div style="font:400 19px/1.8 var(--font-ui);color:var(--text-secondary);word-spacing:.12em;max-width:300px">بسّط أي نص عربي واستمع إليه، من داخل أي تطبيق.</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+              <span style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:999px;background:var(--surface-sunken);font:500 14px/1 var(--font-ui);color:var(--text-secondary)"><span style="width:16px;height:16px;background:var(--ink-2);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/wifi-off.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/wifi-off.svg) center/contain no-repeat"></span>يعمل دون إنترنت</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:999px;background:var(--surface-sunken);font:500 14px/1 var(--font-ui);color:var(--text-secondary)"><span style="width:16px;height:16px;background:var(--ink-2);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/shield-check.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/shield-check.svg) center/contain no-repeat"></span>بلا حسابات</span>
+            </div>
+          </div>
+          <button onClick="{{ goOnb2 }}" style="all:unset;cursor:pointer;height:56px;border-radius:var(--radius-md);background:var(--ink-1);color:var(--paper-1);display:grid;place-items:center;font:500 18px/1 var(--font-ui)">ابدأ</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOnb2 }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;display:flex;flex-direction:column;padding:24px 24px 28px;box-sizing:border-box;gap:28px">
+          <div style="display:flex;gap:6px;justify-content:center"><div style="width:6px;height:6px;border-radius:3px;background:var(--paper-4)"></div><div style="width:24px;height:6px;border-radius:3px;background:var(--ink-1)"></div><div style="width:6px;height:6px;border-radius:3px;background:var(--paper-4)"></div></div>
+          <div style="display:grid;gap:12px">
+            <div style="font:500 30px/1.3 var(--font-display)">نزّل نموذج بيان</div>
+            <div style="font:400 18px/1.8 var(--font-ui);color:var(--text-secondary);word-spacing:.12em">يعمل بيان على جهازك بالكامل. تنزّل النموذج مرة واحدة، ثم يعمل دون إنترنت.</div>
+          </div>
+          <div style="background:var(--surface-raised);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:20px;display:grid;gap:18px">
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="width:48px;height:48px;border-radius:14px;background:var(--accent-soft);display:grid;place-items:center;flex:none"><sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><img src="assets/logo/bayan-symbol-light.svg" alt="" style="width:34px"></sc-if><sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><img src="assets/logo/bayan-symbol-dark.svg" alt="" style="width:34px"></sc-if></div>
+              <div style="flex:1;display:grid;gap:4px"><div style="font:500 18px/1.3 var(--font-ui)">نموذج التبسيط</div><div style="font:400 15px/1.3 var(--font-ui);color:var(--text-muted)">{{ dlSizeLabel }}</div></div>
+              <sc-if value="{{ dlDone }}" hint-placeholder-val="{{ false }}"><span style="width:28px;height:28px;background:var(--success);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/circle-check.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/circle-check.svg) center/contain no-repeat"></span></sc-if>
+            </div>
+            <div style="height:8px;border-radius:4px;background:var(--paper-3);overflow:hidden"><div style="height:100%;width:{{ dlBarW }};background:var(--accent);border-radius:4px;transition:width .2s linear"></div></div>
+            <button onClick="{{ toggleWifi }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;min-height:44px">
+              <span style="width:22px;height:22px;background:var(--ink-2);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/wifi.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/wifi.svg) center/contain no-repeat"></span>
+              <span style="flex:1;font:400 17px/1.4 var(--font-ui)">التنزيل عبر Wi‑Fi فقط</span>
+              <span style="width:44px;height:26px;border-radius:999px;background:{{ wifiTrack }};position:relative;flex:none;transition:background .2s"><span style="position:absolute;top:3px;inset-inline-start:{{ wifiThumbX }};width:20px;height:20px;border-radius:50%;background:{{ wifiThumb }};transition:inset-inline-start .2s var(--ease-page)"></span></span>
+            </button>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;font:400 15px/1.7 var(--font-ui);color:var(--text-muted)"><span style="width:18px;height:18px;margin-top:4px;flex:none;background:var(--ink-3);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/lock.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/lock.svg) center/contain no-repeat"></span>لا يغادر أيّ نص جهازك. لا حسابات ولا خوادم.</div>
+          <div style="flex:1"></div>
+          <button onClick="{{ dlAction }}" style="all:unset;cursor:pointer;height:56px;border-radius:var(--radius-md);background:var(--ink-1);color:var(--paper-1);display:grid;place-items:center;font:500 18px/1 var(--font-ui);opacity:{{ dlBtnOpacity }}">{{ dlBtnLabel }}</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOnb3 }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;display:flex;flex-direction:column;padding:24px 24px 28px;box-sizing:border-box;gap:24px">
+          <div style="display:flex;gap:6px;justify-content:center"><div style="width:6px;height:6px;border-radius:3px;background:var(--paper-4)"></div><div style="width:6px;height:6px;border-radius:3px;background:var(--paper-4)"></div><div style="width:24px;height:6px;border-radius:3px;background:var(--ink-1)"></div></div>
+          <div style="font:500 30px/1.3 var(--font-display)">بيان في كل تطبيق</div>
+          <div style="background:#FFFFFF;border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:56px 18px 20px;position:relative;font:400 17px/1.9 'Noto Naskh Arabic',serif;color:#1F1F1F">
+            <div style="position:absolute;top:10px;inset-inline:12px;display:flex;justify-content:center"><div style="display:flex;background:#FFFFFF;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.18);overflow:hidden;font:500 14px/1 var(--font-ui);color:#1F1F1F"><span style="padding:11px 12px">نسخ</span><span style="padding:11px 12px">مشاركة</span><span style="padding:11px 12px;background:#F6EDE1;color:#8A5E35;display:flex;align-items:center;gap:6px"><img src="assets/logo/bayan-symbol-light.svg" alt="" style="width:20px">تبسيط</span></div></div>
+            تقطع الطيور المهاجرة <span style="background:#C9DDF9">آلاف الكيلومترات سنوياً مستعينةً بالمجال المغناطيسي</span> للأرض.
+          </div>
+          <div style="display:grid;gap:16px">
+            <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;gap:14px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:50%;background:var(--ink-1);color:var(--paper-1);display:grid;place-items:center;font:500 16px/1 var(--font-ui);flex:none">{{ s.n }}</span><span style="font:400 18px/1.7 var(--font-ui);padding-top:2px">{{ s.t }}</span></div>
+            </sc-for>
+          </div>
+          <div style="flex:1"></div>
+          <div style="display:grid;gap:10px">
+            <button onClick="{{ goHost }}" style="all:unset;cursor:pointer;height:56px;border-radius:var(--radius-md);background:var(--ink-1);color:var(--paper-1);display:grid;place-items:center;font:500 18px/1 var(--font-ui)">جرّبه الآن</button>
+            <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;height:48px;border-radius:var(--radius-md);color:var(--ink-1);display:grid;place-items:center;font:500 17px/1 var(--font-ui)">إلى الرئيسية</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;overflow:auto;padding:8px 20px 32px;box-sizing:border-box;display:grid;gap:22px;align-content:start">
+          <div style="display:flex;align-items:center;justify-content:space-between;height:56px">
+            <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><img src="assets/logo/bayan-mark-light.svg" alt="بيان" style="height:34px"></sc-if><sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><img src="assets/logo/bayan-mark-dark.svg" alt="بيان" style="height:34px"></sc-if>
+            <button onClick="{{ goSettings }}" aria-label="إعدادات القراءة" style="all:unset;cursor:pointer;width:48px;height:48px;border-radius:50%;display:grid;place-items:center"><span style="width:24px;height:24px;background:var(--ink-1);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/settings-2.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/settings-2.svg) center/contain no-repeat"></span></button>
+          </div>
+          <div style="background:var(--surface-raised);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:16px 18px;display:flex;align-items:center;gap:14px">
+            <span style="width:12px;height:12px;border-radius:50%;background:var(--success);flex:none;box-shadow:0 0 0 5px var(--success-soft)"></span>
+            <div style="flex:1;display:grid;gap:3px"><div style="font:500 17px/1.3 var(--font-ui)">النموذج جاهز · يعمل دون إنترنت</div><div style="font:400 14px/1.3 var(--font-ui);color:var(--text-muted)">٢٢٠ م.ب · الإصدار ١٫٠ · على جهازك</div></div>
+          </div>
+          <div style="display:grid;gap:10px">
+            <div style="font:500 16px/1.3 var(--font-ui);color:var(--text-secondary)">بسّط نصاً</div>
+            <div style="background:var(--surface-raised);border:1.5px solid var(--border-default);border-radius:var(--radius-lg);padding:14px;display:grid;gap:12px">
+              <textarea value="{{ paste }}" onChange="{{ onPaste }}" placeholder="الصق نصاً عربياً هنا…" style="all:unset;min-height:110px;font:400 18px/1.8 var(--font-reading);color:var(--text-primary);white-space:pre-wrap"></textarea>
+              <div style="display:flex;gap:10px">
+                <button onClick="{{ fillSample }}" style="all:unset;cursor:pointer;height:44px;padding:0 16px;border-radius:var(--radius-md);border:1.5px solid var(--ink-1);display:flex;align-items:center;gap:8px;font:500 16px/1 var(--font-ui)"><span style="width:18px;height:18px;background:var(--ink-1);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/clipboard-paste.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/clipboard-paste.svg) center/contain no-repeat"></span>لصق</button>
+                <button onClick="{{ openSheet }}" style="all:unset;cursor:pointer;flex:1;height:44px;border-radius:var(--radius-md);background:var(--ink-1);color:var(--paper-1);display:grid;place-items:center;font:500 17px/1 var(--font-ui)">بسّط</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;gap:14px">
+            <div style="font:500 16px/1.3 var(--font-ui);color:var(--text-secondary)">من أي تطبيق</div>
+            <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;gap:14px;align-items:flex-start"><span style="width:30px;height:30px;border-radius:50%;background:var(--surface-sunken);color:var(--ink-1);display:grid;place-items:center;font:500 15px/1 var(--font-ui);flex:none">{{ s.n }}</span><span style="font:400 17px/1.7 var(--font-ui);padding-top:1px">{{ s.t }}</span></div>
+            </sc-for>
+            <button onClick="{{ goHost }}" style="all:unset;cursor:pointer;justify-self:start;height:44px;display:flex;align-items:center;font:500 16px/1 var(--font-ui);color:var(--text-accent);text-decoration:underline;text-underline-offset:5px">جرّب على مقال تجريبي</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:4px;height:64px;padding:0 8px;flex:none">
+            <button onClick="{{ goHome }}" aria-label="رجوع" style="all:unset;cursor:pointer;width:48px;height:48px;border-radius:50%;display:grid;place-items:center"><span style="width:24px;height:24px;background:var(--ink-1);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/arrow-right.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/arrow-right.svg) center/contain no-repeat"></span></button>
+            <div style="font:500 22px/1 var(--font-display)">إعدادات القراءة</div>
+          </div>
+          <div style="flex:1;overflow:auto;padding:4px 20px 32px;display:grid;gap:26px;align-content:start">
+            <div style="background:var(--surface-raised);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:18px 20px">
+              <div style="font:400 {{ readSize }}/{{ readLeading }} {{ readFont }};word-spacing:var(--read-word-space);color:var(--text-primary)">{{ previewText }}</div>
+            </div>
+            <div style="display:grid;gap:10px">
+              <div style="font:500 16px/1.3 var(--font-ui);color:var(--text-secondary)">الخط</div>
+              <sc-for list="{{ fontOpts }}" as="o" hint-placeholder-count="2">
+                <button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;min-height:56px;padding:0 16px;border-radius:var(--radius-md);border:1.5px solid {{ o.bd }};background:var(--surface-raised)">
+                  <span style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink-1);display:grid;place-items:center;box-sizing:border-box;flex:none"><span style="width:11px;height:11px;border-radius:50%;background:var(--accent);transform:scale({{ o.dot }});transition:transform .2s"></span></span>
+                  <span style="flex:1;font:400 20px/1.4 {{ o.family }}">{{ o.label }}</span>
+                  <span style="font:400 14px/1 var(--font-ui);color:var(--text-muted)">{{ o.note }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:grid;gap:10px">
+              <div style="font:500 16px/1.3 var(--font-ui);color:var(--text-secondary)">حجم الخط</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;border-radius:14px;background:var(--surface-sunken)">
+                <sc-for list="{{ sizeOpts }}" as="o" hint-placeholder-count="4">
+                  <button onClick="{{ o.pick }}" aria-label="{{ o.aria }}" style="all:unset;cursor:pointer;height:56px;border-radius:10px;display:grid;place-items:center;background:{{ o.bg }};box-shadow:{{ o.sh }};font:500 {{ o.fs }}/1 var(--font-ui);color:var(--ink-1)">أ</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:grid;gap:10px">
+              <div style="font:500 16px/1.3 var(--font-ui);color:var(--text-secondary)">تباعد الأسطر</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:var(--surface-sunken)">
+                <sc-for list="{{ leadOpts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;height:48px;border-radius:10px;display:grid;place-items:center;background:{{ o.bg }};box-shadow:{{ o.sh }};font:500 16px/1 var(--font-ui);color:var(--ink-1)">{{ o.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <button onClick="{{ toggleTashkeelDefault }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;min-height:64px;padding:0 16px;border-radius:var(--radius-md);background:var(--surface-raised);border:1px solid var(--border-default)">
+              <div style="flex:1;display:grid;gap:4px"><span style="font:500 17px/1.3 var(--font-ui)">التشكيل</span><span style="font:400 14px/1.4 var(--font-ui);color:var(--text-muted)">إظهار الحركات في النص المبسّط افتراضياً</span></div>
+              <span style="width:44px;height:26px;border-radius:999px;background:{{ tdTrack }};position:relative;flex:none;transition:background .2s"><span style="position:absolute;top:3px;inset-inline-start:{{ tdThumbX }};width:20px;height:20px;border-radius:50%;background:{{ tdThumb }};transition:inset-inline-start .2s var(--ease-page)"></span></span>
+            </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isHost }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;background:#FFFFFF;color:#1F1F1F;display:flex;flex-direction:column;font-family:system-ui,sans-serif">
+          <div style="height:60px;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid #EAEAEA;flex:none">
+            <span style="width:22px;height:22px;background:#444;-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/arrow-right.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/arrow-right.svg) center/contain no-repeat"></span>
+            <span style="font:500 17px/1 system-ui">مجلة العلوم</span>
+          </div>
+          <div style="padding:22px 20px;display:grid;gap:14px;overflow:auto">
+            <div style="font:700 25px/1.5 'Noto Naskh Arabic',serif">رحلة الطيور المهاجرة</div>
+            <div style="font:400 14px/1 system-ui;color:#777">٤ دقائق للقراءة</div>
+            <div style="position:relative;margin-top:44px">
+              <sc-if value="{{ showToolbar }}" hint-placeholder-val="{{ true }}">
+                <div style="position:absolute;top:-54px;inset-inline:0;display:flex;justify-content:center;z-index:2">
+                  <div style="display:flex;background:#FFFFFF;border-radius:12px;box-shadow:0 3px 14px rgba(0,0,0,.2);overflow:hidden;font:500 15px/1 system-ui">
+                    <span style="padding:13px 13px">نسخ</span><span style="padding:13px 13px">مشاركة</span><span style="padding:13px 13px">تحديد الكل</span>
+                    <button onClick="{{ openSheet }}" style="all:unset;cursor:pointer;padding:0 14px;background:#F6EDE1;color:#8A5E35;display:flex;align-items:center;gap:6px;font:500 15px/1 var(--font-ui)"><img src="assets/logo/bayan-symbol-light.svg" alt="" style="width:22px">تبسيط</button>
+                  </div>
+                </div>
+              </sc-if>
+              <p style="margin:0;font:400 19px/2 'Noto Naskh Arabic',serif"><span style="background:#C9DDF9">{{ originalPlain }}</span></p>
+            </div>
+            <p style="margin:0;font:400 19px/2 'Noto Naskh Arabic',serif;color:#333">ويرى العلماء أن فهم هذه الرحلات يساعد على حماية مواطن الطيور على طول مساراتها.</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:var(--scrim);opacity:{{ scrimOpacity }};pointer-events:{{ scrimPE }};transition:opacity .3s var(--ease-page)"></div>
+      <div style="position:absolute;inset-inline:0;bottom:0;height:82%;background:var(--surface-raised);border-radius:28px 28px 0 0;box-shadow:var(--shadow-3);display:flex;flex-direction:column;transform:translateY({{ sheetY }});transition:transform .36s var(--ease-page)">
+        <div style="display:flex;justify-content:center;padding:10px 0 4px;flex:none"><div style="width:36px;height:4px;border-radius:2px;background:var(--paper-4)"></div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px 8px;flex:none">
+          <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><img src="assets/logo/bayan-symbol-light.svg" alt="" style="width:40px"></sc-if><sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><img src="assets/logo/bayan-symbol-dark.svg" alt="" style="width:40px"></sc-if>
+          <div style="flex:1;display:grid;gap:2px"><div style="font:500 18px/1.2 var(--font-ui)">بيان</div><div style="font:400 13px/1.2 var(--font-ui);color:var(--text-muted)">على جهازك · دون إنترنت</div></div>
+          <button onClick="{{ closeSheet }}" aria-label="إغلاق" style="all:unset;cursor:pointer;width:48px;height:48px;border-radius:50%;display:grid;place-items:center"><span style="width:22px;height:22px;background:var(--ink-1);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/x.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/x.svg) center/contain no-repeat"></span></button>
+        </div>
+        <div style="padding:0 16px;flex:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface-sunken)">
+            <sc-for list="{{ viewOpts }}" as="o" hint-placeholder-count="2">
+              <button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;height:44px;border-radius:10px;display:grid;place-items:center;background:{{ o.bg }};box-shadow:{{ o.sh }};font:500 16px/1 var(--font-ui);color:var(--ink-1)">{{ o.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex:1;overflow:auto;padding:20px 20px 12px">
+          <sc-if value="{{ sheetLoading }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;gap:14px;padding-top:6px">
+              <div style="font:400 16px/1.4 var(--font-ui);color:var(--text-muted)">جارٍ التبسيط على جهازك…</div>
+              <div style="height:18px;border-radius:9px;background:var(--paper-3);width:92%"></div>
+              <div style="height:18px;border-radius:9px;background:var(--paper-3);width:78%"></div>
+              <div style="height:18px;border-radius:9px;background:var(--paper-3);width:85%"></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ sheetReady }}" hint-placeholder-val="{{ false }}">
+            <div dir="rtl" style="font:400 {{ readSize }}/{{ readLeading }} {{ readFont }};color:var(--text-primary);text-align:start">
+              <sc-for list="{{ words }}" as="w" hint-placeholder-count="12">
+                <span style="display:inline-block;padding:0 .12em;margin:0 .07em;border-radius:6px;background:{{ w.bg }};color:{{ w.fg }};transition:background .15s, color .3s">{{ w.t }}</span>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <div style="border-top:1px solid var(--border-subtle);padding:12px 16px 16px;display:grid;gap:12px;flex:none">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button onClick="{{ toggleTashkeel }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--border-default);background:{{ tkChipBg }}">
+              <span style="font:500 15px/1 var(--font-ui)">التشكيل</span>
+              <span style="width:36px;height:22px;border-radius:999px;background:{{ tkTrack }};position:relative"><span style="position:absolute;top:3px;inset-inline-start:{{ tkThumbX }};width:16px;height:16px;border-radius:50%;background:{{ tkThumb }};transition:inset-inline-start .2s var(--ease-page)"></span></span>
+            </button>
+            <div style="flex:1"></div>
+            <button onClick="{{ copyText }}" aria-label="نسخ" style="all:unset;cursor:pointer;height:44px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;font:500 15px/1 var(--font-ui)"><span style="width:20px;height:20px;background:var(--ink-1);-webkit-mask:url(https://unpkg.com/lucide-static@0.460.0/icons/copy.svg) center/contain no-repeat;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/copy.svg) center/contain no-repeat"></span>{{ copyLabel }}</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <button onClick="{{ togglePlay }}" aria-label="{{ playAria }}" style="all:unset;cursor:pointer;width:56px;height:56px;border-radius:50%;background:var(--ink-1);display:grid;place-items:center;flex:none"><span style="width:24px;height:24px;background:var(--paper-1);-webkit-mask:url({{ playIcon }}) center/contain no-repeat;mask:url({{ playIcon }}) center/contain no-repeat"></span></button>
+            <div style="flex:1;display:grid;gap:6px">
+              <div style="font:500 15px/1 var(--font-ui)">{{ playLabel }}</div>
+              <div style="height:4px;border-radius:2px;background:var(--paper-3);overflow:hidden"><div style="height:100%;width:{{ progressW }};background:var(--accent);transition:width .2s linear"></div></div>
+            </div>
+            <button onClick="{{ cycleSpeed }}" style="all:unset;cursor:pointer;height:44px;min-width:56px;padding:0 10px;box-sizing:border-box;border-radius:999px;border:1px solid var(--border-default);display:grid;place-items:center;font:500 15px/1 var(--font-ui)">{{ speedLabel }}</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;onb1&quot;,&quot;onb2&quot;,&quot;onb3&quot;,&quot;home&quot;,&quot;host&quot;,&quot;settings&quot;],&quot;default&quot;:&quot;onb1&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const T = {
+  simple: 'تطير الطيور المهاجرة مسافات طويلة كل سنة. تعرف طريقها من الشمس والنجوم. وتتوقف أحياناً لتأكل، ثم تكمل رحلتها.',
+  simpleT: 'تَطِيرُ الطُّيُورُ المُهَاجِرَةُ مَسَافَاتٍ طَوِيلَةً كُلَّ سَنَةٍ. تَعْرِفُ طَرِيقَهَا مِنَ الشَّمْسِ وَالنُّجُومِ. وَتَتَوَقَّفُ أَحْيَاناً لِتَأْكُلَ، ثُمَّ تُكْمِلُ رِحْلَتَهَا.',
+  original: 'تقطع الطيور المهاجرة آلاف الكيلومترات سنوياً، مستعينةً بالمجال المغناطيسي للأرض وموقع الشمس والنجوم لتحديد اتجاهها بدقة مذهلة، وتتوقف في محطات محددة للتزود بالغذاء قبل استئناف رحلتها الطويلة.',
+  originalT: 'تَقْطَعُ الطُّيُورُ المُهَاجِرَةُ آلَافَ الكِيلُومِتْرَاتِ سَنَوِيّاً، مُسْتَعِينَةً بِالمَجَالِ المِغْنَاطِيسِيِّ لِلأَرْضِ وَمَوْقِعِ الشَّمْسِ وَالنُّجُومِ لِتَحْدِيدِ اتِّجَاهِهَا بِدِقَّةٍ مُذْهِلَةٍ، وَتَتَوَقَّفُ فِي مَحَطَّاتٍ مُحَدَّدَةٍ لِلتَّزَوُّدِ بِالغِذَاءِ قَبْلَ اسْتِئْنَافِ رِحْلَتِهَا الطَّوِيلَةِ.'
+};
+const SIZES = { s: '20px', m: '24px', l: '28px', xl: '34px' };
+const LEADS = { normal: '1.8', wide: '2.1', wider: '2.5' };
+const ICON = n => `https://unpkg.com/lucide-static@0.460.0/icons/${n}.svg`;
+const SCREENS = [['onb1', 'Onboarding · welcome'], ['onb2', 'Onboarding · model download'], ['onb3', 'Onboarding · selection menu'], ['home', 'Home'], ['host', 'Another app · select text'], ['sheet', 'Bayan sheet (reader)'], ['settings', 'Reading settings']];
+
+class Component extends DCLogic {
+  state = { screen: this.props.startScreen ?? 'onb1', wifiOnly: true, dl: 0, dlState: 'idle', sheet: false, sheetLoading: false, view: 'simple',
+    tashkeel: false, tashkeelDefault: false, playing: false, idx: -1, speed: 1, font: 'readex', size: 'm', lead: 'wide', paste: '', copied: false };
+  componentWillUnmount() { clearInterval(this.dlT); clearInterval(this.playT); clearTimeout(this.loadT); clearTimeout(this.cpT); }
+  go = s => { this.stop(); if (s === 'sheet') { this.setState({ screen: 'host' }); this.openSheet(); return; } this.setState({ screen: s, sheet: false }); };
+  startDl = () => {
+    if (this.state.dlState !== 'idle') return;
+    this.setState({ dlState: 'loading' });
+    this.dlT = setInterval(() => this.setState(s => { const dl = Math.min(1, s.dl + 0.035); if (dl >= 1) { clearInterval(this.dlT); return { dl, dlState: 'done' }; } return { dl }; }), 120);
+  };
+  openSheet = () => {
+    this.stop(); clearTimeout(this.loadT);
+    this.setState(s => ({ sheet: true, sheetLoading: true, view: 'simple', idx: -1, tashkeel: s.tashkeelDefault }));
+    this.loadT = setTimeout(() => this.setState({ sheetLoading: false }), 1100);
+  };
+  closeSheet = () => { this.stop(); this.setState({ sheet: false }); };
+  words() { const s = this.state; const k = s.view === 'simple' ? (s.tashkeel ? 'simpleT' : 'simple') : (s.tashkeel ? 'originalT' : 'original'); return T[k].split(' '); }
+  stop() { clearInterval(this.playT); this.playT = null; if (this.state.playing) this.setState({ playing: false }); }
+  tick = () => this.setState(s => { const n = this.words().length; const idx = s.idx + 1; if (idx >= n) { clearInterval(this.playT); this.playT = null; return { idx: n, playing: false }; } return { idx }; });
+  play() { clearInterval(this.playT); const n = this.words().length; if (this.state.idx >= n) this.setState({ idx: -1 }); this.setState({ playing: true }); this.playT = setInterval(this.tick, 460 / this.state.speed); }
+  togglePlay = () => { if (this.state.sheetLoading) return; this.state.playing ? this.stop() : this.play(); };
+  renderVals() {
+    const s = this.state, dark = (this.props.theme ?? 'light') === 'dark';
+    const words = this.words(), n = words.length;
+    const hl = s.sheet && !s.sheetLoading;
+    const seg = on => ({ bg: on ? 'var(--surface-raised)' : 'transparent', sh: on ? 'var(--shadow-1)' : 'none' });
+    const sw = (on) => ({ track: on ? 'var(--ink-1)' : 'var(--paper-4)', thumb: on ? 'var(--ochre-500)' : 'var(--paper-0)', x: on ? '21px' : '3px' });
+    const wf = sw(s.wifiOnly), td = sw(s.tashkeelDefault), tk = sw(s.tashkeel);
+    const cur = s.sheet ? 'sheet' : s.screen;
+    return {
+      theme: dark ? 'dark' : 'light', isDark: dark, isLight: !dark, deviceDark: dark && s.screen !== 'host',
+      stackedSrc: `assets/logo/bayan-stacked-${dark ? 'dark' : 'light'}.svg`, markSrc: `assets/logo/bayan-mark-${dark ? 'dark' : 'light'}.svg`, symbolSrc: `assets/logo/bayan-symbol-${dark ? 'dark' : 'light'}.svg`,
+      nav: SCREENS.map(([k, label], i) => ({ num: String(i + 1).padStart(2, '0'), label, go: () => this.go(k), bg: cur === k ? '#282824' : 'transparent', fg: cur === k ? '#F6F2E6' : '#282824' })),
+      isOnb1: s.screen === 'onb1', isOnb2: s.screen === 'onb2', isOnb3: s.screen === 'onb3', isHome: s.screen === 'home', isSettings: s.screen === 'settings', isHost: s.screen === 'host',
+      goOnb2: () => this.go('onb2'), goHome: () => this.go('home'), goHost: () => this.go('host'), goSettings: () => this.go('settings'),
+      steps: [{ n: '١', t: 'حدّد نصاً عربياً في أي تطبيق.' }, { n: '٢', t: 'اضغط «تبسيط» من القائمة.' }, { n: '٣', t: 'اقرأ النص المبسّط واستمع إليه.' }],
+      dlSizeLabel: s.dlState === 'idle' ? '٢٢٠ م.ب · مرة واحدة فقط' : s.dlState === 'done' ? 'تم التنزيل · ٢٢٠ م.ب' : `${AR(Math.round(s.dl * 220))} من ٢٢٠ م.ب`,
+      dlBarW: `${Math.round(s.dl * 100)}%`, dlDone: s.dlState === 'done',
+      dlBtnLabel: s.dlState === 'idle' ? 'نزّل الآن' : s.dlState === 'done' ? 'التالي' : 'جارٍ التنزيل…', dlBtnOpacity: s.dlState === 'loading' ? 0.5 : 1,
+      dlAction: () => s.dlState === 'done' ? this.go('onb3') : this.startDl(),
+      toggleWifi: () => this.setState(x => ({ wifiOnly: !x.wifiOnly })), wifiTrack: wf.track, wifiThumb: wf.thumb, wifiThumbX: wf.x,
+      paste: s.paste, onPaste: e => this.setState({ paste: e.target.value }), fillSample: () => this.setState({ paste: T.original }),
+      openSheet: this.openSheet, closeSheet: this.closeSheet,
+      showToolbar: !s.sheet, originalPlain: T.original,
+      scrimOpacity: s.sheet ? 1 : 0, scrimPE: s.sheet ? 'auto' : 'none', sheetY: s.sheet ? '0%' : '105%',
+      sheetLoading: s.sheetLoading, sheetReady: !s.sheetLoading,
+      viewOpts: [['simple', 'المبسّط'], ['original', 'الأصلي']].map(([k, label]) => ({ label, ...seg(s.view === k), pick: () => { this.stop(); this.setState({ view: k, idx: -1 }); } })),
+      words: words.map((t, i) => ({ t, bg: hl && i === s.idx ? 'var(--read-highlight)' : 'transparent', fg: hl && s.idx >= 0 && i < s.idx ? 'var(--read-spoken)' : 'var(--text-primary)' })),
+      readSize: SIZES[s.size], readLeading: LEADS[s.lead], readFont: s.font === 'readex' ? "'Readex Pro', sans-serif" : "'Noto Naskh Arabic', serif",
+      toggleTashkeel: () => this.setState(x => ({ tashkeel: !x.tashkeel })), tkTrack: tk.track, tkThumb: tk.thumb, tkThumbX: s.tashkeel ? '17px' : '3px', tkChipBg: s.tashkeel ? 'var(--accent-soft)' : 'transparent',
+      togglePlay: this.togglePlay, playIcon: ICON(s.playing ? 'pause' : 'play'), playAria: s.playing ? 'إيقاف مؤقت' : 'استمع',
+      playLabel: s.playing ? 'يُقرأ الآن…' : s.idx >= n ? 'انتهت القراءة' : s.idx >= 0 ? 'متوقف مؤقتاً' : 'استمع',
+      progressW: `${Math.max(0, Math.min(100, ((s.idx + 1) / n) * 100))}%`,
+      cycleSpeed: () => { const sp = s.speed === 1 ? 1.25 : s.speed === 1.25 ? 0.75 : 1; this.setState({ speed: sp }, () => { if (this.state.playing) this.play(); }); },
+      speedLabel: s.speed === 1 ? '١×' : s.speed === 1.25 ? '١٫٢٥×' : '٠٫٧٥×',
+      copyText: () => { try { navigator.clipboard.writeText(words.join(' ')); } catch (e) {} this.setState({ copied: true }); clearTimeout(this.cpT); this.cpT = setTimeout(() => this.setState({ copied: false }), 1500); },
+      copyLabel: s.copied ? 'نُسخ' : 'نسخ',
+      previewText: T.simple.split('.')[0] + '.',
+      fontOpts: [['readex', 'Readex Pro', "'Readex Pro', sans-serif", 'مُوصى به'], ['naskh', 'نسخ', "'Noto Naskh Arabic', serif", '']].map(([k, label, family, note]) => ({ label, family, note, bd: s.font === k ? 'var(--ink-1)' : 'var(--border-default)', dot: s.font === k ? 1 : 0, pick: () => this.setState({ font: k }) })),
+      sizeOpts: [['s', '17px', 'صغير'], ['m', '21px', 'متوسط'], ['l', '26px', 'كبير'], ['xl', '32px', 'كبير جداً']].map(([k, fs, aria]) => ({ fs, aria, ...seg(s.size === k), pick: () => this.setState({ size: k }) })),
+      leadOpts: [['normal', 'عادي'], ['wide', 'واسع'], ['wider', 'أوسع']].map(([k, label]) => ({ label, ...seg(s.lead === k), pick: () => this.setState({ lead: k }) })),
+      toggleTashkeelDefault: () => this.setState(x => ({ tashkeelDefault: !x.tashkeelDefault })), tdTrack: td.track, tdThumb: td.thumb, tdThumbX: td.x
+    };
+  }
+}
+</script>
+</body>
+</html>
