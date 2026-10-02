@@ -1,0 +1,11 @@
+.venv-*/
+media/
+slides/
+spike/media/
+spike/slides/
+spike/pptx/
+spike/*.pptx
+out/
+slides/
+__pycache__/
+spike/temp/
