@@ -49,9 +49,10 @@ benchmark, meaning and simplification trade off: the medium strength setting cut
 it in \bvHAppTfiveKept\% and cuts \bvHAppTfiveClause{}. AraT5v2 keeps meaning
 \bfxHTfiveNvsBartNKept{} points more often than AraBART without a tag, and
 no system yet leaves easy text alone. The reader with dyslexia found \rEasier{} of
-\rN{} rewrites easier to read. The int8 AraT5v2 bundle shows the first word of a
-rewrite 177--318\,ms after the request on a Snapdragon 870 phone, and of each
-later sentence within 85\,ms.
+\rN{} rewrites easier to read. On a Snapdragon 870 phone the first word of a
+rewrite appears 82--172\,ms after the request with the int8 AraBART bundle
+(222\,MB) and 177--318\,ms with AraT5v2 (471\,MB), and each later sentence starts
+within 30 and 85\,ms.
 \vspace{2pt}}}
 \end{fullwidth}
 
@@ -1004,30 +1005,33 @@ A2 & \ar{… بنتيجة (۱/۳) في المباراة …} & \ar{… بنتي�
 \lead{RQ3: cost on the phone.} Both simplifiers were exported to ONNX with the
 tokenizer inside the bundle and quantised to int8 (\autoref{tab:device}). The
 AraBART bundle fits the 250\,MB budget; the AraT5v2 bundle does not, because 46\%
-of its weights are two untied 110k-row embedding matrices. We tested the app on a
-Xiaomi Mi~11X (Snapdragon 870, Android 13, 6\,GB RAM) with the AraT5v2 bundle, the
-harder of the two to fit. Because output streams, the reader waits for the first
-token, not the whole sentence: 177--318\,ms for a paragraph's first sentence and
-55--85\,ms for each later one, on a phone that now sits in the mid-range. On the laptop, with the
-same decoding loop, AraBART is 1.9 times faster than AraT5v2, so its phone latency
-should be lower still. Quantisation leaves meaning unchanged for both models and shifts AraT5v2 toward copying (F5).
+of its weights are two untied 110k-row embedding matrices. We tested both bundles
+in the app on a Xiaomi Mi~11X (Snapdragon 870, Android 13, 6\,GB RAM), a phone that
+now sits in the mid-range, with the same two-sentence paragraph and six cold starts
+each. Because output streams, the reader waits for the first token, not the whole
+sentence: with AraBART 82--172\,ms for a paragraph's first sentence and 28--30\,ms
+for each later one, with AraT5v2 177--318\,ms and 55--85\,ms. AraBART loads in
+1.0--1.7\,s against 2.6--7.3\,s, and finishes a sentence about twice as fast, the
+same ratio as on the laptop. Quantisation leaves meaning unchanged for both models
+and shifts AraT5v2 toward copying (F5).
 
 \begin{table}[h]
 \small
 \caption{On-device cost. Laptop: 4 CPU threads, median and 90th percentile per
 BayanBench test sentence, the app's own decoding loop. Phone: Xiaomi Mi~11X
-(Snapdragon 870, Android 13, 6\,GB RAM), from the app's logs over six runs on a
-two-sentence paragraph.}
+(Snapdragon 870, Android 13, 6\,GB RAM), from the app's logs over six cold starts
+each on the same two-sentence paragraph (AraT5v2 on 26 September, AraBART on
+3 October).}
 \label{tab:device}
 \begin{tabularx}{\linewidth}{|L|C{30mm}|C{30mm}|}
 \hline
 \head{} & \head{AraBART, int8} & \head{AraT5v2, int8} \\ \hline
 Download (encoder + decoder + tokenizer) & \textbf{222\,MB} & 471\,MB \\ \hline
 Laptop CPU, per sentence (median / p90) & \textbf{0.10 / 0.24\,s} & 0.20 / 0.43\,s \\ \hline
-Phone: model load, cold & --- & 2.6--7.3\,s \\ \hline
-Phone: first token, first sentence & --- & 177--318\,ms \\ \hline
-Phone: first token, later sentences & --- & 55--85\,ms \\ \hline
-Phone: whole sentence & --- & 0.48--2.24\,s \\ \hline
+Phone: model load, cold & \textbf{1.0--1.7\,s} & 2.6--7.3\,s \\ \hline
+Phone: first token, first sentence & \textbf{82--172\,ms} & 177--318\,ms \\ \hline
+Phone: first token, later sentences & \textbf{28--30\,ms} & 55--85\,ms \\ \hline
+Phone: whole sentence & \textbf{0.23--1.10\,s} & 0.48--2.24\,s \\ \hline
 Read-aloud voice (Nabra-7M-Distill, int8) & \multicolumn{2}{c|}{8.7\,MB} \\ \hline
 \end{tabularx}
 \end{table}
@@ -1144,8 +1148,8 @@ O1 Beat copying on changed rows; easier text without losing meaning &
   \hBartSameMin--\hAppTfiveSame\% of changed outputs; restraint not met & partly met \\ \hline
 O2 Diacritize without changing letters & Libtashkeel: DER 6.91\% without case endings,
   0 of 100 sentences altered, 4.8\,MB; not in the tested build & partly met \\ \hline
-O3 Run on a phone within 250\,MB & AraBART int8: 222\,MB; AraT5v2 int8, the bundle
-  tested on a Snapdragon 870, is 471\,MB; first token in 55--318\,ms & partly met \\ \hline
+O3 Run on a phone within 250\,MB & Both bundles run on a Snapdragon 870 phone, first
+  token in 28--318\,ms; AraBART int8 is 222\,MB, AraT5v2 int8 471\,MB & partly met \\ \hline
 O4 Evidence from readers & A reader with dyslexia rated \rN{} rewrites and \rPairs{}
   comparisons with informed consent: \rEasier{} easier, \rHarder{} harder; no
   reading-time or comprehension study & partly met \\ \hline
@@ -1218,9 +1222,8 @@ comprehension, would turn ratings into evidence about reading.
 \item \textbf{Some tracks are small.} E3 and E4 hold 64 and 40 test items, and
       few core items contain a number (\autoref{tab:benchhead}), so these rates separate only large
       differences.
-\item \textbf{One phone and one bundle.} On-device figures come from one
-      mid-range phone and the AraT5v2 bundle, which at 471\,MB exceeds the 250\,MB
-      objective.
+\item \textbf{One phone.} On-device figures come from one mid-range phone, and
+      the more faithful AraT5v2 bundle, at 471\,MB, exceeds the 250\,MB objective.
 \item \textbf{One run per configuration.} Each model was trained once, with one
       seed, so the comparison between architectures carries no estimate of
       training variance.
