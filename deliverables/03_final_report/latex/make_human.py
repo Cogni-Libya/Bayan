@@ -205,7 +205,7 @@ t += [r"\end{tabularx}", r"\end{table}"]
 out.append(r"\newcommand{\humansystable}{" + "\n".join(t) + "}")
 
 t = [r"\begin{table}[h]", r"\small",
-     rf"\caption{{The reader with dyslexia: ``was it easier for you to read?'' on \rN{{}} outputs (five per system), "
+     rf"\caption{{The reader with dyslexia: ``was it easier for you?'' on \rN{{}} outputs (five per system), "
      r"against the original.}", r"\label{tab:reader}",
      r"\begin{tabularx}{\linewidth}{|L|C{18mm}|C{18mm}|C{18mm}|}", r"\hline",
      r"\head{System} & \head{Easier} & \head{Same} & \head{Harder} \\ \hline"]
@@ -219,7 +219,7 @@ out.append(r"\newcommand{\readertable}{" + "\n".join(t) + "}")
 t = [r"\begin{table}[h]", r"\small",
      r"\caption{Side-by-side comparisons by the team raters: which version is better for a reader with dyslexia "
      r"(easier, with the same meaning). Counts of rater votes.}", r"\label{tab:pairs}",
-     r"\begin{tabularx}{\linewidth}{|p{20mm}|L|C{10mm}|C{10mm}|C{10mm}|}", r"\hline",
+     r"\begin{tabularx}{\linewidth}{|p{21mm}|L|C{12mm}|C{12mm}|C{12mm}|}", r"\hline",
      r"\head{Contrast} & \head{Systems (first vs second)} & \head{First} & \head{Tie} & \head{Second} \\ \hline"]
 for c, x, y, wx, tie, wy in cmp_rows:
     t.append(f"{c} & {SYSTEMS[x]} vs {SYSTEMS[y]} & {wx} & {tie} & {wy}" + r" \\ \hline")

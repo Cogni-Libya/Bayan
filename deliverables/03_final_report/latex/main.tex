@@ -51,8 +51,8 @@ it in \bvHAppTfiveKept\% and cuts \bvHAppTfiveClause{}. AraT5v2 keeps meaning
 no system yet leaves easy text alone. The reader with dyslexia found \rEasier{} of
 \rN{} rewrites easier to read. On a Snapdragon 870 phone the first word of a
 rewrite appears 82--172\,ms after the request with the int8 AraBART bundle
-(222\,MB) and 177--318\,ms with AraT5v2 (471\,MB), and each later sentence starts
-within 30 and 85\,ms.
+(222\,MB) and 177--318\,ms with AraT5v2 (471\,MB); each later sentence starts
+within 30\,ms and 85\,ms respectively.
 \vspace{2pt}}}
 \end{fullwidth}
 
@@ -610,8 +610,9 @@ which version is better for such a reader: easier, with the same meaning. Five
 team members rated on a web page built for the round, which saved every answer
 as it was given and bound each rater to one name. A sixth rater, a reader with
 dyslexia, gave informed consent and answered only the ease question, worded for
-them as \ar{هل كانت أسهل عليك في القراءة؟} (was it easier for you to read?), on 30
-shared outputs and 10 comparisons. An output's meaning counts as kept when a strict majority of its
+them as \mbox{\ar{هل كانت أسهل عليك؟}} (was it easier for you?), on 30 shared
+outputs, and for a comparison \mbox{\ar{أي النسختين كانت أسهل عليك في القراءة؟}}
+(which version was easier for you to read?), on 10. An output's meaning counts as kept when a strict majority of its
 raters said \emph{same}; a tie counts as not kept.
 
 % ================================================================== 3 Results
@@ -912,14 +913,15 @@ split on core items; \autoref{tab:benchfx} isolates one change at a time, and
       of outputs. Without the tag the same models cut \bvHTfiveNClause{} and
       \bvHBartNClause{} words and keep \bvHTfiveNKept\% and \bvHBartNKept\%; the
       int8 AraT5v2 bundle cuts \bvHAppTfiveClause{} and keeps \bvHAppTfiveKept\%
-      (\autoref{fig:tradeoff}). Every system that simplifies more keeps meaning
-      less often, and none reaches both.
+      (\autoref{fig:tradeoff}). Within each architecture, every setting that
+      simplifies more keeps meaning less often, and no system simplifies as much
+      as the tagged setting while keeping meaning as often as the shipped bundle.
 \item \textbf{AraT5v2 keeps meaning better at every setting.} At the same setting
       AraT5v2 keeps the meaning \bfxHTfiveNvsBartNKept{} points more often than
       AraBART without a tag \bfxHTfiveNvsBartNKeptCI, \bfxHTfivevsBartKept{} with
       the \texttt{[S2]} tag and \bfxHAppTfivevsAppBartKept{} as an int8 bundle,
-      every interval excluding zero, while the two cut long clauses by similar
-      amounts without a tag. The human ratings agree (\autoref{fig:dumbbell}).
+      every interval excluding zero; without a tag the two cut long clauses by
+      similar amounts. The human ratings agree (\autoref{fig:dumbbell}).
 \item \textbf{Simplification is mostly structural.} The predicted reading level
       falls by at most \bvHmaxLevel{} levels on average, and each output removes
       \bvHminHard--\bvHmaxHard{} hard words on average, where a clause loses up to
@@ -938,7 +940,8 @@ split on core items; \autoref{tab:benchfx} isolates one change at a time, and
       meaning kept by \bfxHTfiveNvsTfiveKept{} (AraT5v2) and \bfxHBartNvsBartKept{}
       (AraBART) points and cuts \bfxHTfiveNvsTfiveClause{} and
       \bfxHBartNvsBartClause{} fewer words from the longest clause. Quantising to
-      int8 leaves meaning unchanged for both models; for AraT5v2 it also moves the
+      int8 makes no measurable difference to meaning for either model; for
+      AraT5v2 it moves the
       model toward copying (\bfxHAppTfivevsTfiveNClause{} fewer words cut,
       \bfxHAppTfivevsTfiveNC{} points more easy text left alone), which makes the
       shipped AraT5v2 bundle the safest system and the least simplifying one.
@@ -957,9 +960,9 @@ definition. Colour: the model; shape: the setting.}
 
 \lead{Across item sets.} \autoref{tab:benchsets} reports the four item sets side
 by side. Meaning is kept at similar rates on text published after every corpus we
-use (outside) as on core, so the scorer's view does not depend on BAREC's
-genres; the gains in clause length are smaller away from core, and restraint is
-weak everywhere.
+use (outside) as on core, so the results do not rest on BAREC's genres. Clause
+gains vary between sets without a common direction, and restraint is weak
+everywhere.
 
 \benchsetstable
 
@@ -1013,8 +1016,8 @@ each. Because output streams, the reader waits for the first token, not the whol
 sentence: with AraBART 82--172\,ms for a paragraph's first sentence and 28--30\,ms
 for each later one, with AraT5v2 177--318\,ms and 55--85\,ms. AraBART loads in
 1.0--1.7\,s against 2.6--7.3\,s, and finishes a sentence about twice as fast, the
-same ratio as on the laptop. Quantisation leaves meaning unchanged for both models
-and shifts AraT5v2 toward copying (F5).
+same ratio as on the laptop. Quantisation makes no measurable difference to
+meaning and shifts AraT5v2 toward copying (F5).
 
 \begin{table}[h]
 \small
