@@ -79,10 +79,13 @@ def table(split, s, label, caption, cols=COLS):
     out = [r"\begin{table}[h]", r"\small", r"\caption{" + caption + "}", r"\label{" + label + "}",
            r"\begin{tabularx}{\linewidth}{|L|" + "C{15.4mm}|" * len(cols) + "C{7mm}|}", r"\hline",
            r"\head{Measure} & " + " & ".join(r"\head{" + SYSTEMS[c] + "}" for c in cols) + r" & \head{$n$} \\ \hline"]
-    group = None
+    group, omitted = None, False
     for g, block, measure, lab, kind, up in ROWS:
         es = [entry(res[c], s, block, measure) for c in cols]
         if all(e is None for e in es):
+            continue
+        if all(e is None or e.get("complete") is False for c, e in zip(cols, es) if c != "copy"):
+            omitted = True                     # not scored yet on this split: leave the row out, say so in the caption
             continue
         if g != group:
             out.append(r"\multicolumn{" + str(len(cols) + 2) + r"}{|l|}{\cellcolor{sichead}\textbf{" + g + r"}} \\ \hline")
@@ -96,6 +99,8 @@ def table(split, s, label, caption, cols=COLS):
         n = next((e["n"] for e in es if e is not None), 0)
         out.append(lab + " & " + " & ".join(cells) + f" & {n:,}" + r" \\ \hline")
     out += [r"\end{tabularx}", r"\end{table}"]
+    if omitted:
+        out[2] = out[2][:-1] + r" The meaning rows are left out: this split's outputs are not yet scored for meaning.}"
     return "\n".join(out)
 
 

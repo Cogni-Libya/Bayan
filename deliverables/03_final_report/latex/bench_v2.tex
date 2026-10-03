@@ -28,27 +28,24 @@ Negation count changed & 0.0 & \makecell{20.4\\[-2pt]{\tiny[9--31]}} & \makecell
 \end{table}}
 \newcommand{\benchothertable}{\begin{table}[h]
 \small
-\caption{Model~2 on BayanBench v2, \textbf{test} split, \emph{core} items (749 of 1250 items; 197 documents in the split), each system run once. Meaning: the open scorer, Gemma~4 31B; a copy of the input keeps its meaning by definition. Simpler: mean change from selection to output, over the items where there is something to simplify. Rates in \%, means with their sign; 95\% intervals from a bootstrap over whole documents in brackets. The two \texttt{[S2]} columns send the medium strength tag the model was trained with; the two \emph{int8 app} columns are the quantised bundles the app downloads, which send no tag. All outputs pass through the app's guards. Bold: the best model on each row. $n$ = items the measure applies to.}
+\caption{Model~2 on BayanBench v2, \textbf{test} split, \emph{core} items (749 of 1250 items; 197 documents in the split), each system run once. Meaning: the open scorer, Gemma~4 31B; a copy of the input keeps its meaning by definition. Simpler: mean change from selection to output, over the items where there is something to simplify. Rates in \%, means with their sign; 95\% intervals from a bootstrap over whole documents in brackets. The two \texttt{[S2]} columns send the medium strength tag the model was trained with; the two \emph{int8 app} columns are the quantised bundles the app downloads, which send no tag. All outputs pass through the app's guards. Bold: the best model on each row. $n$ = items the measure applies to. The meaning rows are left out: this split's outputs are not yet scored for meaning.}
 \label{tab:benchother}
 \begin{tabularx}{\linewidth}{|L|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{7mm}|}
 \hline
 \head{Measure} & \head{Copy the input} & \head{AraT5v2, \texttt{[S2]}} & \head{AraBART, \texttt{[S2]}} & \head{AraT5v2, int8 app} & \head{AraBART, int8 app} & \head{$n$} \\ \hline
-\multicolumn{7}{|l|}{\cellcolor{sichead}\textbf{Meaning}} \\ \hline
-Meaning kept (P(same) $\geq$ 0.5, numbers kept), \% & 100.0 & {\scriptsize pending} & {\scriptsize pending} & --- & --- & 659 \\ \hline
-Mean P(same meaning) & 1.00 & {\scriptsize pending} & {\scriptsize pending} & --- & --- & 659 \\ \hline
 \multicolumn{7}{|l|}{\cellcolor{sichead}\textbf{Simpler (mean change)}} \\ \hline
-Longest clause: words cut (clause over 15) & +0.0 & \makecell{+6.3\\[-2pt]{\tiny[+5.0, +7.9]}} & \makecell{\textbf{+6.7}\\[-2pt]{\tiny[+5.4, +8.3]}} & --- & --- & 212 \\ \hline
-Reading level: levels lower (level 10+) & +0.00 & \makecell{\textbf{+0.40}\\[-2pt]{\tiny[+0.31, +0.49]}} & \makecell{+0.38\\[-2pt]{\tiny[+0.30, +0.47]}} & --- & --- & 543 \\ \hline
-Hard words removed (items with any) & +0.00 & \makecell{+0.61\\[-2pt]{\tiny[+0.46, +0.81]}} & \makecell{\textbf{+0.68}\\[-2pt]{\tiny[+0.54, +0.85]}} & --- & --- & 328 \\ \hline
+Longest clause: words cut (clause over 15) & +0.0 & \makecell{+6.3\\[-2pt]{\tiny[+5.0, +7.9]}} & \makecell{\textbf{+6.7}\\[-2pt]{\tiny[+5.4, +8.3]}} & \makecell{+1.9\\[-2pt]{\tiny[+1.0, +2.9]}} & \makecell{+4.8\\[-2pt]{\tiny[+3.5, +6.1]}} & 212 \\ \hline
+Reading level: levels lower (level 10+) & +0.00 & \makecell{\textbf{+0.40}\\[-2pt]{\tiny[+0.31, +0.49]}} & \makecell{+0.38\\[-2pt]{\tiny[+0.30, +0.47]}} & \makecell{+0.14\\[-2pt]{\tiny[+0.08, +0.20]}} & \makecell{+0.28\\[-2pt]{\tiny[+0.19, +0.38]}} & 543 \\ \hline
+Hard words removed (items with any) & +0.00 & \makecell{+0.61\\[-2pt]{\tiny[+0.46, +0.81]}} & \makecell{\textbf{+0.68}\\[-2pt]{\tiny[+0.54, +0.85]}} & \makecell{+0.31\\[-2pt]{\tiny[+0.22, +0.44]}} & \makecell{+0.59\\[-2pt]{\tiny[+0.46, +0.75]}} & 328 \\ \hline
 \multicolumn{7}{|l|}{\cellcolor{sichead}\textbf{Checks, \%}} \\ \hline
-Every number kept & 100.0 & \makecell{\textbf{82.7}\\[-2pt]{\tiny[65--95]}} & \makecell{78.7\\[-2pt]{\tiny[63--90]}} & --- & --- & 75 \\ \hline
-No house-rule break & 100.0 & \makecell{\textbf{99.8}\\[-2pt]{\tiny[99--100]}} & \makecell{99.7\\[-2pt]{\tiny[99--100]}} & --- & --- & 659 \\ \hline
+Every number kept & 100.0 & \makecell{82.7\\[-2pt]{\tiny[65--95]}} & \makecell{78.7\\[-2pt]{\tiny[63--90]}} & \makecell{\textbf{84.0}\\[-2pt]{\tiny[70--94]}} & \makecell{76.0\\[-2pt]{\tiny[59--88]}} & 75 \\ \hline
+No house-rule break & 100.0 & \makecell{99.8\\[-2pt]{\tiny[99--100]}} & \makecell{99.7\\[-2pt]{\tiny[99--100]}} & \textbf{100.0} & \textbf{100.0} & 659 \\ \hline
 \multicolumn{7}{|l|}{\cellcolor{sichead}\textbf{Behaviour, \%}} \\ \hline
-Easy text left unchanged (C) & 100.0 & \makecell{\textbf{14.3}\\[-2pt]{\tiny[7--22]}} & \makecell{11.7\\[-2pt]{\tiny[5--19]}} & --- & --- & 77 \\ \hline
-Cut-off selection keeps its ending (E1) & 100.0 & \makecell{36.5\\[-2pt]{\tiny[25--47]}} & \makecell{\textbf{38.8}\\[-2pt]{\tiny[27--50]}} & --- & --- & 85 \\ \hline
-Protected text: letters unchanged (F) & 100.0 & \makecell{\textbf{4.4}\\[-2pt]{\tiny[0--10]}} & \makecell{\textbf{4.4}\\[-2pt]{\tiny[0--11]}} & --- & --- & 90 \\ \hline
+Easy text left unchanged (C) & 100.0 & \makecell{14.3\\[-2pt]{\tiny[7--22]}} & \makecell{11.7\\[-2pt]{\tiny[5--19]}} & \makecell{\textbf{48.1}\\[-2pt]{\tiny[36--61]}} & \makecell{24.7\\[-2pt]{\tiny[15--35]}} & 77 \\ \hline
+Cut-off selection keeps its ending (E1) & 100.0 & \makecell{36.5\\[-2pt]{\tiny[25--47]}} & \makecell{38.8\\[-2pt]{\tiny[27--50]}} & \makecell{38.8\\[-2pt]{\tiny[28--49]}} & \makecell{\textbf{45.9}\\[-2pt]{\tiny[34--58]}} & 85 \\ \hline
+Protected text: letters unchanged (F) & 100.0 & \makecell{4.4\\[-2pt]{\tiny[0--10]}} & \makecell{4.4\\[-2pt]{\tiny[0--11]}} & \makecell{\textbf{47.8}\\[-2pt]{\tiny[30--70]}} & \makecell{24.4\\[-2pt]{\tiny[16--36]}} & 90 \\ \hline
 \multicolumn{7}{|l|}{\cellcolor{sichead}\textbf{Flags (not failures), \%}} \\ \hline
-Negation count changed & 0.0 & \makecell{23.1\\[-2pt]{\tiny[17--30]}} & \makecell{24.1\\[-2pt]{\tiny[17--32]}} & --- & --- & 139 \\ \hline
+Negation count changed & 0.0 & \makecell{23.1\\[-2pt]{\tiny[17--30]}} & \makecell{24.1\\[-2pt]{\tiny[17--32]}} & \makecell{7.1\\[-2pt]{\tiny[4--11]}} & \makecell{18.4\\[-2pt]{\tiny[13--25]}} & 139 \\ \hline
 \end{tabularx}
 \end{table}}
 \newcommand{\benchsetstable}{\begin{table}[h]
@@ -614,6 +611,124 @@ int8 app: AraBART $\rightarrow$ AraT5v2 & +23.8$^{*}$\,{\tiny[+18.1, +29.7]} & -
 \newcommand{\bvTestWriBartNNum}{100.0}
 \newcommand{\bvTestWriBartNRules}{100.0}
 \newcommand{\bvTestWriBartNNeg}{14.3}
+\newcommand{\bvTestAppTfiveKept}{pending}
+\newcommand{\bvTestAppTfivePsame}{pending}
+\newcommand{\bvTestAppTfiveClause}{1.9}
+\newcommand{\bvTestAppTfiveLevel}{0.14}
+\newcommand{\bvTestAppTfiveHard}{0.31}
+\newcommand{\bvTestAppTfiveNum}{84.0}
+\newcommand{\bvTestAppTfiveRules}{100.0}
+\newcommand{\bvTestAppTfiveC}{48.1}
+\newcommand{\bvTestAppTfiveEone}{38.8}
+\newcommand{\bvTestAppTfiveF}{47.8}
+\newcommand{\bvTestAppTfiveNeg}{7.1}
+\newcommand{\bvTestOutAppTfiveKept}{pending}
+\newcommand{\bvTestOutAppTfivePsame}{pending}
+\newcommand{\bvTestOutAppTfiveClause}{2.1}
+\newcommand{\bvTestOutAppTfiveLevel}{0.07}
+\newcommand{\bvTestOutAppTfiveHard}{0.20}
+\newcommand{\bvTestOutAppTfiveNum}{89.7}
+\newcommand{\bvTestOutAppTfiveRules}{100.0}
+\newcommand{\bvTestOutAppTfiveC}{27.3}
+\newcommand{\bvTestOutAppTfiveNeg}{20.6}
+\newcommand{\bvTestHeldAppTfiveKept}{pending}
+\newcommand{\bvTestHeldAppTfivePsame}{pending}
+\newcommand{\bvTestHeldAppTfiveClause}{2.3}
+\newcommand{\bvTestHeldAppTfiveLevel}{0.19}
+\newcommand{\bvTestHeldAppTfiveHard}{0.33}
+\newcommand{\bvTestHeldAppTfiveNum}{52.8}
+\newcommand{\bvTestHeldAppTfiveRules}{100.0}
+\newcommand{\bvTestHeldAppTfiveC}{22.8}
+\newcommand{\bvTestHeldAppTfiveEone}{22.2}
+\newcommand{\bvTestHeldAppTfiveNeg}{14.3}
+\newcommand{\bvTestWriAppTfiveKept}{pending}
+\newcommand{\bvTestWriAppTfivePsame}{pending}
+\newcommand{\bvTestWriAppTfiveClause}{-1.0}
+\newcommand{\bvTestWriAppTfiveLevel}{0.00}
+\newcommand{\bvTestWriAppTfiveHard}{0.62}
+\newcommand{\bvTestWriAppTfiveNum}{100.0}
+\newcommand{\bvTestWriAppTfiveRules}{100.0}
+\newcommand{\bvTestWriAppTfiveNeg}{13.3}
+\newcommand{\bvTestAppBartKept}{pending}
+\newcommand{\bvTestAppBartPsame}{pending}
+\newcommand{\bvTestAppBartClause}{4.8}
+\newcommand{\bvTestAppBartLevel}{0.28}
+\newcommand{\bvTestAppBartHard}{0.59}
+\newcommand{\bvTestAppBartNum}{76.0}
+\newcommand{\bvTestAppBartRules}{100.0}
+\newcommand{\bvTestAppBartC}{24.7}
+\newcommand{\bvTestAppBartEone}{45.9}
+\newcommand{\bvTestAppBartF}{24.4}
+\newcommand{\bvTestAppBartNeg}{18.4}
+\newcommand{\bvTestOutAppBartKept}{pending}
+\newcommand{\bvTestOutAppBartPsame}{pending}
+\newcommand{\bvTestOutAppBartClause}{4.2}
+\newcommand{\bvTestOutAppBartLevel}{0.15}
+\newcommand{\bvTestOutAppBartHard}{0.48}
+\newcommand{\bvTestOutAppBartNum}{87.2}
+\newcommand{\bvTestOutAppBartRules}{100.0}
+\newcommand{\bvTestOutAppBartC}{12.1}
+\newcommand{\bvTestOutAppBartNeg}{22.9}
+\newcommand{\bvTestHeldAppBartKept}{pending}
+\newcommand{\bvTestHeldAppBartPsame}{pending}
+\newcommand{\bvTestHeldAppBartClause}{3.9}
+\newcommand{\bvTestHeldAppBartLevel}{0.38}
+\newcommand{\bvTestHeldAppBartHard}{0.40}
+\newcommand{\bvTestHeldAppBartNum}{50.9}
+\newcommand{\bvTestHeldAppBartRules}{100.0}
+\newcommand{\bvTestHeldAppBartC}{18.5}
+\newcommand{\bvTestHeldAppBartEone}{22.2}
+\newcommand{\bvTestHeldAppBartNeg}{20.7}
+\newcommand{\bvTestWriAppBartKept}{pending}
+\newcommand{\bvTestWriAppBartPsame}{pending}
+\newcommand{\bvTestWriAppBartClause}{0.0}
+\newcommand{\bvTestWriAppBartLevel}{0.00}
+\newcommand{\bvTestWriAppBartHard}{0.12}
+\newcommand{\bvTestWriAppBartNum}{100.0}
+\newcommand{\bvTestWriAppBartRules}{100.0}
+\newcommand{\bvTestWriAppBartNeg}{14.3}
+\newcommand{\bfxTestTfiveNvsTfiveClause}{1.9}
+\newcommand{\bfxTestTfiveNvsTfiveClauseS}{-1.9}
+\newcommand{\bfxTestTfiveNvsTfiveClauseCI}{[-2.4, -1.4]}
+\newcommand{\bfxTestTfiveNvsTfiveC}{13.0}
+\newcommand{\bfxTestTfiveNvsTfiveCS}{+13.0}
+\newcommand{\bfxTestTfiveNvsTfiveCCI}{[+4.8, +21.4]}
+\newcommand{\bfxTestBartNvsBartClause}{1.8}
+\newcommand{\bfxTestBartNvsBartClauseS}{-1.8}
+\newcommand{\bfxTestBartNvsBartClauseCI}{[-2.5, -1.2]}
+\newcommand{\bfxTestBartNvsBartC}{11.7}
+\newcommand{\bfxTestBartNvsBartCS}{+11.7}
+\newcommand{\bfxTestBartNvsBartCCI}{[+3.4, +19.1]}
+\newcommand{\bfxTestAppTfivevsTfiveNClause}{2.6}
+\newcommand{\bfxTestAppTfivevsTfiveNClauseS}{-2.6}
+\newcommand{\bfxTestAppTfivevsTfiveNClauseCI}{[-3.3, -1.9]}
+\newcommand{\bfxTestAppTfivevsTfiveNC}{20.8}
+\newcommand{\bfxTestAppTfivevsTfiveNCS}{+20.8}
+\newcommand{\bfxTestAppTfivevsTfiveNCCI}{[+11.9, +31.1]}
+\newcommand{\bfxTestAppBartvsBartNClause}{0.2}
+\newcommand{\bfxTestAppBartvsBartNClauseS}{-0.2}
+\newcommand{\bfxTestAppBartvsBartNClauseCI}{[-0.5, +0.2]}
+\newcommand{\bfxTestAppBartvsBartNC}{1.3}
+\newcommand{\bfxTestAppBartvsBartNCS}{+1.3}
+\newcommand{\bfxTestAppBartvsBartNCCI}{[-3.2, +5.9]}
+\newcommand{\bfxTestTfivevsBartClause}{0.4}
+\newcommand{\bfxTestTfivevsBartClauseS}{-0.4}
+\newcommand{\bfxTestTfivevsBartClauseCI}{[-0.9, +0.2]}
+\newcommand{\bfxTestTfivevsBartC}{2.6}
+\newcommand{\bfxTestTfivevsBartCS}{+2.6}
+\newcommand{\bfxTestTfivevsBartCCI}{[-6.8, +12.5]}
+\newcommand{\bfxTestTfiveNvsBartNClause}{0.5}
+\newcommand{\bfxTestTfiveNvsBartNClauseS}{-0.5}
+\newcommand{\bfxTestTfiveNvsBartNClauseCI}{[-1.1, +0.2]}
+\newcommand{\bfxTestTfiveNvsBartNC}{3.9}
+\newcommand{\bfxTestTfiveNvsBartNCS}{+3.9}
+\newcommand{\bfxTestTfiveNvsBartNCCI}{[-8.6, +16.7]}
+\newcommand{\bfxTestAppTfivevsAppBartClause}{2.8}
+\newcommand{\bfxTestAppTfivevsAppBartClauseS}{-2.8}
+\newcommand{\bfxTestAppTfivevsAppBartClauseCI}{[-3.7, -2.0]}
+\newcommand{\bfxTestAppTfivevsAppBartC}{23.4}
+\newcommand{\bfxTestAppTfivevsAppBartCS}{+23.4}
+\newcommand{\bfxTestAppTfivevsAppBartCCI}{[+11.3, +36.9]}
 \newcommand{\bvHCopyKept}{100.0}
 \newcommand{\bvHCopyPsame}{1.00}
 \newcommand{\bvHCopyClause}{0.0}

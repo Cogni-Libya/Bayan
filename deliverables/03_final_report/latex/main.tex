@@ -597,9 +597,10 @@ items, \hDocs{} documents), drawn from the six model-2 systems of
 \autoref{tab:benchhead}. Copies of the input were not rated, because there is
 nothing to judge, and protected and constructed items (F, E1, E2) were left out.
 \hEven{} outputs were drawn evenly, 35 per system; \hNear{} more were drawn where the
-scorer was least sure (P(same) between 0.3 and 0.7), so the check does not rest
-only on easy cases. \hShared{} outputs and 15 comparisons were rated by every
-rater, to measure agreement; the rest were split one rating each.
+scorer was least sure (P(same) between 0.1 and 0.9, the narrowest band that held
+enough candidates), so the check does not rest only on easy cases. \hShared{}
+outputs and 15 comparisons went to every rater, to measure agreement; the rest
+were split one rating each.
 
 For each output a rater saw the source and the rewrite, without the system's
 name, and answered three questions: \emph{meaning} (same, a minor change, a major
@@ -816,7 +817,7 @@ with the editors' rate as a dashed line.}
 \subsection{Human Evaluation}
 \label{sec:human}
 
-\lead{Agreement between raters.} On the \hShared{} outputs every rater saw, the
+\lead{Agreement between raters.} On the \hShared{} outputs given to every rater, the
 raters agreed moderately on meaning (Krippendorff's $\alpha$ = \hAlphaMeaning{},
 interval metric; \hExactMeaning\% of rater pairs gave the same answer) and weakly on
 Arabic ($\alpha$ = \hAlphaArabic{}) and ease ($\alpha$ = \hAlphaEase{}). The Arabic
@@ -1161,13 +1162,14 @@ test sets, SARI rewards inaction and is blind to reversals of meaning; a model
 that beats copying on the sentences editors changed still scores below copying
 overall, and what it learned from SAMER is vocabulary substitution without
 restructuring. An open meaning scorer, by contrast, agrees with human raters (AUC
-\hAucSame{}) and can be rerun by anyone. \textbf{RQ2:} partly. One tagged model
-shortens long clauses and keeps most content, and AraT5v2 keeps meaning clearly
-better than AraBART; but every setting trades meaning for simplification, the
-safest one simplifies least, and no setting leaves easy text alone.
+\hAucSame{}) and can be rerun by anyone. \textbf{RQ2:} partly. Model~2 shortens
+long clauses in every setting, and AraT5v2 keeps the meaning of
+\bvHTfiveKept--\bvHAppTfiveKept\% of outputs, clearly more than AraBART; but every
+setting trades meaning for simplification, the safest one simplifies least, and no
+setting leaves easy text alone.
 \textbf{RQ3:} yes, with one caveat. Streamed output reaches the reader in under a
-third of a second on a mid-range phone, and quantisation costs neither model any
-meaning; the int8 AraBART bundle fits the 250\,MB budget, while the AraT5v2
+third of a second on a mid-range phone, and quantisation costs neither model
+measurable meaning; the int8 AraBART bundle fits the 250\,MB budget, while the AraT5v2
 bundle, the more faithful of the two, needs 471\,MB.
 
 \lead{Benefits.} For readers: help where and when the difficulty occurs, offline
