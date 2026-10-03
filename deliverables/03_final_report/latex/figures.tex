@@ -208,12 +208,13 @@
 % --------------------------------------------------------------------- UI --
 \newcommand{\figui}{%
 \begin{tikzpicture}[font=\scriptsize]
-  \node[inner sep=0, draw=black!40] (a) {\includegraphics[height=78mm]{assets/ui_sheet.jpg}};
-  \node[inner sep=0, draw=black!40, right=6mm of a] (b) {\includegraphics[height=78mm]{assets/ui_floating.jpg}};
-  \node[inner sep=0, draw=black!40, right=6mm of b] (c) {\includegraphics[height=78mm]{assets/ui_minimized.jpg}};
-  \node[below=1.5mm of a, font=\scriptsize\bfseries, text width=38mm, align=center] {(a) result sheet over the web page, reading aloud};
-  \node[below=1.5mm of b, font=\scriptsize\bfseries, text width=38mm, align=center] {(b) floating panel, the page stays usable};
-  \node[below=1.5mm of c, font=\scriptsize\bfseries, text width=38mm, align=center] {(c) minimised: reading continues};
+  \node[inner sep=0, draw=black!30] (a) {\includegraphics[height=70mm]{assets/ui_select.jpg}};
+  \node[inner sep=0, draw=black!30, right=4mm of a] (b) {\includegraphics[height=70mm]{assets/ui_sheet.jpg}};
+  \node[inner sep=0, draw=black!30, right=4mm of b] (c) {\includegraphics[height=70mm]{assets/ui_floating.jpg}};
+  \node[inner sep=0, draw=black!30, right=4mm of c] (d) {\includegraphics[height=70mm]{assets/ui_settings.jpg}};
+  \foreach \n/\t in {a/{(a) select text in any app, then \emph{Simplify}}, b/{(b) the result, read aloud word by word},
+                     c/{(c) minimised over the page, still reading}, d/{(d) the reader's settings, with a live preview}}
+    \node[below=1.5mm of \n, font=\scriptsize\bfseries, text width=33mm, align=center] {\t};
 \end{tikzpicture}}
 
 % ------------------------------------------------- meaning vs simplification --
