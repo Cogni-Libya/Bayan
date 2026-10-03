@@ -376,7 +376,9 @@ private fun ProcessTextOverlay(
     val edge by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(300) else settle, label = "edge")
     val aurora by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(500) else settle, label = "aurora")
     val border by animateFloatAsState(if (closing) 0f else if (working) 1f else 0.3f, settle, label = "border")
-    val scrim = 0.06f
+    // On Android 13+ the light's own still grain stands in for a scrim; before that, a faint scrim.
+    val scrim = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) 0f else 0.06f
+    val veil = reveal.value.coerceIn(0f, 1f) * (if (closing) enter.value.coerceIn(0f, 1f) else 1f)
 
     // Dragging anywhere on the panel: it follows the finger and shrinks a little as it goes down.
     // A short pull (or a fling) collapses it to a few lines; a long pull closes it; dragging up expands it again.
@@ -435,6 +437,7 @@ private fun ProcessTextOverlay(
             started = started,
             reveal = reveal.value,
             edge = edge,
+            veil = veil,
             aurora = aurora * enter.value.coerceIn(0f, 1f),
             border = border * enter.value.coerceIn(0f, 1f),
             panel = panel,
