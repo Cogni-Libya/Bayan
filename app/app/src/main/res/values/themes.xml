@@ -10,6 +10,8 @@
     <!-- The "تبسيط" sheet opens over the app the text came from. -->
     <style name="Theme.Bayan.Overlay" parent="Theme.Bayan">
         <item name="android:windowIsTranslucent">true</item>
+        <!-- No window animation: the overlay draws its own entrance (panel, then light), timed from the first frame. -->
+        <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">false</item>

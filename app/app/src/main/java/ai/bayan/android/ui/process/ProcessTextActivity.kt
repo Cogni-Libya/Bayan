@@ -102,6 +102,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -150,6 +151,16 @@ import kotlinx.coroutines.launch
 
 /** "تبسيط" in any app's text-selection menu: simplifies the selection in a panel over that app. */
 class ProcessTextActivity : ComponentActivity() {
+    /** True once the window has focus, i.e. is on screen: the entrance (panel and light) is timed from it. Compose
+     *  draws its first frames before the window is shown, so a clock started at the first frame would run unseen. */
+    private val onScreen = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) onScreen.value = true
+    }
+
+
     /** The selection being simplified; a new selection while the panel is open replaces it. */
     private val selection = MutableStateFlow("")
 
@@ -230,8 +241,10 @@ class ProcessTextActivity : ComponentActivity() {
             }
             CompositionLocalProvider(LocalAppContainer provides app) {
                 BayanTheme(s.themeMode) {
+                    val visible by onScreen.collectAsStateWithLifecycle()
                     ProcessTextOverlay(
                         text = text,
+                        onScreen = visible,
                         canReplace = !readOnly,
                         onReplace = { result ->
                             setResult(RESULT_OK, Intent().putExtra(Intent.EXTRA_PROCESS_TEXT, result))
@@ -275,6 +288,7 @@ class ProcessTextActivity : ComponentActivity() {
 @Composable
 private fun ProcessTextOverlay(
     text: String,
+    onScreen: Boolean,
     canReplace: Boolean,
     onReplace: (String) -> Unit,
     onOpenApp: () -> Unit,
@@ -313,10 +327,16 @@ private fun ProcessTextOverlay(
     FollowReading(key, readable, complete, settings.speechRate)
     AutoRead(settings.autoRead, key, readable, settings.speechRate)
 
-    LaunchedEffect(Unit) {
+    // Timed from the moment the window is on screen (it has no window animation; 1 s at most): the panel springs up and
+    // the light rises with it, as the system assistant's do.
+    var started by remember { mutableStateOf(false) }
+    LaunchedEffect(onScreen) {
+        if (!onScreen) delay(1000)
+        if (started) return@LaunchedEffect
+        withFrameNanos { }
+        started = true
         haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
-        launch { reveal.animateTo(1f, tween(700, easing = FastOutSlowInEasing)) }
-        delay(110)
+        launch { reveal.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
         enter.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow))
     }
     LaunchedEffect(state is SimplifyState.Done) {
@@ -356,7 +376,7 @@ private fun ProcessTextOverlay(
     val edge by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(300) else settle, label = "edge")
     val aurora by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(500) else settle, label = "aurora")
     val border by animateFloatAsState(if (closing) 0f else if (working) 1f else 0.3f, settle, label = "border")
-    val scrim = 0.22f
+    val scrim = 0.06f
 
     // Dragging anywhere on the panel: it follows the finger and shrinks a little as it goes down.
     // A short pull (or a fling) collapses it to a few lines; a long pull closes it; dragging up expands it again.
@@ -412,6 +432,7 @@ private fun ProcessTextOverlay(
                 ),
         )
         OverlayGlow(
+            started = started,
             reveal = reveal.value,
             edge = edge,
             aurora = aurora * enter.value.coerceIn(0f, 1f),
