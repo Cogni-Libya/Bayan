@@ -4,14 +4,15 @@
 \setlength{\emergencystretch}{2em}
 \input{figures}
 \input{results}
-\input{bench_results}
+\input{bench_v2}
+\input{human}
 
 \begin{document}
 
 \siccover
   {Bayan: On-Device Arabic Text Simplification\\for Readers with Dyslexia\\[1mm]
    {\normalfont\fontsize{12}{15}\selectfont \ar{تبسيط}\enspace$\cdot$\enspace Simplify}}
-  {30/09/26}
+  {05/10/26}
   {Cogni}
   {Marwan Elamami\\ Abdulrahman Khengari\\ Ahmed Alaeb\\ Sanad Ali\\
    Mohammed Thabet\\ Abdul Majid Mraied}
@@ -36,17 +37,21 @@ pair is kept, LLM-written pairs enter only through a meaning filter derived from
 human rewrites, and a strength tag conditions each source. Building that corpus
 exposed that 9.3\% of a public Arabic simplification dataset overlaps the
 standard test sets. To measure what a reader needs rather than agreement with one
-editor, we introduce \textbf{BayanBench}, 1,981 items in 13 behavioural tracks
-and four item sets, split by document and scored per measure with
-cluster-bootstrap intervals. On its test split, the medium strength setting
-removes every clause over 15 words in \btTfiveB--\btBartB\% of long-clause items and
-reduces hard words in \btTfiveHard--\btBartHard\% of items, while keeping at least 60\% of
-the source's words in \btBartKept--\btTfiveKept\%. It also over-edits easy text, rewrites
-protected scripture, and completes cut-off selections, failures that a
-reference-based score does not surface. Quantised to int8, the AraBART bundle
-takes 222\,MB; the larger AraT5v2 bundle, run on a Snapdragon 870 phone, shows
-the first word of a rewrite 177--318\,ms after the request, and of each later
-sentence within 85\,ms.
+editor, we introduce \textbf{BayanBench}, 1,981 items split by document, which
+scores meaning with an open model (Gemma~4 31B) and simplification, restraint and
+correctness with code, each with cluster-bootstrap intervals. Five raters and a
+reader with dyslexia rated \hTasks{} outputs and comparisons; the meaning scorer
+separates the outputs they judged faithful from the rest with an AUC of
+\hAucSame{} (\hAucNotMajor{} when a minor change counts as faithful). On the
+benchmark, meaning and simplification trade off: the medium strength setting cuts
+\bvHTfiveClause{} words from the longest clause and keeps the meaning in
+\bvHTfiveKept\% of outputs (AraT5v2), while the shipped int8 AraT5v2 bundle keeps
+it in \bvHAppTfiveKept\% and cuts \bvHAppTfiveClause{}. AraT5v2 keeps meaning
+\bfxHTfiveNvsBartNKept{} points more often than AraBART without a tag, and
+no system yet leaves easy text alone. The reader with dyslexia found \rEasier{} of
+\rN{} rewrites easier to read. The int8 AraT5v2 bundle shows the first word of a
+rewrite 177--318\,ms after the request on a Snapdragon 870 phone, and of each
+later sentence within 85\,ms.
 \vspace{2pt}}}
 \end{fullwidth}
 
@@ -133,19 +138,22 @@ outcome:
       that audit: all unchanged pairs kept, LLM-written pairs admitted by a
       meaning filter calibrated on human rewrites, and a strength tag that becomes
       the reader's setting (\autoref{sec:method}).
-\item \textbf{BayanBench}, a behavioural benchmark for dyslexia-oriented Arabic
-      rewriting with deterministic and judge tiers, document-level splits,
-      cluster-bootstrap intervals, and a judge-acceptance protocol fixed before
-      any judge was tested (\autoref{sec:bench}).
+\item \textbf{BayanBench}, a benchmark for dyslexia-oriented Arabic rewriting
+      that reports meaning, simplification, restraint and correctness as
+      separate measures, with an open meaning scorer that anyone can rerun,
+      document-level splits and cluster-bootstrap intervals (\autoref{sec:bench}).
+\item \textbf{A human evaluation} of \hTasks{} rating tasks by five raters and a
+      reader with dyslexia, which validates the meaning scorer against people and
+      rates every system on meaning, ease and correct Arabic (\autoref{sec:human}).
 \item \textbf{An on-device system}, with int8 encoder--decoder bundles decoded
       token by token inside an Android app and measured on a phone
       (\autoref{sec:design}, \autoref{sec:ondevice}).
 \end{itemize}
 
 \autoref{sec:related} places the work in the literature. Section~2 describes the
-data, the models, the system and the benchmark; Section~3 reports the results for
-each research question; Section~4 draws the conclusions and states the
-limitations.
+data, the models, the system, the benchmark and the rating protocol; Section~3
+reports the results for each research question; Section~4 draws the conclusions
+and states the limitations.
 
 \subsection{Related Work}
 \label{sec:related}
@@ -176,7 +184,9 @@ error taxonomies track meaning \cite{salsa}. For benchmark design we follow
 behavioural testing \cite{checklist}, construct-validity and reporting checklists
 \cite{bean2025,betterbench}, and document-clustered intervals \cite{miller2024}.
 LLM judges are known to favour outputs close to data they wrote or approved
-\cite{li2026}, which shapes how we restrict ours.
+\cite{li2026}, so an automatic judge must be checked against people before its
+scores are trusted; we report agreement between raters with Krippendorff's
+$\alpha$ \cite{krippendorff}.
 
 \subsection{Members and Role Assignments}
 
@@ -194,20 +204,23 @@ Marwan Elamami & Team lead; integration; on-device model &
   Product-form decision (\#9); evaluation protocol and fixes (\#16, \#18);
   model~1 diagnosis; Baseet acquisition and leakage filtering; model-2 recipe,
   data and task specifications (\#27--\#34); on-device engine and app; phone
-  test; BayanBench; Action Plan (\#25); this report \\ \hline
+  test; BayanBench and its v2 package (\#48); rating site and analysis; Action
+  Plan (\#25); this report \\ \hline
 Abdulrahman Khengari & Data lead &
   Validators for generated pairs (\#10, \#11); CAMeL readability check (\#17,
   \#20); synthetic corpus of 13,072 pairs, split and published (\#8, \#38,
-  \#39) \\ \hline
+  \#39); BayanBench v2 design, open meaning scorer runs and rating-set design
+  (\#48); pitch decks (\#50) \\ \hline
 Ahmed Alaeb & Model training &
   SAMER conversion; model~1 trained and documented (\#5, \#22); model~2 on
-  AraT5v2 trained and published (\#28, \#40) \\ \hline
+  AraT5v2 trained and published (\#28, \#40); human ratings (\#48) \\ \hline
 Sanad Ali & Diacritization; co-training &
   Four-system diacritization benchmark; Libtashkeel selected (\#6, \#23);
-  model~2 on AraBART and the speed benchmark (\#29, \#35) \\ \hline
+  model~2 on AraBART and the speed benchmark (\#29, \#35); human ratings (\#48) \\ \hline
 Mohammed Thabet & Android application &
   \texttt{PROCESS\_TEXT} plugin, result sheet and 41 tests (\#14, \#21); model
-  download pipeline, sheet states and typography settings (\#31, \#37) \\ \hline
+  download pipeline, sheet states and typography settings (\#31, \#37); human
+  ratings (\#48) \\ \hline
 Abdul Majid Mraied & Evaluation &
   Scoring and leakage scripts (\#7, \#15); locked-set converter, copy
   baselines, generate-and-score path (\#19, \#24, \#26) \\ \hline
@@ -216,19 +229,20 @@ Abdul Majid Mraied & Evaluation &
 
 \subsection{Schedule and Milestones}
 
-The work reported here ran from 13 to 28 September 2026, ahead of submission on
-5 October and the pitch on 6 October. It went through two complete
+The work reported here ran from 13 September to 3 October 2026, ahead of
+submission on 5 October and the pitch on 6 October. It went through two complete
 build-and-measure cycles. Model~1 was trained, scored on locked test sets and
 diagnosed. Model~2 was designed from that diagnosis, trained on two
 architectures, exported to the phone, tested on a device, and scored on a
-benchmark built for the task. \autoref{fig:schedule} shows the timeline;
+benchmark built for the task. The last week replaced the benchmark's closed
+meaning judge with an open scorer and checked that scorer against human ratings. \autoref{fig:schedule} shows the timeline;
 \autoref{tab:milestones} compares target and actual dates.
 
 \begin{figure}[h]
 \centering
 \resizebox{\linewidth}{!}{\figschedule}
-\caption{Timeline as executed, 13--28 September. AP = Action Plan; M1, M2 =
-mentoring sessions. Numbers after a task are its GitHub issues.}
+\caption{Timeline as executed, 13 September to 3 October. AP = Action Plan; M1,
+M2 = mentoring sessions. Numbers after a task are its GitHub issues.}
 \label{fig:schedule}
 \end{figure}
 
@@ -249,6 +263,8 @@ Model~2 trained, both architectures (\#28, \#29)      & Fri 25 Sep & Fri 25 Sep 
 Synthetic corpus exported (\#8, \#38)                 & Fri 25 Sep & Sat 26 Sep \\ \hline
 Model running on a phone, latency measured            & Fri 2 Oct  & Sat 26 Sep \\ \hline
 BayanBench built; model~2 scored on its test split    & ---        & Mon 28 Sep \\ \hline
+BayanBench v2: open meaning scorer; all systems scored (\#48) & ---  & Wed 30 Sep \\ \hline
+Human rating round complete, six raters (\#48)        & Fri 2 Oct  & Sat 3 Oct \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -410,8 +426,8 @@ and the logs show full alignment at all 40 evaluations.
 
 Each task is a GitHub issue with an owner, a reviewer and a definition of done;
 changes arrive as reviewed pull requests. Over the period reported, the team
-opened 20 issues and 24 pull requests, of which 20 were merged, with work from
-every member. SAMER text and model outputs on SAMER move only through private
+opened 23 issues and 28 pull requests, of which 22 were merged, with merged work
+from every member. SAMER text and model outputs on SAMER move only through private
 Kaggle datasets and a private Hugging Face organisation, never through the
 repository.
 
@@ -476,24 +492,40 @@ tests this for Arabic, so we built one against the construct-validity checklist
 of \cite{bean2025} and the reporting practices of \cite{betterbench}.
 
 \lead{Construct.} A rewrite is dyslexia-friendly when it says the same thing in a
-form that is easier to decode and follow: no clause over 15 words (BAREC's
-guideline limit for level 10, about grade 4), more familiar words, no new errors,
-and restraint where the text is already easy. Visual formatting, read-aloud and
+form that is easier to decode and follow: shorter clauses, more familiar words,
+no new errors, and restraint where the text is already easy. Visual formatting, read-aloud and
 tashkeel are out of scope, and summarising is always a failure: dropping content
 never counts as simplification.
 
-\lead{Tracks and measures.} Each track targets one behaviour and is scored on its
-own (\autoref{tab:tracks}); the probe tracks follow CheckList \cite{checklist}. A
-\emph{clause} is a maximal span between punctuation marks (full stop, question and
-exclamation marks, comma, semicolon, colon, line break), so the clause measure
-credits added commas as well as split sentences and must be read next to the
-content measures. \emph{Kept words} is the share of the source's words of three
-or more letters, compared after removing clitics, that reappear in the output.
-\emph{Hard words} are words at levels 4--5 of the SAMER readability lexicon, and
-\emph{reading level} is the maximum sentence level predicted by the CAMeL BAREC
-readability model, counted only for sources at level 10 or above. Numbers are
-compared as multisets after mapping Arabic-Indic and Persian digits to Western
-ones; negations are counted over eleven negating particles.
+\lead{Measures.} Every output is scored on separate measures, grouped in blocks
+and never combined into one number (\autoref{tab:tracks}); the probe tracks follow
+CheckList \cite{checklist}.
+\begin{itemize}
+\item \emph{Meaning}, from an open model (below): the mean P(same meaning), and
+      \emph{meaning kept}, an output whose P(same meaning) is at least 0.5 and
+      that keeps every number of its source. An unchanged copy keeps its meaning
+      by definition.
+\item \emph{Simpler}, as changes from source to output, each on the items where
+      there is something to simplify: words cut from the longest clause (sources
+      with a clause over 15 words, BAREC's guideline limit for level 10, about
+      grade 4), reading levels lowered (the maximum sentence level predicted by the
+      CAMeL BAREC readability model, sources at level 10 or above), and hard words
+      removed (words at levels 4--5 of the SAMER readability lexicon).
+\item \emph{Checks}, deterministic: every number kept, and no house punctuation
+      rule broken.
+\item \emph{Behaviour}: easy text left unchanged (C), protected text keeping its
+      letters (F), and a cut-off selection keeping its ending (E1).
+\item \emph{Flags}: a changed count of negations, limits (at least, at most,
+      only) or conditions. A flag marks an output for attention and is never a
+      failure on its own, because a rewrite can rephrase a negation correctly.
+\end{itemize}
+A \emph{clause} is a maximal span between punctuation marks (full stop, question
+and exclamation marks, comma, semicolon, colon, line break), so the clause
+measure credits added commas as well as split sentences and is read next to
+meaning. Numbers are compared as multisets after mapping Arabic-Indic and Persian
+digits to Western ones; negations are counted over eleven negating particles. The
+pass/fail measures of the first version (no clause over 15 words, at least 60\% of
+the source's words kept) are still computed as diagnostics.
 
 \begin{table}[h]
 \small
@@ -502,15 +534,15 @@ ones; negations are counted over eleven negating particles.
 \begin{tabularx}{\linewidth}{|C{8mm}|p{34mm}|L|C{16mm}|}
 \hline
 \head{Track} & \head{Behaviour} & \head{Measured by} & \head{Items} \\ \hline
-A1--A3 & meaning kept: general; hard spots (negation, numbers, conditions, cause, quantity, certainty); high stakes (legal, medical) & judge (insertion, deletion, substitution; severity \cite{devaraj2022}); code (numbers, negations) & 299 / 508 \\ \hline
-B & long clauses fixed & code: no clause over 15 words & 104 / 187 \\ \hline
+A1--A3 & meaning kept: general; hard spots (negation, numbers, conditions, cause, quantity, certainty); high stakes (legal, medical) & meaning scorer; numbers kept; flags & 299 / 508 \\ \hline
+B & long clauses shortened & words cut from the longest clause; meaning scorer & 104 / 187 \\ \hline
 B2, B3 & fewer hard words; lower reading level & SAMER word levels; CAMeL BAREC readability model & across items \\ \hline
-C & easy text left unharmed & code: unchanged; judge & 129 / 202 \\ \hline
-D & correct Arabic & judge; house punctuation rules & across items \\ \hline
-E1--E4 & real selections: cut-offs, messy text, 40+ words, several sentences & code (end mark, clause length); judge & 139 / 263 \\ \hline
-F & protected text (Qur'an, Bible, classical poetry) & code: letters unchanged & 60 / 90 \\ \hline
+C & easy text left unharmed & unchanged; meaning scorer & 129 / 202 \\ \hline
+D & correct Arabic & house punctuation rules; human ratings & across items \\ \hline
+E1--E4 & real selections: cut-offs, messy text, 40+ words, several sentences & end mark; clause length; meaning scorer & 139 / 263 \\ \hline
+F & protected text (Qur'an, Bible, classical poetry) & letters unchanged (never sent to the scorer) & 60 / 90 \\ \hline
 G & on the phone & int8 bundle against the same model in PyTorch; size, time & --- \\ \hline
-H & people & blind ratings on 100 items & --- \\ \hline
+H & people & \hTasks{} blind rating tasks, six raters (\autoref{sec:protocol}) & --- \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -527,34 +559,58 @@ items from 197), so no document contributes to both splits. Any BAREC document
 with a sentence found in any training or generated data was dropped whole (17
 documents), and near-copies were removed by word-trigram overlap.
 
-\lead{Two tiers.} The \emph{code tier} is deterministic: every measure above,
-plus house punctuation rules, unchanged easy text and protected letters. The
-\emph{judge tier} holds meaning and grammar verdicts from Gemini~3.1~Pro with a
-fixed Arabic checklist; the judge sees only the selection and the output, never
-the system's name. Verdicts are shared data keyed by the content of the
-(selection, output) pair, so scoring never calls a judge, an unjudged output is
-reported as pending rather than guessed, and a judge-tier rate is shown only once
-90\% of its items have verdicts.
+\lead{The meaning scorer.} Meaning is scored by Gemma~4 31B \cite{gemma4}, run in
+its 4-bit quantisation-aware checkpoint with vLLM \cite{vllm}, as a scorer rather
+than a writer: it sees the source and the output, never the system's name, and
+answers four yes/no questions (does the rewrite keep exactly the same meaning;
+does it add a fact; does it drop a fact or qualifier; does it contradict the
+source). The probability of \emph{yes} is read from one forward pass, so no text
+is generated and the score is continuous. Scores are shared data keyed by the
+content of the (source, output) pair, so scoring a system needs no GPU, an output
+nobody has scored is reported as pending rather than guessed, and a meaning rate
+is shown only once 90\% of its items are scored. The first version of the
+benchmark used pass/fail verdicts from a closed model, Gemini~3.1~Pro, with a
+fixed checklist; the open scorer replaces it because anyone can rerun it, it
+costs about \$0.12 for 2,700 pairs, and it gives a graded score whose threshold
+can be checked against people. The 0.5 threshold was set before the human
+ratings and kept after them (\autoref{sec:human}). Model~2's training data
+contains nothing a Gemma model wrote or approved, and the written items come from
+a different model family, which limits preference leakage \cite{li2026}.
 
-\lead{Validating the judge.} We planted seven kinds of error (a changed number, a
-dropped negation, a swapped quantifier, a deleted clause, an invented detail, a
-mid-sentence full stop, broken agreement) in outputs the judge had passed. It
-flagged a major error in all 47, named the planted type in 45, and gave the same
-verdict on 12 of 13 pairs judged twice. Any other judge is accepted only if its
-verdicts on a 792-pair validation set clear thresholds fixed before any candidate
-was tested: recall of meaning errors $\geq$ 0.80, pass rate on clean pairs $\geq$
-0.70, $\kappa$ $\geq$ 0.60 against the reference verdicts, planted errors $\geq$
-90\% and recall of language errors $\geq$ 0.60. Model~2's training data contains
-nothing the judge wrote or approved, and the benchmark's written items come from a
-different model family, which limits preference leakage \cite{li2026}.
-
-\lead{Statistics and release.} Every rate carries a 95\% interval from a
+\lead{Statistics and release.} Every rate and mean carries a 95\% interval from a
 bootstrap over whole documents (2,000 resamples), because sentences from one
 document pass or fail together \cite{miller2024}; a comparison counts only when
 the interval of the paired difference excludes zero. The benchmark ships as a
-Python package whose command-line tool covers the whole cycle (\texttt{verify}, \texttt{predict}, \texttt{score},
-\texttt{pending}, \texttt{judge}, \texttt{validate-judge}) with its data in a checksum-pinned Hugging Face dataset, so any
-team member can score a model on a laptop, on Kaggle or on Linux.
+Python package whose command-line tool covers the whole cycle (\texttt{verify},
+\texttt{predict}, \texttt{score}, \texttt{meaning-pending}, \texttt{meaning}),
+with its data, model outputs and meaning scores in a checksum-pinned Hugging Face
+dataset, so any team member can score a model on a laptop, on Kaggle or on Linux.
+
+\subsection{Human Rating Protocol}
+\label{sec:protocol}
+
+An automatic scorer is only useful if it agrees with people, so we rated a sample
+of model outputs before trusting it. The rating set holds \hSingles{} single
+outputs and \hPairs{} side-by-side comparisons from the dev split (core and outside
+items, \hDocs{} documents), drawn from the six model-2 systems of
+\autoref{tab:benchhead}. Copies of the input were not rated, because there is
+nothing to judge, and protected and constructed items (F, E1, E2) were left out.
+\hEven{} outputs were drawn evenly, 35 per system; \hNear{} more were drawn where the
+scorer was least sure (P(same) between 0.3 and 0.7), so the check does not rest
+only on easy cases. \hShared{} outputs and 15 comparisons were rated by every
+rater, to measure agreement; the rest were split one rating each.
+
+For each output a rater saw the source and the rewrite, without the system's
+name, and answered three questions: \emph{meaning} (same, a minor change, a major
+change), \emph{Arabic} (correct, a minor error, a major error) and \emph{ease} for a
+reader with dyslexia (easier, the same, harder). For a comparison the question was
+which version is better for such a reader: easier, with the same meaning. Five
+team members rated on a web page built for the round, which saved every answer
+as it was given and bound each rater to one name. A sixth rater, a reader with
+dyslexia, gave informed consent and answered only the ease question, worded for
+them as \ar{هل كانت أسهل عليك في القراءة؟} (was it easier for you to read?), on 30
+shared outputs and 10 comparisons. An output's meaning counts as kept when a strict majority of its
+raters said \emph{same}; a tie counts as not kept.
 
 % ================================================================== 3 Results
 \section{Results}
@@ -755,69 +811,164 @@ with the editors' rate as a dashed line.}
 \label{fig:training2}
 \end{figure}
 
-\lead{RQ2: model~2 on BayanBench.} We ran both models once on the BayanBench test
-split in the medium setting (\texttt{[S2]}), and also ran the two int8 bundles
-exactly as the app calls them (\autoref{tab:benchtest}; the dev split, which gives
-the same picture, is in \autoref{tab:benchdev}). We report the code tier, which is
-deterministic and complete for every system. Five findings follow.
+\FloatBarrier
+\subsection{Human Evaluation}
+\label{sec:human}
 
-\benchtesttable
+\lead{Agreement between raters.} On the \hShared{} outputs every rater saw, the
+raters agreed moderately on meaning (Krippendorff's $\alpha$ = \hAlphaMeaning{},
+interval metric; \hExactMeaning\% of rater pairs gave the same answer) and weakly on
+Arabic ($\alpha$ = \hAlphaArabic{}) and ease ($\alpha$ = \hAlphaEase{}). The Arabic
+figure is low partly because almost every output was rated correct, so the raters
+agreed on \hExactArabic\% of pairs yet the few errors they flagged rarely
+coincided. Meaning is therefore the one human judgement firm enough to check an
+automatic scorer against; ease is reported per system but not used as a target.
+
+\lead{The meaning scorer against people.} \autoref{tab:scorerauc} and
+\autoref{fig:scorer} compare the scorer's P(same meaning) with the raters'
+verdict on all \hRated{} rated outputs. It separates the outputs the raters kept
+from the rest with an AUC of \hAucSame{} [\hAucSameLo--\hAucSameHi], rising to
+\hAucThree{} on the \hThreeN{} outputs with three or more raters, where the human
+verdict is itself more reliable; it is \hAucNotMajor{} when a minor change counts as
+kept. Its scores are bimodal, so the cut-off matters less than the ranking. As a
+pass/fail rule at 0.5 it catches \hCaught{} of the \hLosses{} outputs the raters
+judged changed, including all \hMajorCaught{} with a major change, and fails
+\hWrongFail{} of the \hKept{} that the raters kept: the scorer is stricter than
+people, so ``meaning kept'' is a conservative rate. A cut-off of 0.3 would have
+failed seven fewer kept outputs and caught the same losses; we kept the 0.5 set
+before the ratings rather than tune the threshold on the sample used to check it.
+
+\scoreraucatable
+
+\begin{figure}[h]
+\centering
+\figscorer
+\caption{The meaning scorer against the raters, on \hRated{} rated dev outputs. (a)
+ROC curves for two definitions of a kept meaning; the dotted diagonal is chance.
+(b) Every rated output by the raters' majority answer (\hVerdictSame{} same,
+\hVerdictMinor{} minor or split, \hVerdictMajor{} major) against the scorer's
+P(same); rows are jittered vertically for legibility.}
+\label{fig:scorer}
+\end{figure}
+
+\lead{Each system, as people rated it.} \autoref{tab:humansys} and
+\autoref{fig:dumbbell} show each system on the 35 changed outputs drawn evenly
+from it. The raters kept the meaning in \hAppTfiveSame\% of the int8 AraT5v2
+bundle's rewrites and \hMTfiveNSame\% of the untagged AraT5v2's, against
+\hBartSameMin\% for each of the three AraBART systems. The scorer, applied to the
+same outputs, also places every AraT5v2 system above every AraBART one, and is
+\hGapMin{} to \hGapMax{} points stricter than the raters on each system. The raters
+judged about half of every system's rewrites easier (\hEasierMin--\hEasierMax\%)
+and \hArabicMin--\hArabicMax\% of them correct Arabic. Because
+copies were not rated, these are rates among outputs that changed, not over all
+inputs as in \autoref{sec:benchres}.
+
+\humansystable
+
+\begin{figure}[h]
+\centering
+\figdumbbell
+\caption{Same meaning, per system, on the same 35 outputs each: the raters'
+verdict (circle) and the scorer at P(same) $\geq$ 0.5 (square).}
+\label{fig:dumbbell}
+\end{figure}
+
+\lead{The reader with dyslexia.} \autoref{tab:reader} gives the sixth rater's
+answers. Of \rN{} rewrites, \rEasier{} were easier to read for them, \rSame{} no
+different and \rHarder{} harder; their answer matched the team's majority on
+\rAgree\% of the shared outputs, about as often as two team raters agreed with
+each other on ease (\hExactEase\%). The int8 AraT5v2 bundle, the most cautious
+system, was the only one never found easier. One reader is not a study, but the
+direction matches the benchmark: the system that keeps meaning best is also the
+one that simplifies least.
+
+\readertable
+
+\lead{Side-by-side comparisons.} \autoref{tab:pairs} counts the team's votes. The
+clearest contrast is architecture without a tag, where AraT5v2 was preferred in
+most votes; the other contrasts hold too few votes to separate the systems.
+
+\pairstable
+
+\FloatBarrier
+\subsection{BayanBench Results}
+\label{sec:benchres}
+
+\lead{RQ2: model~2 on BayanBench.} Each of the seven systems was run once on the
+BayanBench splits: model~2 on both architectures in the medium setting
+(\texttt{[S2]}) and without a tag, the two int8 bundles exactly as the app calls
+them, and copying the input. \autoref{tab:benchhead} reports the \benchheadsplit{}
+split on core items; \autoref{tab:benchfx} isolates one change at a time, and
+\autoref{tab:benchother} gives the other split. Five findings follow.
+
+\benchheadtable
 
 \begin{enumerate}[label=\textbf{F\arabic*}, leftmargin=8mm]
-\item \textbf{Model~2 makes text easier on the measures the reading research
-      supports.} In the \texttt{[S2]} setting, every clause of a long-clause item
-      ends at 15 words or fewer in \btTfiveB\% (AraT5v2) and \btBartB\% (AraBART) of B
-      items, against 0\% for copying; hard words fall in
-      \btTfiveHard--\btBartHard\% of items that contain any, and the predicted
-      reading level falls in \btTfiveLevel--\btBartLevel\%. The two architectures are
-      statistically indistinguishable on every ease measure.
-\item \textbf{It keeps most of the content, and AraT5v2 keeps more.} AraT5v2 keeps
-      at least 60\% of the source's words in \btTfiveKept\% of items and AraBART in
-      \btBartKept\%, a paired difference whose interval excludes zero. House
-      punctuation rules are broken in about 1\% of outputs.
-\item \textbf{It does not know when to stop.} Easy text, which should come back
-      unchanged, does so in only \btTfiveC\% (AraT5v2) and \btBartC\% (AraBART) of
-      C items. Protected text keeps its letters in \btTfiveF\%, and a selection cut
-      mid-sentence keeps its ending in about a third of E1 items; the rest are
-      completed with a full stop and, sometimes, invented words
-      (\autoref{tab:errors}). No training corpus shows these behaviours: SAMER's
-      unchanged pairs are literary sentences, and no corpus contains protected
-      or cut-off text.
-\item \textbf{Numbers and negations are at risk.} Numbers survive in
-      \btTfiveNum\% of items that contain one and negations in \btTfiveNeg\%. Of the
-      40 number failures, 24 are clause markers such as ``(1)'' in the Universal
-      Declaration of Human Rights, which a rewrite drops harmlessly; the rest
-      include digits in the Persian range (\ar{۱۹۹۲}, \ar{۱/۳}), which the model
-      drops or replaces.
-\item \textbf{The deployed input format costs ease.} The bundles the app ships
-      send the bare prefix without a strength tag. \autoref{tab:benchfx} isolates
-      the effect: removing the tag makes the model safer (more words kept, more
-      easy text left alone) and fixes far fewer long clauses. Quantising to int8
-      changes little for AraBART; for AraT5v2 it moves behaviour further toward
-      copying, making its untagged int8 bundle the most conservative system we
-      measured.
+\item \textbf{Meaning and simplification trade off.} The medium setting cuts
+      \bvHTfiveClause{} (AraT5v2) and \bvHBartClause{} (AraBART) words from the
+      longest clause and keeps the meaning in \bvHTfiveKept\% and \bvHBartKept\%
+      of outputs. Without the tag the same models cut \bvHTfiveNClause{} and
+      \bvHBartNClause{} words and keep \bvHTfiveNKept\% and \bvHBartNKept\%; the
+      int8 AraT5v2 bundle cuts \bvHAppTfiveClause{} and keeps \bvHAppTfiveKept\%
+      (\autoref{fig:tradeoff}). Every system that simplifies more keeps meaning
+      less often, and none reaches both.
+\item \textbf{AraT5v2 keeps meaning better at every setting.} At the same setting
+      AraT5v2 keeps the meaning \bfxHTfiveNvsBartNKept{} points more often than
+      AraBART without a tag \bfxHTfiveNvsBartNKeptCI, \bfxHTfivevsBartKept{} with
+      the \texttt{[S2]} tag and \bfxHAppTfivevsAppBartKept{} as an int8 bundle,
+      every interval excluding zero, while the two cut long clauses by similar
+      amounts without a tag. The human ratings agree (\autoref{fig:dumbbell}).
+\item \textbf{Simplification is mostly structural.} The predicted reading level
+      falls by at most \bvHmaxLevel{} levels on average, and each output removes
+      \bvHminHard--\bvHmaxHard{} hard words on average, where a clause loses up to
+      \bvHmaxClause{} words: the models shorten clauses far more than they change
+      vocabulary.
+\item \textbf{Restraint is weak.} Easy text comes back unchanged in only
+      \bvHminC--\bvHmaxC\% of C items, protected text keeps its letters in
+      \bvHminF--\bvHmaxF\%, and a selection cut mid-sentence keeps its ending
+      in \bvHminEone--\bvHmaxEone\% of E1 items; the rest are completed, sometimes
+      with invented words (\autoref{tab:errors}). No training corpus shows these
+      behaviours: SAMER's unchanged pairs are literary sentences, and no corpus
+      contains protected or cut-off text. Numbers survive in
+      \bvHminNum--\bvHmaxNum\% of the core items that contain one.
+\item \textbf{The deployed format buys meaning with ease.} The bundles the app
+      ships send no strength tag (\autoref{tab:benchfx}). Dropping the tag raises
+      meaning kept by \bfxHTfiveNvsTfiveKept{} (AraT5v2) and \bfxHBartNvsBartKept{}
+      (AraBART) points and cuts \bfxHTfiveNvsTfiveClause{} and
+      \bfxHBartNvsBartClause{} fewer words from the longest clause. Quantising to
+      int8 leaves meaning unchanged for both models; for AraT5v2 it also moves the
+      model toward copying (\bfxHAppTfivevsTfiveNClause{} fewer words cut,
+      \bfxHAppTfivevsTfiveNC{} points more easy text left alone), which makes the
+      shipped AraT5v2 bundle the safest system and the least simplifying one.
 \end{enumerate}
+
+\begin{figure}[h]
+\centering
+\figtradeoff{\tradeoffH}
+\caption{Meaning kept against simplification, \benchheadsplit{} split, core items,
+with 95\% document-bootstrap intervals. Copying the input sits at the top left by
+definition. Colour: the model; shape: the setting.}
+\label{fig:tradeoff}
+\end{figure}
 
 \benchefftable
 
-\lead{Across item sets.} \autoref{tab:benchsets} reports the two systems a reader
-would meet, AraT5v2 in the medium setting and the int8 AraBART bundle, on each
-item set. The ease measures are lower away from core: AraT5v2 fixes long clauses
-in 58.9\% of core items but in 39.1\% of held-out and 40.4\% of outside items, so
-part of the core result reflects the genres of BAREC's documents. The gains
-nevertheless stay far above copying on text published after every corpus we use.
-Restraint is weak everywhere and weakest on held-out and outside text, where
-fewer than 7\% of easy sentences come back unchanged.
+\lead{Across item sets.} \autoref{tab:benchsets} reports the four item sets side
+by side. Meaning is kept at similar rates on text published after every corpus we
+use (outside) as on core, so the scorer's view does not depend on BAREC's
+genres; the gains in clause length are smaller away from core, and restraint is
+weak everywhere.
 
 \benchsetstable
 
 \lead{Error analysis.} \autoref{tab:errors} shows test outputs of AraT5v2 in the
-medium setting. The first is the intended behaviour: a 17-word sentence split into two cause-linked clauses. The second passes every code check and reverses a
-quantity, which is the reason meaning needs a judge tier and not code alone. The
-others are the failures of F3 and F4. One example is not printed: in a Qur'anic
-verse (\emph{al-K\=afir\=un} 109:4) the model dropped the negation \ar{لا},
-inverting the verse's meaning, the most serious error we observed and the reason
-protected text must never reach the model.
+medium setting. The first is the intended behaviour: a 17-word sentence split into
+two cause-linked clauses. The second passes every code check and reverses a
+quantity, which is why meaning needs a scorer and not code alone. The others are
+the failures of F4. One example is not printed: in a Qur'anic verse
+(\emph{al-K\=afir\=un} 109:4) the model dropped the negation \ar{لا}, inverting
+the verse's meaning, the most serious error we observed and the reason protected
+text must never reach the model.
 
 \begin{table}[h]
 \small
@@ -844,7 +995,7 @@ A2 & \ar{… بنتيجة (۱/۳) في المباراة …} & \ar{… بنتي�
 \end{tabularx}
 \end{table}
 
-\benchdevtable
+\benchothertable
 
 \FloatBarrier
 \subsection{On the Device}
@@ -859,7 +1010,7 @@ harder of the two to fit. Because output streams, the reader waits for the first
 token, not the whole sentence: 177--318\,ms for a paragraph's first sentence and
 55--85\,ms for each later one, on a phone that now sits in the mid-range. On the laptop, with the
 same decoding loop, AraBART is 1.9 times faster than AraT5v2, so its phone latency
-should be lower still. Quantisation moves AraBART by less than 2 points on every code measure, while it shifts AraT5v2 toward copying (F5).
+should be lower still. Quantisation leaves meaning unchanged for both models and shifts AraT5v2 toward copying (F5).
 
 \begin{table}[h]
 \small
@@ -933,13 +1084,17 @@ sheet, reading aloud with the current word highlighted. (b) The floating panel.
 app tested on the phone unit-tests its text pipeline (sentence splitting,
 punctuation repair, clitic normalisation and the retention fallback), and its
 download pipeline checks every file by SHA-256. The leakage checker is tested against a
-planted duplicate and must exit non-zero. The benchmark package has its own tests
-on a built-in toy dataset, and its prediction command reproduces our model-2
-outputs on all 731 dev items. Running the pipeline end to end on real data, not
-fixtures, exposed three harness faults: the scoring script put every BAREC row in
-the ``unchanged'' bucket; the shared prediction script omitted model~1's training
-prefix, which alone cost twelve SARI points; and length-grouped batching shuffled
-the evaluation set. Each now has a guard.
+planted duplicate and must exit non-zero. The benchmark package has 12 tests on
+a built-in toy dataset, and its prediction command reproduces our model-2
+outputs on all 731 dev items, as an independent rerun by a teammate confirmed.
+Running the pipeline end to end on real data, not fixtures, exposed four harness
+faults: the scoring script put every BAREC row in the ``unchanged'' bucket; the
+shared prediction script omitted model~1's training prefix, which alone cost
+twelve SARI points; length-grouped batching shuffled the evaluation set; and
+under \texttt{transformers}~5 the same models produced garbled outputs, because
+AraT5v2's tied embeddings and AraBART's sentence markers are handled
+differently. Each now has a guard; the last makes the prediction command refuse
+to run under version~5.
 
 \lead{Improvements.} Each measured problem produced a change
 (\autoref{tab:improvements}); the findings of the final evaluation are discussed
@@ -961,7 +1116,9 @@ SAMER teaches word substitution; model~1 below copying on DAASI & DAASI and mean
 Baseet's LLM targets often summarise & Meaning filter calibrated on human rewrites \\ \hline
 Prediction script omitted the training prefix & Prefix a required setting of every model and bundle \\ \hline
 Length grouping shuffled the evaluation set & Grouping off; alignment check stops the run \\ \hline
-SARI is blind to meaning errors & BayanBench, with a validated judge and code checks \\ \hline
+SARI is blind to meaning errors & BayanBench: meaning scored separately from ease, with code checks \\ \hline
+The closed judge was quota-bound, pass/fail and not rerunnable & Open meaning scorer, continuous, rerun by anyone, checked against six raters \\ \hline
+Under \texttt{transformers}~5 the models' outputs changed silently & Prediction refuses to run under version~5 \\ \hline
 The model invents text around headings and fragments & Sentences under six words pass through unchanged in the app \\ \hline
 \end{tabularx}
 \end{table}
@@ -981,14 +1138,17 @@ The model invents text around headings and fragments & Sentences under six words
 \head{Objective} & \head{Evidence} & \head{Outcome} \\ \hline
 O1 Beat copying on changed rows; easier text without losing meaning &
   Model~1: \greedychanged{} vs \copytestchanged{} on SAMER test (\greedygain{}). Model~2:
-  66.58 on changed dev rows; on BayanBench test, long clauses fixed in
-  \btTfiveB--\btBartB\% of items with $\geq$60\% of words kept in
-  \btBartKept--\btTfiveKept\%; restraint not met & partly met \\ \hline
+  66.58 on changed dev rows; on BayanBench, meaning kept in
+  \bvHminKept--\bvHmaxKept\% of outputs while cutting \bvHminClause--\bvHmaxClause{}
+  words from the longest clause, and raters kept the meaning of
+  \hBartSameMin--\hAppTfiveSame\% of changed outputs; restraint not met & partly met \\ \hline
 O2 Diacritize without changing letters & Libtashkeel: DER 6.91\% without case endings,
   0 of 100 sentences altered, 4.8\,MB; not in the tested build & partly met \\ \hline
-O3 Run on a phone within 250\,MB & AraBART int8: 222\,MB; app tested on a Snapdragon 870,
-  first token in 55--318\,ms & met \\ \hline
-O4 Evidence from readers & Blind rating set of 100 items prepared; no sessions held & not yet \\ \hline
+O3 Run on a phone within 250\,MB & AraBART int8: 222\,MB; AraT5v2 int8, the bundle
+  tested on a Snapdragon 870, is 471\,MB; first token in 55--318\,ms & partly met \\ \hline
+O4 Evidence from readers & A reader with dyslexia rated \rN{} rewrites and \rPairs{}
+  comparisons with informed consent: \rEasier{} easier, \rHarder{} harder; no
+  reading-time or comprehension study & partly met \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -996,56 +1156,71 @@ The answers to the research questions are these. \textbf{RQ1:} no. On copy-heavy
 test sets, SARI rewards inaction and is blind to reversals of meaning; a model
 that beats copying on the sentences editors changed still scores below copying
 overall, and what it learned from SAMER is vocabulary substitution without
-restructuring. \textbf{RQ2:} largely yes. One tagged model makes long-clause
-sentences easier in about half of the cases and reduces hard words in over 40\%,
-keeps most content, and still helps, though less, on text published after its training data; it lacks restraint. \textbf{RQ3:} yes. The int8 AraBART bundle fits the
-budget, streamed output reaches the reader in under a third of a second on a
-mid-range phone, and quantisation costs AraBART little. The shipped bundles are conservative mainly because they send no strength tag, and for AraT5v2 also because of quantisation.
+restructuring. An open meaning scorer, by contrast, agrees with human raters (AUC
+\hAucSame{}) and can be rerun by anyone. \textbf{RQ2:} partly. One tagged model
+shortens long clauses and keeps most content, and AraT5v2 keeps meaning clearly
+better than AraBART; but every setting trades meaning for simplification, the
+safest one simplifies least, and no setting leaves easy text alone.
+\textbf{RQ3:} yes, with one caveat. Streamed output reaches the reader in under a
+third of a second on a mid-range phone, and quantisation costs neither model any
+meaning; the int8 AraBART bundle fits the 250\,MB budget, while the AraT5v2
+bundle, the more faithful of the two, needs 471\,MB.
 
 \lead{Benefits.} For readers: help where and when the difficulty occurs, offline
 and private, with the original always one tap away. For schools: a tool that runs
 on the phones students already own. For the field: a documented case of test-set
 contamination in a public Arabic simplification corpus, an evaluation protocol
-that exposes copy-heavy scores, and a benchmark that measures what an Arabic
-reader with dyslexia needs rather than agreement with one editor.
+that exposes copy-heavy scores, and a benchmark whose meaning scorer has been
+checked against people, measuring what an Arabic reader with dyslexia needs rather
+than agreement with one editor.
 
 \FloatBarrier
 \subsection{Future Improvements}
 \label{sec:future}
 
-The evaluation points to specific next steps. Restraint and protection belong in
-the app as much as in the model: scripture and poetry should be detected and
-never sent to it, a cut-off selection should keep its ending, and Persian-range
-digits should be mapped before decoding and restored after. The strength tag
-should travel with every request. Sentence splitting needs training data that
-teaches it, which no human-written corpus provides. Choosing checkpoints on
-BayanBench rather than on SARI would let the behaviours readers need shape
-training itself. Last, the benchmark's human track and a reading study with
-readers with dyslexia are what would turn these automatic results into evidence
-about reading.
+The evaluation points to specific next steps. The central one is to move the
+trade-off of F1: a model that simplifies as much as the tagged setting while
+keeping meaning as often as the shipped bundle. The meaning scorer, now checked
+against people, can rank candidate rewrites and select checkpoints, so that
+training is steered by the behaviours readers need rather than by SARI. Restraint
+and protection belong in the app as much as in the model: scripture and poetry
+should be detected and never sent to it, a cut-off selection should keep its
+ending, and Persian-range digits should be mapped before decoding and restored
+after. The AraT5v2 bundle can meet the size budget by pruning its vocabulary to the
+pieces Arabic text uses: 46\% of its parameters sit in two embedding matrices,
+and pruned int8 weights would take about 223\,MB. Sentence splitting needs
+training data that teaches it, which no human-written corpus provides. Last, a
+reading study with more readers with dyslexia, measuring reading time and
+comprehension, would turn ratings into evidence about reading.
 
 \subsection{Limitations}
 \label{sec:limits}
 
 \begin{itemize}
-\item \textbf{No reader has used Bayan yet.} Every result is automatic. The
-      measures are chosen from reading research, but none is validated as a
-      predictor of reading success for Arabic readers with dyslexia, and no such
-      metric exists in any language.
-\item \textbf{Code tier only.} Meaning is checked here through numbers,
-      negations and kept words. These catch deletions but not substitutions such
-      as the reversal in \autoref{tab:errors}, which only the judge tier detects.
-\item \textbf{The clause measure credits commas.} A rewrite can meet the 15-word
-      limit by adding commas as well as by splitting sentences. We read it next to
-      kept words and reading level, and the 15-word limit is itself a design
-      choice: the ranking of the five systems in \autoref{tab:benchtest} is the same at 12, 15 and 20 words, but the absolute rates move.
+\item \textbf{One reader with dyslexia.} The reader rated rewrites on a web page;
+      nobody with dyslexia has yet used the app or been measured reading with it,
+      and the five team raters do not have dyslexia.
+\item \textbf{The meaning scorer is a model.} It agrees with people at AUC
+      \hAucSame{} but is stricter than them, failing \hWrongFail{} of the \hKept{}
+      outputs they kept, so ``meaning kept'' is a conservative rate. It was
+      checked on dev outputs of the six model-2 systems, from \hDocs{} documents; a
+      very different system could be judged differently.
+\item \textbf{Ease and Arabic are weakly agreed.} Raters agreed on ease and on
+      correct Arabic with $\alpha$ of only \hAlphaEase{} and \hAlphaArabic{}, so
+      the benchmark measures ease through clause length, reading level and hard
+      words, and checks Arabic only through house rules.
+\item \textbf{The clause measure credits commas.} A rewrite can shorten its
+      longest clause by adding commas as well as by splitting sentences, which is
+      why it is always read next to meaning.
 \item \textbf{No reference-based test score for model~2.} Model~2 is compared
       with published work only through its dev selection score; its test
       evaluation is BayanBench, which has no human references.
-\item \textbf{Some tracks are small.} E3 and E4 hold 64 and 40 test items and
-      separate only large differences.
+\item \textbf{Some tracks are small.} E3 and E4 hold 64 and 40 test items, and
+      few core items contain a number (\autoref{tab:benchhead}), so these rates separate only large
+      differences.
 \item \textbf{One phone and one bundle.} On-device figures come from one
-      mid-range phone and the AraT5v2 bundle.
+      mid-range phone and the AraT5v2 bundle, which at 471\,MB exceeds the 250\,MB
+      objective.
 \item \textbf{One run per configuration.} Each model was trained once, with one
       seed, so the comparison between architectures carries no estimate of
       training variance.
@@ -1060,8 +1235,9 @@ both what a model had learned and what it broke. A public corpus overlapped the
 test sets. And the behaviours a reader needs --- shorter clauses, familiar words,
 the same meaning, and restraint where the text is already easy --- had to be
 measured one by one before they could be improved. BayanBench makes those
-measurements reproducible by anyone on the team, and its first results mark
-restraint as the problem to solve next.
+measurements reproducible by anyone on the team, its meaning scorer agrees with
+human raters, and its results set the next goal plainly: simplify as much as the
+boldest setting while keeping meaning as well as the safest.
 
 \FloatBarrier
 \subsection*{References}
@@ -1097,6 +1273,9 @@ restraint as the problem to solve next.
 \bibitem{betterbench} A.~Reuel, A.~Hardy, C.~Smith, M.~Lamparth, M.~Hardy and M.~J. Kochenderfer. BetterBench: assessing AI benchmarks, uncovering issues, and establishing best practices. \emph{NeurIPS Datasets and Benchmarks}, 2024.
 \bibitem{miller2024} E.~Miller. Adding error bars to evals: a statistical approach to language model evaluations. arXiv:2411.00640, 2024.
 \bibitem{li2026} D.~Li et al. Preference leakage: a contamination problem in LLM-as-a-judge. \emph{ICLR}, 2026.
+\bibitem{krippendorff} K.~Krippendorff. \emph{Content Analysis: An Introduction to Its Methodology}, 4th ed. SAGE, 2019.
+\bibitem{gemma4} Google DeepMind. Gemma~4, 31B instruction-tuned, quantisation-aware int4 checkpoint (\texttt{google/gemma-4-31B-it-qat-w4a16-ct}). Hugging Face, 2026.
+\bibitem{vllm} W.~Kwon et al. Efficient memory management for large language model serving with PagedAttention. \emph{SOSP}, pp.~611--626, 2023.
 \bibitem{arat5} E.~M.~B. Nagoudi, A.~Elmadany and M.~Abdul-Mageed. AraT5: Text-to-Text Transformers for Arabic Language Generation. \emph{ACL}, pp.~628--647, 2022.
 \bibitem{octopus} A.~Elmadany, E.~M.~B. Nagoudi and M.~Abdul-Mageed. Octopus: A Multitask Model and Toolkit for Arabic Natural Language Generation. \emph{ArabicNLP}, pp.~232--243, 2023.
 \bibitem{arabart} M.~K. Eddine, N.~Tomeh, N.~Habash, J.~Le Roux and M.~Vazirgiannis. AraBART: a Pretrained Arabic Sequence-to-Sequence Model for Abstractive Summarization. \emph{WANLP}, pp.~31--42, 2022.

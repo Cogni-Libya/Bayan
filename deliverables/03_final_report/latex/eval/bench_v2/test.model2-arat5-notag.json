@@ -1,0 +1,614 @@
+{
+ "items": 1250,
+ "sets": {
+  "core": {
+   "items": 749,
+   "meaning": {
+    "meaning kept": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 42,
+     "pending": 617,
+     "complete": false
+    },
+    "P(same meaning)": {
+     "mean": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "n": 42,
+     "pending": 617,
+     "complete": false
+    }
+   },
+   "simpler": {
+    "longest clause: words shorter": {
+     "mean": [
+      4.471698113207547,
+      3.27,
+      5.935323383084577
+     ],
+     "n": 212
+    },
+    "reading level: levels lower": {
+     "mean": [
+      0.17679558011049723,
+      0.1111111111111111,
+      0.24870466321243523
+     ],
+     "n": 543
+    },
+    "hard words: fewer": {
+     "mean": [
+      0.45426829268292684,
+      0.33134328358208953,
+      0.6052631578947368
+     ],
+     "n": 328
+    }
+   },
+   "checks": {
+    "numbers kept": {
+     "rate": [
+      78.66666666666666,
+      62.121212121212125,
+      90.21739130434783
+     ],
+     "n": 75
+    },
+    "no house-rule break": {
+     "rate": [
+      99.84825493171472,
+      99.52380952380952,
+      100.0
+     ],
+     "n": 659
+    }
+   },
+   "behaviour": {
+    "C: easy text left unchanged": {
+     "rate": [
+      27.27272727272727,
+      18.055555555555554,
+      36.486486486486484
+     ],
+     "n": 77
+    },
+    "F: letters unchanged": {
+     "rate": [
+      18.88888888888889,
+      8.737864077669903,
+      31.11111111111111
+     ],
+     "n": 90
+    },
+    "F: exactly unchanged": {
+     "rate": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "n": 90
+    },
+    "E1: end mark kept": {
+     "rate": [
+      40.0,
+      29.069767441860467,
+      50.602409638554214
+     ],
+     "n": 85
+    }
+   },
+   "flags": {
+    "negation changed": {
+     "rate": [
+      11.971830985915492,
+      7.042253521126761,
+      16.560509554140125
+     ],
+     "n": 142
+    },
+    "limit changed": {
+     "rate": [
+      19.565217391304348,
+      8.333333333333332,
+      32.55813953488372
+     ],
+     "n": 46
+    },
+    "condition changed": {
+     "rate": [
+      19.607843137254903,
+      10.526315789473683,
+      29.411764705882355
+     ],
+     "n": 51
+    }
+   },
+   "diagnostics": {
+    "kept 60%+ of words": {
+     "rate": [
+      96.90721649484536,
+      95.43973941368078,
+      98.17578772802653
+     ],
+     "n": 582
+    },
+    "no clause over 15 words": {
+     "rate": [
+      54.54545454545454,
+      46.51162790697674,
+      62.16216216216216
+     ],
+     "n": 209
+    },
+    "negations kept": {
+     "rate": [
+      89.92805755395683,
+      85.39325842696628,
+      94.44444444444444
+     ],
+     "n": 139
+    },
+    "mid-sentence full stop added": {
+     "rate": [
+      1.2139605462822458,
+      0.45662100456621,
+      2.127659574468085
+     ],
+     "n": 659
+    },
+    "B: not left as copy": {
+     "rate": [
+      98.13084112149532,
+      95.28301886792453,
+      100.0
+     ],
+     "n": 107
+    }
+   }
+  },
+  "held-out": {
+   "items": 274,
+   "meaning": {
+    "meaning kept": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 24,
+     "pending": 250,
+     "complete": false
+    },
+    "P(same meaning)": {
+     "mean": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "n": 24,
+     "pending": 250,
+     "complete": false
+    }
+   },
+   "simpler": {
+    "longest clause: words shorter": {
+     "mean": [
+      2.9655172413793105,
+      1.6590909090909092,
+      3.9743589743589745
+     ],
+     "n": 58
+    },
+    "reading level: levels lower": {
+     "mean": [
+      0.3067484662576687,
+      0.15172413793103448,
+      0.423728813559322
+     ],
+     "n": 163
+    },
+    "hard words: fewer": {
+     "mean": [
+      0.37209302325581395,
+      0.18811881188118812,
+      0.5276381909547738
+     ],
+     "n": 129
+    }
+   },
+   "checks": {
+    "numbers kept": {
+     "rate": [
+      54.71698113207547,
+      23.404255319148938,
+      100.0
+     ],
+     "n": 53
+    },
+    "no house-rule break": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 274
+    }
+   },
+   "behaviour": {
+    "C: easy text left unchanged": {
+     "rate": [
+      15.217391304347828,
+      9.090909090909092,
+      21.50537634408602
+     ],
+     "n": 92
+    },
+    "E1: end mark kept": {
+     "rate": [
+      22.22222222222222,
+      0.0,
+      66.66666666666666
+     ],
+     "n": 9
+    }
+   },
+   "flags": {
+    "negation changed": {
+     "rate": [
+      19.298245614035086,
+      4.545454545454546,
+      31.147540983606557
+     ],
+     "n": 57
+    },
+    "limit changed": {
+     "rate": [
+      12.5,
+      0.0,
+      28.57142857142857
+     ],
+     "n": 16
+    },
+    "condition changed": {
+     "rate": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "n": 6
+    }
+   },
+   "diagnostics": {
+    "kept 60%+ of words": {
+     "rate": [
+      92.85714285714286,
+      89.8936170212766,
+      96.68874172185431
+     ],
+     "n": 182
+    },
+    "no clause over 15 words": {
+     "rate": [
+      47.5,
+      34.285714285714285,
+      57.57575757575758
+     ],
+     "n": 40
+    },
+    "negations kept": {
+     "rate": [
+      86.79245283018868,
+      79.6875,
+      97.36842105263158
+     ],
+     "n": 53
+    },
+    "mid-sentence full stop added": {
+     "rate": [
+      0.7299270072992701,
+      0.0,
+      1.9543973941368076
+     ],
+     "n": 274
+    },
+    "B: not left as copy": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 23
+    }
+   }
+  },
+  "outside": {
+   "items": 204,
+   "meaning": {
+    "meaning kept": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 23,
+     "pending": 181,
+     "complete": false
+    },
+    "P(same meaning)": {
+     "mean": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "n": 23,
+     "pending": 181,
+     "complete": false
+    }
+   },
+   "simpler": {
+    "longest clause: words shorter": {
+     "mean": [
+      2.8153846153846156,
+      1.6101694915254237,
+      4.106060606060606
+     ],
+     "n": 65
+    },
+    "reading level: levels lower": {
+     "mean": [
+      0.1377245508982036,
+      0.030303030303030304,
+      0.2441860465116279
+     ],
+     "n": 167
+    },
+    "hard words: fewer": {
+     "mean": [
+      0.4146341463414634,
+      0.2903225806451613,
+      0.5528455284552846
+     ],
+     "n": 123
+    }
+   },
+   "checks": {
+    "numbers kept": {
+     "rate": [
+      89.74358974358975,
+      80.0,
+      97.5609756097561
+     ],
+     "n": 39
+    },
+    "no house-rule break": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 204
+    }
+   },
+   "behaviour": {
+    "C: easy text left unchanged": {
+     "rate": [
+      12.121212121212121,
+      2.857142857142857,
+      24.137931034482758
+     ],
+     "n": 33
+    }
+   },
+   "flags": {
+    "negation changed": {
+     "rate": [
+      28.57142857142857,
+      13.88888888888889,
+      44.11764705882353
+     ],
+     "n": 35
+    },
+    "limit changed": {
+     "rate": [
+      20.0,
+      0.0,
+      50.0
+     ],
+     "n": 10
+    },
+    "condition changed": {
+     "rate": [
+      33.33333333333333,
+      19.047619047619047,
+      46.666666666666664
+     ],
+     "n": 27
+    }
+   },
+   "diagnostics": {
+    "kept 60%+ of words": {
+     "rate": [
+      91.22807017543859,
+      85.98726114649682,
+      95.95375722543352
+     ],
+     "n": 171
+    },
+    "no clause over 15 words": {
+     "rate": [
+      34.32835820895522,
+      24.324324324324326,
+      43.42105263157895
+     ],
+     "n": 67
+    },
+    "negations kept": {
+     "rate": [
+      80.64516129032258,
+      64.51612903225806,
+      94.11764705882352
+     ],
+     "n": 31
+    },
+    "mid-sentence full stop added": {
+     "rate": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "n": 204
+    },
+    "B: not left as copy": {
+     "rate": [
+      94.73684210526315,
+      86.95652173913044,
+      100.0
+     ],
+     "n": 57
+    }
+   }
+  },
+  "written": {
+   "items": 23,
+   "meaning": {
+    "meaning kept": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 2,
+     "pending": 21,
+     "complete": false
+    },
+    "P(same meaning)": {
+     "mean": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "n": 2,
+     "pending": 21,
+     "complete": false
+    }
+   },
+   "simpler": {
+    "longest clause: words shorter": {
+     "mean": [
+      2.0,
+      2.0,
+      2.0
+     ],
+     "n": 1
+    },
+    "reading level: levels lower": {
+     "mean": [
+      0.043478260869565216,
+      -0.08695652173913043,
+      0.21739130434782608
+     ],
+     "n": 23
+    },
+    "hard words: fewer": {
+     "mean": [
+      0.625,
+      0.25,
+      1.0
+     ],
+     "n": 8
+    }
+   },
+   "checks": {
+    "numbers kept": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 2
+    },
+    "no house-rule break": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 23
+    }
+   },
+   "behaviour": {},
+   "flags": {
+    "negation changed": {
+     "rate": [
+      13.333333333333334,
+      0.0,
+      33.33333333333333
+     ],
+     "n": 15
+    },
+    "limit changed": {
+     "rate": [
+      16.666666666666664,
+      0.0,
+      50.0
+     ],
+     "n": 6
+    },
+    "condition changed": {
+     "rate": [
+      11.11111111111111,
+      0.0,
+      33.33333333333333
+     ],
+     "n": 9
+    }
+   },
+   "diagnostics": {
+    "kept 60%+ of words": {
+     "rate": [
+      100.0,
+      100.0,
+      100.0
+     ],
+     "n": 23
+    },
+    "negations kept": {
+     "rate": [
+      92.85714285714286,
+      78.57142857142857,
+      100.0
+     ],
+     "n": 14
+    },
+    "mid-sentence full stop added": {
+     "rate": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "n": 23
+    }
+   }
+  }
+ },
+ "split": "test",
+ "predictions": "/home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/test/model2-arat5-notag.jsonl",
+ "baseline": null,
+ "data_version": "1.0",
+ "bayanbench": "2.0.0.dev0",
+ "meaning": {
+  "scorer": "gemma-4-31B-it-qat-w4a16-ct|q-v1",
+  "same_threshold": 0.5,
+  "contradict_threshold": null,
+  "simpler_min": null
+ },
+ "accepted_judges": null,
+ "hard_words_measured": true,
+ "reading_level_measured": true
+}

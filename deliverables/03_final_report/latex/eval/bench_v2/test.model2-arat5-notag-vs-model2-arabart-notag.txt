@@ -1,0 +1,100 @@
+BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/test/model2-arat5-notag.jsonl  (rate % or mean [95% interval])
+  note: thresholds set on the command line: your own analysis, not the official score
+
+== core items (749) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (42 of 659 scored)  n=42, pending 617, vs model2-arabart-notag +0.0 [+0,+0]
+    P(same meaning)                                                incomplete (42 of 659 scored)  n=42, pending 617, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +4.47 [+3.27, +5.94]  n=212, vs model2-arabart-notag -0.46 [-1.11,+0.19]
+    reading level: levels lower                                     +0.18 [+0.11, +0.25]  n=543, vs model2-arabart-notag -0.08 [-0.16,-0.01]*
+    hard words: fewer                                               +0.45 [+0.33, +0.61]  n=328, vs model2-arabart-notag -0.07 [-0.18,+0.04]
+  checks (deterministic)
+    numbers kept                                                    78.7 [ 62- 90]  n=75, vs model2-arabart-notag +2.7 [-5,+12]
+    no house-rule break                                             99.8 [100-100]  n=659, vs model2-arabart-notag -0.2 [-0,+0]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     27.3 [ 18- 36]  n=77, vs model2-arabart-notag +3.9 [-9,+17]
+    F: letters unchanged                                            18.9 [  9- 31]  n=90, vs model2-arabart-notag -4.4 [-12,+10]
+    F: exactly unchanged                                             0.0 [  0-  0]  n=90, vs model2-arabart-notag +0.0 [+0,+0]
+    E1: end mark kept                                               40.0 [ 29- 51]  n=85, vs model2-arabart-notag -5.9 [-11,-1]*
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                12.0 [  7- 17]  n=142, vs model2-arabart-notag -6.4 [-13,-1]*
+    limit changed                                                   19.6 [  8- 33]  n=46, vs model2-arabart-notag +0.0 [-10,+9]
+    condition changed                                               19.6 [ 11- 29]  n=51, vs model2-arabart-notag -6.4 [-15,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              96.9 [ 95- 98]  n=582, vs model2-arabart-notag +2.6 [+1,+5]*
+    no clause over 15 words                                         54.5 [ 47- 62]  n=209, vs model2-arabart-notag -1.0 [-9,+7]
+    negations kept                                                  89.9 [ 85- 94]  n=139, vs model2-arabart-notag +6.5 [+1,+13]*
+    mid-sentence full stop added                                     1.2 [  0-  2]  n=659, vs model2-arabart-notag +0.0 [+0,+0]
+    B: not left as copy                                             98.1 [ 95-100]  n=107, vs model2-arabart-notag +0.9 [-3,+5]
+
+== held-out items (274) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (24 of 274 scored)  n=24, pending 250, vs model2-arabart-notag +0.0 [+0,+0]
+    P(same meaning)                                                incomplete (24 of 274 scored)  n=24, pending 250, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.97 [+1.66, +3.97]  n=58, vs model2-arabart-notag -0.97 [-1.95,-0.06]*
+    reading level: levels lower                                     +0.31 [+0.15, +0.42]  n=163, vs model2-arabart-notag -0.09 [-0.21,+0.09]
+    hard words: fewer                                               +0.37 [+0.19, +0.53]  n=129, vs model2-arabart-notag -0.07 [-0.23,+0.09]
+  checks (deterministic)
+    numbers kept                                                    54.7 [ 23-100]  n=53, vs model2-arabart-notag +1.9 [+0,+8]
+    no house-rule break                                            100.0 [100-100]  n=274, vs model2-arabart-notag +0.0 [+0,+0]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     15.2 [  9- 22]  n=92, vs model2-arabart-notag -4.3 [-11,+2]
+    E1: end mark kept                                               22.2 [  0- 67]  n=9, vs model2-arabart-notag +0.0 [+0,+0]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                19.3 [  5- 31]  n=57, vs model2-arabart-notag +1.8 [+0,+4]
+    limit changed                                                   12.5 [  0- 29]  n=16, vs model2-arabart-notag -6.2 [-25,+0]
+    condition changed                                                0.0 [  0-  0]  n=6, vs model2-arabart-notag -50.0 [-83,-17]*
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              92.9 [ 90- 97]  n=182, vs model2-arabart-notag +0.0 [-5,+3]
+    no clause over 15 words                                         47.5 [ 34- 58]  n=40, vs model2-arabart-notag -5.0 [-16,+4]
+    negations kept                                                  86.8 [ 80- 97]  n=53, vs model2-arabart-notag -1.9 [-4,+0]
+    mid-sentence full stop added                                     0.7 [  0-  2]  n=274, vs model2-arabart-notag +0.0 [+0,+0]
+    B: not left as copy                                            100.0 [100-100]  n=23, vs model2-arabart-notag +0.0 [+0,+0]
+
+== outside items (204) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (23 of 204 scored)  n=23, pending 181, vs model2-arabart-notag +0.0 [+0,+0]
+    P(same meaning)                                                incomplete (23 of 204 scored)  n=23, pending 181, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.82 [+1.61, +4.11]  n=65, vs model2-arabart-notag -1.08 [-1.79,-0.28]*
+    reading level: levels lower                                     +0.14 [+0.03, +0.24]  n=167, vs model2-arabart-notag -0.02 [-0.15,+0.10]
+    hard words: fewer                                               +0.41 [+0.29, +0.55]  n=123, vs model2-arabart-notag -0.10 [-0.25,+0.05]
+  checks (deterministic)
+    numbers kept                                                    89.7 [ 80- 98]  n=39, vs model2-arabart-notag +2.6 [-8,+14]
+    no house-rule break                                            100.0 [100-100]  n=204, vs model2-arabart-notag +0.0 [+0,+0]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     12.1 [  3- 24]  n=33, vs model2-arabart-notag +0.0 [-13,+16]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                28.6 [ 14- 44]  n=35, vs model2-arabart-notag +3.0 [-10,+17]
+    limit changed                                                   20.0 [  0- 50]  n=10, vs model2-arabart-notag -11.1 [-38,+0]
+    condition changed                                               33.3 [ 19- 47]  n=27, vs model2-arabart-notag +0.0 [-10,+12]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              91.2 [ 86- 96]  n=171, vs model2-arabart-notag +2.3 [-3,+8]
+    no clause over 15 words                                         34.3 [ 24- 43]  n=67, vs model2-arabart-notag -10.4 [-21,+0]
+    negations kept                                                  80.6 [ 65- 94]  n=31, vs model2-arabart-notag -3.2 [-17,+11]
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=204, vs model2-arabart-notag +0.0 [+0,+0]
+    B: not left as copy                                             94.7 [ 87-100]  n=57, vs model2-arabart-notag -1.8 [-10,+6]
+
+== written items (23) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (2 of 23 scored)  n=2, pending 21, vs model2-arabart-notag +0.0 [+0,+0]
+    P(same meaning)                                                incomplete (2 of 23 scored)  n=2, pending 21, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.00 [+2.00, +2.00]  n=1, vs model2-arabart-notag -1.00 [-1.00,-1.00]*
+    reading level: levels lower                                     +0.04 [-0.09, +0.22]  n=23, vs model2-arabart-notag +0.00 [-0.17,+0.26]
+    hard words: fewer                                               +0.62 [+0.25, +1.00]  n=8, vs model2-arabart-notag +0.75 [+0.12,+1.50]*
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=2, vs model2-arabart-notag +0.0 [+0,+0]
+    no house-rule break                                            100.0 [100-100]  n=23, vs model2-arabart-notag +0.0 [+0,+0]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                13.3 [  0- 33]  n=15, vs model2-arabart-notag -7.1 [-21,+0]
+    limit changed                                                   16.7 [  0- 50]  n=6, vs model2-arabart-notag +0.0 [+0,+0]
+    condition changed                                               11.1 [  0- 33]  n=9, vs model2-arabart-notag +0.0 [+0,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                             100.0 [100-100]  n=23, vs model2-arabart-notag +0.0 [+0,+0]
+    negations kept                                                  92.9 [ 79-100]  n=14, vs model2-arabart-notag +7.1 [+0,+21]
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=23, vs model2-arabart-notag +0.0 [+0,+0]
+
+pending item-measures: {'core': {'meaning': 1234}, 'held-out': {'meaning': 500}, 'outside': {'meaning': 362}, 'written': {'meaning': 42}}. `bayanbench meaning-pending` lists the outputs to score.

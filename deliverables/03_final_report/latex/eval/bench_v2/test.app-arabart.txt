@@ -1,0 +1,100 @@
+BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/test/app-arabart.jsonl  (rate % or mean [95% interval])
+  note: thresholds set on the command line: your own analysis, not the official score
+
+== core items (749) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (46 of 659 scored)  n=46, pending 613
+    P(same meaning)                                                incomplete (46 of 659 scored)  n=46, pending 613
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +4.76 [+3.55, +6.12]  n=212
+    reading level: levels lower                                     +0.28 [+0.19, +0.38]  n=543
+    hard words: fewer                                               +0.59 [+0.46, +0.75]  n=328
+  checks (deterministic)
+    numbers kept                                                    76.0 [ 59- 88]  n=75
+    no house-rule break                                            100.0 [100-100]  n=659
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     24.7 [ 15- 35]  n=77
+    F: letters unchanged                                            24.4 [ 16- 36]  n=90
+    F: exactly unchanged                                             0.0 [  0-  0]  n=90
+    E1: end mark kept                                               45.9 [ 34- 58]  n=85
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                18.4 [ 13- 25]  n=141
+    limit changed                                                   17.8 [  7- 29]  n=45
+    condition changed                                               25.0 [ 13- 38]  n=48
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              93.5 [ 91- 96]  n=582
+    no clause over 15 words                                         55.0 [ 47- 63]  n=209
+    negations kept                                                  82.7 [ 76- 89]  n=139
+    mid-sentence full stop added                                     1.2 [  0-  2]  n=659
+    B: not left as copy                                             98.1 [ 95-100]  n=107
+
+== held-out items (274) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (32 of 274 scored)  n=32, pending 242
+    P(same meaning)                                                incomplete (32 of 274 scored)  n=32, pending 242
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +3.93 [+2.71, +5.02]  n=58
+    reading level: levels lower                                     +0.38 [+0.17, +0.54]  n=163
+    hard words: fewer                                               +0.40 [+0.25, +0.50]  n=129
+  checks (deterministic)
+    numbers kept                                                    50.9 [ 22-100]  n=53
+    no house-rule break                                            100.0 [100-100]  n=274
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     18.5 [ 10- 27]  n=92
+    E1: end mark kept                                               22.2 [  0- 67]  n=9
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                20.7 [  7- 36]  n=58
+    limit changed                                                   23.5 [  6- 47]  n=17
+    condition changed                                               33.3 [  0- 67]  n=6
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              89.0 [ 84- 95]  n=182
+    no clause over 15 words                                         50.0 [ 39- 60]  n=40
+    negations kept                                                  86.8 [ 79- 95]  n=53
+    mid-sentence full stop added                                     0.7 [  0-  2]  n=274
+    B: not left as copy                                            100.0 [100-100]  n=23
+
+== outside items (204) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (17 of 204 scored)  n=17, pending 187
+    P(same meaning)                                                incomplete (17 of 204 scored)  n=17, pending 187
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +4.23 [+2.98, +5.59]  n=65
+    reading level: levels lower                                     +0.15 [+0.01, +0.30]  n=167
+    hard words: fewer                                               +0.48 [+0.38, +0.57]  n=123
+  checks (deterministic)
+    numbers kept                                                    87.2 [ 74- 97]  n=39
+    no house-rule break                                            100.0 [100-100]  n=204
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     12.1 [  3- 23]  n=33
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                22.9 [  9- 39]  n=35
+    limit changed                                                   22.2 [  0- 62]  n=9
+    condition changed                                               34.6 [ 17- 50]  n=26
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              87.1 [ 80- 93]  n=171
+    no clause over 15 words                                         47.8 [ 38- 56]  n=67
+    negations kept                                                  87.1 [ 75- 97]  n=31
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=204
+    B: not left as copy                                             96.5 [ 91-100]  n=57
+
+== written items (23) ==
+  meaning (open scorer)
+    meaning kept                                                   incomplete (5 of 23 scored)  n=5, pending 18
+    P(same meaning)                                                incomplete (5 of 23 scored)  n=5, pending 18
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +0.00 [+0.00, +0.00]  n=1
+    reading level: levels lower                                     +0.00 [-0.22, +0.17]  n=23
+    hard words: fewer                                               +0.12 [-0.25, +0.50]  n=8
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=2
+    no house-rule break                                            100.0 [100-100]  n=23
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                14.3 [  0- 36]  n=14
+    limit changed                                                   16.7 [  0- 50]  n=6
+    condition changed                                               20.0 [  0- 50]  n=10
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              95.7 [ 87-100]  n=23
+    negations kept                                                  85.7 [ 64-100]  n=14
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=23
+
+pending item-measures: {'core': {'meaning': 1226}, 'held-out': {'meaning': 484}, 'outside': {'meaning': 374}, 'written': {'meaning': 36}}. `bayanbench meaning-pending` lists the outputs to score.
