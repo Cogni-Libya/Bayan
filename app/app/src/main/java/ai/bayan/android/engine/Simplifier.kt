@@ -45,41 +45,52 @@ class Simplifier(private val store: ModelStore) {
                 Log.i(TAG, "loaded $modelId in ${(System.nanoTime() - t) / 1_000_000} ms")
             }
             val e = engine!!
-            val paragraphs = ArabicText.paragraphs(ArabicText.stripTashkeel(text))
-            val total = paragraphs.sumOf { it.size }
+            val steps = ArabicText.plan(text, MIN_WORDS)
+            val openEnded = ArabicText.isOpenEnded(text)
+            val lastSentence = steps.indexOfLast { it is ArabicText.Step.Sentence }
+            val total = steps.count { it is ArabicText.Step.Sentence }
             var done = 0
             val result = StringBuilder()
             send(SimplifyEvent.Progress("", 0, 0, total))
-            for ((p, sentences) in paragraphs.withIndex()) {
-                if (p > 0) result.append("\n\n")
-                for ((s, sentence) in sentences.withIndex()) {
-                    if (s > 0) result.append(' ')
-                    val committed = result.length
-                    val t = System.nanoTime()
-                    var firstToken = 0L
-                    val out = if (ArabicText.wordCount(sentence) < MIN_WORDS) {
-                        sentence
-                    } else {
-                        e.generate(sentence, isCancelled = { !isActive }) { partial ->
-                            if (firstToken == 0L) firstToken = System.nanoTime() - t
-                            trySend(SimplifyEvent.Progress(result.toString() + partial, committed, done, total))
+            for ((k, step) in steps.withIndex()) {
+                val prev = steps.getOrNull(k - 1)
+                if (prev != null) result.append(if (prev.paragraph != step.paragraph) "\n" else " ")
+                when (step) {
+                    is ArabicText.Step.Protected -> result.append(step.text) // scripture and set poetry: never rewritten
+                    is ArabicText.Step.Bullet -> result.append(step.marker)
+                    is ArabicText.Step.Sentence -> {
+                        val committed = result.length
+                        val t = System.nanoTime()
+                        var firstToken = 0L
+                        var out = if (!step.toModel) step.text else {
+                            val raw = e.generate(step.input, isCancelled = { !isActive }) { partial ->
+                                if (firstToken == 0L) firstToken = System.nanoTime() - t
+                                trySend(SimplifyEvent.Progress(result.toString() + ArabicText.matchDigitStyle(step.text, partial), committed, done, total))
+                            }
+                            shown(step, raw)
                         }
+                        if (k == lastSentence && openEnded) out = ArabicText.keepOpenEnding(step.text, out)
+                        Log.i(TAG, "sentence ${done + 1}/$total: first token ${firstToken / 1_000_000} ms, whole ${(System.nanoTime() - t) / 1_000_000} ms")
+                        if (!isActive) return@withLock
+                        result.append(out)
+                        done++
                     }
-                    Log.i(TAG, "sentence ${done + 1}/$total: first token ${firstToken / 1_000_000} ms, whole ${(System.nanoTime() - t) / 1_000_000} ms")
-                    if (!isActive) return@withLock
-                    result.append(faithful(sentence, out))
-                    done++
-                    send(SimplifyEvent.Progress(result.toString(), result.length, done, total))
                 }
+                send(SimplifyEvent.Progress(result.toString(), result.length, done, total))
             }
             send(SimplifyEvent.Finished(result.toString(), modelId, System.currentTimeMillis() - started))
         }
     }.buffer(Channel.CONFLATED).flowOn(Dispatchers.Default)
 
-    /** The model's sentence, unless it drifted away from the source's meaning; then the source is kept as it was. */
-    private fun faithful(sentence: String, out: String): String =
-        if (out.isBlank() || ArabicText.retention(sentence, out) < MIN_RETENTION) sentence
-        else ArabicText.fixPunctuation(sentence, out)
+    /** The model's sentence, unless a guard stops it (ArabicText.fallback); then the source sentence is kept. */
+    private fun shown(step: ArabicText.Step.Sentence, raw: String): String {
+        val reason = ArabicText.fallback(step.input, raw, MIN_RETENTION)
+        if (reason != null) {
+            Log.i(TAG, "kept the source sentence: $reason")
+            return step.text
+        }
+        return ArabicText.matchDigitStyle(step.text, ArabicText.fixPunctuation(step.input, raw))
+    }
 
     /** Frees the model's memory when no simplification is running (e.g. when the system asks the app to trim memory). */
     fun releaseIfIdle() {
