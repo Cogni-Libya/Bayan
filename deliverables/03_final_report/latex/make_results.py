@@ -105,7 +105,7 @@ DAASI sources and references have tashkeel stripped.}
 \label{tab:test}
 \begin{tabularx}{\linewidth}{|L|C{11mm}|C{13mm}|C{15mm}|C{10mm}|C{13mm}|C{15mm}|C{11mm}|}
 \hline
-\head{System} & \head{SARI all} & \head{SARI changed} & \head{SARI unchanged} & \head{BLEU} & \head{BERT\-Score} & \head{Readability drop} & \head{Copy rate} \\ \hline
+\head{System} & \head{SARI all} & \head{SARI changed} & \head{SARI un\-changed} & \head{BLEU} & \head{BERT\-Score} & \head{Read\-ability drop} & \head{Copy rate} \\ \hline
 \multicolumn{8}{|l|}{\cellcolor{sichead}\textbf{SAMER test (3,277 rows, locked, in domain)}} \\ \hline
 """ + row("Copy the input", g[C]) + "\n"
     + row("Model~1, greedy", g[M], bold=(1,)) + "\n"
@@ -125,7 +125,7 @@ before the model sees it, as the application does.}
 \label{tab:barec}
 \begin{tabularx}{\linewidth}{|L|C{17mm}|C{17mm}|C{17mm}|C{17mm}|C{17mm}|}
 \hline
-\head{Input} & \head{Copy rate} & \head{BERTScore} & \head{Readability drop} & \head{Source words kept} & \head{Rows losing $>$half} \\ \hline
+\head{Input} & \head{Copy rate} & \head{BERTScore} & \head{Read\-ability drop} & \head{Source words kept} & \head{Rows losing $>$half} \\ \hline
 """ + f"Stripped (as deployed) & {macros['strippedcopy']} & {macros['strippedbert']} & {macros['strippeddrop']} & {macros['strippedkept']}\\% & {macros['strippedlost']}\\% \\\\ \\hline\n"
     + f"Raw, with tashkeel & {macros['rawcopy']} & {macros['rawbert']} & {macros['rawdrop']} & {macros['rawkept']}\\% & {macros['rawlost']}\\% \\\\ \\hline\n"
     + r"""\end{tabularx}
@@ -156,7 +156,7 @@ tex.append(r"""\newcommand{\figsari}{%
 tex.append(r"""\newcommand{\figbehaviour}{%
 \begin{tikzpicture}
 \begin{axis}[
-  name=a, width=0.5\linewidth, height=50mm, font=\scriptsize,
+  name=a, width=0.42\linewidth, height=50mm, font=\scriptsize,
   xbar, bar width=6pt, xmin=0, xmax=100, xlabel={\%},
   symbolic y coords={single-word edits, changed rows left untouched, rows returned unchanged},
   ytick=data, enlarge y limits=0.3, yticklabel style={align=right, text width=19mm},
@@ -171,8 +171,8 @@ tex.append(r"""\newcommand{\figbehaviour}{%
     + r"""  \addlegendentry{human}
 \end{axis}
 \begin{axis}[
-  at={(a.east)}, anchor=west, xshift=26mm,
-  width=0.5\linewidth, height=50mm, font=\scriptsize,
+  at={(a.east)}, anchor=west, xshift=20mm,
+  width=0.42\linewidth, height=50mm, font=\scriptsize,
   xbar, bar width=6pt, xmin=0, xmax=100, xlabel={\%},
   symbolic y coords={rows losing $>$half, source words kept},
   ytick=data, enlarge y limits=0.55, yticklabel style={align=right, text width=16mm},

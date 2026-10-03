@@ -15,6 +15,8 @@ python extract_template_assets.py "path/to/SIC_AI_Capstone Project_Final Report.
 
 # whenever the evaluation is re-run: regenerate every reported number
 python make_results.py eval
+# and the BayanBench tables, from the private bench folder
+python make_bench_results.py ~/MyProjects/Bayan/data/processed/bench
 
 tectonic -X compile main.tex        # -> main.pdf
 ```
@@ -25,10 +27,12 @@ fonts are not ours to publish.
 
 | File | What it holds |
 |---|---|
-| `main.tex` | the report, in the template's six sections |
+| `main.tex` | the report, in the template's six sections, plus an abstract, related work, BayanBench, limitations and ethics |
 | `bayan.sty` | the template's layout and styles |
 | `figures.tex` | timeline, architecture, workflow, EDA, training and UI figures (TikZ/pgfplots) |
 | `results.tex` | **generated** by `make_results.py` — test-set tables, SARI and behaviour charts, and every number quoted from them |
+| `bench_results.tex` | **generated** by `make_bench_results.py` — model 2 on BayanBench (code tier, test and dev, item sets, paired effects) |
+| `make_bench_results.py` | reads the bench's items, model outputs and reading-level cache; computes every measure with the bench's own `lib.py`/`ease.py`, with document-bootstrap intervals |
 | `make_results.py` | reads `score.py` outputs and behaviour statistics, writes `results.tex` |
 | `extract_template_assets.py` | de-obfuscates the template's embedded fonts; renders its cover page to `assets/sic_cover.pdf` |
 | `eval/` | the numbers behind `results.tex`: `score.py` outputs, behaviour statistics, and the scripts that produced them (no corpus text) |

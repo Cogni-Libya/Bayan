@@ -14,116 +14,105 @@
 }
 
 % ------------------------------------------------------------- schedule --
-% Gantt of the real timeline. 13 Sep is day 0; 4.3mm per day.
+% Gantt of the timeline as executed, 13 Sep (day 0) to 28 Sep (day 15). 4.3mm per day.
 \newcommand{\figschedule}{%
-\begin{tikzpicture}[font=\scriptsize, x=4.3mm, y=-4.6mm]
+\begin{tikzpicture}[font=\scriptsize, x=4.3mm, y=-4.3mm]
   \def\lab{-0.6}
-  % day grid and date labels
   \foreach \d/\t in {0/13,2/15,4/17,6/19,8/21,10/23,12/25,14/27,16/29,18/1,20/3,22/5} {
-    \draw[black!12] (\d,0.3) -- (\d,16.9);
+    \draw[black!12] (\d,0.3) -- (\d,17.9);
     \node[anchor=south, text=black!60] at (\d,0.3) {\t};
   }
   \node[anchor=south east, text=black!60] at (\lab,0.3) {September \enspace$|$\enspace day};
   \node[anchor=south, text=black!60] at (19.5,-0.35) {October};
-  % bars: row, start, end, style, label
-  \foreach \r/\s/\e/\c/\t in {
-    1/0/5/sicblue/{Scoping, literature audit, brief},
-    2/4/6/sicblue/{Repository and review workflow \#1--\#3},
-    3/6/8/sicblue/{Product-form decision \#9},
-    4/6/9/sicblue/{Validators, readability check \#10 \#17},
-    5/6/9/sicblue/{Evaluation scripts, locked tests \#7},
-    6/6/9/sicblue/{Diacritization benchmark \#6},
-    7/6/10/sicblue/{SAMER conversion, model 1 \#5},
-    8/7/9/sicblue/{Android plugin shell \#14},
-    9/8/10/sicblue/{Copy baselines, converter \#19},
-    10/8/10/sicblue/{Model 1 diagnosis; Baseet filtered},
-    11/5/9/sicblue/{Action Plan}} {
-    \fill[\c] (\s,\r-0.32) rectangle (\e,\r+0.32);
+  \foreach \r/\s/\e/\t in {
+    1/0/5/{Scoping, literature audit, brief},
+    2/4/6/{Repository and review workflow \#1--\#3},
+    3/6/8/{Product-form decision \#9},
+    4/6/9/{Validators, readability check \#10 \#17},
+    5/6/10/{Evaluation scripts, locked tests \#7 \#19},
+    6/6/9/{Diacritization benchmark \#6},
+    7/6/10/{SAMER conversion, model 1 \#5},
+    8/7/9/{Android plugin shell \#14},
+    9/5/11/{Action Plan \#25},
+    10/9/11/{Model 1 on the locked tests; diagnosis},
+    11/10/11/{Model-2 recipe and data \#27 \#33 \#34},
+    12/11/13/{Model 2 trained: AraT5v2, AraBART \#28 \#29},
+    13/6/13/{Synthetic corpus exported \#8 \#38},
+    14/12/14/{On-device engine and app; phone test},
+    15/13/15/{BayanBench built},
+    16/15/15.6/{Model 2 scored on the BayanBench test split}} {
+    \fill[sicblue] (\s,\r-0.32) rectangle (\e,\r+0.32);
     \node[anchor=east] at (\lab,\r) {\t};
   }
-  % in progress: solid to today, hatched onward
-  \foreach \r/\s/\e/\t in {12/6/16/{Synthetic corpus \#8 \#12}, 13/10/16/{Model 2: mixed corpus, AraBART}} {
-    \fill[figwarm] (\s,\r-0.3) rectangle (10,\r+0.3);
-    \draw[figwarm, line width=0.7pt, fill=figwarm!12] (10,\r-0.3) rectangle (\e,\r+0.3);
-    \node[anchor=east] at (\lab,\r) {\t};
-  }
-  \foreach \r/\s/\e/\t in {14/11/19/{On-device inference, int8}, 15/15/20/{Human evaluation}, 16/18/23/{Final report, slides, pitch}} {
-    \draw[figgrey, dashed, line width=0.6pt, fill=black!5] (\s,\r-0.3) rectangle (\e,\r+0.3);
-    \node[anchor=east] at (\lab,\r) {\t};
-  }
-  % milestones
-  \foreach \d/\t/\a in {9/{AP}/north east, 10/{M1}/north west, 17/{M2}/north,
+  \foreach \d/\t/\a in {6/{M1}/north, 9/{AP}/north east, 10/{M2}/north west,
                          22/{Submit}/north east, 23/{Pitch}/north west} {
     \node[fill=black, diamond, inner sep=1.3pt] at (\d,17.4) {};
     \node[anchor=\a, font=\tiny] at (\d,17.7) {\t};
   }
   \node[anchor=east] at (\lab,17.4) {Milestones};
-  % today
-  \draw[figwarm, line width=1pt] (10,0.3) -- (10,16.9);
-  \node[anchor=south, fill=white, inner sep=1pt, text=figwarm, font=\tiny\bfseries] at (10,16.9) {today};
 \end{tikzpicture}}
 
 % ---------------------------------------------------------- architecture --
 \newcommand{\figarchitecture}{%
 \begin{tikzpicture}[font=\footnotesize]
-  \node[built, minimum width=30mm] (host) {Any app\\{\scriptsize message, web page, PDF}};
-  \node[built, right=9mm of host, minimum width=32mm] (intent)
+  \node[built, minimum width=29mm] (host) {Any app\\{\scriptsize message, web page, PDF}};
+  \node[built, right=8mm of host, minimum width=31mm] (intent)
        {\texttt{PROCESS\_TEXT}\\{\scriptsize menu entry \ar{تبسيط}}};
-  \node[built, right=9mm of intent, minimum width=30mm] (sheet)
-       {Bottom sheet\\{\scriptsize simplified + original}};
+  \node[built, right=8mm of intent, minimum width=33mm] (sheet)
+       {Overlay over the app\\{\scriptsize simplified $\leftrightarrow$ original}};
   \draw[flow] (host) -- (intent);
   \draw[flow] (intent) -- (sheet);
 
-  \node[pending, below=24mm of host.west, anchor=west, minimum width=24mm]
-       (strip) {strip diacritics};
-  \node[chosen, right=4mm of strip, minimum width=29mm] (simp)
-       {simplifier\\{\scriptsize model 1 trained}};
-  \node[chosen, right=4mm of simp, minimum width=25mm] (diac)
-       {diacritizer\\{\scriptsize Libtashkeel}};
-  \node[pending, right=4mm of diac, minimum width=23mm] (tts)
-       {read-aloud\\{\scriptsize word timings}};
+  \node[built, below=22mm of host.west, anchor=west, minimum width=21mm]
+       (strip) {strip tashkeel,\\split sentences};
+  \node[built, right=3mm of strip, minimum width=27mm] (simp)
+       {simplifier, int8\\{\scriptsize streamed token by token}};
+  \node[built, right=3mm of simp, minimum width=22mm] (guard)
+       {retention\\fallback};
+  \node[built, right=3mm of guard, minimum width=22mm] (tts)
+       {read-aloud\\{\scriptsize word highlight}};
   \draw[flow] (strip) -- (simp);
-  \draw[flow] (simp) -- (diac);
-  \draw[flow] (diac) -- (tts);
+  \draw[flow] (simp) -- (guard);
+  \draw[flow] (guard) -- (tts);
+  \node[pending, below=6mm of simp, minimum width=27mm] (diac) {diacritizer\\{\scriptsize selected; not in this build}};
   \begin{scope}[on background layer]
     \node[draw=figgrey, line width=0.6pt, rounded corners=3pt, inner xsep=6pt,
-          inner ysep=6pt, fit=(strip)(simp)(diac)(tts)] (dev) {};
+          inner ysep=6pt, fit=(strip)(simp)(guard)(tts)(diac)] (dev) {};
   \end{scope}
   \node[anchor=north west, font=\scriptsize\itshape, text=black!65]
-       at ([yshift=-1pt]dev.south west) (devlab) {on the device, ONNX Runtime Mobile, no network};
+       at ([yshift=-1pt]dev.south west) (devlab) {on the device: ONNX Runtime (simplifier), sherpa-onnx (voices); no network after download};
   \draw[flow] (intent.south) -- ++(0,-6mm) -| (strip.north);
   \draw[flow] (tts.north) -- ++(0,6mm) -| (sheet.south);
 
-  % legend
   \node[built, minimum height=3mm, minimum width=6mm, below=3mm of devlab.south west,
         anchor=north west] (k1) {};
-  \node[right=1mm of k1, font=\scriptsize] (l1) {built and tested};
-  \node[chosen, minimum height=3mm, minimum width=6mm, right=5mm of l1] (k2) {};
-  \node[right=1mm of k2, font=\scriptsize] (l2) {selected or trained, not yet in the app};
-  \node[pending, minimum height=3mm, minimum width=6mm, right=5mm of l2] (k3) {};
-  \node[right=1mm of k3, font=\scriptsize] {not started};
+  \node[right=1mm of k1, font=\scriptsize] (l1) {built and running on a phone};
+  \node[pending, minimum height=3mm, minimum width=6mm, right=5mm of l1] (k3) {};
+  \node[right=1mm of k3, font=\scriptsize] {not in this build};
 \end{tikzpicture}}
 
 % --------------------------------------------------------------- pipeline --
 \newcommand{\figpipeline}{%
-\begin{tikzpicture}[font=\footnotesize, node distance=8mm]
-  \node[built, minimum width=34mm] (src) {source corpora\\{\scriptsize SAMER, BAREC, Baseet, DAASI}};
-  \node[gate, below=of src, minimum width=34mm] (leak) {leakage check\\{\scriptsize exact + 5-gram Jaccard}};
-  \node[built, below=of leak, minimum width=34mm] (train) {fine-tuning\\{\scriptsize model 1 on SAMER}};
-  \node[built, below=of train, minimum width=34mm] (eval) {scoring\\{\scriptsize beside the copy baseline}};
+\begin{tikzpicture}[font=\footnotesize, node distance=7mm]
+  \node[built, minimum width=36mm] (src) {source corpora\\{\scriptsize SAMER, DAASI, Baseet}};
+  \node[gate, below=of src, minimum width=36mm] (leak) {leakage check\\{\scriptsize exact + 5-gram Jaccard}};
+  \node[gate, below=of leak, minimum width=36mm] (mean) {meaning filter, strength tags\\{\scriptsize Baseet pairs only}};
+  \node[built, below=of mean, minimum width=36mm] (train) {fine-tuning\\{\scriptsize AraT5v2 and AraBART}};
+  \node[built, below=of train, minimum width=36mm] (eval) {scoring\\{\scriptsize copy baseline; BayanBench}};
   \draw[flow] (src) -- (leak);
-  \draw[flow] (leak) -- node[right, font=\scriptsize, text=figwarm] {clean rows only} (train);
+  \draw[flow] (leak) -- node[right, font=\scriptsize, text=figwarm] {clean rows only} (mean);
+  \draw[flow] (mean) -- (train);
   \draw[flow] (train) -- (eval);
 
-  \node[built, left=24mm of leak, minimum width=30mm, dash pattern=on 4pt off 2pt]
+  \node[built, left=20mm of leak, minimum width=30mm, dash pattern=on 4pt off 2pt]
        (test) {locked test sets\\{\scriptsize SHA-256 manifest}};
   \draw[flow] (test) -- (leak);
-  \draw[flow] (test.south) |- node[pos=0.75, below, font=\scriptsize] {final models only} (eval.west);
+  \draw[flow] (test.south) |- node[pos=0.8, below, font=\scriptsize] {final models only} (eval.west);
 
-  \node[pending, right=24mm of src, minimum width=30mm] (gen) {LLM generation\\{\scriptsize synthetic pairs}};
-  \node[gate, right=24mm of leak, minimum width=30mm] (judge) {validators\\{\scriptsize + human review}};
-  \draw[flow, figgrey, dashed] (gen) -- (judge);
-  \draw[flow, figgrey, dashed] (judge) |- (train.east);
+  \node[built, right=20mm of src, minimum width=30mm] (gen) {LLM generation\\{\scriptsize from BAREC sources}};
+  \node[gate, right=20mm of leak, minimum width=30mm] (judge) {validators\\{\scriptsize equivalence, readability}};
+  \node[built, right=20mm of mean, minimum width=30mm] (pub) {synthetic corpus\\{\scriptsize 13,072 pairs, published}};
+  \draw[flow] (judge) -- (pub);
 \end{tikzpicture}}
 
 % -------------------------------------------------------------------- EDA --
@@ -183,48 +172,44 @@
 \end{axis}
 \end{tikzpicture}}
 
-% The decoder and behaviour charts are generated with the numbers into results.tex.
+% ------------------------------------------------------ model-2 training --
+% From the committed notebooks (scripts/training/model2/*.ipynb): 20 evaluations
+% each, on the 600 changed rows (SARI) and all 900 rows (copy rate) of select_dev.
+\newcommand{\figtrainingtwo}{%
+\begin{tikzpicture}
+\begin{axis}[
+  name=a, width=0.52\linewidth, height=52mm, font=\scriptsize,
+  xlabel={epoch}, ylabel={SARI, 600 changed rows}, xmin=0.3, xmax=10.2, ymin=55, ymax=67.5,
+  grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left,
+  title={(a) selection metric}, title style={font=\scriptsize\bfseries},
+  legend style={at={(0.97,0.03)}, anchor=south east, draw=black!25, font=\tiny},
+  every axis plot/.append style={line width=0.9pt, mark size=1pt}]
+  \addplot[sicblue, mark=*] coordinates {(0.5,55.91)(1,58.84)(1.5,59.70)(2,61.00)(2.5,61.61)(3,61.96)(3.5,62.65)(4,63.88)(4.5,63.85)(5,64.77)(5.5,65.36)(6,65.13)(6.5,65.69)(7,65.96)(7.5,66.26)(8,66.17)(8.5,66.24)(9,66.47)(9.5,66.56)(10,66.58)};
+  \addlegendentry{AraT5v2 (368M)}
+  \addplot[figwarm, mark=triangle*] coordinates {(0.5,56.08)(1,57.65)(1.5,59.30)(2,59.28)(2.5,60.99)(3,61.06)(3.5,62.59)(4,63.05)(4.5,63.19)(5,63.45)(5.5,63.96)(6,64.20)(6.5,64.51)(7,64.31)(7.5,64.61)(8,64.54)(8.5,64.53)(9,64.71)(9.5,64.55)(10,64.50)};
+  \addlegendentry{AraBART (139M)}
+\end{axis}
+\begin{axis}[
+  at={(a.east)}, anchor=west, xshift=13mm,
+  width=0.52\linewidth, height=52mm, font=\scriptsize,
+  xlabel={epoch}, ylabel={copy rate, all 900 rows (\%)}, xmin=0.3, xmax=10.2, ymin=28, ymax=95,
+  grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left,
+  title={(b) outputs identical to the input}, title style={font=\scriptsize\bfseries},
+  every axis plot/.append style={line width=0.9pt, mark size=1pt}]
+  \addplot[sicblue, mark=*] coordinates {(0.5,79.89)(1,78.33)(1.5,73.89)(2,68.33)(2.5,62.78)(3,61.78)(3.5,60.00)(4,60.44)(4.5,59.33)(5,57.00)(5.5,54.00)(6,54.00)(6.5,53.11)(7,51.67)(7.5,52.11)(8,52.33)(8.5,51.11)(9,51.22)(9.5,50.67)(10,51.00)};
+  \addplot[figwarm, mark=triangle*] coordinates {(0.5,91.22)(1,84.56)(1.5,73.11)(2,70.22)(2.5,66.89)(3,62.67)(3.5,61.44)(4,61.78)(4.5,60.00)(5,59.78)(5.5,55.89)(6,53.33)(6.5,54.78)(7,52.44)(7.5,53.89)(8,51.67)(8.5,51.56)(9,51.44)(9.5,52.11)(10,52.00)};
+  \draw[black!60, dashed, line width=0.7pt] (axis cs:0.3,33.33) -- (axis cs:10.2,33.33);
+  \node[font=\tiny, text=black!60, anchor=south east] at (axis cs:10.1,33.6) {human references: 33.3\%};
+\end{axis}
+\end{tikzpicture}}
 
 % --------------------------------------------------------------------- UI --
-\definecolor{appteal}{HTML}{0D5D56}
-\definecolor{appsurf}{HTML}{FCFDF7}
-\newcommand{\phone}[2]{% {name}{position}
-  \node[draw=black!70, line width=1pt, rounded corners=5pt, minimum width=46mm,
-        minimum height=86mm, fill=white] (#1) at #2 {};}
 \newcommand{\figui}{%
 \begin{tikzpicture}[font=\scriptsize]
-  % (a) host app with the selection menu
-  \phone{p1}{(0,0)}
-  \foreach \y in {30,24,18,12,6,0,-6,-12,-18,-24,-30}
-    \fill[black!10] ([xshift=-19mm, yshift=\y mm]p1.center) rectangle ++(38mm,2mm);
-  \fill[sicblue!25] ([xshift=-12mm, yshift=6mm]p1.center) rectangle ++(28mm,2mm);
-  \node[draw=black!30, fill=white, rounded corners=2pt, drop shadow={opacity=0.15},
-        inner sep=3pt, font=\scriptsize] at ([yshift=15mm]p1.center)
-       {\ar{نسخ}\quad\ar{تحديد الكل}\quad\textcolor{appteal}{\bfseries\ar{تبسيط}}};
-  \node[below=2mm of p1, font=\scriptsize\bfseries] {(a) select text in any app};
-  % (b) the bottom sheet
-  \phone{p2}{(58mm,0)}
-  \foreach \y in {30,24,18}
-    \fill[black!10] ([xshift=-19mm, yshift=\y mm]p2.center) rectangle ++(38mm,2mm);
-  \fill[black, opacity=0.35, rounded corners=5pt] (p2.north west) rectangle (p2.south east);
-  \fill[appsurf, rounded corners=6pt] ([yshift=-18mm]p2.north west) rectangle (p2.south east);
-  \fill[black!30, rounded corners=1pt] ([xshift=-3mm, yshift=-20mm]p2.north) rectangle ++(6mm,0.8mm);
-  \node[anchor=north east, text=appteal, font=\scriptsize\bfseries] at ([xshift=-3mm, yshift=-22mm]p2.north east) {\ar{تبسيط بيان}};
-  \node[draw=appteal, line width=0.8pt, rounded corners=3pt, minimum width=40mm,
-        minimum height=19mm, anchor=north] (simp) at ([yshift=-28mm]p2.north) {};
-  \node[anchor=north east, text=appteal, font=\tiny\bfseries] at ([xshift=-2mm, yshift=-1.5mm]simp.north east) {\ar{النص المبسط للقراءة الميسرة}};
-  \foreach \y in {7,11,15}
-    \fill[black!55] ([xshift=-2mm, yshift=-\y mm]simp.north east) rectangle ++(-30mm,1.4mm);
-  \node[draw=black!25, fill=black!4, rounded corners=3pt, minimum width=40mm,
-        minimum height=12mm, anchor=north] (orig) at ([yshift=-2mm]simp.south) {};
-  \node[anchor=north east, text=black!55, font=\tiny] at ([xshift=-2mm, yshift=-1.2mm]orig.north east) {\ar{النص الأصلي}};
-  \foreach \y in {6,9}
-    \fill[black!25] ([xshift=-2mm, yshift=-\y mm]orig.north east) rectangle ++(-34mm,1mm);
-  \node[anchor=north, font=\tiny, text=appteal] at ([yshift=-3mm]orig.south)
-       {\ar{استمع}\qquad\ar{نسخ}\qquad\ar{إعدادات}};
-  \node[below=2mm of p2, font=\scriptsize\bfseries] {(b) result sheet over the app};
-  % typography callout
-  \node[anchor=west, align=left, font=\scriptsize, text width=34mm] (t) at ([xshift=6mm, yshift=4mm]p2.east)
-       {20\,sp text\\line height 1.6 + 10\,sp\\letter spacing 0.04\\right-to-left, \emph{not} justified};
-  \draw[black!50, -{Stealth[length=3pt]}] (t.west) -- ([xshift=1mm]simp.east);
+  \node[inner sep=0, draw=black!40] (a) {\includegraphics[height=78mm]{assets/ui_sheet.jpg}};
+  \node[inner sep=0, draw=black!40, right=6mm of a] (b) {\includegraphics[height=78mm]{assets/ui_floating.jpg}};
+  \node[inner sep=0, draw=black!40, right=6mm of b] (c) {\includegraphics[height=78mm]{assets/ui_minimized.jpg}};
+  \node[below=1.5mm of a, font=\scriptsize\bfseries, text width=38mm, align=center] {(a) result sheet over the web page, reading aloud};
+  \node[below=1.5mm of b, font=\scriptsize\bfseries, text width=38mm, align=center] {(b) floating panel, the page stays usable};
+  \node[below=1.5mm of c, font=\scriptsize\bfseries, text width=38mm, align=center] {(c) minimised: reading continues};
 \end{tikzpicture}}
