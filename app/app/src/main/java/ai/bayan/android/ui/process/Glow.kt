@@ -102,23 +102,6 @@ private fun edgePath(size: Size, radius: Float, inset: Float): Path = Path().app
     close()
 }
 
-/** Draws the part of the outline that has lit up: from the bottom centre up both sides, meeting at the top. */
-private fun DrawScope.edgeLight(brush: ShaderBrush, radius: Float, width: Float, reveal: Float, alpha: Float = 1f) {
-    if (reveal <= 0f) return
-    val measure = PathMeasure().apply { setPath(edgePath(size, radius, width / 2), false) }
-    val length = measure.length
-    val half = length / 2 * reveal.coerceIn(0f, 1f)
-    val stroke = Stroke(width = width, cap = StrokeCap.Round)
-    if (reveal >= 1f) {
-        drawPath(edgePath(size, radius, width / 2), brush, alpha = alpha, style = stroke)
-        return
-    }
-    val a = Path(); measure.getSegment(0f, half, a, true)
-    val b = Path(); measure.getSegment(length - half, length, b, true)
-    drawPath(a, brush, alpha = alpha, style = stroke)
-    drawPath(b, brush, alpha = alpha, style = stroke)
-}
-
 /** Light is strongest at the bottom, where the panel is, and fades toward the top of the screen. */
 private fun DrawScope.fadeTowardTop(top: Float = 0.25f) = drawRect(
     Brush.verticalGradient(0f to Color.Black.copy(alpha = top), 0.55f to Color.Black.copy(alpha = 0.6f), 1f to Color.Black),
@@ -126,26 +109,81 @@ private fun DrawScope.fadeTowardTop(top: Float = 0.25f) = drawRect(
 )
 
 /**
- * The light of the overlay, in the manner of the system assistant:
- * - [edge]: a thin bright line round the screen with a soft halo, rising from the bottom ([reveal] 0 → 1);
- * - [aurora]: a luminous horizon behind the panel while Bayan works;
+ * Iridescent tones for the light's leading edge and its travelling highlight: the phone's Material You hue and
+ * its neighbours, saturated, with a pale highlight. Bright enough to read as light on any wallpaper or app.
+ */
+@Composable
+private fun iridescentColors(): List<Color> {
+    val primary = MaterialTheme.colorScheme.primary
+    val tertiary = MaterialTheme.colorScheme.tertiary
+    return remember(primary, tertiary) {
+        val p = FloatArray(3).also { ColorUtils.colorToHSL(primary.toArgb(), it) }
+        val t = FloatArray(3).also { ColorUtils.colorToHSL(tertiary.toArgb(), it) }
+        fun tone(h: Float, s: Float, l: Float) = Color(ColorUtils.HSLToColor(floatArrayOf((h + 360f) % 360f, s, l)))
+        listOf(
+            tone(p[0] - 30f, 0.85f, 0.64f),
+            tone(p[0], 0.9f, 0.66f),
+            Color(0xFFFFF8F0),
+            tone(t[0], 0.85f, 0.64f),
+            tone(p[0] + 40f, 0.85f, 0.62f),
+            tone(p[0] - 30f, 0.85f, 0.64f),
+        )
+    }
+}
+
+/** The part of the closed outline between [from] and [to] (in path lengths), wrapping past the start. */
+private fun segment(measure: PathMeasure, length: Float, from: Float, to: Float): Path {
+    val out = Path()
+    val a = ((from % length) + length) % length
+    val b = a + (to - from)
+    if (b <= length) {
+        measure.getSegment(a, b, out, true)
+    } else {
+        measure.getSegment(a, length, out, true)
+        val rest = Path(); measure.getSegment(0f, b - length, rest, true); out.addPath(rest)
+    }
+    return out
+}
+
+private fun smoothstep(e0: Float, e1: Float, x: Float): Float {
+    val t = ((x - e0) / (e1 - e0)).coerceIn(0f, 1f)
+    return t * t * (3 - 2 * t)
+}
+
+/**
+ * The light of the overlay, after the system assistant's:
+ * - on opening ([reveal] 0 → 1), two lights rise from the bottom centre up both edges of the screen and meet at the
+ *   top; each has an iridescent head and leaves a soft glow along the edge behind it;
+ * - while Bayan works ([working]), the edge glow breathes, a highlight travels round the screen, and a warm haze
+ *   lies behind the panel ([aurora]); [edge] scales the whole frame (the activity dims it to a calm glow once the
+ *   text is ready);
  * - [border]: the same light, finer, round the panel at [panel].
- * Each part is a stack of the same shape at growing width and blur: crisp line, inner glow, outer halo.
+ * Each part is drawn as a stack of the same shape at growing width and blur: crisp line, inner glow, outer halo.
+ * With animations off (Settings ▸ Accessibility ▸ Remove animations) the light is still, and fully revealed.
  */
 @Composable
 fun OverlayGlow(reveal: Float, edge: Float, aurora: Float, border: Float, panel: Rect?, working: Boolean, modifier: Modifier = Modifier) {
-    val colors = glowColors()
+    val soft = glowColors()
+    val bright = iridescentColors()
+    val context = LocalView.current.context
+    val still = remember {
+        android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    }
     val transition = rememberInfiniteTransition(label = "glow")
-    val angle by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(if (working) 7000 else 14000, easing = LinearEasing)), label = "angle")
-    val breathe by transition.animateFloat(0.85f, 1f, infiniteRepeatable(tween(2200), RepeatMode.Reverse), label = "breathe")
+    val travel by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(3600, easing = LinearEasing)), label = "travel")
+    val angle by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "angle")
+    val breathe by transition.animateFloat(0.78f, 1f, infiniteRepeatable(tween(2400), RepeatMode.Reverse), label = "breathe")
     val radius = screenCornerRadius()
     val density = LocalDensity.current
     val panelRadius = with(density) { 32.dp.toPx() }
     val blurs = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val pulse = if (working) breathe else 1f
+    val shown = if (still) 1f else reveal
+    val pulse = if (working && !still) breathe else 1f
+    val shimmer = if (working && !still) 1f else 0f
+    val comet = if (still) 0f else 1f - smoothstep(0.82f, 1f, reveal)
 
     @Composable
-    fun Layer(blur: Float, lineWidth: Float, panelWidth: Float, edgeAlpha: Float, panelAlpha: Float, horizon: Boolean = false) {
+    fun Layer(blur: Float, lineWidth: Float, panelWidth: Float, edgeAlpha: Float, headAlpha: Float, panelAlpha: Float, horizon: Boolean = false) {
         val blurPx = with(density) { blur.dp.toPx() }
         Canvas(
             Modifier
@@ -155,23 +193,50 @@ fun OverlayGlow(reveal: Float, edge: Float, aurora: Float, border: Float, panel:
                     if (blurs && blur > 0f) renderEffect = BlurEffect(blurPx, blurPx, TileMode.Decal)
                 },
         ) {
-            val brush = sweepBrush(colors, center, angle)
+            val width = with(density) { lineWidth.dp.toPx() }
             if (horizon && aurora > 0f) {
+                val drift = 0.16f * kotlin.math.sin(Math.toRadians(angle.toDouble())).toFloat()
                 drawRect(
                     Brush.radialGradient(
-                        listOf(colors[1].copy(alpha = 0.35f), colors[3].copy(alpha = 0.16f), Color.Transparent),
-                        center = Offset(size.width * (0.5f + 0.18f * kotlin.math.sin(Math.toRadians(angle.toDouble())).toFloat()), size.height * 1.02f),
-                        radius = size.width * 0.95f,
+                        listOf(bright[1].copy(alpha = 0.42f), bright[3].copy(alpha = 0.2f), soft[1].copy(alpha = 0.08f), Color.Transparent),
+                        center = Offset(size.width * (0.5f + drift), size.height * 1.04f),
+                        radius = size.width * 1.05f,
                     ),
-                    alpha = aurora * pulse,
+                    alpha = (aurora * pulse).coerceAtMost(1f),
                 )
             }
-            if (edge > 0f && lineWidth > 0f) {
-                edgeLight(brush, radius, with(density) { lineWidth.dp.toPx() }, reveal, (edge * edgeAlpha * pulse).coerceAtMost(1f))
+            if (edge > 0f && width > 0f && shown > 0f) {
+                val path = edgePath(size, radius, width / 2)
+                val measure = PathMeasure().apply { setPath(path, false) }
+                val length = measure.length
+                val half = length / 2
+                val stroke = Stroke(width = width, cap = StrokeCap.Round)
+                val frame = Brush.verticalGradient(listOf(soft[1].copy(alpha = 0.55f), soft[3], bright[1]))
+                // The glow left behind the rising lights, then the whole frame.
+                if (shown >= 1f) drawPath(path, frame, alpha = (edge * edgeAlpha * pulse).coerceAtMost(1f), style = stroke)
+                else {
+                    val h = half * shown
+                    drawPath(segment(measure, length, 0f, h), frame, alpha = edge * edgeAlpha, style = stroke)
+                    drawPath(segment(measure, length, length - h, length), frame, alpha = edge * edgeAlpha, style = stroke)
+                }
+                val iridescent = sweepBrush(bright, center, angle)
+                // The two rising heads.
+                if (comet > 0f && headAlpha > 0f) {
+                    val h = half * shown
+                    val head = length * 0.14f
+                    drawPath(segment(measure, length, h - head, h), iridescent, alpha = (comet * headAlpha).coerceAtMost(1f), style = stroke)
+                    drawPath(segment(measure, length, length - h, length - h + head), iridescent, alpha = (comet * headAlpha).coerceAtMost(1f), style = stroke)
+                }
+                // A highlight travelling round the screen while Bayan works.
+                if (shimmer > 0f && shown >= 1f && headAlpha > 0f) {
+                    val at = length * travel
+                    drawPath(segment(measure, length, at, at + length * 0.18f), iridescent, alpha = (edge * shimmer * headAlpha * 0.75f).coerceAtMost(1f), style = stroke)
+                    drawPath(segment(measure, length, at + half, at + half + length * 0.18f), iridescent, alpha = (edge * shimmer * headAlpha * 0.75f).coerceAtMost(1f), style = stroke)
+                }
             }
             if (border > 0f && panel != null && panelWidth > 0f) {
                 drawRoundRect(
-                    sweepBrush(colors, panel.center, -angle),
+                    sweepBrush(bright, panel.center, -angle),
                     topLeft = panel.topLeft,
                     size = panel.size,
                     cornerRadius = CornerRadius(panelRadius),
@@ -179,19 +244,19 @@ fun OverlayGlow(reveal: Float, edge: Float, aurora: Float, border: Float, panel:
                     style = Stroke(width = with(density) { panelWidth.dp.toPx() }),
                 )
             }
-            fadeTowardTop()
+            fadeTowardTop(top = 0.5f)
         }
     }
 
     Box(modifier.fillMaxSize()) {
         if (blurs) {
-            Layer(blur = 56f, lineWidth = 30f, panelWidth = 20f, edgeAlpha = 0.28f, panelAlpha = 0.3f, horizon = true)
-            Layer(blur = 12f, lineWidth = 7f, panelWidth = 5f, edgeAlpha = 0.5f, panelAlpha = 0.45f)
+            Layer(blur = 48f, lineWidth = 40f, panelWidth = 18f, edgeAlpha = 0.5f, headAlpha = 0.7f, panelAlpha = 0.3f, horizon = true)
+            Layer(blur = 14f, lineWidth = 12f, panelWidth = 5f, edgeAlpha = 0.6f, headAlpha = 0.9f, panelAlpha = 0.45f)
         } else {
-            Layer(blur = 0f, lineWidth = 14f, panelWidth = 8f, edgeAlpha = 0.18f, panelAlpha = 0.2f)
-            Layer(blur = 0f, lineWidth = 6f, panelWidth = 4f, edgeAlpha = 0.35f, panelAlpha = 0.35f)
+            Layer(blur = 0f, lineWidth = 16f, panelWidth = 8f, edgeAlpha = 0.22f, headAlpha = 0.35f, panelAlpha = 0.2f, horizon = true)
+            Layer(blur = 0f, lineWidth = 6f, panelWidth = 4f, edgeAlpha = 0.4f, headAlpha = 0.6f, panelAlpha = 0.35f)
         }
-        Layer(blur = 0f, lineWidth = 1.8f, panelWidth = 1.2f, edgeAlpha = 0.85f, panelAlpha = 0.7f)
+        Layer(blur = 0f, lineWidth = 2f, panelWidth = 1.2f, edgeAlpha = 0.8f, headAlpha = 1f, panelAlpha = 0.7f)
     }
 }
 
