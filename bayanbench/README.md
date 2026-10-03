@@ -33,6 +33,8 @@ meaning (vLLM, a 44 GB+ GPU), `[judge]` the v1 Gemini judge. Without `[ease]`, a
    ```bash
    bayanbench predict --model Congi-libya/bayan-model2-arabart --prefix "بسط: [S2] " --split dev -o preds_dev.jsonl
    ```
+   Use the exact prefix the model was trained with: model 2 AraT5 takes «بسّط: » (with the shadda), model 2 AraBART
+   «بسط: ». `predict` needs transformers < 5; under 5 the outputs come out wrong, so run it in its own environment.
    Any other system: write one line per item, `{"id": "<item id>", "output": "<the text the reader sees>"}`, for
    every item of the split (items are in `items/dev.jsonl` of the data repo).
 2. **Scorecard.**

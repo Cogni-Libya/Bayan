@@ -14,6 +14,10 @@ def run(model_id, prefix, items, batch_size=24, device=None, max_length=256, no_
         from transformers import AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer, T5Tokenizer
     except ImportError:
         raise SystemExit("predict needs the [predict] extra: pip install 'bayanbench[predict]'")
+    import transformers
+    if int(transformers.__version__.split(".")[0]) >= 5:   # AraT5's tied weights and AraBART's <s></s> change under 5
+        raise SystemExit(f"predict needs transformers < 5 (found {transformers.__version__}); "
+                         "pip install 'transformers>=4.46,<5' in a separate environment from [meaning]")
     cfg = AutoConfig.from_pretrained(model_id)
     if cfg.model_type in ("t5", "mt5"):          # AraT5v2's fast tokenizer is broken; the slow one is what it trained with
         tok = T5Tokenizer.from_pretrained(model_id, legacy=True)
