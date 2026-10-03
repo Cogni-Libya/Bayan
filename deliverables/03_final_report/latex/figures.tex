@@ -208,10 +208,10 @@
 % --------------------------------------------------------------------- UI --
 \newcommand{\figui}{%
 \begin{tikzpicture}[font=\scriptsize]
-  \node[inner sep=0, draw=black!30] (a) {\includegraphics[height=70mm]{assets/ui_select.jpg}};
-  \node[inner sep=0, draw=black!30, right=4mm of a] (b) {\includegraphics[height=70mm]{assets/ui_sheet.jpg}};
-  \node[inner sep=0, draw=black!30, right=4mm of b] (c) {\includegraphics[height=70mm]{assets/ui_floating.jpg}};
-  \node[inner sep=0, draw=black!30, right=4mm of c] (d) {\includegraphics[height=70mm]{assets/ui_settings.jpg}};
+  \node[inner sep=0] (a) {\includegraphics[height=70mm]{assets/ui_select.jpg}};
+  \node[inner sep=0, right=4mm of a] (b) {\includegraphics[height=70mm]{assets/ui_sheet.jpg}};
+  \node[inner sep=0, right=4mm of b] (c) {\includegraphics[height=70mm]{assets/ui_floating.jpg}};
+  \node[inner sep=0, right=4mm of c] (d) {\includegraphics[height=70mm]{assets/ui_settings.jpg}};
   \foreach \n/\t in {a/{(a) select text in any app, then \emph{Simplify}}, b/{(b) the result, read aloud word by word},
                      c/{(c) minimised over the page, still reading}, d/{(d) the reader's settings, with a live preview}}
     \node[below=1.5mm of \n, font=\scriptsize\bfseries, text width=33mm, align=center] {\t};
