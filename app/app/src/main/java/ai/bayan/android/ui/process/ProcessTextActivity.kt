@@ -315,7 +315,7 @@ private fun ProcessTextOverlay(
 
     LaunchedEffect(Unit) {
         haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
-        launch { reveal.animateTo(1f, tween(1000, easing = FastOutSlowInEasing)) }
+        launch { reveal.animateTo(1f, tween(700, easing = FastOutSlowInEasing)) }
         delay(110)
         enter.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow))
     }
@@ -352,9 +352,9 @@ private fun ProcessTextOverlay(
     // While Bayan works the whole screen glows.
     val settle = tween<Float>(1100)
     val quiet = closing
-    // Once the text is ready the motion stops and the light settles to a calm frame, so it never competes with reading.
-    val edge by animateFloatAsState(if (quiet) 0f else if (working) 1f else 0.32f, if (working) tween(300) else settle, label = "edge")
-    val aurora by animateFloatAsState(if (quiet) 0f else if (working) 1f else 0.35f, if (working) tween(500) else settle, label = "aurora")
+    // Once the text is ready the light fades away, so it never competes with reading.
+    val edge by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(300) else settle, label = "edge")
+    val aurora by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(500) else settle, label = "aurora")
     val border by animateFloatAsState(if (closing) 0f else if (working) 1f else 0.3f, settle, label = "border")
     val scrim = 0.22f
 
