@@ -68,29 +68,30 @@
   \node[built, below=22mm of host.west, anchor=west, minimum width=21mm]
        (strip) {strip tashkeel,\\split sentences};
   \node[built, right=3mm of strip, minimum width=27mm] (simp)
-       {simplifier, int8\\{\scriptsize streamed token by token}};
+       {simplifier, int8\\{\scriptsize streamed, or 4 beams}};
   \node[built, right=3mm of simp, minimum width=22mm] (guard)
-       {retention\\fallback};
+       {guards\\{\scriptsize keep the source}};
   \node[built, right=3mm of guard, minimum width=22mm] (tts)
        {read-aloud\\{\scriptsize word highlight}};
   \draw[flow] (strip) -- (simp);
   \draw[flow] (simp) -- (guard);
   \draw[flow] (guard) -- (tts);
-  \node[pending, below=6mm of simp, minimum width=27mm] (diac) {diacritizer\\{\scriptsize selected; not in this build}};
+  \node[built, below=6mm of guard, minimum width=27mm] (diac) {diacritizer\\{\scriptsize Libtashkeel, a setting}};
+  \draw[flow, densely dashed] (guard.south) -- (diac.north);
+  \draw[flow, densely dashed] (diac.east) -| (tts.south);
   \begin{scope}[on background layer]
     \node[draw=figgrey, line width=0.6pt, rounded corners=3pt, inner xsep=6pt,
           inner ysep=6pt, fit=(strip)(simp)(guard)(tts)(diac)] (dev) {};
   \end{scope}
   \node[anchor=north west, font=\scriptsize\itshape, text=black!65]
-       at ([yshift=-1pt]dev.south west) (devlab) {on the device: ONNX Runtime (simplifier), sherpa-onnx (voices); no network after download};
+       at ([yshift=-1pt]dev.south west) (devlab) {on the device: ONNX Runtime (simplifier, diacritizer), sherpa-onnx (voices); no network after download};
   \draw[flow] (intent.south) -- ++(0,-6mm) -| (strip.north);
   \draw[flow] (tts.north) -- ++(0,6mm) -| (sheet.south);
 
   \node[built, minimum height=3mm, minimum width=6mm, below=3mm of devlab.south west,
         anchor=north west] (k1) {};
   \node[right=1mm of k1, font=\scriptsize] (l1) {built and running on a phone};
-  \node[pending, minimum height=3mm, minimum width=6mm, right=5mm of l1] (k3) {};
-  \node[right=1mm of k3, font=\scriptsize] {not in this build};
+  \draw[flow, densely dashed] ([xshift=5mm]l1.east) -- ++(6mm,0) node[right, font=\scriptsize] {optional step};
 \end{tikzpicture}}
 
 % --------------------------------------------------------------- pipeline --

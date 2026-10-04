@@ -50,8 +50,8 @@ by Gemma~4 31B (14,975 rows) and a third model trained on it cut about
 but keep the meaning less often on the test split (by \mThreeTKeptAbs{} points), so
 the app keeps model~2 and offers model~3 as an option. A small meaning judge catches 95.5\% of planted errors. On a
 Snapdragon 870 phone the first word of a rewrite appears 82--172\,ms after the
-request with the int8 AraBART bundle (222\,MB) and 177--318\,ms with AraT5v2
-(471\,MB, over our 250\,MB budget).\vspace{2pt}}}
+request with the int8 AraBART bundle (222\,MB, the default) and 177--318\,ms with
+the optional AraT5v2 bundles (471\,MB).\vspace{2pt}}}
 \end{fullwidth}
 
 % ============================================================== 1 Introduction
@@ -125,8 +125,8 @@ outcome:
 \item A simplifier that beats copying the input on held-out sentences a human
       simplified, and that lowers linguistic load without losing meaning.
 \item Diacritics restored on the simplified text without altering its letters.
-\item The pipeline running on a mid-range Android phone, within 250\,MB for the
-      simplifier.
+\item The pipeline running on a mid-range Android phone at interactive speed,
+      with a default simplifier within 250\,MB.
 \item Evidence from readers with dyslexia, collected with informed consent.
 \end{enumerate}
 
@@ -135,7 +135,8 @@ simplification, which lowers linguistic load in the form of long clauses and har
 words, and read-aloud (text-to-speech), and it delivers both in any app. Dyslexia has other
 axes that this report does not address or has not tested. \emph{Decoding}: short
 vowels are unwritten, we strip tashkeel before the model sees the text, and the
-diacritizer we selected is not in the build we tested. \emph{Visual layout}: the
+app can add it back (a setting, off by default) but we have not tested that with
+readers. \emph{Visual layout}: the
 app has typography settings, which we have not tested with readers. \emph{The
 auditory route}: the app reads aloud, which we have not tested. \emph{Fluency and
 working memory}: not measured. No reader has used Bayan, so objective~O4 has not
@@ -256,7 +257,8 @@ BayanBench built; model~2 scored on its test split    & ---        & Mon 28 Sep 
 BayanBench v2: open meaning scorer; all systems scored (\#48) & ---  & Wed 30 Sep \\ \hline
 Human rating round complete, six raters (\#48)        & Fri 2 Oct  & Sat 3 Oct \\ \hline
 Model~3 ship decision (\autoref{sec:model3})           & Sun 4 Oct  & Sun 4 Oct: option \\ \hline
-Beam search in the app; model~3 on four beams (\#61, \#62) & ---   & Sun 4 Oct \\ \hline
+Beam search in the app, a setting for model~3 (\#61, \#62, \#66) & --- & Mon 5 Oct \\ \hline
+Tashkeel in the app (Libtashkeel, a setting)        & ---        & Mon 5 Oct \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -519,14 +521,15 @@ require it, keeps reading while the reader returns to the page.
 \lead{Inference.} The simplifier ships as an int8 ONNX bundle (encoder, decoder
 with a key--value cache, and tokenizer), downloaded once, verified by SHA-256, and
 run by ONNX Runtime with a decoding loop written in Kotlin that blocks repeated
-3-grams and stops at 256 tokens. Each bundle names its decoding. Model~2 decodes
-greedily and streams each token to the screen as it is produced. Model~3 decodes
-with four beams (\#61, \#62): a port of transformers' beam search that runs the
-beams as one batch and reorders the decoder's cache when a beam continues another.
+3-grams and stops at 256 tokens. By default it decodes greedily and streams each
+token to the screen as it is produced. For model~3 a setting, \emph{More faithful,
+slower} (off by default; \#61, \#62, \#66), decodes with four beams instead: a port
+of transformers' beam search that runs the beams as one batch and reorders the
+decoder's cache when a beam continues another.
 On the same CPU the app's engine gives transformers' exact tokens on 120 of 120
 BayanBench sentences, and the search matches transformers' own on all 578 test
-cases whose decisions are clear of float rounding. Beams can still change earlier words until they finish, so model~3
-shows each sentence when it is final. The app strips tashkeel, splits the
+cases whose decisions are clear of float rounding. Beams can still change earlier words until they finish, so with
+the setting on each sentence is shown when it is final. The app strips tashkeel, splits the
 selection into sentences and decodes them one by one. Sentences under six words (headings, labels) pass
 through unchanged, because the model was trained on longer sentences and invents
 text around fragments.
@@ -539,7 +542,9 @@ usual quotation formulas, fully vowelled verse) and \emph{never sent to the
 model}: they come back exactly as selected. After the model, a sentence keeps its
 source wording when the rewrite keeps less than 35\% of its content words, drops
 or changes a number, drops a Latin-script word, or changes the count of negations
-or of limits (\emph{at least}, \emph{only}, \dots). Digits return in the source's
+or of limits (\emph{at least}, \emph{only}, \dots); since \#66 it also checks
+condition words and counts Latin-script words one by one, the checks model~3's
+benchmarked safety net used (\#61). Digits return in the source's
 own style, and a selection cut mid-sentence keeps its open ending. On the
 BayanBench dev core items these guards raise numbers kept from 72\% to 100\% and
 protected text and cut-off endings to 100\%, remove every flagged negation and
@@ -550,9 +555,13 @@ one tap away.
 \lead{Read-aloud and diacritization.} Voices run on the device through
 sherpa-onnx. The default, Nabra-7M-Distill, is a Kokoro-architecture Arabic
 voice exported to int8 (8.7\,MB); three Piper voices are optional downloads. The
-spoken word is highlighted as it is read. The diacritizer, Libtashkeel, was
-selected on the benchmark in \autoref{tab:diac} but is not part of the build we
-tested.
+spoken word is highlighted as it is read. The diacritizer, Libtashkeel
+(\autoref{tab:diac}), runs on the device too: a 4.8\,MB character model bundled
+with the app. With \emph{Show tashkeel} on (off by default, since full vowels can
+crowd a line), each finished sentence gets its short vowels after the guards, so
+the reader, read-aloud, copy and history all use the same text. The Kotlin port
+gives the Python package's exact output on 305 BayanBench texts and never changes a
+letter.
 
 \begin{figure}[h]
 \centering
@@ -1143,10 +1152,10 @@ narrow model~2's meaning losses more than model~3's. Since a wrong meaning costs
 reader more than a long clause, the app keeps model~2 as its large model and lists
 model~3 as an option that simplifies more, decided on Sunday 4 October.
 
-The same day the app gained beam search (\#61, \#62), and model~3 now decodes with
-four beams, as \#61 proposed: in the runs reported there, on model~3's int8 bundle,
+The app has since gained beam search (\#61, \#62, \#66), offered for model~3 as a
+setting that is off by default, as \#61 proposed: in the runs reported there, on model~3's int8 bundle,
 four beams kept the meaning 4--8 points more often than greedy decoding, at a small
-cost in simplification. Run as the app now runs it, through the same text step, model~3
+cost in simplification. Run with four beams through the same text step, model~3
 still cuts \mBeamTClauseAbs{} more words from the longest clause than the app's large
 model on test [\mBeamTClauseCi] (\mBeamClauseAbs{} on dev), leaves easy text unchanged
 \mBeamTEasyAbs{} points more often (\mBeamEasyAbs{} on dev), and keeps every number.
@@ -1237,8 +1246,9 @@ The model invents text around headings and fragments & Sentences under six words
 
 \lead{RQ3: cost on the phone.} Both simplifiers were exported to ONNX with the
 tokenizer inside the bundle and quantised to int8 (\autoref{tab:device}). The
-AraBART bundle fits the 250\,MB budget; the AraT5v2 bundle does not, because 46\%
-of its weights are two untied 110k-row embedding matrices. We tested both bundles
+AraBART bundle, the default, fits the 250\,MB budget. The AraT5v2 bundles are
+optional downloads of 471\,MB: 46\% of their weights are two untied 110k-row
+embedding matrices, and we kept them whole rather than trade quality for size. We tested both bundles
 in the app on a Xiaomi Mi~11X (Snapdragon 870, Android 13, 6\,GB RAM), a phone that
 now sits in the mid-range, with the same two-sentence paragraph and six cold starts
 each. Because output streams, the reader waits for the first token, not the whole
@@ -1246,13 +1256,13 @@ sentence: with AraBART 82--172\,ms for a paragraph's first sentence and 28--30\,
 for each later one, with AraT5v2 177--318\,ms and 55--85\,ms. AraBART loads in
 1.0--1.7\,s against 2.6--7.3\,s, and finishes a sentence about twice as fast, the
 same ratio as on the laptop. Model~3 has the same architecture and bundle size as
-the AraT5v2 bundle measured here, and decodes with four beams, which runs the
-decoder on four rows at a time and gives up streaming: over 120 BayanBench dev
+the AraT5v2 bundle measured here. With the beam setting on it decodes with four
+beams, which runs the decoder on four rows at a time and gives up streaming: over 120 BayanBench dev
 sentences it takes 1.19\,s per sentence (median; 90th percentile 2.43\,s) on the
 phone, against 0.41\,s when the same bundle decodes greedily. Quantisation is not neutral for AraT5v2: int8
 changed 62--74\% of its outputs against the float model, though not the rate at
-which meaning is kept (F5). Vocabulary pruning, which would shrink the AraT5v2
-bundles, was never done; the bundles are 449\,MiB and 212\,MiB on disk, the
+which meaning is kept (F5). We did not prune their vocabulary, since any change to
+the shipped weights would need the whole evaluation again; the bundles are 449\,MiB and 212\,MiB on disk, the
 471\,MB and 222\,MB of \autoref{tab:device} in decimal units.
 
 \begin{table}[h]
@@ -1282,6 +1292,14 @@ Tashkeela test fixture (\autoref{tab:diac}). Libtashkeel was selected: CATT ties
 it on accuracy (0.01 points, about six characters in 67,576) but is 16 times
 larger and carries a non-commercial licence, and CAMeL Tools changed the base
 letters of 32 of 100 sentences, corrupting the text it was asked to vocalise.
+Before shipping it we re-ran the benchmark with the same fixture and scoring code
+(\texttt{docs/diacritization\_comparison.md}). Libtashkeel, CATT and Mishkal
+reproduce the table exactly. Newer models did not displace it: the rawi models
+rewrite hamza seats in 97--106 of the 743 sentences, which a diacritizer must
+never do; Tashkeel-v3 scores 8.21\% on CATT's own scorer, not the 4.98\% its card
+reports, at 171M parameters; and Tashkeel-v4 is released for research use only.
+On CATT's scorer CATT and Tashkeel-v3 lead Libtashkeel by up to 1.4 points, at
+16 and 140 times its size.
 
 \begin{table}[h]
 \small
@@ -1317,11 +1335,13 @@ O1 Beat copying on changed rows; lower linguistic load without losing meaning &
   \bvHminKept--\bvHmaxKept\% of outputs, and raters kept the meaning of
   \hBartSameMin--\hAppTfiveSame\% of changed outputs. Model~3 in the app simplifies
   more but keeps the meaning \mThreeTKeptAbs{} points less often on test & partly met \\ \hline
-O2 Diacritize without changing letters & Libtashkeel: DER 6.91\% without case endings,
-  0 of 100 sentences altered, 4.8\,MB; not in the tested build & partly met \\ \hline
-O3 Run on a phone within 250\,MB & Both bundles run on a Snapdragon 870 phone, first
-  token in 28--318\,ms; AraBART int8 is 222\,MB, within budget; AraT5v2 int8 (and
-  model~3) 471\,MB, over it & partly met \\ \hline
+O2 Diacritize without changing letters & Libtashkeel in the app (a setting): DER
+  6.91\% without case endings, no letter changed in 743 + 300 sentences, 4.8\,MB &
+  met \\ \hline
+O3 Run on a phone; default within 250\,MB & Both bundles run on a Snapdragon 870
+  phone, first token in 28--318\,ms; the default AraBART int8 is 222\,MB; the
+  optional AraT5v2 int8 bundles (model~2 large, model~3) are 471\,MB, kept whole for
+  quality & met \\ \hline
 O4 Evidence from readers & A reader with dyslexia rated \rN{} rewrites for ease, with
   informed consent: \rEasier{} easier, \rHarder{} harder. No one with dyslexia has
   used the app, and there is no reading-time or comprehension study & started \\ \hline
@@ -1342,10 +1362,10 @@ the tagged settings. Model~3 does not escape the trade-off: behind the app's cod
 simplifies more than model~2 and leaves easy text alone more often, but keeps the
 meaning less often on test. \textbf{RQ3:} yes for AraBART, in part for AraT5v2. Streamed output
 reaches the reader in under a third of a second on a mid-range phone with either
-bundle (model~3, which decodes with four beams, shows a whole sentence in about
-1.2\,s); the int8 AraBART bundle fits the 250\,MB budget, while the AraT5v2
-bundles, model~3's included, need 471\,MB, and int8 changes most of AraT5v2's
-outputs against the float model.
+bundle (model~3 with the beam setting on shows a whole sentence in about
+1.2\,s); the default int8 AraBART bundle fits the 250\,MB budget, the optional
+AraT5v2 bundles, model~3's included, take 471\,MB, and int8 changes most of
+AraT5v2's outputs against the float model.
 
 \lead{Benefits.} For readers: a tool that offers a simpler version where and when
 the difficulty occurs, offline and private, with the original always one tap
@@ -1366,9 +1386,10 @@ keeping meaning as often as the shipped bundle. The meaning scorer, now checked
 against people, can rank candidate rewrites and select checkpoints, so that
 training is steered by the behaviours readers need rather than by SARI. Model~3 shows
 the next target: its simplification with model~2's meaning rate in the app, which
-a human rating of its outputs would help locate. The AraT5v2 bundle can meet the size budget by pruning its vocabulary to the
-pieces Arabic text uses: 46\% of its parameters sit in two embedding matrices,
-and pruned int8 weights would take about 223\,MB. Sentence splitting needs
+a human rating of its outputs would help locate. The AraT5v2 bundles could be made
+smaller by pruning their vocabulary to the pieces Arabic text uses (46\% of their
+parameters sit in two embedding matrices; about 223\,MB pruned), but only if the
+full evaluation shows no loss. Sentence splitting needs
 training data that teaches it, which no human-written corpus provides. Last, a
 reading study with more readers with dyslexia, measuring reading time and
 comprehension, would turn ratings into evidence about reading.
@@ -1398,12 +1419,11 @@ comprehension, would turn ratings into evidence about reading.
 \item \textbf{Some tracks are small.} E3 and E4 hold 64 and 40 test items, and
       few core items contain a number (\autoref{tab:benchhead}), so these rates separate only large
       differences.
-\item \textbf{One phone.} On-device figures come from one mid-range phone, and
-      the AraT5v2 bundles, model~3's included, at 471\,MB, exceed the 250\,MB
-      objective.
+\item \textbf{One phone.} On-device figures come from one mid-range phone; the
+      optional AraT5v2 bundles (471\,MB) need more storage than the default.
 \item \textbf{Model~3's test comparison is partly scored.} It covers the
       \mThreeTPaired{} of \mThreeTCore{} test core items scored for both systems;
-      model~3 with four beams, as the app now runs it, has a meaning score for
+      model~3 with four beams, the app's optional setting, has a meaning score for
       \mBeamTScored{} of \mBeamTCore{}; and no person has rated model~3's outputs.
 \item \textbf{One run per configuration.} Each model was trained once, with one
       seed, so the comparison between architectures carries no estimate of
