@@ -41,6 +41,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.unit.sp
@@ -86,12 +89,14 @@ private fun StyleCard(style: AppStyle, selected: Boolean, dark: Boolean, modifie
             border = BorderStroke(ring, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
             modifier = Modifier.fillMaxWidth().aspectRatio(0.82f).graphicsLayer { scaleX = lift; scaleY = lift },
         ) {
+            // The preview shows Bayan in Arabic, so it is laid out right to left whatever the app's language.
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // the accent, as the sun of the logo
                 Box(Modifier.size(22.dp).clip(CircleShape).background(scheme.primary))
                 Spacer(Modifier.height(2.dp))
-                Text("بيان", fontFamily = font, fontWeight = FontWeight.Medium, fontSize = 22.sp, color = scheme.onSurface, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End)
-                Text("قراءة أسهل", fontFamily = font, fontSize = 14.sp, color = scheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End)
+                Text("بيان", fontFamily = font, fontWeight = FontWeight.Medium, fontSize = 22.sp, color = scheme.onSurface, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+                Text("قراءة أسهل", fontFamily = font, fontSize = 14.sp, color = scheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
                 Spacer(Modifier.weight(1f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(width = 52.dp, height = 22.dp).clip(CircleShape).background(scheme.primaryContainer))
@@ -100,6 +105,7 @@ private fun StyleCard(style: AppStyle, selected: Boolean, dark: Boolean, modifie
                     Spacer(Modifier.weight(1f))
                     Box(Modifier.size(22.dp).clip(CircleShape).background(scheme.secondaryContainer))
                 }
+            }
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
