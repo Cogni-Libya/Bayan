@@ -34,6 +34,7 @@ no sentence text, committable) so it doesn't need re-deriving by hand and can be
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import sys
 from pathlib import Path
@@ -44,6 +45,13 @@ import polars as pl
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from barec_provenance import annotate_barec_provenance, filter_barec
 from check_leakage import normalize as normalize_text  # one shared "same sentence" definition
+
+# The group KEY is normalize_text(original_text) -- if normalize() ever changes (e.g. a future
+# punctuation/dash fix like the one already made once), the group key changes too, and existing
+# rows can silently cross the frozen threshold without anyone touching SALT or the thresholds file.
+# Pinning a hash of its actual source (not a hand-maintained version string, which is easy to forget
+# to bump) makes that drift loud instead of silent.
+_NORMALIZE_VERSION = hashlib.sha256(inspect.getsource(normalize_text).encode()).hexdigest()[:16]
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SALT = "bayan-split-v1"  # bump the suffix (v2, v3, ...) for a deliberate reset; never change in
@@ -70,9 +78,41 @@ def _level_bucket(level19: float) -> str:
 
 
 def _load_thresholds() -> dict:
-    if THRESHOLDS_PATH.exists():
-        return json.loads(THRESHOLDS_PATH.read_text())
-    return {}
+    if not THRESHOLDS_PATH.exists():
+        return {"_normalize_version": _NORMALIZE_VERSION}
+    data = json.loads(THRESHOLDS_PATH.read_text())
+    pinned = data.get("_normalize_version")
+    if pinned is not None and pinned != _NORMALIZE_VERSION:
+        raise SystemExit(
+            f"normalize() has changed since {THRESHOLDS_PATH} was frozen (pinned {pinned}, now "
+            f"{_NORMALIZE_VERSION}) -- every existing group's split membership may silently shift "
+            "under the new grouping key. This needs a deliberate decision (bump SALT for a full "
+            "reset, or a migration that re-derives thresholds while preserving existing rows' "
+            "splits), not a silent continue."
+        )
+    data.setdefault("_normalize_version", _NORMALIZE_VERSION)
+    return data
+
+
+def _group_by_canonical_text(df: pl.DataFrame) -> pl.DataFrame:
+    """One row per unique normalized text: canonical_id = min(ID) sharing that text, its own
+    barec_split governs test-eligibility for the whole group (sorted by ID first, so .first() is
+    the canonical row's value on every run, not whichever row polars happens to see first), and its
+    hash decides the whole group's split -- every ID sharing that text inherits the same split,
+    closing the bug where the same sentence under different IDs could land on both sides of the
+    split. Split out from build_split so this specific invariant (not the threshold math around it)
+    is directly testable -- see test_dataset_split.py."""
+    return (
+        df.sort("ID")
+        .group_by("norm_text", maintain_order=True)
+        .agg(
+            pl.col("ID").min().alias("canonical_id"),
+            pl.col("ID").alias("member_ids"),
+            pl.col("stratum").first(),
+            pl.col("barec_split").first(),
+        )
+        .with_columns(pl.col("canonical_id").cast(pl.Utf8).map_elements(_bucket_of, return_dtype=pl.Int64).alias("hash_bucket"))
+    )
 
 
 def build_split(provisional_path: Path, barec_dir: Path) -> pl.DataFrame:
@@ -96,29 +136,13 @@ def build_split(provisional_path: Path, barec_dir: Path) -> pl.DataFrame:
         (pl.col("level_bucket") + "|" + pl.col("Domain") + "|" + pl.col("pair_type")).alias("stratum")
     )
 
-    # One row per unique normalized text: canonical_id = min(ID) sharing that text, its own
-    # barec_split governs test-eligibility for the whole group (sorted by ID first, so .first() is
-    # the canonical row's value on every run, not whichever row polars happens to see first), and
-    # its hash decides the whole group's split -- every ID sharing that text inherits the same split, closing the bug where
-    # the same sentence under different IDs could land on both sides of the split.
-    groups = (
-        df.sort("ID")
-        .group_by("norm_text", maintain_order=True)
-        .agg(
-            pl.col("ID").min().alias("canonical_id"),
-            pl.col("ID").alias("member_ids"),
-            pl.col("stratum").first(),
-            pl.col("barec_split").first(),
-        )
-        .with_columns(pl.col("canonical_id").cast(pl.Utf8).map_elements(_bucket_of, return_dtype=pl.Int64).alias("hash_bucket"))
-    )
+    groups = _group_by_canonical_text(df)
 
     thresholds = _load_thresholds()
     n_groups = groups.shape[0]
     stratum_counts = groups["stratum"].value_counts().to_dicts()
     stratum_share = {s["stratum"]: s["count"] / n_groups for s in stratum_counts}
 
-    updated = False
     for stratum in stratum_share:
         if stratum not in thresholds:
             # Brand-new stratum: compute a fresh threshold now, from the current pool, and freeze it.
@@ -128,9 +152,11 @@ def build_split(provisional_path: Path, barec_dir: Path) -> pl.DataFrame:
                 "test_threshold": min(round(test_frac * HASH_SPACE), HASH_SPACE),
                 "dev_width": min(round(dev_frac * HASH_SPACE), HASH_SPACE),
             }
-            updated = True
-    if updated or not THRESHOLDS_PATH.exists():
-        THRESHOLDS_PATH.write_text(json.dumps(thresholds, indent=2, ensure_ascii=False, sort_keys=True))
+    # Always write, not just when a new stratum was added: `_load_thresholds()` migrates an
+    # old-format file (adding `_normalize_version`) in memory, and that migration needs to actually
+    # land on disk even when no stratum-level change happened this run -- a real bug in an earlier
+    # version, found by checking the file's own content after a run rather than trusting `updated`.
+    THRESHOLDS_PATH.write_text(json.dumps(thresholds, indent=2, ensure_ascii=False, sort_keys=True))
 
     def _assign(row: dict) -> str:
         th = thresholds[row["stratum"]]

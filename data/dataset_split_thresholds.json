@@ -142,5 +142,6 @@
   "15+|Social Sciences|short": {
     "dev_width": 806,
     "test_threshold": 1008
-  }
+  },
+  "_normalize_version": "5f097c63207933ef"
 }
