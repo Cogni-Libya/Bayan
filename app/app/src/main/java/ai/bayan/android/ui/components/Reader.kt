@@ -74,6 +74,9 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
@@ -127,7 +130,7 @@ fun ReaderText(
     // The reveal is drawn, not laid out: the text is laid out once and a soft mask follows the frontier, so text
     // flowing in costs a repaint per frame, never a new layout.
     val frontier = rememberRevealFrontier(text, reveal)
-    val annotated = remember(text, highlight, colors) { buildReaderText(text, colors.highlight, highlight) }
+    val annotated = remember(text, highlight, colors) { buildReaderText(text, colors.muted, highlight) }
     Surface(
         color = background,
         shape = MaterialTheme.shapes.extraLarge,
@@ -150,6 +153,24 @@ fun ReaderText(
                     modifier = Modifier
                         .bringIntoViewRequester(requester)
                         .semantics { liveRegion = LiveRegionMode.Polite }
+                        .drawBehind {
+                            // The word being read: a soft band behind it with rounded ends (design system: 6 px radius),
+                            // a little larger than the word; it moves by colour, never by sliding.
+                            val l = layout ?: return@drawBehind
+                            val h = highlight ?: return@drawBehind
+                            if (h.isEmpty() || h.last >= l.layoutInput.text.length) return@drawBehind
+                            val box = l.getPathForRange(h.first, h.last + 1).getBounds()
+                            // fitted to the letters (from the baseline), not to the generous line height
+                            val baseline = l.getLineBaseline(l.getLineForOffset(h.first))
+                            val em = style.sizeSp.sp.toPx()
+                            val padX = 5.dp.toPx()
+                            drawRoundRect(
+                                colors.highlight,
+                                topLeft = Offset(box.left - padX, baseline - em * 0.98f),
+                                size = Size(box.width + 2 * padX, em * 1.55f),
+                                cornerRadius = CornerRadius(8.dp.toPx()),
+                            )
+                        }
                         .revealMask({ frontier.value }, { layout }, with(density) { REVEAL_BAND_DP.dp.toPx() }),
                 )
             }
@@ -215,11 +236,12 @@ private fun Modifier.revealMask(frontier: () -> Float, layout: () -> TextLayoutR
             else drawRect(brush, Offset(x, top), Size(size.width - x, bottom - top), blendMode = BlendMode.DstOut)
         }
 
-private fun buildReaderText(text: String, highlightColor: Color, highlight: IntRange?): AnnotatedString =
+/** While reading aloud, the words already read step back a little (design system: read-spoken), so the eye keeps its place. */
+private fun buildReaderText(text: String, spokenColor: Color, highlight: IntRange?): AnnotatedString =
     buildAnnotatedString {
         append(text)
-        if (highlight != null && !highlight.isEmpty() && highlight.last < text.length) {
-            addStyle(SpanStyle(background = highlightColor), highlight.first, highlight.last + 1)
+        if (highlight != null && !highlight.isEmpty() && highlight.first in 1..text.length) {
+            addStyle(SpanStyle(color = spokenColor), 0, highlight.first)
         }
     }
 

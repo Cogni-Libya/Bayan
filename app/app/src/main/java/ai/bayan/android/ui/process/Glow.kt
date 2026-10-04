@@ -49,6 +49,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
+import ai.bayan.android.data.AppStyle
+import ai.bayan.android.ui.theme.LocalAppStyle
 
 /**
  * The light's colours: a few neighbouring hues around the phone's Material You colour and a pale highlight that
@@ -215,6 +217,11 @@ internal fun edgeLightColours(): List<Color> {
     val primary = scheme.primary
     val tertiary = scheme.tertiary
     val dark = scheme.surface.luminance() < 0.5f
+    if (LocalAppStyle.current == AppStyle.Bayan) return remember(dark) {
+        // Bayan's own palette, as light: the sun's ochre for the rim, brick, slate and olive for the blooms, soft.
+        if (dark) listOf(Color(0xFFE8C9A2), Color(0xFFE09A8C), Color(0xFF9DB8C6), Color(0xFFB9CB98))
+        else listOf(Color(0xFFD9AE7E), Color(0xFFC77A6B), Color(0xFF7E9AAA), Color(0xFF9DB07F))
+    }
     return remember(primary, tertiary, dark) {
         fun hsl(c: Color) = FloatArray(3).also { ColorUtils.colorToHSL(c.toArgb(), it) }
         val p = hsl(primary)

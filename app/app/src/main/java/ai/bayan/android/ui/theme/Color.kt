@@ -5,6 +5,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import ai.bayan.android.data.AppStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
@@ -96,7 +98,13 @@ data class ReaderColors(val background: Color, val text: Color, val muted: Color
 @Composable
 fun ReaderSurface.colors(): ReaderColors = when (this) {
     ReaderSurface.Default -> with(MaterialTheme.colorScheme) {
-        ReaderColors(surfaceContainer, onSurface, onSurfaceVariant, primaryContainer)
+        // Bayan: reading on raised paper, the word read aloud on a band between ochre-100 and -300 (ochre-100 alone
+        // barely shows on paper); its dark mode keeps the design system's highlight.
+        if (LocalAppStyle.current == AppStyle.Bayan) {
+            val dark = surface.luminance() < 0.5f
+            if (dark) ReaderColors(surfaceContainer, onSurface, onSurfaceVariant, Color(0xFF5A4630))
+            else ReaderColors(surfaceContainerLowest, onSurface, onSurfaceVariant, Color(0xFFE6CDA8))
+        } else ReaderColors(surfaceContainer, onSurface, onSurfaceVariant, primaryContainer)
     }
     ReaderSurface.Cream -> ReaderColors(Color(0xFFFBF3E0), Color(0xFF2B2A26), Color(0xFF6E6A5E), Color(0xFFF5D98B))
     ReaderSurface.Mint -> ReaderColors(Color(0xFFE6F4EE), Color(0xFF1F2B27), Color(0xFF5B6B65), Color(0xFFB4E3D2))

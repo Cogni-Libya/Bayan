@@ -1,6 +1,8 @@
 package ai.bayan.android.ui.components
 
 import androidx.compose.foundation.Canvas
+import ai.bayan.android.data.AppStyle
+import ai.bayan.android.ui.theme.LocalAppStyle
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.Brush
@@ -90,7 +92,5 @@ fun BayanLogo(
 
 /** The sun: the logo's own ochre in Bayan's style (it is the primary's source there), the accent otherwise. */
 @Composable
-private fun logoSun(): Color = MaterialTheme.colorScheme.primary.let { p ->
-    // Bayan's primaries are ochre-700 (light) and its dark lift; the logo's sun is always ochre-500.
-    if (p == Color(0xFF8A5E35) || p == Color(0xFFDDBB95)) Color(0xFFC6986B) else p
-}
+private fun logoSun(): Color =
+    if (LocalAppStyle.current == AppStyle.Bayan) Color(0xFFC6986B) else MaterialTheme.colorScheme.primary

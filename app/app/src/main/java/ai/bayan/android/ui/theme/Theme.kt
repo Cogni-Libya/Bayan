@@ -8,6 +8,8 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import ai.bayan.android.data.AppStyle
 import ai.bayan.android.data.ThemeMode
@@ -30,21 +32,25 @@ fun ThemeMode.isDark(): Boolean = when (this) {
 @Composable
 fun BayanTheme(themeMode: ThemeMode = ThemeMode.System, style: AppStyle = AppStyle.Bayan, content: @Composable () -> Unit) {
     val dark = themeMode.isDark()
-    if (style == AppStyle.Bayan) {
-        MaterialExpressiveTheme(
-            colorScheme = if (dark) BayanDark else BayanLight,
-            typography = Typography().inReadexPro(),
-            shapes = BayanShapes,
-            motionScheme = MotionScheme.expressive(),
-            content = content,
-        )
-        return
+    // One call site for both looks, so switching between them changes colours in place (the screen and its state stay).
+    val bayan = style == AppStyle.Bayan
+    val context = LocalContext.current
+    val colors = when {
+        bayan -> if (dark) BayanDark else BayanLight
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        else -> if (dark) FallbackDark else FallbackLight
     }
-    val colors = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val context = LocalContext.current
-        if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else {
-        if (dark) FallbackDark else FallbackLight
-    }
-    MaterialExpressiveTheme(colorScheme = colors, motionScheme = MotionScheme.expressive(), content = content)
+    MaterialExpressiveTheme(
+        colorScheme = colors,
+        typography = if (bayan) BayanTypography else SystemTypography,
+        shapes = if (bayan) BayanShapes else SystemShapes,
+        motionScheme = MotionScheme.expressive(),
+    ) { CompositionLocalProvider(LocalAppStyle provides style, content = content) }
 }
+
+/** The look in use, for the few places that draw Bayan's own palette rather than the colour scheme (light, logo). */
+val LocalAppStyle = staticCompositionLocalOf { AppStyle.Bayan }
+
+private val BayanTypography = Typography().inReadexPro()
+private val SystemTypography = Typography()
+private val SystemShapes = androidx.compose.material3.Shapes()

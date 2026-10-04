@@ -41,6 +41,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.unit.sp
 import ai.bayan.android.R
 import ai.bayan.android.data.AppStyle
@@ -69,9 +71,16 @@ private fun StyleCard(style: AppStyle, selected: Boolean, dark: Boolean, modifie
     val font = if (style == AppStyle.Bayan) ReadexPro else FontFamily.Default
     val ring by animateDpAsState(if (selected) 3.dp else 1.dp, spring(stiffness = Spring.StiffnessMediumLow), label = "ring")
     val lift by animateFloatAsState(if (selected) 1f else 0.96f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow), label = "lift")
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    // The whole option is one target (card, name and description), read as one radio button.
+    Column(
+        modifier
+            .clip(RoundedCornerShape(24.dp))
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .padding(bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         Surface(
-            onClick = onClick,
             shape = RoundedCornerShape(24.dp),
             color = scheme.surface,
             border = BorderStroke(ring, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
