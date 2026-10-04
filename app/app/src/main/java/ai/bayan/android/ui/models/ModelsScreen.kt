@@ -204,7 +204,7 @@ private fun ModelDetails(model: ModelInfo, state: ModelState) {
             is ModelState.Downloading -> stringResource(R.string.models_downloading, Formatter.formatShortFileSize(context, state.downloadedBytes), size)
             ModelState.Queued -> stringResource(R.string.models_waiting)
             is ModelState.Failed -> stringResource(R.string.models_failed, state.reason ?: "")
-            else -> stringResource(R.string.models_facts, size, speed, model.sari)
+            else -> stringResource(R.string.models_facts, size, speed)
         }
         Text(
             status,
