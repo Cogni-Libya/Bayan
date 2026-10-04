@@ -7,9 +7,17 @@
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "12-13|Arts & Humanities|protected": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "12-13|Arts & Humanities|scripture": {
     "dev_width": 934,
     "test_threshold": 1167
+  },
+  "12-13|Arts & Humanities|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
   },
   "12-13|STEM|generated": {
     "dev_width": 934,
@@ -19,6 +27,10 @@
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "12-13|STEM|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "12-13|Social Sciences|generated": {
     "dev_width": 934,
     "test_threshold": 1167
@@ -27,13 +39,29 @@
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "12-13|Social Sciences|protected": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
+  "12-13|Social Sciences|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "13-14|Arts & Humanities|generated": {
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "13-14|Arts & Humanities|protected": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "13-14|Arts & Humanities|scripture": {
     "dev_width": 934,
     "test_threshold": 1167
+  },
+  "13-14|Arts & Humanities|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
   },
   "13-14|STEM|generated": {
     "dev_width": 934,
@@ -43,29 +71,65 @@
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "13-14|Social Sciences|protected": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
+  "13-14|Social Sciences|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "14-15|Arts & Humanities|generated": {
     "dev_width": 934,
     "test_threshold": 1167
+  },
+  "14-15|Arts & Humanities|protected": {
+    "dev_width": 806,
+    "test_threshold": 1008
   },
   "14-15|Arts & Humanities|scripture": {
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "14-15|Arts & Humanities|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "14-15|STEM|generated": {
     "dev_width": 934,
     "test_threshold": 1167
+  },
+  "14-15|STEM|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
   },
   "14-15|Social Sciences|generated": {
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "14-15|Social Sciences|protected": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
+  "14-15|Social Sciences|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "15+|Arts & Humanities|generated": {
     "dev_width": 934,
     "test_threshold": 1167
   },
+  "15+|Arts & Humanities|protected": {
+    "dev_width": 806,
+    "test_threshold": 1008
+  },
   "15+|Arts & Humanities|scripture": {
     "dev_width": 934,
     "test_threshold": 1167
+  },
+  "15+|Arts & Humanities|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
   },
   "15+|STEM|generated": {
     "dev_width": 934,
@@ -74,6 +138,10 @@
   "15+|Social Sciences|generated": {
     "dev_width": 934,
     "test_threshold": 1167
+  },
+  "15+|Social Sciences|short": {
+    "dev_width": 806,
+    "test_threshold": 1008
   },
   "_normalize_version": "5f097c63207933ef"
 }

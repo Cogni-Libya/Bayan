@@ -20,10 +20,11 @@ import polars as pl
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from barec_simplification_pipeline import (
-    EASY_LEVEL_CEILING, EASY_LEVELS, SCRIPTURE_SOURCES, build_identity_pairs, load_and_clean_barec,
+    EASY_LEVEL_CEILING, EASY_LEVELS, build_identity_pairs, load_and_clean_barec,
 )
 from lexical_scorer import LexicalScorer
 
+SCRIPTURE_SOURCES = {"Quran", "Hadith", "Old Testament", "New Testament"}  # v0's set; v1 is assemble_corpus_v1.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CHECKPOINT_PATH = PROJECT_ROOT / "data" / "processed" / "barec_hard_pilot_checkpoint.jsonl"
 QUARANTINE_PATH = PROJECT_ROOT / "data" / "processed" / "barec_hard_pilot_quarantine_lead_le0.jsonl"
