@@ -75,7 +75,7 @@ No large, open, parallel Arabic simplification corpus fits the task, so Bayan bu
 - **Model 2 training data** (private, 22,733 pairs): SAMER L5→L3 (14,343), DAASI train (1,502) and Baseet (6,888,
   filtered for meaning), each source starting with a strength tag (`[S0]`–`[S3]`, `[SA]`). The app sends no tag, which
   keeps the meaning more often (see below).
-- **Model 3** retrains AraT5v2 on corpus v1 (training scripts: #53).
+- **Model 3** retrains AraT5v2 on corpus v1 ([`scripts/meaning_reward/`](scripts/meaning_reward/)); the meaning judge is in [`scripts/meaning_judge/`](scripts/meaning_judge/).
 - **Leakage:** 9.3% of Baseet overlapped our locked test sets; every training file now passes
   [`scripts/evaluation/check_leakage.py`](scripts/evaluation/README.md). 33 BayanBench held-out items appear in corpus v1,
   so models trained on it are reported on the core and outside items only.
