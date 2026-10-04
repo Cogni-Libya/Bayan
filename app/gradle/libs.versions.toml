@@ -48,6 +48,7 @@ androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serializationJson" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntime" }
+onnxruntime-jvm = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
 # The build with ONNX Runtime linked in statically, so it does not clash with the runtime above.
 sherpa-onnx = { module = "com.k2fsa:sherpa-onnx-static-link-onnxruntime", version.ref = "sherpaOnnx" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTest" }

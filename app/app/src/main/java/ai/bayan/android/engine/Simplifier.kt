@@ -26,7 +26,10 @@ sealed interface SimplifyEvent {
 
 class ModelNotInstalledException(val modelId: String) : IllegalStateException("Model $modelId is not installed")
 
-/** Simplifies whole texts sentence by sentence with the active on-device model, streaming each token as it is decoded. */
+/**
+ * Simplifies whole texts sentence by sentence with the active on-device model: greedy models stream each token as it
+ * is decoded, beam-search models show each sentence when it is final.
+ */
 class Simplifier(private val store: ModelStore) {
     private val lock = Mutex()
     private var engine: Seq2SeqEngine? = null
@@ -70,7 +73,9 @@ class Simplifier(private val store: ModelStore) {
                             shown(step, raw)
                         }
                         if (k == lastSentence && openEnded) out = ArabicText.keepOpenEnding(step.text, out)
-                        Log.i(TAG, "sentence ${done + 1}/$total: first token ${firstToken / 1_000_000} ms, whole ${(System.nanoTime() - t) / 1_000_000} ms")
+                        val whole = (System.nanoTime() - t) / 1_000_000
+                        Log.i(TAG, if (e.streams) "sentence ${done + 1}/$total: first token ${firstToken / 1_000_000} ms, whole $whole ms"
+                                   else "sentence ${done + 1}/$total: ${e.spec.num_beams} beams, $whole ms")
                         if (!isActive) return@withLock
                         result.append(out)
                         done++

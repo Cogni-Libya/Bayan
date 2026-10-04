@@ -1,5 +1,6 @@
 package ai.bayan.android.model
 
+import ai.bayan.android.BuildConfig
 import ai.bayan.android.R
 import androidx.annotation.StringRes
 
@@ -60,12 +61,17 @@ object ModelCatalog {
         ModelInfo(
             // Model 3: AraT5v2 on corpus v1, int8, an option next to model 2. On BayanBench test, through the same text step,
             // it simplifies more than model 2 AraT5 (longest clause about 4 words shorter) but keeps the meaning less often.
+            // It decodes with beam search (num_beams 4 in its bayan_model.json, #61), which keeps the meaning more often
+            // than greedy decoding; its sentences arrive whole.
             id = "model3",
             title = R.string.model_model3_title,
             summary = R.string.model_model3_summary,
             architecture = "AraT5v2",
             files = listOf(
-                ModelFile("bayan_model.json", 3_589, "2a781e17148d6c25922bbd1e9ea5da211f5663dc69b8078f513bba276b8bdf69"),
+                ModelFile(
+                    "bayan_model.json", 3_606, "763471cf2a1d9c2d63829d78162f512d603597d8e94d93a7eadd48b64cc006ba",
+                    url = "${BuildConfig.MODEL_BASE_URL}/model3/bayan_model_beam4.json",
+                ),
                 ModelFile("tokenizer.json", 15_315_056, "e2fdcfdda5b5d39ea007cdce1906e0eb206cdb89e4a735090cfa3e200c51d940"),
                 ModelFile("encoder.onnx", 170_493_698, "21b0c2995001afe8069214473bc7ffa8f42695c3bc353f4110310c1e1a4dd738"),
                 ModelFile("decoder.onnx", 285_167_512, "c3f1a1aff034c44e43e7ad6d1719be56854016932c4540fac22b53f80846caa1"),
