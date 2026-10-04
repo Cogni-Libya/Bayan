@@ -82,7 +82,7 @@ private fun screenCornerRadius(): Float {
     return corner?.radius?.toFloat()?.takeIf { it > 0 } ?: fallback
 }
 
-private fun sweepBrush(colors: List<Color>, center: Offset, angle: Float): ShaderBrush {
+internal fun sweepBrush(colors: List<Color>, center: Offset, angle: Float): ShaderBrush {
     val shader = SweepGradient(center.x, center.y, colors.map { it.toArgb() }.toIntArray(), null)
     shader.setLocalMatrix(Matrix().apply { postRotate(angle, center.x, center.y) })
     return ShaderBrush(shader)
@@ -140,47 +140,51 @@ private fun smoothstep(e0: Float, e1: Float, x: Float): Float {
  * grain's strength. With animations off (Settings ▸ Accessibility ▸ Remove animations) it is a still, faint rim.
  */
 @Composable
-fun OverlayGlow(started: Boolean, reveal: Float, edge: Float, veil: Float, aurora: Float, border: Float, panel: Rect?, working: Boolean, modifier: Modifier = Modifier) {
+fun OverlayGlow(started: Boolean, edge: () -> Float, veil: () -> Float, panel: () -> Rect?, working: Boolean, modifier: Modifier = Modifier) {
     val context = LocalView.current.context
     val still = remember {
         android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
     }
     // A frame-paced clock: it advances by at most one frame (20 ms) per drawn frame, so slow first frames pause the
-    // light instead of skipping the part the reader should see.
-    var clockValue by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(if (still) GLOW_END else 0f) }
+    // light instead of skipping the part the reader should see. Like every value that changes per frame here, it is
+    // read only while drawing, so the light repaints without recomposing anything.
+    val clock = remember { androidx.compose.runtime.mutableFloatStateOf(if (still) GLOW_END else 0f) }
     androidx.compose.runtime.LaunchedEffect(started) {
         if (!started || still) return@LaunchedEffect
         var last = androidx.compose.runtime.withFrameNanos { it }
-        while (clockValue < GLOW_END) {
+        while (clock.floatValue < GLOW_END) {
             androidx.compose.runtime.withFrameNanos { now ->
-                clockValue = (clockValue + ((now - last) / 1e9f).coerceAtMost(0.02f)).coerceAtMost(GLOW_END)
+                clock.floatValue = (clock.floatValue + ((now - last) / 1e9f).coerceAtMost(0.02f)).coerceAtMost(GLOW_END)
                 last = now
             }
         }
     }
     val transition = rememberInfiniteTransition(label = "glow")
-    val now by transition.animateFloat(0f, 600f, infiniteRepeatable(tween(600_000, easing = LinearEasing)), label = "now")
-    val breathe by transition.animateFloat(0.8f, 1.15f, infiniteRepeatable(tween(2600), RepeatMode.Reverse), label = "breathe")
+    val now = transition.animateFloat(0f, 600f, infiniteRepeatable(tween(600_000, easing = LinearEasing)), label = "now")
+    val breathe = transition.animateFloat(0.8f, 1.15f, infiniteRepeatable(tween(2600), RepeatMode.Reverse), label = "breathe")
     val radius = screenCornerRadius()
     val density = LocalDensity.current
-    val t = clockValue
-    val k = edge * (if (t >= GLOW_END && working && !still) breathe else 1f)
+    if (!started) return
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        if (!started || (k <= 0f && veil <= 0f)) return
         val shader = remember { android.graphics.RuntimeShader(EDGE_LIGHT_SHADER) }
         val dp = density.density
         val colours = edgeLightColours()
         val paper = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0f else 1f
-        Canvas(modifier.fillMaxSize()) {
+        // Its own layer: the light repaints every frame without the panel and its text being recorded again.
+        Canvas(modifier.fillMaxSize().graphicsLayer()) {
+            val t = clock.floatValue
+            val k = edge() * (if (t >= GLOW_END && working && !still) breathe.value else 1f)
+            val v = veil()
+            if (k <= 0f && v <= 0f) return@Canvas
             shader.setFloatUniform("size", size.width, size.height)
             shader.setFloatUniform("radius", radius)
             shader.setFloatUniform("dp", dp)
             shader.setFloatUniform("t", t / GLOW_PACE)
             shader.setFloatUniform("strength", k)
-            shader.setFloatUniform("veil", veil)
-            shader.setFloatUniform("now", if (working) now else 0f)
+            shader.setFloatUniform("veil", v)
+            shader.setFloatUniform("now", if (working) now.value else 0f)
             shader.setFloatUniform("paper", paper)
-            val p = panel ?: Rect.Zero
+            val p = panel() ?: Rect.Zero
             shader.setFloatUniform("panel", p.left, p.top, p.right, p.bottom)
             shader.setFloatUniform("panelRadius", 32 * dp)
             shader.setColorUniform("rim", colours[0].toArgb())
@@ -191,6 +195,8 @@ fun OverlayGlow(started: Boolean, reveal: Float, edge: Float, veil: Float, auror
         }
         return
     }
+    val t = clock.floatValue
+    val k = edge()
     if (k <= 0f) return
     val rise = androidx.compose.animation.core.FastOutSlowInEasing.transform((t / 0.45f).coerceIn(0f, 1f))
     val body = 1f - 0.75f * smoothstep(2.1f, 3.5f, t)
@@ -292,6 +298,13 @@ float grain(float2 p) {
     return fract((p.x + p.y) * p.x);
 }
 
+// The still grain alone: all that is drawn where the light cannot reach.
+half4 grainOnly(float2 xy, float low) {
+    float va = (0.09 + 0.12 * low) * veil * (1.0 - 0.35 * paper);
+    half g = half(mix(0.35, 0.82, paper) + mix(0.65, 0.18, paper) * grain(xy));
+    return half4(half3(g) * va, va);
+}
+
 half4 main(float2 xy) {
     float2 c = size * 0.5;
     float d = max(-sdRoundBox(xy - c, c, radius), 0.0);
@@ -314,21 +327,31 @@ half4 main(float2 xy) {
     float centre = 1.0 - smoothstep(0.2 * size.x, 0.42 * size.x, abs(xy.x - c.x));
     float mid = (1.0 - 0.3 * bump(t, 0.7, 1.0, 1.1, 1.4) * centre) * (1.0 - 0.3 * centre * smoothstep(2.0, 2.5, t));
     float k = bump(t, 0.1, 0.4, 0.9, 1.6);
+    float streakOn = bump(t, 0.1, 0.35, 1.45, 2.0);
+    // Distance to the panel's outline (huge when there is none).
+    float dp2 = 1e6;
+    float2 pc = float2(0.0); float2 ph = float2(0.0);
+    if (hasPanel) {
+        pc = (panel.xy + panel.zw) * 0.5;
+        ph = (panel.zw - panel.xy) * 0.5;
+        dp2 = max(sdRoundBox(xy - pc, ph, min(panelRadius, min(ph.x, ph.y))), 0.0);
+    }
+    // Where the light cannot reach (well past its fall-off from both the screen edge and the panel, and no colour
+    // blooming), only the grain is drawn: most of the screen, most of the time, costs almost nothing.
+    float fall0 = 6.0 * dp + 56.0 * dp * pow(low, 1.6);
+    if (k <= 0.0 && streakOn <= 0.0 && d > 8.0 * fall0 && dp2 > 8.0 * 34.0 * dp) return grainOnly(xy, low);
     float2 s = size;
     float wBrick = blob(xy, float2(0.0, floorY - 0.12 * s.y), float2(0.35 * s.x, 0.2 * s.y)) * k;
     float wSlate = blob(xy, float2(s.x * (0.72 - 0.22 * smoothstep(0.4, 1.2, t)), floorY - 0.02 * s.y), float2(0.2 * s.x, 0.07 * s.y)) * k;
     float wCorner = blob(xy, float2(0.9 * s.x, floorY), float2(0.14 * s.x, 0.07 * s.y)) * k * 0.9;
     float wStreak = blob(xy, float2(s.x, floorY * (0.18 + 0.5 * smoothstep(0.3, 1.6, t))), float2(0.25 * s.x, 0.2 * s.y))
-        * bump(t, 0.1, 0.35, 1.45, 2.0) * 1.1;
+        * streakOn * 1.1;
     // where a colour blooms, its light reaches further into the screen
     float fall = 6.0 * dp + 56.0 * dp * pow(low, 1.6) + 36.0 * dp * min(wBrick + 0.12 * wStreak + 0.5 * wSlate, 1.0);
     float glow = exp(-d / fall) * amp * (1.0 + (mid - 1.0) * low) * rising;
     // Light from the panel's own outline: it follows the droplet, the pill and the panel as they grow, brightest in
     // the entrance, then a quiet halo round what the reader is reading.
-    if (panel.z > panel.x) {
-        float2 pc = (panel.xy + panel.zw) * 0.5;
-        float2 ph = (panel.zw - panel.xy) * 0.5;
-        float dp2 = max(sdRoundBox(xy - pc, ph, min(panelRadius, min(ph.x, ph.y))), 0.0);
+    if (hasPanel) {
         float pAmp = smoothstep(0.0, 0.35, t) * (1.0 - 0.6 * smoothstep(1.6, 3.2, t));
         // above the panel the light is a taller dawn, as if rising from behind it
         float above = smoothstep(0.0, 1.0, (panel.y - xy.y) / (8.0 * dp));
@@ -343,6 +366,7 @@ half4 main(float2 xy) {
 
     // Sparkles: glints on a loose lattice that twinkle into the coloured light one by one, as the assistant's do,
     // and fade with it; while Bayan works a sparse few go on twinkling in the rim.
+    if (alpha > 0.12) {
     float cellSize = 9.0 * dp;
     float2 cell = floor(xy / cellSize);
     float2 jitter = float2(hash(cell + 11.0), hash(cell + 37.0));
@@ -357,6 +381,7 @@ half4 main(float2 xy) {
     half sa = half(clamp(spark * 0.45, 0.0, 0.6));
     col = (col * alpha + sparkCol * sa * (1.0 - alpha * 0.5)) / max(alpha + sa * (1.0 - alpha * 0.5), 0.001);
     alpha = clamp(alpha + sa * (1.0 - alpha * 0.5), 0.0, 0.95);
+    }
 
     float va = (0.09 + 0.12 * low) * veil * (1.0 - 0.35 * paper);   // the still grain
     half g = half(mix(0.35, 0.82, paper) + mix(0.65, 0.18, paper) * grain(xy));

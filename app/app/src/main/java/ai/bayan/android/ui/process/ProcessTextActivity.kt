@@ -41,12 +41,15 @@ import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import kotlinx.coroutines.delay
+import androidx.compose.ui.layout.onSizeChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.scale
@@ -154,6 +157,7 @@ import ai.bayan.android.ui.components.OriginalToggle
 import ai.bayan.android.ui.components.ReaderActions
 import ai.bayan.android.ui.components.ReaderText
 import ai.bayan.android.ui.components.UnchangedNote
+import ai.bayan.android.ui.components.isUnchanged
 import ai.bayan.android.ui.components.spokenRange
 import ai.bayan.android.ui.home.NoticeCard
 import ai.bayan.android.ui.isBusy
@@ -173,7 +177,11 @@ class ProcessTextActivity : ComponentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) onScreen.value = true
+        if (hasFocus) {
+            onScreen.value = true
+            // Only now (the panel is drawn over it) does the floating pill go, so there is no gap between them.
+            (application as BayanApp).container.overlay.setMinimized(false)
+        }
     }
 
 
@@ -214,7 +222,14 @@ class ProcessTextActivity : ComponentActivity() {
         val app = (application as BayanApp).container
         app.overlay.setMinimized(true)
         startForegroundService(Intent(this, ReadingService::class.java))
-        finish()
+        // Stay (as the pill, showing what the floating pill shows) until the floating pill is drawn over us, then go
+        // without a transition.
+        lifecycleScope.launch {
+            withTimeoutOrNull(900) { app.overlay.floatingShown.first { it } }
+            delay(48)
+            finish()
+            overridePendingTransition(0, 0)
+        }
     }
     private var readOnly = true
 
@@ -243,7 +258,7 @@ class ProcessTextActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val app = (application as BayanApp).container
         if (!receive(intent)) { finish(); return }
-        app.overlay.setMinimized(false)
+        val resumed = intent.action == ACTION_RESUME
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
@@ -265,6 +280,7 @@ class ProcessTextActivity : ComponentActivity() {
                     ProcessTextOverlay(
                         text = text,
                         onScreen = visible,
+                        resumed = resumed,
                         canReplace = !readOnly,
                         onReplace = { result ->
                             setResult(RESULT_OK, Intent().putExtra(Intent.EXTRA_PROCESS_TEXT, result))
@@ -309,6 +325,7 @@ class ProcessTextActivity : ComponentActivity() {
 private fun ProcessTextOverlay(
     text: String,
     onScreen: Boolean,
+    resumed: Boolean,
     canReplace: Boolean,
     onReplace: (String) -> Unit,
     onOpenApp: () -> Unit,
@@ -327,11 +344,13 @@ private fun ProcessTextOverlay(
     // The entrance, after the system assistant's (measured frame by frame): a small droplet of the panel's surface is
     // born on the gesture bar, lifts off it and springs out sideways into a pill; the light blooms as the pill reaches
     // its full width; then the pill unfolds upward into the panel, like a page opening, and the content fades in last.
+    // Reopened from the floating pill, it starts as that pill, in its place, and unfolds from it.
     val reveal = remember { Animatable(0f) }
-    val enter = remember { Animatable(0f) }
-    val lift = remember { Animatable(0f) }      // the droplet rising off the gesture bar
-    val birth = remember { Animatable(0f) }     // the droplet stretching into a pill (springs past 1, then settles)
+    val enter = remember { Animatable(if (resumed) 1f else 0f) }
+    val lift = remember { Animatable(if (resumed) 1f else 0f) }      // the droplet rising off the gesture bar
+    val birth = remember { Animatable(if (resumed) 1f else 0f) }     // the droplet stretching into a pill (springs past 1, then settles)
     val unfold = remember { Animatable(0f) }    // the pill opening upward into the panel
+    val shownHeight = remember { Animatable(0f) }  // the panel's visible height, gliding after its laid-out height
     var entranceDone by remember { mutableStateOf(false) }
     val halo = remember { Animatable(0f) }      // the light the droplet is born in, before the rim takes over
     var folding by remember { mutableStateOf(false) }
@@ -369,6 +388,13 @@ private fun ProcessTextOverlay(
         enter.snapTo(1f)
         haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
         launch { reveal.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
+        if (resumed) {
+            lightOn = true
+            launch { delay(4200); entranceDone = true }
+            launch { unfold.animateTo(1f, spring(dampingRatio = 0.82f, stiffness = 300f)) }
+            launch { delay(160); contentIn.animateTo(1f, tween(260, easing = LinearOutSlowInEasing)) }
+            return@LaunchedEffect
+        }
         launch { lift.animateTo(1f, tween(120, easing = FastOutSlowInEasing)) }
         launch { halo.animateTo(1f, tween(160, easing = LinearOutSlowInEasing)); delay(260); halo.animateTo(0f, tween(650, easing = FastOutSlowInEasing)) }
         launch { delay(80); birth.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = 330f)) }
@@ -399,12 +425,29 @@ private fun ProcessTextOverlay(
     val springBack: () -> Unit = {
         scope.launch { animate(dragY, 0f, animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)) { v, _ -> dragY = v } }
     }
-    /** Back to the app the text came from; reading carries on with the system's media controls. */
+    /**
+     * Back to the app the text came from while Bayan reads on: the panel folds into its pill, where the floating pill
+     * takes over (same size, same place). Without the floating pill (not allowed), it sinks into the gesture bar.
+     */
+    val context = LocalContext.current
     val minimize: () -> Unit = {
         if (!closing) {
             closing = true
+            folding = true
             haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-            scope.launch { enter.animateTo(0f, tween(220)); onMinimize() }
+            val floats = android.provider.Settings.canDrawOverlays(context)
+            scope.launch {
+                launch { contentIn.animateTo(0f, tween(90)) }
+                launch { enter.animateTo(0f, tween(340)) }
+                launch { animate(dragY, 0f, animationSpec = tween(240)) { v, _ -> dragY = v } }
+                delay(50)
+                unfold.animateTo(0f, spring(dampingRatio = 0.9f, stiffness = 520f))
+                if (!floats) {
+                    birth.animateTo(0f, tween(150, easing = FastOutLinearInEasing))
+                    lift.animateTo(0f, tween(90))
+                }
+                onMinimize()
+            }
         }
     }
     PredictiveBackHandler(enabled = !closing) { events ->
@@ -424,11 +467,8 @@ private fun ProcessTextOverlay(
     // Once the text is ready the light settles to a faint, still glow (no motion to pull the eye from the text).
     val settled = !working && entranceDone
     val edge by animateFloatAsState(if (quiet) 0f else 1f, if (!settled && !quiet) tween(300) else settle, label = "edge")
-    val aurora by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(500) else settle, label = "aurora")
-    val border by animateFloatAsState(if (closing) 0f else if (working) 1f else 0.3f, settle, label = "border")
     // On Android 13+ the light's own still grain stands in for a scrim; before that, a faint scrim.
     val scrim = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) 0f else 0.06f
-    val veil = reveal.value.coerceIn(0f, 1f) * (if (closing) enter.value.coerceIn(0f, 1f) else 1f)
 
     // Dragging anywhere on the panel: it follows the finger and shrinks a little as it goes down.
     // A short pull (or a fling) collapses it to a few lines; a long pull closes it; dragging up expands it again.
@@ -472,16 +512,17 @@ private fun ProcessTextOverlay(
 
     val haloColour = edgeLightColours()[0]
     // What the reader sees of the panel right now (droplet, pill or panel), for the light that hugs its outline.
-    val litPanel = panelBox?.let { box ->
+    val litPanel: () -> Rect? = { panelBox?.let { box ->
         with(density) {
             val b = birth.value.coerceAtLeast(0f)
             val u = unfold.value.coerceAtLeast(0f)
-            val w = lerp(lerp(64.dp.toPx(), box.width * 0.78f, b), box.width, u).coerceAtMost(box.width) * (1f + (b - 1f).coerceAtLeast(0f))
-            val h = lerp(lerp(18.dp.toPx(), 58.dp.toPx(), b.coerceIn(0f, 1f)), box.height, u).coerceAtMost(box.height)
+            val w = lerp(lerp(64.dp.toPx(), box.width * PILL_FRACTION, b), box.width, u).coerceAtMost(box.width) * (1f + (b - 1f).coerceAtLeast(0f))
+            val full = shownHeight.value.takeIf { it > 0f }?.coerceAtMost(box.height) ?: box.height
+            val h = lerp(lerp(18.dp.toPx(), PILL_HEIGHT.toPx(), b.coerceIn(0f, 1f)), full, u).coerceAtMost(box.height)
             val bottom = box.bottom + dragY.coerceAtLeast(0f) * 0.85f + (1f - lift.value) * 26.dp.toPx()
             Rect(box.center.x - w / 2f, bottom - h, box.center.x + w / 2f, bottom)
         }
-    }
+    } }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val maxPanel = maxHeight * 0.82f
         Box(
@@ -492,17 +533,16 @@ private fun ProcessTextOverlay(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = close,
+                    // As with the system assistant, tapping the app behind does not end Bayan: the panel steps aside
+                    // to the floating panel and goes on reading while the app is used. With nothing to keep, it closes.
+                    onClick = { if (state is SimplifyState.Done || working) minimize() else close() },
                 ),
         )
         OverlayGlow(
             started = lightOn,
-            reveal = reveal.value,
-            edge = edge,
-            veil = veil,
-            aurora = aurora * enter.value.coerceIn(0f, 1f),
-            border = border * enter.value.coerceIn(0f, 1f),
-            panel = if (lift.value > 0f) litPanel else null,
+            edge = { edge },
+            veil = { reveal.value.coerceIn(0f, 1f) * (if (closing) enter.value.coerceIn(0f, 1f) else 1f) },
+            panel = { if (lift.value > 0f) litPanel() else null },
             working = working,
         )
 
@@ -520,7 +560,7 @@ private fun ProcessTextOverlay(
                     val h = halo.value
                     if (h > 0f) {
                         val b = birth.value.coerceIn(0f, 1f)
-                        val w = lerp(64.dp.toPx(), size.width * 0.78f, b)
+                        val w = lerp(64.dp.toPx(), size.width * PILL_FRACTION, b)
                         val r = 46.dp.toPx()
                         val c = Offset(size.width / 2f, size.height - 14.dp.toPx() + (1f - lift.value) * 26.dp.toPx())
                         scale(scaleX = (w / 2f + r) / r, scaleY = 1f, pivot = c) {
@@ -543,12 +583,13 @@ private fun ProcessTextOverlay(
                     scaleY = (0.88f + 0.12f * e) * shrink * (1f + 0.5f * over)
                     alpha = e.coerceIn(0f, 1f) * (1f - 0.3f * pull) * (lift.value * 4f).coerceAtMost(1f)
                     val u = unfold.value
-                    if (b < 1f || u < 1f) {
+                    val visible = shownHeight.value.takeIf { it > 0f } ?: size.height
+                    if (b < 1f || u < 1f || visible < size.height - 0.5f) {
                         // a pill of the assistant's proportions (about four fifths of the width), then the panel
-                        val pillH = lerp(18.dp.toPx(), 58.dp.toPx(), b.coerceIn(0f, 1f))
-                        val pillW = lerp(64.dp.toPx(), size.width * 0.78f, b.coerceAtLeast(0f))
+                        val pillH = lerp(18.dp.toPx(), PILL_HEIGHT.toPx(), b.coerceIn(0f, 1f))
+                        val pillW = lerp(64.dp.toPx(), size.width * PILL_FRACTION, b.coerceAtLeast(0f))
                         clip = true
-                        shape = Droplet(lerp(pillW, size.width, u.coerceAtLeast(0f)), lerp(pillH, size.height, u.coerceAtLeast(0f)), 32.dp.toPx())
+                        shape = Droplet(lerp(pillW, size.width, u.coerceAtLeast(0f)), lerp(pillH, minOf(visible, size.height), u.coerceAtLeast(0f)), 32.dp.toPx())
                     } else {
                         clip = false
                     }
@@ -578,11 +619,44 @@ private fun ProcessTextOverlay(
                 }
                 .nestedScroll(panelScroll)
                 .draggable(dragState, Orientation.Vertical, onDragStopped = { settleDrag(it) })
-                .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
+                .onSizeChanged { grown ->
+                    // The layout takes its new height at once; only the visible edge glides there (a clip, so nothing
+                    // is measured again per frame).
+                    val h = grown.height.toFloat()
+                    scope.launch { if (shownHeight.value <= 0f) shownHeight.snapTo(h) else shownHeight.animateTo(h, spring(dampingRatio = 0.9f, stiffness = 380f)) }
+                },
         ) {
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                 PanelTopBar(onMinimize = minimize)
                 PanelContent(state, settings, key, showOriginal, { showOriginal = it }, canReplace, onReplace, onOpenApp)
+            }
+        }
+
+        // The pill the panel folds into (and unfolds from), showing what the floating pill shows, so the hand-over
+        // between them cannot be seen.
+        val pillAlpha = {
+            when {
+                folding -> ((0.35f - unfold.value) / 0.35f).coerceIn(0f, 1f)
+                resumed && !closing -> (1f - unfold.value * 3f).coerceIn(0f, 1f)
+                else -> 0f
+            }
+        }
+        if (folding || (resumed && !closing && !entranceDone)) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .safeDrawingPadding()
+                    .padding(12.dp)
+                    .widthIn(max = 640.dp)
+                    .fillMaxWidth()
+                    .graphicsLayer { translationY = dragY.coerceAtLeast(0f) * 0.85f },
+                contentAlignment = Alignment.BottomCenter,
+            ) {
+                ReadingPill(
+                    onExpand = {}, onClose = close,
+                    modifier = Modifier.fillMaxWidth(PILL_FRACTION).height(PILL_HEIGHT),
+                    contentAlpha = pillAlpha, elevation = 0.dp,
+                )
             }
         }
     }
@@ -682,9 +756,11 @@ private fun ColumnScope.PanelContent(
                 if (committed.isNotEmpty()) ReaderActions(committed, key, settings.speechRate, complete = false)
             }
             is SimplifyState.Done -> {
-                OriginalToggle(showOriginal, onShowOriginal, Modifier.fillMaxWidth())
+                // Nothing to compare or replace when Bayan left the text as it was.
+                val unchanged = isUnchanged(state.source, state.result)
+                if (!unchanged) OriginalToggle(showOriginal, onShowOriginal, Modifier.fillMaxWidth())
                 ReaderActions(if (showOriginal) state.source else state.result, key, settings.speechRate)
-                if (canReplace) {
+                if (canReplace && !unchanged) {
                     Button(onClick = { onReplace(state.result) }, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Rounded.SwapHoriz, null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.width(ButtonDefaults.IconSpacing))

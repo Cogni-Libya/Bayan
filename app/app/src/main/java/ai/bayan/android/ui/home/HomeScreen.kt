@@ -92,6 +92,7 @@ import ai.bayan.android.ui.components.OriginalToggle
 import ai.bayan.android.ui.components.ReaderActions
 import ai.bayan.android.ui.components.ReaderText
 import ai.bayan.android.ui.components.UnchangedNote
+import ai.bayan.android.ui.components.isUnchanged
 import ai.bayan.android.ui.components.spokenRange
 import ai.bayan.android.ui.isBusy
 import ai.bayan.android.ui.theme.ContentDirection
@@ -318,7 +319,7 @@ private fun DoneResult(state: SimplifyState.Done, settings: Settings, onCopied: 
     var showOriginal by rememberSaveable(state.result) { mutableStateOf(false) }
     val key = "home:${state.run}:${if (showOriginal) "o" else "s"}"
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OriginalToggle(showOriginal, { showOriginal = it }, Modifier.fillMaxWidth())
+        if (!isUnchanged(state.source, state.result)) OriginalToggle(showOriginal, { showOriginal = it }, Modifier.fillMaxWidth())
         // Actions come first, as in Translate: visible without scrolling however long the text is.
         ReaderActions(if (showOriginal) state.source else state.result, key, settings.speechRate, onCopied = onCopied)
         AnimatedContent(showOriginal, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "result") { original ->

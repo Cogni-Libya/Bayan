@@ -62,6 +62,9 @@ class OverlaySession(private val app: AppContainer, private val scope: Coroutine
     /** The reader said "Not now" to displaying over other apps; minimizing then uses the media controls alone. */
     var floatingDeclined = false
 
+    /** True while the floating pill is on screen, so the panel can hand over to it without a gap. */
+    val floatingShown = MutableStateFlow(false)
+
     val isReading: Boolean get() = app.readAloud.isSpeaking(key(simplify.state.value))
 
     /** Reading key of the simplified text in [state]; the panel shows the original under a different key. */

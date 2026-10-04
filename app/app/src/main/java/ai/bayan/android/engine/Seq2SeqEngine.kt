@@ -161,6 +161,7 @@ class Seq2SeqEngine(dir: File, threads: Int = defaultThreads()) : Closeable {
         if (marker.isFile) {
             val options = OrtSession.SessionOptions().apply {
                 setIntraOpNumThreads(threads)
+                addConfigEntry("session.intra_op.allow_spinning", "0")
                 setOptimizationLevel(OrtSession.SessionOptions.OptLevel.NO_OPT)
             }
             return env.createSession(file.path, options).also { log(file, "optimized", started) }
@@ -168,6 +169,9 @@ class Seq2SeqEngine(dir: File, threads: Int = defaultThreads()) : Closeable {
         val saved = File(file.path + ".opt.tmp")
         val options = OrtSession.SessionOptions().apply {
             setIntraOpNumThreads(threads)
+            // Worker threads sleep between steps instead of spinning: spinning holds the fast cores at full load and
+            // starves the UI, so the overlay's light and the streaming text stutter.
+            addConfigEntry("session.intra_op.allow_spinning", "0")
             setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
             setOptimizedModelFilePath(saved.path)
         }

@@ -26,13 +26,13 @@ class FloatingPanel(private val context: Context) {
     private val owner = WindowOwner()
     private var view: ComposeView? = null
     private val params = WindowManager.LayoutParams(
-        WindowManager.LayoutParams.MATCH_PARENT,
+        WindowManager.LayoutParams.WRAP_CONTENT,   // only the pill: the app beside it stays touchable
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
         PixelFormat.TRANSLUCENT,
     ).apply {
-        gravity = Gravity.BOTTOM
+        gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         y = bottomInset()
     }
 
