@@ -96,9 +96,9 @@
 % --------------------------------------------------------------- pipeline --
 \newcommand{\figpipeline}{%
 \begin{tikzpicture}[font=\footnotesize, node distance=7mm]
-  \node[built, minimum width=36mm] (src) {source corpora\\{\scriptsize SAMER, DAASI, Baseet}};
+  \node[built, minimum width=36mm] (src) {source corpora\\{\scriptsize SAMER, DAASI, external pairs}};
   \node[gate, below=of src, minimum width=36mm] (leak) {leakage check\\{\scriptsize exact + 5-gram Jaccard}};
-  \node[gate, below=of leak, minimum width=36mm] (mean) {meaning filter, strength tags\\{\scriptsize Baseet pairs only}};
+  \node[gate, below=of leak, minimum width=36mm] (mean) {meaning filter, strength tags\\{\scriptsize external pairs only}};
   \node[built, below=of mean, minimum width=36mm] (train) {fine-tuning\\{\scriptsize AraT5v2 and AraBART}};
   \node[built, below=of train, minimum width=36mm] (eval) {scoring\\{\scriptsize copy baseline; BayanBench}};
   \draw[flow] (src) -- (leak);
@@ -113,7 +113,7 @@
 
   \node[built, right=20mm of src, minimum width=30mm] (gen) {LLM generation\\{\scriptsize from BAREC sources}};
   \node[gate, right=20mm of leak, minimum width=30mm] (judge) {validators\\{\scriptsize equivalence, readability}};
-  \node[built, right=20mm of mean, minimum width=30mm] (pub) {synthetic corpus\\{\scriptsize 13,072 pairs, published}};
+  \node[built, right=20mm of mean, minimum width=30mm] (pub) {synthetic corpus\\{\scriptsize v1: 14,975 rows, public}};
   \draw[flow] (judge) -- (pub);
 \end{tikzpicture}}
 
@@ -132,8 +132,6 @@
   \addlegendentry{SAMER train (14,343)}
   \addplot[figgrey, mark=square*] coordinates {(1--5,29.05)(6--10,22.82)(11--15,17.28)(16--20,12.45)(21--25,7.80)(26--30,4.65)(31--35,2.54)(36--40,1.39)($>$40,2.01)};
   \addlegendentry{BAREC train (54,845)}
-  \addplot[figwarm, mark=triangle*] coordinates {(1--5,11.25)(6--10,23.92)(11--15,18.08)(16--20,13.45)(21--25,10.36)(26--30,7.78)(31--35,5.40)(36--40,3.76)($>$40,6.00)};
-  \addlegendentry{Baseet, filtered (31,104)}
   \addplot[black, dashed, mark=o] coordinates {(1--5,19.15)(6--10,25.38)(11--15,27.77)(16--20,18.09)(21--25,6.36)(26--30,2.12)(31--35,0.66)(36--40,0.46)($>$40,0.00)};
   \addlegendentry{DAASI (1,509)}
 \end{axis}
@@ -309,4 +307,78 @@
   \addlegendimage{only marks, mark=*, mark size=2.4pt, sicblue}\addlegendentry{raters (strict majority)}
   \addlegendimage{only marks, mark=square*, mark size=2.1pt, figwarm}\addlegendentry{scorer, P(same) $\geq$ 0.5}
 \end{axis}
+\end{tikzpicture}}
+
+% ------------------------------------------------- data cleaning, corpus v1 --
+% The pipeline that produced corpus v1 (scripts/assemble_corpus_v1.py,
+% barec_simplification_pipeline.py, corpus_constraints.py, check_corpus.py).
+\newcommand{\figcleaning}{%
+\begin{tikzpicture}[font=\scriptsize, node distance=5mm and 6mm,
+    box/.style={built, text width=27mm, minimum height=12mm},
+    gbox/.style={gate, text width=27mm, minimum height=12mm}]
+  % row 1
+  \node[box] (src) {BAREC train + dev\\sources\\{\tiny BAREC test never enters}};
+  \node[box, right=of src] (clean) {strip tashkeel\\and tatweel\\{\tiny every text, in and out}};
+  \node[gbox, right=of clean] (route) {route each source\\{\tiny protected, short,\\quiz, or hard}};
+  \node[box, right=of route] (prot) {protected or short:\\copied unchanged\\{\tiny scripture, poetry, hadith,\\headings of $\le$5 words}};
+  \draw[flow] (src) -- (clean);
+  \draw[flow] (clean) -- (route);
+  \draw[flow] (route) -- (prot);
+  % row 2, right to left
+  \node[box, below=10mm of route] (gen) {Gemma 4 31B\\writes candidates\\{\tiny hard sources only}};
+  \node[gbox, left=of gen] (code) {code gates\\{\tiny option labels, honorifics,\\quoted verses, ending,\\no tashkeel}};
+  \node[gbox, left=of code] (lead) {readability gate\\{\tiny CAMeL, hardest sentence\\$\ge$2 levels easier}};
+  \node[gbox, left=of lead] (judge) {meaning gate\\{\tiny Qwen judge $\ge$ 0.75}};
+  \draw[flow] (route) -- node[right, font=\tiny] {hard} (gen);
+  \draw[flow] (gen) -- (code);
+  \draw[flow] (code) -- (lead);
+  \draw[flow] (lead) -- (judge);
+  % row 3
+  \node[box, below=10mm of judge] (win) {tier A/B winners\\{\tiny the pairs that teach\\how to simplify}};
+  \node[box, right=of win] (mix) {assemble the mix\\{\tiny + 2,900 easy identity,\\750 short, protected}};
+  \node[gbox, right=of mix] (split) {grouped split\\{\tiny by normalised text;\\test from BAREC train only}};
+  \node[gbox, right=of split] (audit) {audit\\{\tiny check\_corpus: 0 violations;\\leakage vs BAREC test}};
+  \node[built, right=of audit, fill=figpale, text width=27mm, minimum height=12mm] (out)
+       {\textbf{corpus v1}\\14,975 rows};
+  \draw[flow] (judge) -- node[left, font=\tiny] {pass} (win);
+  \draw[flow] (win) -- (mix);
+  \draw[flow] (mix) -- (split);
+  \draw[flow] (split) -- (audit);
+  \draw[flow] (audit) -- (out);
+  \coordinate[below=5mm of code.south] (lane);
+  \draw[flow] (prot.south) -- (prot.south |- lane) -- (mix.north |- lane) -- (mix.north);
+\end{tikzpicture}}
+
+% ---------------------------------------- training pipeline, how it evolved --
+\newcommand{\figevolution}{%
+\begin{tikzpicture}[font=\scriptsize, node distance=3mm,
+    col/.style={built, text width=51mm, align=left, inner sep=3pt},
+    colh/.style={built, fill=sicblue, text=white, text width=51mm, minimum height=7mm, font=\footnotesize\bfseries},
+    found/.style={gate, text width=51mm, align=left, inner sep=3pt}]
+  \node[colh] (h1) {Model 1: AraT5v2 on SAMER};
+  \node[colh, right=6mm of h1] (h2) {Model 2: AraT5v2 and AraBART};
+  \node[colh, right=6mm of h2] (h3) {Model 3: AraT5v2 on corpus v1};
+
+  \node[col, below=of h1] (d1) {\textbf{Data.} SAMER level 5 $\rightarrow$ 3, 14,343 pairs; unchanged
+      pairs capped at 20\%.};
+  \node[col, below=of h2] (d2) {\textbf{Data.} 22,733 pairs: all SAMER pairs, DAASI, and
+      meaning-filtered external pairs; a strength tag \texttt{[S0]}--\texttt{[SA]} on each; leakage check.};
+  \node[col, below=of h3] (d3) {\textbf{Data.} corpus v1: generated pairs plus easy, short and
+      protected identity rows (previous figure). Corpus v0 was written, audited and not used.};
+
+  \node[col, below=of d1] (s1) {\textbf{Checkpoint.} best SARI on a 500-row dev sample that is 43\% unchanged.};
+  \node[col, below=of d2] (s2) {\textbf{Checkpoint.} SARI on the 600 changed rows of a 900-row dev sample.};
+  \node[col, below=of d3] (s3) {\textbf{Around the model.} the app's code guards keep the source when a
+      rewrite loses a number or a negation, and pass protected text through.};
+
+  \node[found, below=of s1] (f1) {\textbf{Found.} copying scores SARI 77.5; the model edits
+      rows that needed no change, substitutes words and never restructures; collapses on tashkeel.};
+  \node[found, below=of s2] (f2) {\textbf{Found.} meaning kept only 0.59 (AraT5v2) and 0.40
+      (AraBART); easy and protected text is edited; int8 changes 62--74\% of outputs.};
+  \node[found, below=of s3] (f3) {\textbf{Found.} easy text unchanged 55\% (was 14\%); protected
+      intact 97.8\% (was 4.4\%). As int8 in the app: meaning as well as model~2, \mThreeClauseDiff{} words
+      more cut; ships.};
+
+  \draw[flow] (h1) -- (h2);
+  \draw[flow] (h2) -- (h3);
 \end{tikzpicture}}
