@@ -279,7 +279,7 @@ class ProcessTextActivity : ComponentActivity() {
                 onDispose {}
             }
             CompositionLocalProvider(LocalAppContainer provides app) {
-                BayanTheme(s.themeMode) {
+                BayanTheme(s.themeMode, s.style) {
                     val visible by onScreen.collectAsStateWithLifecycle()
                     ProcessTextOverlay(
                         text = text,

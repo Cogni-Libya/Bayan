@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                 onDispose {}
             }
             CompositionLocalProvider(LocalAppContainer provides app) {
-                BayanTheme(s.themeMode) {
+                BayanTheme(s.themeMode, s.style) {
                     AnimatedContent(s.onboardingDone, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "onboarding") { done ->
                         if (done) BayanNavigation(shared, onSharedTextConsumed = { sharedText.value = null })
                         else OnboardingScreen(onFinish = { app.scope.launch { app.settings.setOnboardingDone() } })

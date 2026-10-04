@@ -89,7 +89,7 @@ import ai.bayan.android.ui.theme.BayanTheme
 fun FloatingReader(container: AppContainer, move: (Float) -> Unit, onExpand: () -> Unit, onClose: () -> Unit) {
     val settings by container.settings.settings.collectAsStateWithLifecycle(Settings())
     CompositionLocalProvider(LocalAppContainer provides container) {
-        BayanTheme(settings.themeMode) {
+        BayanTheme(settings.themeMode, settings.style) {
             val screen = LocalConfiguration.current.screenWidthDp.dp
             // It takes over from the panel's pill, which already has its edge of light; only the shadow (which the
             // panel's pill has not) grows in.
