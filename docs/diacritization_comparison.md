@@ -157,3 +157,44 @@ The runner creates the pinned Tashkeela/CATT test snapshot under `data/tashkeela
 ```
 
 The official test snapshot is from the CATT project's benchmark fixture at `https://raw.githubusercontent.com/abjadai/catt/8d5330499feb85f6625e6af632141ed2ed6065fd/benchmarking/all_models_CATT_data/CATT_data_gt.txt`. It contains 743 lines in this pinned repository state, not the 817k-line aggregate corpus used by unrelated text2tashkeel benchmarks; DER values must not be compared across those different corpora.
+
+---
+
+## Re-benchmark, 5 October (before shipping a diacritizer in the app)
+
+Same fixture and inputs as above (743 CATT/Tashkeela test sentences, every mark removed), scored three ways:
+the repo's own `benchmark_diacritization.py` (DER, DER without case endings, WER), CATT's official `compute_der.py`
+at the same pinned commit, and the DER on the positions the reference marks (its sentences are only partly
+vowelled, so a model that vowels fully is charged for correct marks). Letters are checked on the test set and on 300
+BayanBench texts, the kind of text the app vowels. Scripts: `scripts/evaluation/diacritization_rebench/`.
+
+| Model | DER | DER, no case | WER | CATT official DER | DER on marked | Letters changed (743 test) | Letters changed (300 BayanBench) | Size | Licence |
+|---|---:|---:|---:|---:|---:|---:|---:|---|---|
+| libtashkeel | 8.43% | 6.91% | 29.57% | 9.60% | 5.71% | 0 | 0/300 | 4.8 MB | MIT |
+| catt | 8.44% | 6.92% | 29.40% | 8.76% | 5.58% | 0 | 0/300 | 77.9 MB | CC BY-NC |
+| tashkeel-v3 | 8.98% | 7.67% | 28.29% | 8.21% | 5.92% | 0 | 0/300 | 686 MB fp32 (171M params) | Apache-2.0 |
+| rawi-v3-int8 | 8.39% | 6.99% | 29.48% | 8.53% | 5.36% | 106 | 61/300 | 2.5 MB | Apache-2.0 |
+| rawi-ensemble | 8.45% | 7.04% | 29.90% | 8.60% | 5.53% | 97 | 55/300 | 4.9 MB | Apache-2.0 |
+| rawi-v2-int8 | 8.66% | 7.12% | 30.30% | 8.93% | 5.90% | 106 | 66/300 | 2.5 MB | Apache-2.0 |
+| libtashkeel+rawi-int8 | 8.15% | 6.69% | 29.29% | 9.21% | 5.22% | 118 | 64/300 | 7.3 MB | MIT + Apache-2.0 |
+| bilstm+libtashkeel+rawi-int8 | 8.38% | 6.89% | 29.63% | 8.76% | 4.98% | 122 | 72/300 | ~12 MB | MIT + Apache-2.0 |
+| mishkal | 12.74% | 10.12% | 39.33% | 16.49% | 13.54% | 1 | 0/300 | 4.3 MB | GPLv3 |
+
+**What this shows**
+
+- **The earlier numbers hold.** Libtashkeel, CATT and Mishkal score exactly what this report gave above.
+- **The rawi models (text2tashkeel) are disqualified.** Their accuracy is no better on this fixture (their own 2%
+  DER is on a different corpus), and they rewrite letters: hamza seats (ا→إ، إ→أ، ئ→ي، ؤ→و) in 97–106 of the 743
+  test sentences and in 55–66 of the 300 BayanBench texts. A diacritizer must never change the reader's text. The
+  ensembles that include them inherit the same letter changes.
+- **Tashkeel-v3 does not reproduce its card.** CATT's official DER is 8.21%, against the 4.98% the card gives for the
+  same 742 references, and on marked positions it is 5.92% against Libtashkeel's 5.71%. Its WER is the lowest
+  (28.3%). It is 171M parameters (686 MB), 140 times Libtashkeel, for no measurable gain here.
+- **Tashkeel-v4** reports 2.95% on this fixture but is released under a research-only, non-commercial licence behind
+  a terms form; it was not run.
+
+**Decision: Libtashkeel stays.** Among the models that never change a letter, the scorers disagree on the order:
+Libtashkeel is best on the repo's DER (8.43%), while on CATT's official script CATT (8.76%) and Tashkeel-v3 (8.21%)
+beat it (9.60%). The gap is at most 1.4 points, and the alternatives are 16 times larger and non-commercial (CATT)
+or 140 times larger (Tashkeel-v3). At 4.8 MB and under MIT, Libtashkeel ships in the app (PR #67), behind a
+"Show tashkeel" setting, off by default; Tashkeel-v3 is the candidate for a larger, optional download later.
