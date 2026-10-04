@@ -76,7 +76,7 @@ def test_copy_baseline(data):
     assert core["simpler"]["longest clause: words shorter"]["mean"][0] == 0
     same = core["meaning"]["P(same meaning)"]
     assert same["pending"] == 0 and same["mean"][0] == 1              # a copy cannot change the meaning
-    assert "meaning kept" not in core["meaning"]                      # the threshold is not frozen in this data
+    assert core["meaning"]["meaning kept"]["rate"][0] == 100          # frozen rule: P(same) >= 0.5, numbers kept
     assert "outside" in res["sets"]
 
 

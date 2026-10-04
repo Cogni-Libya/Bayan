@@ -1,6 +1,6 @@
 [project]
 name = "bayanbench"
-version = "2.0.0.dev0"
+version = "2.0.0"
 description = "BayanBench: evaluation suite for dyslexia-friendly Arabic rewriting"
 readme = "README.md"
 requires-python = ">=3.10"

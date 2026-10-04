@@ -95,7 +95,7 @@ def cmd_score(a):
         cw, lv = a.simpler_min.split(",")
         cfg["simpler_min"] = {"clause_words": float(cw), "levels": float(lv)}
     if cfg["same_threshold"] is None:
-        notes.append("meaning kept: the threshold is not frozen yet (#48); P(same meaning) only")
+        notes.append("meaning kept: no threshold set; P(same meaning) only")
     joint = bool(a.joint and cfg["same_threshold"] is not None and cfg["simpler_min"])
     if a.joint and not joint:
         notes.append("joint rate: needs a frozen threshold and minimum change (or --meaning-threshold and --simpler-min)")

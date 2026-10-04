@@ -4,7 +4,7 @@ document, and optionally the paired difference against a baseline predictions fi
 Meaning measures use only pairs with a score from the official meaning scorer; the rest are counted as pending, never
 guessed, and a meaning rate is shown only when at least 90% of its items are scored: which outputs get scored first is
 not random (copies of the selection never need the scorer, for one), so a rate over a small scored part would be
-biased. "meaning kept" needs the threshold frozen from the human ratings (#48); until then only P(same) is shown.
+biased. "meaning kept" uses the threshold frozen in v2.0 from the human ratings (#48): P(same) >= 0.5.
 The joint rate ("meaning kept and simpler") is shown only when asked for (--joint) with its minimum change set.
 The v1 judge tier (Gemini verdicts) is an optional extra (--gemini)."""
 from .data import SETS, item_set

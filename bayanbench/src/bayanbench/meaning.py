@@ -40,8 +40,10 @@ def scorer_name(model=MODEL):
     return f"{model.rsplit('/', 1)[-1]}|{PROMPT_VERSION}"
 
 
-# thresholds and the joint rule are frozen from the human ratings (#48); None until then
-DEFAULT = {"scorer": scorer_name(), "same_threshold": None, "contradict_threshold": None, "simpler_min": None}
+# Frozen for v2.0 from the human rating round (#48, 3 Oct 2026: 290 tasks, 6 raters; the scorer's AUC against the
+# majority "same" is 0.85 [0.79-0.90]): meaning kept = P(same) >= 0.5 and every number kept. The contradiction
+# threshold and the joint rule ("meaning kept and simpler") were not decided in v2 and stay unset.
+DEFAULT = {"scorer": scorer_name(), "same_threshold": 0.5, "contradict_threshold": None, "simpler_min": None}
 
 
 def config(d):

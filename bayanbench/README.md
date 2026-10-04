@@ -8,10 +8,13 @@ the benchmark stops.
 
 - Data (private): Hugging Face dataset `Congi-libya/bayanbench-data`
 
-**v2 (#48, in progress).** Meaning comes from an open scorer run locally (Gemma 4 31B int4 in scoring mode, #47)
-instead of the Gemini judge; "simpler" is measured as continuous changes; the v1 measures are kept as diagnostics
-until the human rating round decides which to drop. The meaning threshold, the flag threshold and the joint rate are
-frozen from that round; until then the scorecard shows P(same meaning) and says the threshold is not frozen.
+**v2.0 (frozen 4 Oct 2026, #48).** Meaning comes from an open scorer run locally (Gemma 4 31B int4 in scoring mode,
+#47) instead of the Gemini judge; "simpler" is measured as continuous changes; the v1 measures are kept as diagnostics.
+The benchmark data is the frozen v1.0 release (28 Sep 2026: items, splits and checksums unchanged since); the code is
+tagged `bayanbench-v2.0`. **The official meaning rule, frozen from the human rating round (3 Oct: 290 tasks, 6 raters;
+the scorer's AUC against the majority "same" is 0.85 [0.79-0.90]):** meaning kept = P(same) ≥ 0.5 and every number
+kept. The contradiction threshold and the joint rate ("meaning kept and simpler") were not decided in v2.0: set them
+on the command line for your own analysis, and the scorecard says so.
 
 ## Install
 
