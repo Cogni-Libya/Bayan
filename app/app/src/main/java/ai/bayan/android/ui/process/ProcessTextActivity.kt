@@ -46,6 +46,10 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -354,6 +358,8 @@ private fun ProcessTextOverlay(
     var entranceDone by remember { mutableStateOf(false) }
     val halo = remember { Animatable(0f) }      // the light the droplet is born in, before the rim takes over
     var folding by remember { mutableStateOf(false) }
+    var minimizing by remember { mutableStateOf(false) }
+    val trace = remember { Animatable(1f) }     // an arc of light running round the panel's outline (1 = none)
     val contentIn = remember { Animatable(0f) }
     var lightOn by remember { mutableStateOf(false) }
     var closing by remember { mutableStateOf(false) }
@@ -391,15 +397,22 @@ private fun ProcessTextOverlay(
         if (resumed) {
             lightOn = true
             launch { delay(4200); entranceDone = true }
-            launch { unfold.animateTo(1f, spring(dampingRatio = 0.72f, stiffness = 380f)) }
-            launch { delay(160); contentIn.animateTo(1f, tween(260, easing = LinearOutSlowInEasing)) }
+            launch {
+                // the pill gathers itself (a touch wider and lower), then springs open into the panel
+                unfold.animateTo(-0.05f, tween(110, easing = FastOutSlowInEasing))
+                unfold.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = 170f))
+            }
+            launch { trace.snapTo(0f); trace.animateTo(1f, tween(900, easing = LinearOutSlowInEasing)) }
+            launch { delay(220); contentIn.animateTo(1f, tween(300, easing = LinearOutSlowInEasing)) }
             return@LaunchedEffect
         }
         launch { lift.animateTo(1f, tween(120, easing = FastOutSlowInEasing)) }
         launch { halo.animateTo(1f, tween(160, easing = LinearOutSlowInEasing)); delay(260); halo.animateTo(0f, tween(650, easing = FastOutSlowInEasing)) }
         launch { delay(80); birth.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = 330f)) }
         launch { delay(300); lightOn = true; delay(4200); entranceDone = true }
-        launch { delay(380); unfold.animateTo(1f, spring(dampingRatio = 0.82f, stiffness = 260f)) }
+        launch { delay(380); unfold.animateTo(1f, spring(dampingRatio = 0.74f, stiffness = 260f)) }
+        // as the droplet becomes a pill, an arc of light runs round it, and on round the panel as it opens
+        launch { delay(300); trace.snapTo(0f); trace.animateTo(1f, tween(1100, easing = LinearOutSlowInEasing)) }
         launch { delay(540); contentIn.animateTo(1f, tween(280, easing = LinearOutSlowInEasing)) }
     }
     LaunchedEffect(state is SimplifyState.Done) {
@@ -409,15 +422,19 @@ private fun ProcessTextOverlay(
         if (!closing) {
             closing = true
             folding = true
-            // The way it came: the content goes, the panel folds back into the pill and sinks into the gesture bar.
+            // The way it came, liquid: the content goes, the panel lands on its pill (a little squash), the pill gathers
+            // into a droplet and drops into the gesture bar, glowing as it goes in.
             scope.launch {
-                launch { contentIn.animateTo(0f, tween(90)) }
-                launch { enter.animateTo(0f, tween(340)) }
-                delay(50)
-                launch { unfold.animateTo(0f, tween(200, easing = FastOutLinearInEasing)) }
-                delay(130)
-                birth.animateTo(0f, tween(150, easing = FastOutLinearInEasing))
-                lift.animateTo(0f, tween(90))
+                launch { contentIn.animateTo(0f, tween(100, easing = FastOutLinearInEasing)) }
+                launch { enter.animateTo(0f, tween(320)) }
+                launch { animate(dragY, 0f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 420f)) { v, _ -> dragY = v } }
+                // one continuous drop: each stage starts while the one before is still settling
+                launch { unfold.animateTo(0f, spring(dampingRatio = 0.7f, stiffness = 520f, visibilityThreshold = 0.004f)) }
+                delay(170)
+                launch { halo.animateTo(0.8f, tween(140)); halo.animateTo(0f, tween(380)) }
+                launch { birth.animateTo(0f, spring(dampingRatio = 0.85f, stiffness = 560f)) }
+                delay(100)
+                lift.animateTo(0f, tween(160, easing = FastOutLinearInEasing))
                 onDismiss()
             }
         }
@@ -434,6 +451,7 @@ private fun ProcessTextOverlay(
         if (!closing) {
             closing = true
             folding = true
+            minimizing = true
             haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
             val floats = android.provider.Settings.canDrawOverlays(context)
             scope.launch {
@@ -517,6 +535,20 @@ private fun ProcessTextOverlay(
     }
 
     val haloColour = edgeLightColours()[0]
+    val traceColour = androidx.compose.ui.graphics.lerp(haloColour, Color.White, 0.5f)
+    /** Where the panel's visible shape is (droplet, pill, panel), in the panel's own coordinates. */
+    fun DrawScope.litShape(size: Size): Rect {
+        val b = birth.value
+        val u = unfold.value
+        val visible = shownHeight.value.takeIf { it > 0f } ?: size.height
+        val pillH = lerp(18.dp.toPx(), PILL_HEIGHT.toPx(), b.coerceIn(0f, 1f))
+        val pillW = lerp(64.dp.toPx(), size.width * PILL_FRACTION, b.coerceAtLeast(0f))
+        val squash = (-u).coerceAtLeast(0f)
+        val w = (lerp(pillW, size.width, u.coerceIn(0f, 1f)) * (1f + 0.9f * squash)).coerceAtMost(size.width)
+        val h = (lerp(pillH, minOf(visible, size.height), u.coerceIn(0f, 1f)) * (1f - 1.6f * squash)).coerceAtMost(size.height)
+        val bottom = size.height + (1f - lift.value) * 26.dp.toPx()
+        return Rect(size.width / 2f - w / 2f, bottom - h, size.width / 2f + w / 2f, bottom)
+    }
     // What the reader sees of the panel right now (droplet, pill or panel), for the light that hugs its outline.
     val litPanel: () -> Rect? = { panelBox?.let { box ->
         with(density) {
@@ -562,6 +594,24 @@ private fun ProcessTextOverlay(
                 .fillMaxWidth()
                 .onGloballyPositioned { panelBox = it.boundsInRoot() }
                 .drawBehind {
+                    // An arc of the theme's light running once round the outline (the pill as it forms, the panel as it
+                    // opens): drawn behind the panel, so only its outer half shows, as light from the edge.
+                    val tr = trace.value
+                    if (tr < 1f) {
+                        val r = litShape(size)
+                        val c = r.center
+                        val sweep = android.graphics.SweepGradient(
+                            c.x, c.y,
+                            intArrayOf(android.graphics.Color.TRANSPARENT, traceColour.toArgb(), android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+                            floatArrayOf(0f, 0.08f, 0.18f, 1f),
+                        ).apply { setLocalMatrix(android.graphics.Matrix().apply { postRotate(90f + 420f * tr, c.x, c.y) }) }
+                        val wide = 3.dp.toPx()
+                        drawRoundRect(
+                            ShaderBrush(sweep), topLeft = r.topLeft, size = r.size,
+                            cornerRadius = CornerRadius(minOf(32.dp.toPx(), r.height / 2f)),
+                            alpha = kotlin.math.sin(Math.PI * tr).toFloat(), style = Stroke(wide),
+                        )
+                    }
                     // The droplet's halo: a soft glow of the theme's light under the gesture bar as the droplet is born.
                     val h = halo.value
                     if (h > 0f) {
@@ -586,7 +636,8 @@ private fun ProcessTextOverlay(
                     transformOrigin = TransformOrigin(0.5f, 1f)
                     translationY = dragY.coerceAtLeast(0f) * 0.85f + (1f - e) * 180.dp.toPx() + (1f - lift.value) * 26.dp.toPx()
                     scaleX = (0.88f + 0.12f * e) * shrink * (1f + over)
-                    scaleY = (0.88f + 0.12f * e) * shrink * (1f + 0.5f * over)
+                    val stretch = (unfold.value - 1f).coerceAtLeast(0f)      // opening past the panel: a little taller
+                    scaleY = (0.88f + 0.12f * e) * shrink * (1f + 0.5f * over) * (1f + 0.5f * stretch)
                     alpha = e.coerceIn(0f, 1f) * (1f - 0.3f * pull) * (lift.value * 4f).coerceAtMost(1f)
                     val u = unfold.value
                     val visible = shownHeight.value.takeIf { it > 0f } ?: size.height
@@ -649,7 +700,7 @@ private fun ProcessTextOverlay(
         val pillAlpha = {
             when {
                 // the pill's content crosses in as the panel's text crosses out: never an empty box
-                folding -> ((0.36f - unfold.value) / 0.26f).coerceIn(0f, 1f)
+                minimizing -> ((0.36f - unfold.value) / 0.26f).coerceIn(0f, 1f)
                 resumed && !closing -> (1f - unfold.value * 3f).coerceIn(0f, 1f)
                 else -> 0f
             }
@@ -665,7 +716,7 @@ private fun ProcessTextOverlay(
                     .fillMaxWidth()
                     .graphicsLayer {
                         // Hidden (and out of reach of touches) until the panel folds into it.
-                        val shown = folding || pillAlpha() > 0f
+                        val shown = minimizing || pillAlpha() > 0f
                         alpha = if (shown) 1f else 0f
                         translationY = if (shown) dragY.coerceAtLeast(0f) * 0.85f else 100_000f
                         // squashes with the panel as it lands
@@ -682,7 +733,7 @@ private fun ProcessTextOverlay(
                     contentAlpha = pillAlpha, elevation = 0.dp, chrome = { 0f },
                     // the pill's edge of light grows in as the fold lands, so the floating pill appears with it
                     edgeLight = {
-                        if (folding) ((0.18f - unfold.value) / 0.18f).coerceIn(0f, 1f)
+                        if (minimizing) ((0.18f - unfold.value) / 0.18f).coerceIn(0f, 1f)
                         else (1f - unfold.value * 6f).coerceIn(0f, 1f)
                     },
                 )
@@ -735,21 +786,25 @@ private fun ColumnScope.PanelContent(
             Modifier.fillMaxWidth().verticalScroll(scroll).padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // One reader for the streamed text and the finished one: it carries on revealing (never fades in twice).
+            val reading: String? = when (state) {
+                is SimplifyState.Running -> state.partial.ifEmpty { null }
+                is SimplifyState.Done -> if (showOriginal) state.source else state.result
+                else -> null
+            }
             when (state) {
-                SimplifyState.Idle, SimplifyState.LoadingModel -> ThinkingLines(Modifier.padding(horizontal = 8.dp, vertical = 12.dp))
-                is SimplifyState.Running ->
-                    if (state.partial.isEmpty()) ThinkingLines(Modifier.padding(horizontal = 8.dp, vertical = 12.dp))
-                    else ReaderText(state.partial, settings.reader, highlight = highlight, reveal = reveal, follow = true)
-                is SimplifyState.Done -> {
-                    ReaderText(
-                        if (showOriginal) state.source else state.result,
-                        settings.reader,
-                        highlight = highlight,
-                        reveal = reveal && !showOriginal,
-                        follow = highlight != null,
-                    )
-                    UnchangedNote(state.source, state.result)
-                }
+                SimplifyState.Idle, SimplifyState.LoadingModel, is SimplifyState.Running, is SimplifyState.Done ->
+                    if (reading == null) ThinkingLines(Modifier.padding(horizontal = 8.dp, vertical = 12.dp))
+                    else {
+                        ReaderText(
+                            reading,
+                            settings.reader,
+                            highlight = highlight,
+                            reveal = reveal && !showOriginal,
+                            follow = state is SimplifyState.Running || highlight != null,
+                        )
+                        if (state is SimplifyState.Done) UnchangedNote(state.source, state.result)
+                    }
                 is SimplifyState.NeedsModel -> NoticeCard(
                     icon = Icons.Rounded.Download,
                     title = stringResource(R.string.home_needs_model_title),

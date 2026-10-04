@@ -43,6 +43,18 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -84,6 +96,8 @@ fun FloatingReader(container: AppContainer, move: (Float) -> Unit, onExpand: () 
             var up by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) { up = true }
             val elevation by animateDpAsState(if (up) 6.dp else 0.dp, tween(300), label = "elevation")
+            val flash = remember { androidx.compose.animation.core.Animatable(0f) }
+            LaunchedEffect(Unit) { flash.animateTo(1f, tween(950, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
             Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 12.dp)) {
                 ReadingPill(
                     onExpand, onClose,
@@ -93,6 +107,7 @@ fun FloatingReader(container: AppContainer, move: (Float) -> Unit, onExpand: () 
                         .pointerInput(Unit) { detectVerticalDragGestures { change, dy -> change.consume(); move(dy) } },
                     elevation = elevation,
                     chrome = { 1f },
+                    flash = { flash.value },
                 )
             }
         }
@@ -105,7 +120,7 @@ fun FloatingReader(container: AppContainer, move: (Float) -> Unit, onExpand: () 
  * the panel as it folds (and as it unfolds again) and by the floating window, so the two are indistinguishable.
  */
 @Composable
-fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, contentAlpha: () -> Float = { 1f }, elevation: Dp = 6.dp, chrome: () -> Float = { 1f }, edgeLight: () -> Float = chrome) {
+fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, contentAlpha: () -> Float = { 1f }, elevation: Dp = 6.dp, chrome: () -> Float = { 1f }, edgeLight: () -> Float = chrome, flash: () -> Float = { 1f }) {
     val container = LocalAppContainer.current
     val settings by container.settings.settings.collectAsStateWithLifecycle(Settings())
     val state by container.overlay.simplify.state.collectAsStateWithLifecycle()
@@ -121,13 +136,19 @@ fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = 
     val colours = edgeLightColours()
     val accent = MaterialTheme.colorScheme.primary
     val surface = MaterialTheme.colorScheme.surfaceContainerLow
+    val spark = androidx.compose.ui.graphics.lerp(colours[0], Color.White, 0.45f)
 
     // The light round the edge: a slow turn while reading, a faint still line otherwise.
     val turn by rememberInfiniteTransition(label = "pill").animateFloat(0f, 1f, infiniteRepeatable(tween(7000, easing = LinearEasing), RepeatMode.Restart), label = "turn")
     val glow by animateFloatAsState(if (reading) 0.85f else 0.3f, tween(600), label = "glow")
 
+    // Pressed, the pill squeezes a little under the finger (and springs back), instead of a ripple.
+    val press = remember { MutableInteractionSource() }
+    val pressed by press.collectIsPressedAsState()
+    val squeeze by animateFloatAsState(if (pressed) 0.94f else 1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "squeeze")
     Row(
         modifier
+            .graphicsLayer { scaleX = squeeze; scaleY = squeeze }
             .then(if (elevation > 0.dp) Modifier.shadow(elevation, CircleShape) else Modifier)
             .clip(CircleShape)
             .drawBehind { drawRect(surface, alpha = chrome()) }
@@ -140,51 +161,101 @@ fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = 
                     size = size.copy(width = size.width - stroke, height = size.height - stroke),
                     cornerRadius = CornerRadius(size.height / 2f), alpha = glow * edgeLight(), style = Stroke(stroke),
                 )
+                // Landing: one bright arc of the theme's light runs round the edge, sealing the pill, then is gone.
+                val f = flash()
+                if (f < 1f) {
+                    val c = Offset(size.width / 2f, size.height / 2f)
+                    val sweep = android.graphics.SweepGradient(
+                        c.x, c.y,
+                        intArrayOf(android.graphics.Color.TRANSPARENT, spark.toArgb(), android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+                        floatArrayOf(0f, 0.07f, 0.16f, 1f),
+                    ).apply { setLocalMatrix(android.graphics.Matrix().apply { postRotate(-90f + 400f * f, c.x, c.y) }) }
+                    val wide = 2.5.dp.toPx()
+                    drawRoundRect(
+                        ShaderBrush(sweep), topLeft = Offset(wide / 2f, wide / 2f),
+                        size = size.copy(width = size.width - wide, height = size.height - wide),
+                        cornerRadius = CornerRadius(size.height / 2f), alpha = kotlin.math.sin(Math.PI * f).toFloat(), style = Stroke(wide),
+                    )
+                }
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
             val settle = Modifier.graphicsLayer { val a = contentAlpha(); alpha = a; scaleX = 0.92f + 0.08f * a; scaleY = scaleX }
             ListenIconToggle(readable, key, settings.speechRate, complete, settle.padding(start = 7.dp))
-            Box(
-                Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clickable(onClick = onExpand)
-                    .padding(horizontal = 10.dp)
-                    .graphicsLayer { alpha = contentAlpha(); compositingStrategy = CompositingStrategy.Offscreen }
-                    .drawWithContent {
-                        // the line runs on past the pill's edge (its end, on the left) and fades out there
-                        drawContent()
-                        val fade = 28.dp.toPx()
-                        drawRect(
-                            Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = fade),
-                            size = size.copy(width = fade), blendMode = BlendMode.DstIn,
-                        )
-                    },
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                val (line, lit) = readingWindow(shown, spoken)
-                if (line.isEmpty()) ThinkingLines(Modifier.padding(vertical = 4.dp), lines = 1)
-                // Arabic runs right to left: the line starts at the right and overflows to the left, where it fades.
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                    Text(
-                        buildAnnotatedString {
-                            append(line)
-                            if (lit != null) addStyle(SpanStyle(color = accent), lit.first, lit.last + 1)
-                        },
-                        // One visible line of whole words (an overflowing Arabic line would be clipped at its start).
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip,
-                        textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
+            ReadingLine(shown, spoken, accent, onExpand, contentAlpha, press, Modifier.weight(1f).fillMaxHeight())
             IconButton(onClick = onClose, modifier = settle.padding(end = 4.dp)) {
                 Icon(Icons.Rounded.Close, stringResource(R.string.action_close))
             }
+        }
+    }
+}
+
+/**
+ * The pill's line, as a teleprompter: the whole text on one line that glides (a soft spring) so the word being spoken
+ * stays in view, lit; before reading starts, its opening words. Arabic runs right to left, so the text starts at the
+ * right edge and moves right as reading goes on; both edges fade into the pill.
+ */
+@Composable
+private fun ReadingLine(text: String, spoken: IntRange?, accent: Color, onExpand: () -> Unit, contentAlpha: () -> Float, press: MutableInteractionSource, modifier: Modifier) {
+    val line = remember(text) { text.replace('\n', ' ').trim() }
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var boxWidth by remember { mutableFloatStateOf(0f) }
+    // How far the strip has moved right, so the spoken word sits about two fifths in from the right edge.
+    // Between two spoken words (or with reading paused) it holds its place; a new text starts from the beginning.
+    var held by remember(line) { mutableFloatStateOf(0f) }
+    val target = run {
+        val l = layout ?: return@run held
+        val r = spoken?.takeIf { it.first < line.length } ?: return@run held
+        val wordRight = l.getHorizontalPosition(r.first, usePrimaryDirection = true)       // in the text's own coordinates
+        val textLeftInBox = boxWidth - l.size.width                                          // the text is right-aligned
+        (boxWidth * 0.6f - (textLeftInBox + wordRight)).coerceIn(0f, (l.size.width - boxWidth * 0.6f).coerceAtLeast(0f))
+            .also { held = it }
+    }
+    // Its first place is taken at once (so a pill taking over from another shows the same words); later moves glide.
+    val shift = remember { androidx.compose.animation.core.Animatable(0f) }
+    var placed by remember { mutableStateOf(false) }
+    LaunchedEffect(target, layout != null, boxWidth > 0f) {
+        if (layout == null || boxWidth <= 0f) return@LaunchedEffect
+        if (!placed) { shift.snapTo(target); placed = true }
+        else shift.animateTo(target, spring(dampingRatio = 1f, stiffness = Spring.StiffnessLow))
+    }
+    val density = LocalDensity.current
+    Box(
+        modifier
+            .clickable(interactionSource = press, indication = null, onClick = onExpand)
+            .padding(horizontal = 10.dp)
+            .onSizeChanged { boxWidth = it.width.toFloat() }
+            .clipToBounds()
+            .graphicsLayer { alpha = contentAlpha(); compositingStrategy = CompositingStrategy.Offscreen }
+            .drawWithContent {
+                drawContent()
+                val fade = with(density) { 28.dp.toPx() }
+                // the strip runs on past the left edge (where it continues) and, once it has moved, past the right
+                drawRect(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = fade), size = size.copy(width = fade), blendMode = BlendMode.DstIn)
+                val right = (shift.value / fade).coerceIn(0f, 1f)
+                if (right > 0f) drawRect(
+                    Brush.horizontalGradient(0f to Color.Black, 1f to Color.Black.copy(alpha = 1f - right), startX = size.width - fade, endX = size.width),
+                    topLeft = Offset(size.width - fade, 0f), size = size.copy(width = fade), blendMode = BlendMode.DstIn,
+                )
+            },
+        contentAlignment = Alignment.CenterEnd,
+    ) {
+        if (line.isEmpty()) ThinkingLines(Modifier.padding(vertical = 4.dp), lines = 1)
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Text(
+                buildAnnotatedString {
+                    append(line)
+                    if (spoken != null && spoken.last < line.length) addStyle(SpanStyle(color = accent), spoken.first, spoken.last + 1)
+                },
+                maxLines = 1,
+                softWrap = false,
+                style = MaterialTheme.typography.bodyLarge,
+                onTextLayout = { layout = it },
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.Start, unbounded = true)
+                    .graphicsLayer { translationX = shift.value },
+            )
         }
     }
 }
@@ -193,17 +264,3 @@ fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = 
 const val PILL_FRACTION = 0.78f
 val PILL_HEIGHT = 58.dp
 
-/**
- * The part of [text] the pill shows: from a little before the spoken word (at a word boundary), so the word being read
- * is always in sight; before reading starts, the opening words. Returns the line and where the spoken word sits in it.
- */
-private fun readingWindow(text: String, spoken: IntRange?): Pair<String, IntRange?> {
-    val flat = text.replace('\n', ' ')
-    if (spoken == null || spoken.first >= flat.length) return flat.trim() to null
-    // Start at a whole word: the spoken word's, then back up to two words before it.
-    var start = flat.lastIndexOf(' ', (spoken.first - 1).coerceAtLeast(0)).let { if (it < 0) 0 else it + 1 }
-    repeat(2) { if (start > 1) start = flat.lastIndexOf(' ', start - 2).let { if (it < 0) 0 else it + 1 } }
-    val line = flat.substring(start)
-    val lit = (spoken.first - start) until (spoken.last + 1 - start).coerceAtMost(line.length)
-    return line to lit
-}
