@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bayan's ground (design system: paper-1, and night in dark mode), for the splash and the window. -->
+    <color name="bayan_ground">#F6F2E6</color>
+</resources>

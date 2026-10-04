@@ -119,7 +119,7 @@
     <string name="settings_privacy">خصوصيتك</string>
     <string name="settings_privacy_body">يجري التبسيط على هاتفك، ولا يُرسَل أي نص إلى الإنترنت.</string>
     <string name="settings_fonts">الخطوط</string>
-    <string name="settings_fonts_body">Noto Sans Arabic وNoto Naskh Arabic، برخصة SIL Open Font License</string>
+    <string name="settings_fonts_body">⁨Readex Pro⁩ و⁨Noto Sans Arabic⁩ و⁨Noto Naskh Arabic⁩، برخصة ⁨SIL Open Font License⁩</string>
 
     <!-- Onboarding -->
     <string name="onboarding_skip">تخطي</string>
@@ -150,6 +150,15 @@
     <string name="history_yesterday">أمس</string>
     <string name="surface_default">تلقائي</string>
     <string name="font_system">خط النظام</string>
+    <string name="font_readex">Readex Pro</string>
+    <string name="settings_style">الشكل</string>
+    <string name="style_bayan">بيان</string>
+    <string name="style_bayan_body">ورق دافئ وخطّ صُمّم للقراءة</string>
+    <string name="style_system">ألوان هاتفك</string>
+    <string name="style_system_body">من خلفية شاشتك وخط النظام</string>
+    <string name="onboarding_style_title">اختر شكل بيان</string>
+    <string name="onboarding_style_body">يمكنك تغييره متى شئت من الإعدادات.</string>
+    <string name="language_follows_phone">%1$s (لغة الهاتف)</string>
     <string name="settings_version_title">الإصدار</string>
     <string name="sheet_working">جارٍ التبسيط…</string>
     <string name="voices_title">صوت القراءة</string>

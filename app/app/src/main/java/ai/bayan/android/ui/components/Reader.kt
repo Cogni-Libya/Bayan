@@ -24,6 +24,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.RecordVoiceOver
 import androidx.compose.material.icons.rounded.Share
@@ -73,6 +74,17 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ai.bayan.android.AppContainer
 import ai.bayan.android.R
@@ -115,8 +127,10 @@ fun ReaderText(
         requester.bringIntoView(Rect(0f, l.getLineTop(line) - margin, l.size.width.toFloat(), l.getLineBottom(line) + margin))
     }
     val background by animateColorAsState(colors.background, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "reader")
+    // The reveal is drawn, not laid out: the text is laid out once and a soft mask follows the frontier, so text
+    // flowing in costs a repaint per frame, never a new layout.
     val frontier = rememberRevealFrontier(text, reveal)
-    val annotated = remember(text, highlight, colors, frontier) { buildReaderText(text, colors.text, colors.highlight, highlight, frontier) }
+    val annotated = remember(text, highlight, colors) { buildReaderText(text, colors.muted, highlight) }
     Surface(
         color = background,
         shape = MaterialTheme.shapes.extraLarge,
@@ -127,7 +141,7 @@ fun ReaderText(
             }
         },
     ) {
-        SelectionContainer(Modifier.padding(horizontal = 24.dp, vertical = 20.dp).animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {
+        SelectionContainer(Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
             if (text.isEmpty() && placeholder != null) {
                 Text(placeholder, style = style.textStyle(), color = colors.muted)
             } else {
@@ -136,7 +150,28 @@ fun ReaderText(
                     style = style.textStyle(),
                     color = colors.text,
                     onTextLayout = { layout = it },
-                    modifier = Modifier.bringIntoViewRequester(requester).semantics { liveRegion = LiveRegionMode.Polite },
+                    modifier = Modifier
+                        .bringIntoViewRequester(requester)
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                        .drawBehind {
+                            // The word being read: a soft band behind it with rounded ends (design system: 6 px radius),
+                            // a little larger than the word; it moves by colour, never by sliding.
+                            val l = layout ?: return@drawBehind
+                            val h = highlight ?: return@drawBehind
+                            if (h.isEmpty() || h.last >= l.layoutInput.text.length) return@drawBehind
+                            val box = l.getPathForRange(h.first, h.last + 1).getBounds()
+                            // fitted to the letters (from the baseline), not to the generous line height
+                            val baseline = l.getLineBaseline(l.getLineForOffset(h.first))
+                            val em = style.sizeSp.sp.toPx()
+                            val padX = 5.dp.toPx()
+                            drawRoundRect(
+                                colors.highlight,
+                                topLeft = Offset(box.left - padX, baseline - em * 0.98f),
+                                size = Size(box.width + 2 * padX, em * 1.55f),
+                                cornerRadius = CornerRadius(8.dp.toPx()),
+                            )
+                        }
+                        .revealMask({ frontier.value }, { layout }, with(density) { REVEAL_BAND_DP.dp.toPx() }),
                 )
             }
         }
@@ -145,44 +180,69 @@ fun ReaderText(
 
 private const val FOLLOW_PAUSE_MS = 5_000L
 
-/** Characters this far behind the reveal frontier fade from clear to fully drawn. */
-private const val REVEAL_BAND = 28f
+/** How far behind the reveal frontier text is fully drawn: the soft edge the text fades in along. */
+private const val REVEAL_BAND_DP = 56f
+
+/** Characters per second the reveal moves at, at most; it catches up faster when far behind. */
+private const val REVEAL_CHARS_PER_S = 80f
 
 /**
- * How far into [text] the reveal has reached. New text flows in word by word, like a streamed answer;
- * text that only grew keeps what is already shown. Without [reveal] everything is shown at once.
+ * How far into [text] the reveal has reached (in characters), read only while drawing. New text flows in word by
+ * word, like a streamed answer; text that only grew keeps what is already shown. Without [reveal] everything is shown.
  */
 @Composable
-private fun rememberRevealFrontier(text: String, reveal: Boolean): Float {
+private fun rememberRevealFrontier(text: String, reveal: Boolean): Animatable<Float, *> {
     val frontier = remember { Animatable(if (reveal) 0f else Float.MAX_VALUE) }
     var shown by remember { mutableStateOf("") }
     LaunchedEffect(text, reveal) {
         if (!reveal) { frontier.snapTo(Float.MAX_VALUE); shown = text; return@LaunchedEffect }
         // A streamed text that was corrected mid-way resumes from the unchanged part; a different text starts over.
-        if (frontier.value > text.length + REVEAL_BAND) frontier.snapTo(0f)
+        if (frontier.value > text.length + 1) frontier.snapTo(0f)
         else if (!text.startsWith(shown)) frontier.snapTo(minOf(frontier.value, text.commonPrefixWith(shown).length.toFloat()))
         shown = text
-        val end = text.length + REVEAL_BAND
-        val millis = ((end - frontier.value) * 12).toInt().coerceIn(300, 1800)
+        val end = text.length + 1f
+        val behind = end - frontier.value
+        val millis = (behind / REVEAL_CHARS_PER_S * 1000).toInt().coerceIn(260, 1600)
         frontier.animateTo(end, tween(millis, easing = LinearEasing))
     }
-    return frontier.value
+    return frontier
 }
 
-private fun buildReaderText(text: String, color: Color, highlightColor: Color, highlight: IntRange?, frontier: Float): AnnotatedString =
+/**
+ * Hides the text past [frontier] (characters) with a soft edge [band] px wide that runs in the reading direction of
+ * its line: lines already reached are whole, the current line fades in up to the frontier, later lines keep their
+ * place but are not drawn yet.
+ */
+private fun Modifier.revealMask(frontier: () -> Float, layout: () -> TextLayoutResult?, band: Float): Modifier =
+    graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            val l = layout() ?: return@drawWithContent
+            val n = l.layoutInput.text.length
+            val f = frontier()
+            if (n == 0 || f >= n + 1) return@drawWithContent
+            val at = f.toInt().coerceIn(0, n - 1)
+            val line = l.getLineForOffset(at)
+            val top = l.getLineTop(line)
+            val bottom = l.getLineBottom(line)
+            // later lines: not yet
+            if (bottom < size.height) drawRect(Color.Black, Offset(0f, bottom), Size(size.width, size.height - bottom), blendMode = BlendMode.DstOut)
+            // this line: clear up to the frontier, then a soft edge, then hidden
+            val x = l.getHorizontalPosition(at, usePrimaryDirection = true)
+            val rtl = l.getParagraphDirection(at) == ResolvedTextDirection.Rtl
+            val (from, to) = if (rtl) x - band to x else x + band to x      // hidden side … clear side
+            val brush = Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = from, endX = to)
+            if (rtl) drawRect(brush, Offset(0f, top), Size(x, bottom - top), blendMode = BlendMode.DstOut)
+            else drawRect(brush, Offset(x, top), Size(size.width - x, bottom - top), blendMode = BlendMode.DstOut)
+        }
+
+/** While reading aloud, the words already read step back a little (design system: read-spoken), so the eye keeps its place. */
+private fun buildReaderText(text: String, spokenColor: Color, highlight: IntRange?): AnnotatedString =
     buildAnnotatedString {
         append(text)
-        if (highlight != null && !highlight.isEmpty() && highlight.last < text.length) {
-            addStyle(SpanStyle(background = highlightColor), highlight.first, highlight.last + 1)
+        if (highlight != null && !highlight.isEmpty() && highlight.first in 1..text.length) {
+            addStyle(SpanStyle(color = spokenColor), 0, highlight.first)
         }
-        if (frontier >= text.length + REVEAL_BAND) return@buildAnnotatedString
-        // Hidden text keeps its place (transparent), so the layout never jumps while it appears.
-        val solid = (frontier - REVEAL_BAND).toInt().coerceIn(0, text.length)
-        val visible = frontier.toInt().coerceIn(0, text.length)
-        for (i in solid until visible) {
-            addStyle(SpanStyle(color = color.copy(alpha = ((frontier - i) / REVEAL_BAND).coerceIn(0f, 1f))), i, i + 1)
-        }
-        if (visible < text.length) addStyle(SpanStyle(color = Color.Transparent), visible, text.length)
     }
 
 /** Two connected toggle buttons that switch between the simplified text and the original. */
@@ -346,14 +406,19 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/** Bayan returned the text as it was: there is nothing to compare or replace. */
+fun isUnchanged(source: String, result: String) = source.trim() == result.trim()
+
 /** Shown when the model kept the text as it was, so the reader knows nothing went wrong. */
 @Composable
 fun UnchangedNote(source: String, result: String) {
-    if (source.trim() != result.trim()) return
-    Text(
-        stringResource(R.string.result_unchanged),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 8.dp),
-    )
+    if (!isUnchanged(source, result)) return
+    Row(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(
+            stringResource(R.string.result_unchanged),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }

@@ -1,5 +1,6 @@
 package ai.bayan.android
 
+import android.os.Build
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -36,9 +37,26 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Bayan's ground reaches into the camera cutout too (screens keep their content clear of it), so a phone on its
+        // side shows no black strip.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
         val app = (application as BayanApp).container
         val settings: StateFlow<Settings?> = app.settings.settings.stateIn(lifecycleScope, SharingStarted.Eagerly, null)
         splash.setKeepOnScreenCondition { settings.value == null }
+        // The sunrise plays to the end, then the splash gives way: the logo lifts a little and fades as the paper
+        // dissolves into the app (after Google AI Edge Gallery's splash exit).
+        splash.setOnExitAnimationListener { view ->
+            val icon = view.iconView
+            // starts while the glow is still settling, so the logo never just sits there
+            val left = (view.iconAnimationStartMillis + view.iconAnimationDurationMillis - 280 - System.currentTimeMillis()).coerceIn(0L, 900L)
+            view.view.animate().alpha(0f).setStartDelay(left + 60).setDuration(360)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .withEndAction { view.remove() }.start()
+            icon.animate().translationY(-icon.height * 0.08f).scaleX(0.94f).scaleY(0.94f).alpha(0f)
+                .setStartDelay(left).setDuration(460).setInterpolator(android.view.animation.PathInterpolator(0.3f, 0f, 0f, 1f)).start()
+        }
         if (savedInstanceState == null) receive(intent)
 
         setContent {
@@ -52,7 +70,7 @@ class MainActivity : ComponentActivity() {
                 onDispose {}
             }
             CompositionLocalProvider(LocalAppContainer provides app) {
-                BayanTheme(s.themeMode) {
+                BayanTheme(s.themeMode, s.style) {
                     AnimatedContent(s.onboardingDone, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "onboarding") { done ->
                         if (done) BayanNavigation(shared, onSharedTextConsumed = { sharedText.value = null })
                         else OnboardingScreen(onFinish = { app.scope.launch { app.settings.setOnboardingDone() } })

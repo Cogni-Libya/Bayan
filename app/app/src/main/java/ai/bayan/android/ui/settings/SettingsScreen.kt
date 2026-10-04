@@ -83,6 +83,9 @@ import ai.bayan.android.data.ReaderFont
 import ai.bayan.android.data.ReaderStyle
 import ai.bayan.android.data.ReaderSurface
 import ai.bayan.android.data.ThemeMode
+import ai.bayan.android.ui.theme.isDark
+import ai.bayan.android.ui.components.StylePicker
+import ai.bayan.android.data.AppStyle
 import ai.bayan.android.model.ModelCatalog
 import ai.bayan.android.speech.VoiceCatalog
 import ai.bayan.android.ui.appViewModel
@@ -107,6 +110,7 @@ class SettingsViewModel(private val app: AppContainer) : ViewModel() {
     fun speechRate(v: Float) = set { repo.setSpeechRate(v) }
     fun highlight(v: Boolean) = set { repo.setHighlight(v) }
     fun theme(v: ThemeMode) = set { repo.setThemeMode(v) }
+    fun style(v: AppStyle) = set { repo.setStyle(v) }
     fun resetReader() = set {
         val d = ReaderStyle()
         repo.setReaderFont(d.font); repo.setReaderSize(d.sizeSp); repo.setLineHeight(d.lineHeight)
@@ -180,11 +184,15 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
                 Item(0, 1, Icons.Rounded.Memory, R.string.settings_model, stringResource(ModelCatalog.get(settings.activeModel).title), onClick = onOpenModels)
 
                 SectionHeader(stringResource(R.string.settings_section_appearance))
+                StylePicker(
+                    settings.style, settings.themeMode.isDark(), onSelect = { vm.style(it) },
+                    Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+                )
                 val languages = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
                 val count = if (languages) 2 else 1
                 Item(0, count, Icons.Rounded.DarkMode, R.string.settings_theme, stringResource(themeLabel(settings.themeMode)), onClick = { choice = Choice.Theme })
                 if (languages) {
-                    Item(1, count, Icons.Rounded.Language, R.string.settings_language, stringResource(R.string.settings_language_body), onClick = {
+                    Item(1, count, Icons.Rounded.Language, R.string.settings_language, currentLanguage(), onClick = {
                         context.startActivity(Intent(SystemSettings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null)))
                     })
                 }
@@ -216,7 +224,23 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
     }
 }
 
-@StringRes private fun fontLabel(f: ReaderFont) = if (f == ReaderFont.System) R.string.font_system else R.string.font_naskh
+@StringRes private fun fontLabel(f: ReaderFont) = when (f) {
+    ReaderFont.Readex -> R.string.font_readex
+    ReaderFont.Naskh -> R.string.font_naskh
+    ReaderFont.System -> R.string.font_system
+}
+
+/** The app's language as it is now, named in itself (Android 13+ per-app languages). */
+@Composable
+private fun currentLanguage(): String {
+    val context = LocalContext.current
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return stringResource(R.string.settings_language_body)
+    val chosen = context.getSystemService(android.app.LocaleManager::class.java).applicationLocales
+    return if (chosen.isEmpty) {
+        val phone = java.util.Locale.getDefault()
+        stringResource(R.string.language_follows_phone, phone.getDisplayLanguage(phone))
+    } else chosen[0].let { it.getDisplayLanguage(it) }
+}
 
 @StringRes private fun themeLabel(m: ThemeMode) = when (m) {
     ThemeMode.System -> R.string.theme_system

@@ -109,7 +109,7 @@
     <string name="settings_privacy">Your privacy</string>
     <string name="settings_privacy_body">Simplification runs on your phone. No text is sent to the internet.</string>
     <string name="settings_fonts">Fonts</string>
-    <string name="settings_fonts_body">Noto Sans Arabic and Noto Naskh Arabic, SIL Open Font License</string>
+    <string name="settings_fonts_body">Readex Pro, Noto Sans Arabic and Noto Naskh Arabic, SIL Open Font License</string>
 
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_next">Next</string>
@@ -137,6 +137,15 @@
     <string name="history_yesterday">Yesterday</string>
     <string name="surface_default">Default</string>
     <string name="font_system">System font</string>
+    <string name="font_readex">Readex Pro</string>
+    <string name="settings_style">Style</string>
+    <string name="style_bayan">Bayan</string>
+    <string name="style_bayan_body">Warm paper and a typeface made for reading</string>
+    <string name="style_system">Your phone\'s colours</string>
+    <string name="style_system_body">From your wallpaper, with the system font</string>
+    <string name="onboarding_style_title">Choose how Bayan looks</string>
+    <string name="onboarding_style_body">You can change it any time in Settings.</string>
+    <string name="language_follows_phone">%1$s (phone language)</string>
     <string name="settings_version_title">Version</string>
     <string name="sheet_working">Simplifying…</string>
     <string name="voices_title">Reading voice</string>
