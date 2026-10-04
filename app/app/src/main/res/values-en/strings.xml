@@ -56,8 +56,8 @@
     <string name="model_arabart_summary">Best for most phones: small, and simplifies quickly, sentence by sentence.</string>
     <string name="model_arat5_title">Large model</string>
     <string name="model_arat5_summary">Scored higher in our tests, but it is slower and needs more space.</string>
-    <string name="model_model3_summary">Simplifies the most while keeping the meaning, but it is slower and needs more space.</string>
-    <string name="model_arat5_previous_title">Large model (previous version)</string>
+    <string name="model_model3_summary">Simplifies more than the large model, but changes the meaning more often. Slower and needs more space.</string>
+    <string name="model_model3_title">Large model, simplifies more</string>
     <string name="models_title">Simplification models</string>
     <string name="models_privacy">Models run entirely on your phone. Your text never leaves your device.</string>
     <string name="models_download">Download (%1$s)</string>
