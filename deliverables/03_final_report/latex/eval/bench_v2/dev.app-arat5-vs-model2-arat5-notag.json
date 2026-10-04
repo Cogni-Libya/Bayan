@@ -991,7 +991,7 @@
  "predictions": "/home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/dev/app-arat5.jsonl",
  "baseline": "/home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/dev/model2-arat5-notag.jsonl",
  "data_version": "1.0",
- "bayanbench": "2.0.0.dev0",
+ "bayanbench": "2.0.0",
  "meaning": {
   "scorer": "gemma-4-31B-it-qat-w4a16-ct|q-v1",
   "same_threshold": 0.5,

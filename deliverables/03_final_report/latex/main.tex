@@ -45,10 +45,10 @@ a judge, so the benchmark keeps the measures that track people. On it, models
 trained on a 22,733-pair mix lower linguistic load at a cost to meaning: the
 medium strength setting of AraT5v2 cuts \bvHTfiveClause{} words from the longest
 clause and keeps the meaning in \bvHTfiveKept\% of outputs. A second corpus written
-by Gemma~4 31B (14,975 rows) and a third model trained on it, run behind the
-app's code guards, keep the meaning as well as the previous app model while
-cutting about \mThreeClauseDiff{} more words from the longest clause; it is the
-model Bayan ships. A small meaning judge catches 95.5\% of planted errors. On a
+by Gemma~4 31B (14,975 rows) and a third model trained on it cut about
+\mThreeTClauseAbs{} more words from the longest clause than model~2 in the app,
+but keep the meaning less often on the test split (by \mThreeTKeptAbs{} points), so
+the app keeps model~2 and offers model~3 as an option. A small meaning judge catches 95.5\% of planted errors. On a
 Snapdragon 870 phone the first word of a rewrite appears 82--172\,ms after the
 request with the int8 AraBART bundle (222\,MB) and 177--318\,ms with AraT5v2
 (471\,MB, over our 250\,MB budget).\vspace{2pt}}}
@@ -223,7 +223,8 @@ architectures, exported to the phone, tested on a device, and scored on a
 benchmark built for the task. The last week replaced the benchmark's closed
 meaning judge with an open scorer and checked that scorer against human ratings;
 model~3, trained on a second corpus, was then gated against the shipped model in
-the app's own pipeline and shipped on 4 October. \autoref{fig:schedule} shows the timeline;
+the app's own pipeline; it passed on dev but lost meaning on test, so on 4 October
+it was added as an option and model~2 stayed the app's large model. \autoref{fig:schedule} shows the timeline;
 \autoref{tab:milestones} compares target and actual dates.
 
 \begin{figure}[h]
@@ -253,7 +254,7 @@ Model running on a phone, latency measured            & Fri 2 Oct  & Sat 26 Sep 
 BayanBench built; model~2 scored on its test split    & ---        & Mon 28 Sep \\ \hline
 BayanBench v2: open meaning scorer; all systems scored (\#48) & ---  & Wed 30 Sep \\ \hline
 Human rating round complete, six raters (\#48)        & Fri 2 Oct  & Sat 3 Oct \\ \hline
-Model~3 ship decision (\autoref{sec:model3})           & Sun 4 Oct  & Sun 4 Oct: ships \\ \hline
+Model~3 ship decision (\autoref{sec:model3})           & Sun 4 Oct  & Sun 4 Oct: option \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -464,8 +465,8 @@ restraint, and protection of text that must not change, as the open problems.
 Model~3 retrains AraT5v2 on corpus v1 instead of the model-2 mix. In the app it
 runs behind the text step's code guards (\autoref{sec:design}), which keep the
 source sentence when a rewrite loses a number or flips a negation and pass
-protected text through untouched. It ships as the app's large model
-(\autoref{sec:model3}).
+protected text through untouched. It ships in the app as an option next to
+model~2 (\autoref{sec:model3}).
 
 \autoref{fig:evolution} summarises how the training pipeline changed. Each step
 was driven by a measured problem in the one before it.
@@ -1013,9 +1014,10 @@ split on core items; \autoref{tab:benchfx} isolates one change at a time, and
       of outputs. Without the tag the same models cut \bvHTfiveNClause{} and
       \bvHBartNClause{} words and keep \bvHTfiveNKept\% and \bvHBartNKept\%; the
       int8 AraT5v2 bundle cuts \bvHAppTfiveClause{} and keeps \bvHAppTfiveKept\%
-      (\autoref{fig:tradeoff}). Within each architecture, every setting that
-      simplifies more keeps meaning less often, and no system simplifies as much
-      as the tagged setting while keeping meaning as often as the shipped bundle.
+      (\autoref{fig:tradeoff}). Within each architecture, the tagged setting
+      simplifies most and keeps meaning least often, and no system simplifies as
+      much as the tagged setting while keeping meaning as often as the shipped
+      bundle.
 \item \textbf{AraT5v2 keeps meaning better at every setting.} At the same setting
       AraT5v2 keeps the meaning \bfxHTfiveNvsBartNKept{} points more often than
       AraBART without a tag \bfxHTfiveNvsBartNKeptCI, \bfxHTfivevsBartKept{} with
@@ -1043,12 +1045,13 @@ split on core items; \autoref{tab:benchfx} isolates one change at a time, and
       (AraBART) points and cuts \bfxHTfiveNvsTfiveClause{} and
       \bfxHBartNvsBartClause{} fewer words from the longest clause. Quantising to
       int8 rewords most outputs (the app's AraT5v2 outputs match the float
-      model's on only 234 of 731 dev items) but makes no measurable difference to
-      meaning kept for either model; for
-      AraT5v2 it moves the
-      model toward copying (\bfxHAppTfivevsTfiveNClause{} fewer words cut,
-      \bfxHAppTfivevsTfiveNC{} points more easy text left alone), which makes the
-      shipped AraT5v2 bundle the safest system and the least simplifying one.
+      model's on only 234 of 731 dev items). For AraBART it makes no measurable
+      difference to meaning kept. For AraT5v2 it moves the model toward copying
+      (\bfxHAppTfivevsTfiveNClause{} fewer words cut, \bfxHAppTfivevsTfiveNC{}
+      points more easy text left alone) and keeps the meaning
+      \bfxHAppTfivevsTfiveNKept{} points more often \bfxHAppTfivevsTfiveNKeptCI{}
+      on this split, though not on dev, which makes the shipped AraT5v2 bundle the
+      safest system and the least simplifying one.
 \end{enumerate}
 
 \begin{figure}[h]
@@ -1111,16 +1114,25 @@ with model~2 (AraT5v2, medium setting), as float models on the behaviours model~
 got wrong, it leaves easy text unchanged in 55\% of cases against 14\%, keeps
 protected text intact in 97.8\% against 4.4\%, and keeps numbers in 93\% of cases.
 Because int8 had changed most of model~2's outputs, model~3 was gated as it
-ships: its int8 bundle, run through the app's text step (\autoref{sec:design}),
-against the previous app model through the same step, on the BayanBench dev core
-items. It keeps the meaning as well (probability of same meaning
-\mThreeSameDiff{} [\mThreeSameLo, \mThreeSameHi] on the \mThreePaired{} items scored for
-both; \mThreeScored{} of \mThreeCore{} were scored when the decision was taken), cuts
-\mThreeClauseDiff{} more words from the longest clause [\mThreeClauseCi], lowers the
-reading level by \mThreeLevelDiff{} more [\mThreeLevelCi], removes \mThreeHardDiff{}
-more hard words [\mThreeHardCi], leaves easy text unchanged in \mThreeEasy\% of
-cases (\mThreeEasyDiff{} points) and keeps every number. Model~3 therefore ships as
-the app's large model, decided on Sunday 4 October.
+would ship: its int8 bundle, run through the app's current text step
+(\autoref{sec:design}), against the app's large model (model~2 AraT5v2, int8)
+through the same step, on the BayanBench core items. The rule, set before the run,
+was that meaning kept must not be significantly lower, the longest clause must
+shrink by more than the app's, and no check may be significantly worse. On dev,
+model~3 passes: meaning kept differs by \mThreeKeptDiff{} points [\mThreeKeptCi] (\mThreeScored{}
+of \mThreeCore{} items scored), \mThreeClauseAbs{} more words are cut from the longest
+clause [\mThreeClauseCi], the reading level falls \mThreeLevelAbs{} more
+[\mThreeLevelCi], easy text is left unchanged \mThreeEasyAbs{} points more often,
+and every number is kept. On test, run once to confirm, the simplification holds
+(\mThreeTClauseAbs{} more words cut [\mThreeTClauseCi], reading level
+\mThreeTLevelAbs{} lower [\mThreeTLevelCi], \mThreeTHardAbs{} more hard words removed
+[\mThreeTHardCi]), but meaning kept falls by \mThreeTKeptAbs{} points
+[\mThreeTKeptCi], a significant loss (\mThreeTPaired{} of \mThreeTCore{} items
+scored for both). Model~3 is the stronger model on its own (against model~2 as a raw
+model it keeps the meaning as often and simplifies more), but the app's guards
+narrow model~2's meaning losses more than model~3's. Since a wrong meaning costs a
+reader more than a long clause, the app keeps model~2 as its large model and lists
+model~3 as an option that simplifies more, decided on Sunday 4 October.
 
 \subsection{User Interface}
 
@@ -1279,8 +1291,8 @@ O1 Beat copying on changed rows; lower linguistic load without losing meaning &
   Model~1: \greedychanged{} vs \copytestchanged{} on SAMER test (\greedygain{}). Model~2
   lowers clause length and hard words, but keeps the meaning in
   \bvHminKept--\bvHmaxKept\% of outputs, and raters kept the meaning of
-  \hBartSameMin--\hAppTfiveSame\% of changed outputs. Model~3 in the app keeps
-  meaning as well as the previous app model and simplifies more & partly met \\ \hline
+  \hBartSameMin--\hAppTfiveSame\% of changed outputs. Model~3 in the app simplifies
+  more but keeps the meaning \mThreeTKeptAbs{} points less often on test & partly met \\ \hline
 O2 Diacritize without changing letters & Libtashkeel: DER 6.91\% without case endings,
   0 of 100 sentences altered, 4.8\,MB; not in the tested build & partly met \\ \hline
 O3 Run on a phone within 250\,MB & Both bundles run on a Snapdragon 870 phone, first
@@ -1302,9 +1314,9 @@ linguistic load, but not for free: every setting trades meaning for
 simplification, the safest one simplifies least, and AraT5v2 keeps the meaning
 of \bvHTfiveKept--\bvHAppTfiveKept\% of outputs, more than AraBART. Removing the
 strength tag helps meaning, so the untagged bundles the app ships are safer than
-the tagged settings. Model~3, behind the app's code guards, keeps the meaning as
-well as the previous app model while simplifying more and leaving easy text alone
-more often. \textbf{RQ3:} yes for AraBART, in part for AraT5v2. Streamed output
+the tagged settings. Model~3 does not escape the trade-off: behind the app's code guards it
+simplifies more than model~2 and leaves easy text alone more often, but keeps the
+meaning less often on test. \textbf{RQ3:} yes for AraBART, in part for AraT5v2. Streamed output
 reaches the reader in under a third of a second on a mid-range phone with either
 bundle; the int8 AraBART bundle fits the 250\,MB budget, while the AraT5v2
 bundles, model~3's included, need 471\,MB, and int8 changes most of AraT5v2's
@@ -1327,9 +1339,9 @@ The evaluation points to specific next steps. The central one is to move the
 trade-off of F1: a model that simplifies as much as the tagged setting while
 keeping meaning as often as the shipped bundle. The meaning scorer, now checked
 against people, can rank candidate rewrites and select checkpoints, so that
-training is steered by the behaviours readers need rather than by SARI. Model~3's
-meaning was scored on part of the dev split when it shipped and not yet on test;
-completing that scoring, and a human rating of model~3, comes first. The AraT5v2 bundle can meet the size budget by pruning its vocabulary to the
+training is steered by the behaviours readers need rather than by SARI. Model~3 shows
+the next target: its simplification with model~2's meaning rate in the app, which
+a human rating of its outputs would help locate. The AraT5v2 bundle can meet the size budget by pruning its vocabulary to the
 pieces Arabic text uses: 46\% of its parameters sit in two embedding matrices,
 and pruned int8 weights would take about 223\,MB. Sentence splitting needs
 training data that teaches it, which no human-written corpus provides. Last, a
@@ -1364,8 +1376,8 @@ comprehension, would turn ratings into evidence about reading.
 \item \textbf{One phone.} On-device figures come from one mid-range phone, and
       the AraT5v2 bundles, model~3's included, at 471\,MB, exceed the 250\,MB
       objective.
-\item \textbf{Model~3 was gated on part of its scores.} The ship decision used
-      the \mThreeScored{} of \mThreeCore{} dev core items that had a meaning score,
+\item \textbf{Model~3's test comparison is partly scored.} It covers the
+      \mThreeTPaired{} of \mThreeTCore{} test core items scored for both systems,
       and no person has rated model~3's outputs.
 \item \textbf{One run per configuration.} Each model was trained once, with one
       seed, so the comparison between architectures carries no estimate of

@@ -6,35 +6,35 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      78.60394537177542,
+      75.0,
+      82.43243243243244
      ],
-     "n": 124,
-     "pending": 535,
-     "complete": false,
+     "n": 659,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      28.072837632776938,
+      23.309352517985612,
+      32.55474452554745
      ],
-     "diff_n": 26
+     "diff_n": 659
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.7868757207890744,
+      0.7531345218800648,
+      0.8239543333333333
      ],
-     "n": 124,
-     "pending": 535,
-     "complete": false,
+     "n": 659,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      0.27508710166919575,
+      0.2299677265500795,
+      0.3184619047619047
      ],
-     "diff_n": 26
+     "diff_n": 659
     }
    },
    "simpler": {
@@ -291,35 +291,35 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      77.00729927007299,
+      62.67409470752089,
+      89.95633187772926
      ],
-     "n": 43,
-     "pending": 231,
-     "complete": false,
+     "n": 274,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      20.072992700729927,
+      14.507772020725387,
+      27.27272727272727
      ],
-     "diff_n": 16
+     "diff_n": 274
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.841863503649635,
+      0.7975905172413794,
+      0.8953979079497908
      ],
-     "n": 43,
-     "pending": 231,
-     "complete": false,
+     "n": 274,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      0.23061131386861314,
+      0.16470765306122448,
+      0.2883343023255814
      ],
-     "diff_n": 16
+     "diff_n": 274
     }
    },
    "simpler": {
@@ -548,35 +548,35 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      75.49019607843137,
+      68.78048780487805,
+      81.37254901960785
      ],
-     "n": 47,
-     "pending": 157,
-     "complete": false,
+     "n": 204,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      28.921568627450984,
+      21.568627450980394,
+      36.76470588235294
      ],
-     "diff_n": 8
+     "diff_n": 204
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.7601725490196078,
+      0.697064039408867,
+      0.8163392156862744
      ],
-     "n": 47,
-     "pending": 157,
-     "complete": false,
+     "n": 204,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      0.2978985294117647,
+      0.2287406862745098,
+      0.3712995098039216
      ],
-     "diff_n": 8
+     "diff_n": 204
     }
    },
    "simpler": {
@@ -791,35 +791,35 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      82.6086956521739,
+      65.21739130434783,
+      95.65217391304348
      ],
-     "n": 6,
-     "pending": 17,
-     "complete": false,
+     "n": 23,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      13.043478260869565,
+      -17.391304347826086,
+      43.47826086956522
      ],
-     "diff_n": 3
+     "diff_n": 23
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.8257608695652173,
+      0.6521782608695652,
+      0.9565217391304348
      ],
-     "n": 6,
-     "pending": 17,
-     "complete": false,
+     "n": 23,
+     "pending": 0,
+     "complete": true,
      "diff": [
-      0.0,
-      0.0,
-      0.0
+      0.12956521739130436,
+      -0.1738086956521739,
+      0.4327521739130435
      ],
-     "diff_n": 3
+     "diff_n": 23
     }
    },
    "simpler": {
@@ -991,7 +991,7 @@
  "predictions": "/home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/test/app-arat5.jsonl",
  "baseline": "/home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/test/app-arabart.jsonl",
  "data_version": "1.0",
- "bayanbench": "2.0.0.dev0",
+ "bayanbench": "2.0.0",
  "meaning": {
   "scorer": "gemma-4-31B-it-qat-w4a16-ct|q-v1",
   "same_threshold": 0.5,

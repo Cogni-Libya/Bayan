@@ -601,7 +601,7 @@
  "predictions": "/home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/dev/app-arabart.jsonl",
  "baseline": null,
  "data_version": "1.0",
- "bayanbench": "2.0.0.dev0",
+ "bayanbench": "2.0.0",
  "meaning": {
   "scorer": "gemma-4-31B-it-qat-w4a16-ct|q-v1",
   "same_threshold": 0.5,

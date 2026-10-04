@@ -3,8 +3,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == core items (749) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (124 of 659 scored)  n=124, pending 535, vs app-arabart +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (124 of 659 scored)  n=124, pending 535, vs app-arabart +0.00 [+0.00,+0.00]
+    meaning kept                                                    78.6 [ 75- 82]  n=659, vs app-arabart +28.1 [+23,+33]*
+    P(same meaning)                                                 +0.79 [+0.75, +0.82]  n=659, vs app-arabart +0.28 [+0.23,+0.32]*
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +1.92 [+1.05, +2.86]  n=212, vs app-arabart -2.84 [-3.67,-2.05]*
     reading level: levels lower                                     +0.14 [+0.08, +0.20]  n=543, vs app-arabart -0.15 [-0.24,-0.05]*
@@ -30,8 +30,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == held-out items (274) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (43 of 274 scored)  n=43, pending 231, vs app-arabart +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (43 of 274 scored)  n=43, pending 231, vs app-arabart +0.00 [+0.00,+0.00]
+    meaning kept                                                    77.0 [ 63- 90]  n=274, vs app-arabart +20.1 [+15,+27]*
+    P(same meaning)                                                 +0.84 [+0.80, +0.90]  n=274, vs app-arabart +0.23 [+0.16,+0.29]*
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.33 [+1.14, +3.49]  n=58, vs app-arabart -1.60 [-3.06,-0.09]*
     reading level: levels lower                                     +0.19 [+0.02, +0.30]  n=163, vs app-arabart -0.19 [-0.30,-0.06]*
@@ -55,8 +55,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == outside items (204) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (47 of 204 scored)  n=47, pending 157, vs app-arabart +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (47 of 204 scored)  n=47, pending 157, vs app-arabart +0.00 [+0.00,+0.00]
+    meaning kept                                                    75.5 [ 69- 81]  n=204, vs app-arabart +28.9 [+22,+37]*
+    P(same meaning)                                                 +0.76 [+0.70, +0.82]  n=204, vs app-arabart +0.30 [+0.23,+0.37]*
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.09 [+0.75, +3.55]  n=65, vs app-arabart -2.14 [-2.90,-1.36]*
     reading level: levels lower                                     +0.07 [-0.04, +0.16]  n=167, vs app-arabart -0.08 [-0.20,+0.01]
@@ -79,8 +79,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == written items (23) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (6 of 23 scored)  n=6, pending 17, vs app-arabart +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (6 of 23 scored)  n=6, pending 17, vs app-arabart +0.00 [+0.00,+0.00]
+    meaning kept                                                    82.6 [ 65- 96]  n=23, vs app-arabart +13.0 [-17,+43]
+    P(same meaning)                                                 +0.83 [+0.65, +0.96]  n=23, vs app-arabart +0.13 [-0.17,+0.43]
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   -1.00 [-1.00, -1.00]  n=1, vs app-arabart -1.00 [-1.00,-1.00]*
     reading level: levels lower                                     +0.00 [-0.17, +0.17]  n=23, vs app-arabart +0.00 [-0.22,+0.26]
@@ -96,5 +96,3 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
     kept 60%+ of words                                             100.0 [100-100]  n=23, vs app-arabart +4.3 [+0,+13]
     negations kept                                                  92.9 [ 79-100]  n=14, vs app-arabart +7.1 [+0,+21]
     mid-sentence full stop added                                     0.0 [  0-  0]  n=23, vs app-arabart +0.0 [+0,+0]
-
-pending item-measures: {'core': {'meaning': 1070}, 'held-out': {'meaning': 462}, 'outside': {'meaning': 314}, 'written': {'meaning': 34}}. `bayanbench meaning-pending` lists the outputs to score.

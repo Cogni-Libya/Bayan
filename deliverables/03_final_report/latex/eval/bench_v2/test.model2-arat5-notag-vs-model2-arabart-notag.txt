@@ -3,8 +3,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == core items (749) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (42 of 659 scored)  n=42, pending 617, vs model2-arabart-notag +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (42 of 659 scored)  n=42, pending 617, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+    meaning kept                                                    68.3 [ 65- 72]  n=659, vs model2-arabart-notag +16.8 [+12,+22]*
+    P(same meaning)                                                 +0.68 [+0.65, +0.72]  n=659, vs model2-arabart-notag +0.16 [+0.12,+0.21]*
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +4.47 [+3.27, +5.94]  n=212, vs model2-arabart-notag -0.46 [-1.11,+0.19]
     reading level: levels lower                                     +0.18 [+0.11, +0.25]  n=543, vs model2-arabart-notag -0.08 [-0.16,-0.01]*
@@ -30,8 +30,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == held-out items (274) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (24 of 274 scored)  n=24, pending 250, vs model2-arabart-notag +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (24 of 274 scored)  n=24, pending 250, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+    meaning kept                                                    70.8 [ 59- 82]  n=274, vs model2-arabart-notag +12.4 [+7,+18]*
+    P(same meaning)                                                 +0.78 [+0.73, +0.83]  n=274, vs model2-arabart-notag +0.15 [+0.08,+0.20]*
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.97 [+1.66, +3.97]  n=58, vs model2-arabart-notag -0.97 [-1.95,-0.06]*
     reading level: levels lower                                     +0.31 [+0.15, +0.42]  n=163, vs model2-arabart-notag -0.09 [-0.21,+0.09]
@@ -55,8 +55,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == outside items (204) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (23 of 204 scored)  n=23, pending 181, vs model2-arabart-notag +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (23 of 204 scored)  n=23, pending 181, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+    meaning kept                                                    64.2 [ 57- 71]  n=204, vs model2-arabart-notag +16.2 [+8,+25]*
+    P(same meaning)                                                 +0.65 [+0.58, +0.71]  n=204, vs model2-arabart-notag +0.17 [+0.09,+0.25]*
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.82 [+1.61, +4.11]  n=65, vs model2-arabart-notag -1.08 [-1.79,-0.28]*
     reading level: levels lower                                     +0.14 [+0.03, +0.24]  n=167, vs model2-arabart-notag -0.02 [-0.15,+0.10]
@@ -79,8 +79,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == written items (23) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (2 of 23 scored)  n=2, pending 21, vs model2-arabart-notag +0.0 [+0,+0]
-    P(same meaning)                                                incomplete (2 of 23 scored)  n=2, pending 21, vs model2-arabart-notag +0.00 [+0.00,+0.00]
+    meaning kept                                                    73.9 [ 52- 91]  n=23, vs model2-arabart-notag +13.0 [-13,+39]
+    P(same meaning)                                                 +0.75 [+0.56, +0.91]  n=23, vs model2-arabart-notag +0.14 [-0.11,+0.38]
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.00 [+2.00, +2.00]  n=1, vs model2-arabart-notag -1.00 [-1.00,-1.00]*
     reading level: levels lower                                     +0.04 [-0.09, +0.22]  n=23, vs model2-arabart-notag +0.00 [-0.17,+0.26]
@@ -96,5 +96,3 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
     kept 60%+ of words                                             100.0 [100-100]  n=23, vs model2-arabart-notag +0.0 [+0,+0]
     negations kept                                                  92.9 [ 79-100]  n=14, vs model2-arabart-notag +7.1 [+0,+21]
     mid-sentence full stop added                                     0.0 [  0-  0]  n=23, vs model2-arabart-notag +0.0 [+0,+0]
-
-pending item-measures: {'core': {'meaning': 1234}, 'held-out': {'meaning': 500}, 'outside': {'meaning': 362}, 'written': {'meaning': 42}}. `bayanbench meaning-pending` lists the outputs to score.

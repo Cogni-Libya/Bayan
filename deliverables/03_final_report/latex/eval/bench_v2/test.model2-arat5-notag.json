@@ -6,23 +6,23 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      68.28528072837634,
+      64.50617283950618,
+      72.10084033613445
      ],
-     "n": 42,
-     "pending": 617,
-     "complete": false
+     "n": 659,
+     "pending": 0,
+     "complete": true
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.683880880121396,
+      0.6461670261941448,
+      0.7235204580152672
      ],
-     "n": 42,
-     "pending": 617,
-     "complete": false
+     "n": 659,
+     "pending": 0,
+     "complete": true
     }
    },
    "simpler": {
@@ -177,23 +177,23 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      70.8029197080292,
+      59.2814371257485,
+      82.25806451612904
      ],
-     "n": 24,
-     "pending": 250,
-     "complete": false
+     "n": 274,
+     "pending": 0,
+     "complete": true
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.7771580291970803,
+      0.7301920792079207,
+      0.8269695364238411
      ],
-     "n": 24,
-     "pending": 250,
-     "complete": false
+     "n": 274,
+     "pending": 0,
+     "complete": true
     }
    },
    "simpler": {
@@ -332,23 +332,23 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      64.2156862745098,
+      56.58536585365853,
+      71.07843137254902
      ],
-     "n": 23,
-     "pending": 181,
-     "complete": false
+     "n": 204,
+     "pending": 0,
+     "complete": true
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.6476985294117648,
+      0.5752241379310344,
+      0.7137926829268293
      ],
-     "n": 23,
-     "pending": 181,
-     "complete": false
+     "n": 204,
+     "pending": 0,
+     "complete": true
     }
    },
    "simpler": {
@@ -479,23 +479,23 @@
    "meaning": {
     "meaning kept": {
      "rate": [
-      100.0,
-      100.0,
-      100.0
+      73.91304347826086,
+      52.17391304347826,
+      91.30434782608695
      ],
-     "n": 2,
-     "pending": 21,
-     "complete": false
+     "n": 23,
+     "pending": 0,
+     "complete": true
     },
     "P(same meaning)": {
      "mean": [
-      1.0,
-      1.0,
-      1.0
+      0.7458869565217391,
+      0.5568130434782609,
+      0.9084
      ],
-     "n": 2,
-     "pending": 21,
-     "complete": false
+     "n": 23,
+     "pending": 0,
+     "complete": true
     }
    },
    "simpler": {
@@ -601,7 +601,7 @@
  "predictions": "/home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/test/model2-arat5-notag.jsonl",
  "baseline": null,
  "data_version": "1.0",
- "bayanbench": "2.0.0.dev0",
+ "bayanbench": "2.0.0",
  "meaning": {
   "scorer": "gemma-4-31B-it-qat-w4a16-ct|q-v1",
   "same_threshold": 0.5,

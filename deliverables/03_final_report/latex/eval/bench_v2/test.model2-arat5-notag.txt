@@ -3,8 +3,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == core items (749) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (42 of 659 scored)  n=42, pending 617
-    P(same meaning)                                                incomplete (42 of 659 scored)  n=42, pending 617
+    meaning kept                                                    68.3 [ 65- 72]  n=659
+    P(same meaning)                                                 +0.68 [+0.65, +0.72]  n=659
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +4.47 [+3.27, +5.94]  n=212
     reading level: levels lower                                     +0.18 [+0.11, +0.25]  n=543
@@ -30,8 +30,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == held-out items (274) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (24 of 274 scored)  n=24, pending 250
-    P(same meaning)                                                incomplete (24 of 274 scored)  n=24, pending 250
+    meaning kept                                                    70.8 [ 59- 82]  n=274
+    P(same meaning)                                                 +0.78 [+0.73, +0.83]  n=274
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.97 [+1.66, +3.97]  n=58
     reading level: levels lower                                     +0.31 [+0.15, +0.42]  n=163
@@ -55,8 +55,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == outside items (204) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (23 of 204 scored)  n=23, pending 181
-    P(same meaning)                                                incomplete (23 of 204 scored)  n=23, pending 181
+    meaning kept                                                    64.2 [ 57- 71]  n=204
+    P(same meaning)                                                 +0.65 [+0.58, +0.71]  n=204
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.82 [+1.61, +4.11]  n=65
     reading level: levels lower                                     +0.14 [+0.03, +0.24]  n=167
@@ -79,8 +79,8 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
 
 == written items (23) ==
   meaning (open scorer)
-    meaning kept                                                   incomplete (2 of 23 scored)  n=2, pending 21
-    P(same meaning)                                                incomplete (2 of 23 scored)  n=2, pending 21
+    meaning kept                                                    73.9 [ 52- 91]  n=23
+    P(same meaning)                                                 +0.75 [+0.56, +0.91]  n=23
   simpler (change from selection to output, mean)
     longest clause: words shorter                                   +2.00 [+2.00, +2.00]  n=1
     reading level: levels lower                                     +0.04 [-0.09, +0.22]  n=23
@@ -96,5 +96,3 @@ BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/
     kept 60%+ of words                                             100.0 [100-100]  n=23
     negations kept                                                  92.9 [ 79-100]  n=14
     mid-sentence full stop added                                     0.0 [  0-  0]  n=23
-
-pending item-measures: {'core': {'meaning': 1234}, 'held-out': {'meaning': 500}, 'outside': {'meaning': 362}, 'written': {'meaning': 42}}. `bayanbench meaning-pending` lists the outputs to score.
