@@ -46,6 +46,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import kotlinx.coroutines.delay
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -438,10 +439,11 @@ private fun ProcessTextOverlay(
             val floats = android.provider.Settings.canDrawOverlays(context)
             scope.launch {
                 launch { contentIn.animateTo(0f, tween(90)) }
-                launch { enter.animateTo(0f, tween(340)) }
-                launch { animate(dragY, 0f, animationSpec = tween(240)) { v, _ -> dragY = v } }
+                launch { enter.animateTo(0f, tween(260)) }
+                launch { animate(dragY, 0f, animationSpec = tween(420, easing = EmphasizedDecelerate)) { v, _ -> dragY = v } }
                 delay(50)
-                unfold.animateTo(0f, spring(dampingRatio = 0.9f, stiffness = 520f))
+                // Material's emphasized curve: away fast, landing softly on the pill.
+                unfold.animateTo(0f, tween(420, easing = EmphasizedDecelerate))
                 if (!floats) {
                     birth.animateTo(0f, tween(150, easing = FastOutLinearInEasing))
                     lift.animateTo(0f, tween(90))
@@ -466,7 +468,11 @@ private fun ProcessTextOverlay(
     // The light's entrance always plays to the end, even when the text is ready at once.
     // Once the text is ready the light settles to a faint, still glow (no motion to pull the eye from the text).
     val settled = !working && entranceDone
-    val edge by animateFloatAsState(if (quiet) 0f else 1f, if (!settled && !quiet) tween(300) else settle, label = "edge")
+    val edge by animateFloatAsState(
+        if (quiet) 0f else 1f,
+        when { quiet -> tween(260) /* gone before the window is */; !settled -> tween(300); else -> settle },
+        label = "edge",
+    )
     // On Android 13+ the light's own still grain stands in for a scrim; before that, a faint scrim.
     val scrim = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) 0f else 0.06f
 
@@ -641,7 +647,8 @@ private fun ProcessTextOverlay(
                 else -> 0f
             }
         }
-        if (folding || (resumed && !closing && !entranceDone)) {
+        // Composed ahead of time (invisible) once the panel is up, so folding never waits for it to be built.
+        if (folding || entranceDone || (resumed && !closing)) {
             Box(
                 Modifier
                     .align(Alignment.BottomCenter)
@@ -649,7 +656,12 @@ private fun ProcessTextOverlay(
                     .padding(12.dp)
                     .widthIn(max = 640.dp)
                     .fillMaxWidth()
-                    .graphicsLayer { translationY = dragY.coerceAtLeast(0f) * 0.85f },
+                    .graphicsLayer {
+                        // Hidden (and out of reach of touches) until the panel folds into it.
+                        val shown = folding || pillAlpha() > 0f
+                        alpha = if (shown) 1f else 0f
+                        translationY = if (shown) dragY.coerceAtLeast(0f) * 0.85f else 100_000f
+                    },
                 contentAlignment = Alignment.BottomCenter,
             ) {
                 ReadingPill(
@@ -782,3 +794,6 @@ private class Droplet(private val width: Float, private val height: Float, priva
         return Outline.Rounded(RoundRect((size.width - w) / 2f, size.height - h, (size.width + w) / 2f, size.height, CornerRadius(r)))
     }
 }
+
+/** Material 3's emphasized decelerate curve: quick to leave, very soft to arrive. */
+private val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
