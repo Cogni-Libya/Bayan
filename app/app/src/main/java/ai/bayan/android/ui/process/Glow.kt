@@ -158,6 +158,7 @@ fun OverlayGlow(started: Boolean, reveal: Float, edge: Float, veil: Float, auror
         }
     }
     val transition = rememberInfiniteTransition(label = "glow")
+    val now by transition.animateFloat(0f, 600f, infiniteRepeatable(tween(600_000, easing = LinearEasing)), label = "now")
     val breathe by transition.animateFloat(0.8f, 1.15f, infiniteRepeatable(tween(2600), RepeatMode.Reverse), label = "breathe")
     val radius = screenCornerRadius()
     val density = LocalDensity.current
@@ -175,6 +176,7 @@ fun OverlayGlow(started: Boolean, reveal: Float, edge: Float, veil: Float, auror
             shader.setFloatUniform("t", t)
             shader.setFloatUniform("strength", k)
             shader.setFloatUniform("veil", veil)
+            shader.setFloatUniform("now", if (working) now else 0f)
             shader.setColorUniform("rim", colours[0].toArgb())
             shader.setColorUniform("first", colours[1].toArgb())
             shader.setColorUniform("second", colours[2].toArgb())
@@ -233,6 +235,7 @@ uniform float dp;
 uniform float t;
 uniform float strength;
 uniform float veil;
+uniform float now;                    // seconds, running on while the overlay is open (for the twinkle)
 
 layout(color) uniform half4 rim;      // the theme's primary, pale: the light once it settles
 layout(color) uniform half4 first;    // primary
@@ -251,6 +254,21 @@ float bump(float x, float a, float b, float c, float d) {
 float blob(float2 p, float2 c, float2 r) {
     float2 q = (p - c) / r;
     return exp(-dot(q, q));
+}
+
+float hash(float2 p) {
+    p = fract(p * float2(0.1031, 0.1030));
+    p += dot(p, p.yx + 33.33);
+    return fract((p.x + p.y) * p.x);
+}
+
+// A soft eight-pointed glint (the assistant's are four-pointed): long arms on the axes, shorter ones on the diagonals.
+float glint(float2 q, float r) {
+    float2 a = abs(q);
+    float axes = exp(-a.x / (0.3 * r)) * exp(-a.y / r) + exp(-a.y / (0.3 * r)) * exp(-a.x / r);
+    float2 d = float2(a.x + a.y, abs(a.x - a.y)) * 0.7071;
+    float diag = exp(-d.y / (0.3 * r)) * exp(-d.x / (0.6 * r));
+    return max(0.8 * axes + 0.4 * diag, exp(-dot(q, q) / (0.16 * r * r)));
 }
 
 float grain(float2 p) {
@@ -286,8 +304,25 @@ half4 main(float2 xy) {
     half3 col = (rim.rgb * 0.12 + first.rgb * wBrick + second.rgb * wSlate + corner * wCorner + streak * wStreak) / (0.12 + blobs);
     float alpha = clamp(glow * (1.0 + 0.9 * blobs * (1.0 - 0.5 * low)) * strength, 0.0, 0.92);
 
-    float va = (0.06 + 0.11 * low) * veil;                      // the still grain
-    half g = half(0.45 + 0.55 * grain(xy));
+    // Sparkles: glints on a loose lattice that twinkle into the coloured light one by one, as the assistant's do,
+    // and fade with it; while Bayan works a sparse few go on twinkling in the rim.
+    float cellSize = 9.0 * dp;
+    float2 cell = floor(xy / cellSize);
+    float2 jitter = float2(hash(cell + 11.0), hash(cell + 37.0));
+    float2 centre2 = (cell + 0.2 + 0.6 * jitter) * cellSize;
+    float born = 0.3 + 0.7 * hash(cell + 71.0);
+    float phase = 6.2831853 * hash(cell + 5.0);
+    float twinkle = 0.55 + 0.45 * sin(now * (2.2 + 2.0 * hash(cell + 3.0)) + phase);
+    float early = smoothstep(born, born + 0.18, t) * (1.0 - smoothstep(1.4, 2.0, t)) * clamp(blobs * 1.6, 0.0, 1.0);
+    float later = smoothstep(2.4, 3.2, t) * step(0.88, hash(cell + 91.0)) * low;
+    float spark = glint(xy - centre2, 2.0 * dp) * twinkle * (early + 0.6 * later) * smoothstep(0.12, 0.5, alpha);
+    half3 sparkCol = mix(col, half3(1.0), 0.65);
+    half sa = half(clamp(spark * 0.45, 0.0, 0.6));
+    col = (col * alpha + sparkCol * sa * (1.0 - alpha * 0.5)) / max(alpha + sa * (1.0 - alpha * 0.5), 0.001);
+    alpha = clamp(alpha + sa * (1.0 - alpha * 0.5), 0.0, 0.95);
+
+    float va = (0.09 + 0.12 * low) * veil;                      // the still grain
+    half g = half(0.35 + 0.65 * grain(xy));
     // grain under the light: premultiplied "light over grain"
     half3 rgb = col * alpha + half3(g) * va * (1.0 - alpha);
     half a = half(alpha + va * (1.0 - alpha));

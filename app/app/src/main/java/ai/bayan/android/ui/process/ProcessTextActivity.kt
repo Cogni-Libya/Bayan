@@ -47,6 +47,18 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import kotlinx.coroutines.delay
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.ui.util.lerp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -228,6 +240,10 @@ class ProcessTextActivity : ComponentActivity() {
         val app = (application as BayanApp).container
         if (!receive(intent)) { finish(); return }
         app.overlay.setMinimized(false)
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
+        )
 
         setContent {
             val text by selection.collectAsStateWithLifecycle()
@@ -304,9 +320,17 @@ private fun ProcessTextOverlay(
     val haptics = LocalHapticFeedback.current
     val density = LocalDensity.current
 
-    // The entrance: the edge light rises from the bottom, then the panel springs up.
+    // The entrance, after the system assistant's (measured frame by frame): a small droplet of the panel's surface is
+    // born on the gesture bar, lifts off it and springs out sideways into a pill; the light blooms as the pill reaches
+    // its full width; then the pill unfolds upward into the panel, like a page opening, and the content fades in last.
     val reveal = remember { Animatable(0f) }
     val enter = remember { Animatable(0f) }
+    val lift = remember { Animatable(0f) }      // the droplet rising off the gesture bar
+    val birth = remember { Animatable(0f) }     // the droplet stretching into a pill (springs past 1, then settles)
+    val unfold = remember { Animatable(0f) }    // the pill opening upward into the panel
+    var entranceDone by remember { mutableStateOf(false) }
+    val contentIn = remember { Animatable(0f) }
+    var lightOn by remember { mutableStateOf(false) }
     var closing by remember { mutableStateOf(false) }
     var dragY by remember { mutableFloatStateOf(0f) }
     /** Only a finger moves the panel: the automatic scrolling that follows the spoken word must not. */
@@ -335,9 +359,14 @@ private fun ProcessTextOverlay(
         if (started) return@LaunchedEffect
         withFrameNanos { }
         started = true
+        enter.snapTo(1f)
         haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
         launch { reveal.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
-        enter.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow))
+        launch { lift.animateTo(1f, tween(120, easing = FastOutSlowInEasing)) }
+        launch { delay(80); birth.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = 330f)) }
+        launch { delay(300); lightOn = true; delay(2200); entranceDone = true }
+        launch { delay(380); unfold.animateTo(1f, spring(dampingRatio = 0.82f, stiffness = 260f)) }
+        launch { delay(540); contentIn.animateTo(1f, tween(280, easing = LinearOutSlowInEasing)) }
     }
     LaunchedEffect(state is SimplifyState.Done) {
         if (state is SimplifyState.Done) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -372,8 +401,10 @@ private fun ProcessTextOverlay(
     // While Bayan works the whole screen glows.
     val settle = tween<Float>(1100)
     val quiet = closing
-    // Once the text is ready the light fades away, so it never competes with reading.
-    val edge by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(300) else settle, label = "edge")
+    // Once the text is ready the light fades away, so it never competes with reading; but its entrance always plays to
+    // the end, even when the text is ready at once.
+    val lightOff = quiet || (!working && entranceDone)
+    val edge by animateFloatAsState(if (lightOff) 0f else 1f, if (!lightOff) tween(300) else settle, label = "edge")
     val aurora by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(500) else settle, label = "aurora")
     val border by animateFloatAsState(if (closing) 0f else if (working) 1f else 0.3f, settle, label = "border")
     // On Android 13+ the light's own still grain stands in for a scrim; before that, a faint scrim.
@@ -434,7 +465,7 @@ private fun ProcessTextOverlay(
                 ),
         )
         OverlayGlow(
-            started = started,
+            started = lightOn,
             reveal = reveal.value,
             edge = edge,
             veil = veil,
@@ -456,15 +487,34 @@ private fun ProcessTextOverlay(
                     val e = enter.value
                     val pull = (dragY / closeAt).coerceIn(0f, 1f)
                     val shrink = (1f - 0.1f * pull) * (1f - 0.08f * backProgress)
+                    val b = birth.value
+                    val over = (b - 1f).coerceAtLeast(0f)                 // the spring's overshoot stretches it a little
                     transformOrigin = TransformOrigin(0.5f, 1f)
-                    translationY = dragY.coerceAtLeast(0f) * 0.85f + (1f - e) * with(density) { 180.dp.toPx() }
-                    scaleX = (0.88f + 0.12f * e) * shrink
-                    scaleY = (0.88f + 0.12f * e) * shrink
-                    alpha = e.coerceIn(0f, 1f) * (1f - 0.3f * pull)
+                    translationY = dragY.coerceAtLeast(0f) * 0.85f + (1f - e) * 180.dp.toPx() + (1f - lift.value) * 26.dp.toPx()
+                    scaleX = (0.88f + 0.12f * e) * shrink * (1f + over)
+                    scaleY = (0.88f + 0.12f * e) * shrink * (1f + 0.5f * over)
+                    alpha = e.coerceIn(0f, 1f) * (1f - 0.3f * pull) * (lift.value * 4f).coerceAtMost(1f)
+                    val u = unfold.value
+                    if (b < 1f || u < 1f) {
+                        val pill = lerp(18.dp.toPx(), 58.dp.toPx(), b.coerceIn(0f, 1f))
+                        clip = true
+                        shape = Droplet(lerp(64.dp.toPx(), size.width, b.coerceAtLeast(0f)), lerp(pill, size.height, u.coerceAtLeast(0f)), 32.dp.toPx())
+                    } else {
+                        clip = false
+                    }
                 }
                 .onGloballyPositioned { panel = it.boundsInRoot() }
                 .clip(RoundedCornerShape(32.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                .drawWithContent {
+                    val a = contentIn.value
+                    if (a >= 1f) drawContent()
+                    else if (a > 0f) drawIntoCanvas { canvas ->
+                        canvas.saveLayer(Rect(Offset.Zero, size), Paint().apply { alpha = a })
+                        drawContent()
+                        canvas.restore()
+                    }
+                }
                 .heightIn(max = maxPanel)
                 .pointerInput(Unit) {
                     awaitEachGesture {
@@ -594,5 +644,15 @@ private fun ColumnScope.PanelContent(
             }
             else -> Unit
         }
+    }
+}
+
+/** The panel while it is being born: a rounded shape of [width] × [height] centred on its bottom edge. */
+private class Droplet(private val width: Float, private val height: Float, private val corner: Float) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val w = width.coerceAtMost(size.width)
+        val h = height.coerceAtMost(size.height)
+        val r = minOf(corner, h / 2f, w / 2f)
+        return Outline.Rounded(RoundRect((size.width - w) / 2f, size.height - h, (size.width + w) / 2f, size.height, CornerRadius(r)))
     }
 }
