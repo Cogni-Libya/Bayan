@@ -1,0 +1,10 @@
+# generated (build/analysis.json holds private BayanBench item text); see README.md
+build/
+*.aux
+*.log
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+*.xdv
+__pycache__/
