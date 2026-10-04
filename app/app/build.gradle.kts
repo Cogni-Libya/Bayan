@@ -33,6 +33,8 @@ android {
         }
     }
 
+    // Unit tests that run the engine (EngineParityTest) need android.util.Log to be a no-op on the JVM.
+    testOptions.unitTests.isReturnDefaultValues = true
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -91,6 +93,7 @@ dependencies {
     implementation(libs.sherpa.onnx) { artifact { type = "aar" } }
 
     testImplementation(libs.junit)
+    testImplementation(libs.onnxruntime.jvm)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
@@ -98,4 +101,9 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.espresso.core)
+}
+
+// On the JVM, unit tests use ONNX Runtime's desktop build (same version) instead of the Android one.
+configurations.matching { it.name.endsWith("UnitTestRuntimeClasspath") }.configureEach {
+    exclude(group = "com.microsoft.onnxruntime", module = "onnxruntime-android")
 }
