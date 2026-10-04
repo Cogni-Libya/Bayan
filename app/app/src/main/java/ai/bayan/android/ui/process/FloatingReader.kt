@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -78,10 +79,11 @@ fun FloatingReader(container: AppContainer, move: (Float) -> Unit, onExpand: () 
     CompositionLocalProvider(LocalAppContainer provides container) {
         BayanTheme(settings.themeMode) {
             val screen = LocalConfiguration.current.screenWidthDp.dp
-            // Its shadow grows in once it has taken over from the panel's pill (which has none).
+            // It takes over from the panel's pill, which already has its edge of light; only the shadow (which the
+            // panel's pill has not) grows in.
             var up by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) { up = true }
-            val elevation by animateDpAsState(if (up) 14.dp else 0.dp, tween(500, delayMillis = 120), label = "elevation")
+            val elevation by animateDpAsState(if (up) 6.dp else 0.dp, tween(300), label = "elevation")
             Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 12.dp)) {
                 ReadingPill(
                     onExpand, onClose,
@@ -90,6 +92,7 @@ fun FloatingReader(container: AppContainer, move: (Float) -> Unit, onExpand: () 
                         .height(PILL_HEIGHT)
                         .pointerInput(Unit) { detectVerticalDragGestures { change, dy -> change.consume(); move(dy) } },
                     elevation = elevation,
+                    chrome = { 1f },
                 )
             }
         }
@@ -102,7 +105,7 @@ fun FloatingReader(container: AppContainer, move: (Float) -> Unit, onExpand: () 
  * the panel as it folds (and as it unfolds again) and by the floating window, so the two are indistinguishable.
  */
 @Composable
-fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, contentAlpha: () -> Float = { 1f }, elevation: Dp = 14.dp) {
+fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, contentAlpha: () -> Float = { 1f }, elevation: Dp = 6.dp, chrome: () -> Float = { 1f }, edgeLight: () -> Float = chrome) {
     val container = LocalAppContainer.current
     val settings by container.settings.settings.collectAsStateWithLifecycle(Settings())
     val state by container.overlay.simplify.state.collectAsStateWithLifecycle()
@@ -117,6 +120,7 @@ fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = 
     val spoken = spokenRange(key)
     val colours = edgeLightColours()
     val accent = MaterialTheme.colorScheme.primary
+    val surface = MaterialTheme.colorScheme.surfaceContainerLow
 
     // The light round the edge: a slow turn while reading, a faint still line otherwise.
     val turn by rememberInfiniteTransition(label = "pill").animateFloat(0f, 1f, infiniteRepeatable(tween(7000, easing = LinearEasing), RepeatMode.Restart), label = "turn")
@@ -124,9 +128,9 @@ fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = 
 
     Row(
         modifier
-            .then(if (elevation > 0.dp) Modifier.shadow(elevation, CircleShape, ambientColor = accent, spotColor = accent) else Modifier)
+            .then(if (elevation > 0.dp) Modifier.shadow(elevation, CircleShape) else Modifier)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .drawBehind { drawRect(surface, alpha = chrome()) }
             .drawWithContent {
                 drawContent()
                 val stroke = 1.5.dp.toPx()
@@ -134,7 +138,7 @@ fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = 
                 drawRoundRect(
                     brush, topLeft = Offset(stroke / 2f, stroke / 2f),
                     size = size.copy(width = size.width - stroke, height = size.height - stroke),
-                    cornerRadius = CornerRadius(size.height / 2f), alpha = glow * contentAlpha(), style = Stroke(stroke),
+                    cornerRadius = CornerRadius(size.height / 2f), alpha = glow * edgeLight(), style = Stroke(stroke),
                 )
             },
         verticalAlignment = Alignment.CenterVertically,
@@ -169,8 +173,8 @@ fun ReadingPill(onExpand: () -> Unit, onClose: () -> Unit, modifier: Modifier = 
                             append(line)
                             if (lit != null) addStyle(SpanStyle(color = accent), lit.first, lit.last + 1)
                         },
+                        // One visible line of whole words (an overflowing Arabic line would be clipped at its start).
                         maxLines = 1,
-                        softWrap = false,
                         overflow = TextOverflow.Clip,
                         textAlign = TextAlign.Start,
                         style = MaterialTheme.typography.bodyLarge,
@@ -196,8 +200,9 @@ val PILL_HEIGHT = 58.dp
 private fun readingWindow(text: String, spoken: IntRange?): Pair<String, IntRange?> {
     val flat = text.replace('\n', ' ')
     if (spoken == null || spoken.first >= flat.length) return flat.trim() to null
-    var start = (spoken.first - 24).coerceAtLeast(0)
-    if (start > 0) start = flat.indexOf(' ', start).let { if (it in 0 until spoken.first) it + 1 else spoken.first }
+    // Start at a whole word: the spoken word's, then back up to two words before it.
+    var start = flat.lastIndexOf(' ', (spoken.first - 1).coerceAtLeast(0)).let { if (it < 0) 0 else it + 1 }
+    repeat(2) { if (start > 1) start = flat.lastIndexOf(' ', start - 2).let { if (it < 0) 0 else it + 1 } }
     val line = flat.substring(start)
     val lit = (spoken.first - start) until (spoken.last + 1 - start).coerceAtMost(line.length)
     return line to lit

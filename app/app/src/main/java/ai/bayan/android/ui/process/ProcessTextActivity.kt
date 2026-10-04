@@ -46,7 +46,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import kotlinx.coroutines.delay
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -392,7 +391,7 @@ private fun ProcessTextOverlay(
         if (resumed) {
             lightOn = true
             launch { delay(4200); entranceDone = true }
-            launch { unfold.animateTo(1f, spring(dampingRatio = 0.82f, stiffness = 300f)) }
+            launch { unfold.animateTo(1f, spring(dampingRatio = 0.72f, stiffness = 380f)) }
             launch { delay(160); contentIn.animateTo(1f, tween(260, easing = LinearOutSlowInEasing)) }
             return@LaunchedEffect
         }
@@ -438,12 +437,13 @@ private fun ProcessTextOverlay(
             haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
             val floats = android.provider.Settings.canDrawOverlays(context)
             scope.launch {
-                launch { contentIn.animateTo(0f, tween(90)) }
+                launch { contentIn.animateTo(0f, tween(100, easing = FastOutLinearInEasing)) }
                 launch { enter.animateTo(0f, tween(260)) }
-                launch { animate(dragY, 0f, animationSpec = tween(420, easing = EmphasizedDecelerate)) { v, _ -> dragY = v } }
-                delay(50)
-                // Material's emphasized curve: away fast, landing softly on the pill.
-                unfold.animateTo(0f, tween(420, easing = EmphasizedDecelerate))
+                launch { animate(dragY, 0f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 420f)) { v, _ -> dragY = v } }
+                // A soft spring with a little bounce (as Material's shared-element morphs): the panel lands on the pill
+                // like a drop, squashing a touch wider and shorter before it settles.
+                unfold.animateTo(0f, spring(dampingRatio = 0.62f, stiffness = 420f, visibilityThreshold = 0.002f))
+                unfold.snapTo(0f)
                 if (!floats) {
                     birth.animateTo(0f, tween(150, easing = FastOutLinearInEasing))
                     lift.animateTo(0f, tween(90))
@@ -595,7 +595,12 @@ private fun ProcessTextOverlay(
                         val pillH = lerp(18.dp.toPx(), PILL_HEIGHT.toPx(), b.coerceIn(0f, 1f))
                         val pillW = lerp(64.dp.toPx(), size.width * PILL_FRACTION, b.coerceAtLeast(0f))
                         clip = true
-                        shape = Droplet(lerp(pillW, size.width, u.coerceAtLeast(0f)), lerp(pillH, minOf(visible, size.height), u.coerceAtLeast(0f)), 32.dp.toPx())
+                        val squash = (-u).coerceAtLeast(0f)                 // landing past the pill: wider and shorter
+                        shape = Droplet(
+                            lerp(pillW, size.width, u.coerceAtLeast(0f)) * (1f + 0.9f * squash),
+                            lerp(pillH, minOf(visible, size.height), u.coerceAtLeast(0f)) * (1f - 1.6f * squash),
+                            32.dp.toPx(),
+                        )
                     } else {
                         clip = false
                     }
@@ -634,7 +639,8 @@ private fun ProcessTextOverlay(
         ) {
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                 PanelTopBar(onMinimize = minimize)
-                PanelContent(state, settings, key, showOriginal, { showOriginal = it }, canReplace, onReplace, onOpenApp)
+                // Reopened from the pill, the text is already known: it is shown, not revealed again.
+                PanelContent(state, settings, key, showOriginal, { showOriginal = it }, canReplace, onReplace, onOpenApp, reveal = !resumed)
             }
         }
 
@@ -642,7 +648,8 @@ private fun ProcessTextOverlay(
         // between them cannot be seen.
         val pillAlpha = {
             when {
-                folding -> ((0.35f - unfold.value) / 0.35f).coerceIn(0f, 1f)
+                // the pill's content crosses in as the panel's text crosses out: never an empty box
+                folding -> ((0.36f - unfold.value) / 0.26f).coerceIn(0f, 1f)
                 resumed && !closing -> (1f - unfold.value * 3f).coerceIn(0f, 1f)
                 else -> 0f
             }
@@ -661,13 +668,23 @@ private fun ProcessTextOverlay(
                         val shown = folding || pillAlpha() > 0f
                         alpha = if (shown) 1f else 0f
                         translationY = if (shown) dragY.coerceAtLeast(0f) * 0.85f else 100_000f
+                        // squashes with the panel as it lands
+                        val squash = (-unfold.value).coerceAtLeast(0f)
+                        transformOrigin = TransformOrigin(0.5f, 1f)
+                        scaleX = 1f + 0.9f * squash
+                        scaleY = 1f - 1.6f * squash
                     },
                 contentAlignment = Alignment.BottomCenter,
             ) {
                 ReadingPill(
                     onExpand = {}, onClose = close,
                     modifier = Modifier.fillMaxWidth(PILL_FRACTION).height(PILL_HEIGHT),
-                    contentAlpha = pillAlpha, elevation = 0.dp,
+                    contentAlpha = pillAlpha, elevation = 0.dp, chrome = { 0f },
+                    // the pill's edge of light grows in as the fold lands, so the floating pill appears with it
+                    edgeLight = {
+                        if (folding) ((0.18f - unfold.value) / 0.18f).coerceIn(0f, 1f)
+                        else (1f - unfold.value * 6f).coerceIn(0f, 1f)
+                    },
                 )
             }
         }
@@ -794,6 +811,3 @@ private class Droplet(private val width: Float, private val height: Float, priva
         return Outline.Rounded(RoundRect((size.width - w) / 2f, size.height - h, (size.width + w) / 2f, size.height, CornerRadius(r)))
     }
 }
-
-/** Material 3's emphasized decelerate curve: quick to leave, very soft to arrive. */
-private val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)

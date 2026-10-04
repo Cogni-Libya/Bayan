@@ -33,6 +33,9 @@ class FloatingPanel(private val context: Context) {
         PixelFormat.TRANSLUCENT,
     ).apply {
         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+        // Placed from the screen's own bottom (the system would otherwise lift it above the navigation bar as well,
+        // and it would not sit exactly where the panel's pill was).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) fitInsetsTypes = 0
         y = bottomInset()
     }
 
