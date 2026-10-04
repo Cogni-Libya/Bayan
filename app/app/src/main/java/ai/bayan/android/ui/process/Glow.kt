@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
@@ -169,14 +170,19 @@ fun OverlayGlow(started: Boolean, reveal: Float, edge: Float, veil: Float, auror
         val shader = remember { android.graphics.RuntimeShader(EDGE_LIGHT_SHADER) }
         val dp = density.density
         val colours = edgeLightColours()
+        val paper = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0f else 1f
         Canvas(modifier.fillMaxSize()) {
             shader.setFloatUniform("size", size.width, size.height)
             shader.setFloatUniform("radius", radius)
             shader.setFloatUniform("dp", dp)
-            shader.setFloatUniform("t", t)
+            shader.setFloatUniform("t", t / GLOW_PACE)
             shader.setFloatUniform("strength", k)
             shader.setFloatUniform("veil", veil)
             shader.setFloatUniform("now", if (working) now else 0f)
+            shader.setFloatUniform("paper", paper)
+            val p = panel ?: Rect.Zero
+            shader.setFloatUniform("panel", p.left, p.top, p.right, p.bottom)
+            shader.setFloatUniform("panelRadius", 32 * dp)
             shader.setColorUniform("rim", colours[0].toArgb())
             shader.setColorUniform("first", colours[1].toArgb())
             shader.setColorUniform("second", colours[2].toArgb())
@@ -198,28 +204,34 @@ fun OverlayGlow(started: Boolean, reveal: Float, edge: Float, veil: Float, auror
  * read as light, not paint. A grey theme stays grey.
  */
 @Composable
-private fun edgeLightColours(): List<Color> {
+internal fun edgeLightColours(): List<Color> {
     val scheme = MaterialTheme.colorScheme
     val primary = scheme.primary
     val tertiary = scheme.tertiary
-    return remember(primary, tertiary) {
+    val dark = scheme.surface.luminance() < 0.5f
+    return remember(primary, tertiary, dark) {
         fun hsl(c: Color) = FloatArray(3).also { ColorUtils.colorToHSL(c.toArgb(), it) }
         val p = hsl(primary)
         val q = hsl(tertiary)
         fun light(h: Float, s: Float, l: Float) =
             Color(ColorUtils.HSLToColor(floatArrayOf((h + 360f) % 360f, if (s < 0.08f) s else maxOf(s, 0.75f), l)))
         val gap = ((q[0] - p[0] + 540f) % 360f) - 180f           // shortest way round the colour wheel
+        // On a light theme (light screens beneath) a pale light would vanish: the same hues, deeper.
+        val l = if (dark) floatArrayOf(0.8f, 0.66f, 0.66f, 0.7f) else floatArrayOf(0.66f, 0.55f, 0.55f, 0.58f)
         listOf(
-            light(p[0], maxOf(p[1], 0.9f).takeIf { p[1] >= 0.08f } ?: p[1], 0.8f),
-            light(p[0], p[1], 0.66f),
-            light(q[0], q[1], 0.66f),
-            light(p[0] + gap / 2f, (p[1] + q[1]) / 2f, 0.7f),
+            light(p[0], maxOf(p[1], 0.9f).takeIf { p[1] >= 0.08f } ?: p[1], l[0]),
+            light(p[0], p[1], l[1]),
+            light(q[0], q[1], l[2]),
+            light(p[0] + gap / 2f, (p[1] + q[1]) / 2f, l[3]),
         )
     }
 }
 
 /** When the entrance of the light is over (s); it then holds, breathing while Bayan works. */
-private const val GLOW_END = 3.5f
+private const val GLOW_END = 6f
+
+/** The light is unhurried: its choreography (timed after the assistant's) is played this many times slower. */
+private const val GLOW_PACE = 1.7f
 
 /**
  * The edge light as a shader (Android 13+): for every pixel, the exact distance to the screen's rounded edge and a
@@ -235,7 +247,10 @@ uniform float dp;
 uniform float t;
 uniform float strength;
 uniform float veil;
-uniform float now;                    // seconds, running on while the overlay is open (for the twinkle)
+uniform float now;
+uniform float paper;
+uniform float4 panel;                 // what is visible of the panel (left, top, right, bottom); empty when none
+uniform float panelRadius;                  // 1 on a light theme: the grain is paler, so it never greys a white page                    // seconds, running on while the overlay is open (for the twinkle)
 
 layout(color) uniform half4 rim;      // the theme's primary, pale: the light once it settles
 layout(color) uniform half4 first;    // primary
@@ -280,24 +295,46 @@ float grain(float2 p) {
 half4 main(float2 xy) {
     float2 c = size * 0.5;
     float d = max(-sdRoundBox(xy - c, c, radius), 0.0);
+    // The light's floor: the top of the panel when there is one (so the bloom sits where the reader can see it, and
+    // rises with the panel as it unfolds), else the bottom of the screen.
+    bool hasPanel = panel.z > panel.x;
+    float floorY = hasPanel ? min(panel.y + 24.0 * dp, size.y) : size.y;
     float up = size.y - xy.y;                                   // px above the bottom edge
-    float low = 1.0 - smoothstep(0.0, 0.32 * size.y, up);      // 1 at the bottom, 0 from a third of the way up
+    float aboveFloor = max(floorY - xy.y, 0.0);
+    float low = max(1.0 - smoothstep(0.0, 0.32 * size.y, up),  // 1 at the bottom, 0 from a third of the way up
+                    1.0 - smoothstep(0.0, 0.24 * size.y, aboveFloor));
+    // In the entrance the light climbs from the floor up both sides to the top, with a soft front.
+    float climb = 1.0 - pow(1.0 - clamp(t / 0.6, 0.0, 1.0), 3.0);
+    float reach = aboveFloor / max(floorY, 1.0);
+    float rising = 1.0 - smoothstep(climb * 1.2 - 0.25, climb * 1.2, reach);
 
     float bottom = smoothstep(0.0, 0.5, t) * (1.0 - 0.15 * bump(t, 0.75, 1.05, 1.1, 1.4)) * (1.0 - 0.78 * smoothstep(2.1, 3.5, t));
     float side = smoothstep(0.0, 0.45, t) * (1.0 - 0.2 * bump(t, 0.7, 1.0, 1.2, 1.5)) * (1.0 - 0.7 * smoothstep(2.0, 3.4, t));
-    float amp = mix(0.48 * side, 0.62 * bottom, pow(low, 1.2));
+    float amp = mix(0.6 * side, 0.72 * bottom, pow(low, 1.2));
     float centre = 1.0 - smoothstep(0.2 * size.x, 0.42 * size.x, abs(xy.x - c.x));
     float mid = (1.0 - 0.3 * bump(t, 0.7, 1.0, 1.1, 1.4) * centre) * (1.0 - 0.3 * centre * smoothstep(2.0, 2.5, t));
     float k = bump(t, 0.1, 0.4, 0.9, 1.6);
     float2 s = size;
-    float wBrick = blob(xy, float2(0.0, 0.84 * s.y), float2(0.35 * s.x, 0.2 * s.y)) * k;
-    float wSlate = blob(xy, float2(s.x * (0.72 - 0.22 * smoothstep(0.4, 1.2, t)), s.y), float2(0.2 * s.x, 0.06 * s.y)) * k;
-    float wCorner = blob(xy, float2(0.9 * s.x, s.y), float2(0.14 * s.x, 0.06 * s.y)) * k * 0.9;
-    float wStreak = blob(xy, float2(s.x, s.y * (0.16 + 0.36 * smoothstep(0.3, 1.6, t))), float2(0.25 * s.x, 0.2 * s.y))
+    float wBrick = blob(xy, float2(0.0, floorY - 0.12 * s.y), float2(0.35 * s.x, 0.2 * s.y)) * k;
+    float wSlate = blob(xy, float2(s.x * (0.72 - 0.22 * smoothstep(0.4, 1.2, t)), floorY - 0.02 * s.y), float2(0.2 * s.x, 0.07 * s.y)) * k;
+    float wCorner = blob(xy, float2(0.9 * s.x, floorY), float2(0.14 * s.x, 0.07 * s.y)) * k * 0.9;
+    float wStreak = blob(xy, float2(s.x, floorY * (0.18 + 0.5 * smoothstep(0.3, 1.6, t))), float2(0.25 * s.x, 0.2 * s.y))
         * bump(t, 0.1, 0.35, 1.45, 2.0) * 1.1;
     // where a colour blooms, its light reaches further into the screen
     float fall = 6.0 * dp + 56.0 * dp * pow(low, 1.6) + 36.0 * dp * min(wBrick + 0.12 * wStreak + 0.5 * wSlate, 1.0);
-    float glow = exp(-d / fall) * amp * (1.0 + (mid - 1.0) * low);
+    float glow = exp(-d / fall) * amp * (1.0 + (mid - 1.0) * low) * rising;
+    // Light from the panel's own outline: it follows the droplet, the pill and the panel as they grow, brightest in
+    // the entrance, then a quiet halo round what the reader is reading.
+    if (panel.z > panel.x) {
+        float2 pc = (panel.xy + panel.zw) * 0.5;
+        float2 ph = (panel.zw - panel.xy) * 0.5;
+        float dp2 = max(sdRoundBox(xy - pc, ph, min(panelRadius, min(ph.x, ph.y))), 0.0);
+        float pAmp = smoothstep(0.0, 0.35, t) * (1.0 - 0.6 * smoothstep(1.6, 3.2, t));
+        // above the panel the light is a taller dawn, as if rising from behind it
+        float above = smoothstep(0.0, 1.0, (panel.y - xy.y) / (8.0 * dp));
+        float pFall = mix(12.0, 34.0, above * centre) * dp;
+        glow = max(glow, exp(-dp2 / pFall) * mix(0.62, 0.7, above) * pAmp);
+    }
     half3 corner = mix(second.rgb, between.rgb, smoothstep(0.6, 1.1, t));
     half3 streak = mix(second.rgb, between.rgb, smoothstep(0.7, 1.3, t));
     float blobs = wBrick + wSlate + wCorner + wStreak;
@@ -312,17 +349,17 @@ half4 main(float2 xy) {
     float2 centre2 = (cell + 0.2 + 0.6 * jitter) * cellSize;
     float born = 0.3 + 0.7 * hash(cell + 71.0);
     float phase = 6.2831853 * hash(cell + 5.0);
-    float twinkle = 0.55 + 0.45 * sin(now * (2.2 + 2.0 * hash(cell + 3.0)) + phase);
-    float early = smoothstep(born, born + 0.18, t) * (1.0 - smoothstep(1.4, 2.0, t)) * clamp(blobs * 1.6, 0.0, 1.0);
-    float later = smoothstep(2.4, 3.2, t) * step(0.88, hash(cell + 91.0)) * low;
+    float twinkle = 0.55 + 0.45 * sin(now * (1.1 + 1.2 * hash(cell + 3.0)) + phase);
+    float early = smoothstep(born, born + 0.25, t) * (1.0 - smoothstep(2.3, 3.0, t)) * clamp(blobs * 1.6 + 0.5 * low, 0.0, 1.0);
+    float later = smoothstep(2.6, 3.4, t) * step(0.86, hash(cell + 91.0)) * low;
     float spark = glint(xy - centre2, 2.0 * dp) * twinkle * (early + 0.6 * later) * smoothstep(0.12, 0.5, alpha);
     half3 sparkCol = mix(col, half3(1.0), 0.65);
     half sa = half(clamp(spark * 0.45, 0.0, 0.6));
     col = (col * alpha + sparkCol * sa * (1.0 - alpha * 0.5)) / max(alpha + sa * (1.0 - alpha * 0.5), 0.001);
     alpha = clamp(alpha + sa * (1.0 - alpha * 0.5), 0.0, 0.95);
 
-    float va = (0.09 + 0.12 * low) * veil;                      // the still grain
-    half g = half(0.35 + 0.65 * grain(xy));
+    float va = (0.09 + 0.12 * low) * veil * (1.0 - 0.35 * paper);   // the still grain
+    half g = half(mix(0.35, 0.82, paper) + mix(0.65, 0.18, paper) * grain(xy));
     // grain under the light: premultiplied "light over grain"
     half3 rgb = col * alpha + half3(g) * va * (1.0 - alpha);
     half a = half(alpha + va * (1.0 - alpha));

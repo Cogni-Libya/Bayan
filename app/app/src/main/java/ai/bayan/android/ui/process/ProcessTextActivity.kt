@@ -47,6 +47,10 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import kotlinx.coroutines.delay
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.LayoutDirection
@@ -329,6 +333,8 @@ private fun ProcessTextOverlay(
     val birth = remember { Animatable(0f) }     // the droplet stretching into a pill (springs past 1, then settles)
     val unfold = remember { Animatable(0f) }    // the pill opening upward into the panel
     var entranceDone by remember { mutableStateOf(false) }
+    val halo = remember { Animatable(0f) }      // the light the droplet is born in, before the rim takes over
+    var folding by remember { mutableStateOf(false) }
     val contentIn = remember { Animatable(0f) }
     var lightOn by remember { mutableStateOf(false) }
     var closing by remember { mutableStateOf(false) }
@@ -337,6 +343,7 @@ private fun ProcessTextOverlay(
     var fingerDown by remember { mutableStateOf(false) }
     var backProgress by remember { mutableFloatStateOf(0f) }
     var panel by remember { mutableStateOf<Rect?>(null) }
+    var panelBox by remember { mutableStateOf<Rect?>(null) }   // the panel's laid-out bounds, before its entrance transform
     var showOriginal by rememberSaveable { mutableStateOf(false) }
     val working = state.isBusy || state is SimplifyState.Idle
 
@@ -363,8 +370,9 @@ private fun ProcessTextOverlay(
         haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
         launch { reveal.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
         launch { lift.animateTo(1f, tween(120, easing = FastOutSlowInEasing)) }
+        launch { halo.animateTo(1f, tween(160, easing = LinearOutSlowInEasing)); delay(260); halo.animateTo(0f, tween(650, easing = FastOutSlowInEasing)) }
         launch { delay(80); birth.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = 330f)) }
-        launch { delay(300); lightOn = true; delay(2200); entranceDone = true }
+        launch { delay(300); lightOn = true; delay(4200); entranceDone = true }
         launch { delay(380); unfold.animateTo(1f, spring(dampingRatio = 0.82f, stiffness = 260f)) }
         launch { delay(540); contentIn.animateTo(1f, tween(280, easing = LinearOutSlowInEasing)) }
     }
@@ -374,7 +382,18 @@ private fun ProcessTextOverlay(
     val close: () -> Unit = {
         if (!closing) {
             closing = true
-            scope.launch { enter.animateTo(0f, tween(220)); onDismiss() }
+            folding = true
+            // The way it came: the content goes, the panel folds back into the pill and sinks into the gesture bar.
+            scope.launch {
+                launch { contentIn.animateTo(0f, tween(90)) }
+                launch { enter.animateTo(0f, tween(340)) }
+                delay(50)
+                launch { unfold.animateTo(0f, tween(200, easing = FastOutLinearInEasing)) }
+                delay(130)
+                birth.animateTo(0f, tween(150, easing = FastOutLinearInEasing))
+                lift.animateTo(0f, tween(90))
+                onDismiss()
+            }
         }
     }
     val springBack: () -> Unit = {
@@ -401,10 +420,10 @@ private fun ProcessTextOverlay(
     // While Bayan works the whole screen glows.
     val settle = tween<Float>(1100)
     val quiet = closing
-    // Once the text is ready the light fades away, so it never competes with reading; but its entrance always plays to
-    // the end, even when the text is ready at once.
-    val lightOff = quiet || (!working && entranceDone)
-    val edge by animateFloatAsState(if (lightOff) 0f else 1f, if (!lightOff) tween(300) else settle, label = "edge")
+    // The light's entrance always plays to the end, even when the text is ready at once.
+    // Once the text is ready the light settles to a faint, still glow (no motion to pull the eye from the text).
+    val settled = !working && entranceDone
+    val edge by animateFloatAsState(if (quiet) 0f else 1f, if (!settled && !quiet) tween(300) else settle, label = "edge")
     val aurora by animateFloatAsState(if (quiet || !working) 0f else 1f, if (working) tween(500) else settle, label = "aurora")
     val border by animateFloatAsState(if (closing) 0f else if (working) 1f else 0.3f, settle, label = "border")
     // On Android 13+ the light's own still grain stands in for a scrim; before that, a faint scrim.
@@ -451,6 +470,18 @@ private fun ProcessTextOverlay(
         }
     }
 
+    val haloColour = edgeLightColours()[0]
+    // What the reader sees of the panel right now (droplet, pill or panel), for the light that hugs its outline.
+    val litPanel = panelBox?.let { box ->
+        with(density) {
+            val b = birth.value.coerceAtLeast(0f)
+            val u = unfold.value.coerceAtLeast(0f)
+            val w = lerp(lerp(64.dp.toPx(), box.width * 0.78f, b), box.width, u).coerceAtMost(box.width) * (1f + (b - 1f).coerceAtLeast(0f))
+            val h = lerp(lerp(18.dp.toPx(), 58.dp.toPx(), b.coerceIn(0f, 1f)), box.height, u).coerceAtMost(box.height)
+            val bottom = box.bottom + dragY.coerceAtLeast(0f) * 0.85f + (1f - lift.value) * 26.dp.toPx()
+            Rect(box.center.x - w / 2f, bottom - h, box.center.x + w / 2f, bottom)
+        }
+    }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val maxPanel = maxHeight * 0.82f
         Box(
@@ -471,7 +502,7 @@ private fun ProcessTextOverlay(
             veil = veil,
             aurora = aurora * enter.value.coerceIn(0f, 1f),
             border = border * enter.value.coerceIn(0f, 1f),
-            panel = panel,
+            panel = if (lift.value > 0f) litPanel else null,
             working = working,
         )
 
@@ -483,8 +514,25 @@ private fun ProcessTextOverlay(
                 .padding(12.dp)
                 .widthIn(max = 640.dp)
                 .fillMaxWidth()
+                .onGloballyPositioned { panelBox = it.boundsInRoot() }
+                .drawBehind {
+                    // The droplet's halo: a soft glow of the theme's light under the gesture bar as the droplet is born.
+                    val h = halo.value
+                    if (h > 0f) {
+                        val b = birth.value.coerceIn(0f, 1f)
+                        val w = lerp(64.dp.toPx(), size.width * 0.78f, b)
+                        val r = 46.dp.toPx()
+                        val c = Offset(size.width / 2f, size.height - 14.dp.toPx() + (1f - lift.value) * 26.dp.toPx())
+                        scale(scaleX = (w / 2f + r) / r, scaleY = 1f, pivot = c) {
+                            drawCircle(
+                                Brush.radialGradient(listOf(haloColour.copy(alpha = 0.75f * h), haloColour.copy(alpha = 0.28f * h), Color.Transparent), c, r),
+                                radius = r, center = c,
+                            )
+                        }
+                    }
+                }
                 .graphicsLayer {
-                    val e = enter.value
+                    val e = if (folding) 1f else enter.value
                     val pull = (dragY / closeAt).coerceIn(0f, 1f)
                     val shrink = (1f - 0.1f * pull) * (1f - 0.08f * backProgress)
                     val b = birth.value
@@ -496,9 +544,11 @@ private fun ProcessTextOverlay(
                     alpha = e.coerceIn(0f, 1f) * (1f - 0.3f * pull) * (lift.value * 4f).coerceAtMost(1f)
                     val u = unfold.value
                     if (b < 1f || u < 1f) {
-                        val pill = lerp(18.dp.toPx(), 58.dp.toPx(), b.coerceIn(0f, 1f))
+                        // a pill of the assistant's proportions (about four fifths of the width), then the panel
+                        val pillH = lerp(18.dp.toPx(), 58.dp.toPx(), b.coerceIn(0f, 1f))
+                        val pillW = lerp(64.dp.toPx(), size.width * 0.78f, b.coerceAtLeast(0f))
                         clip = true
-                        shape = Droplet(lerp(64.dp.toPx(), size.width, b.coerceAtLeast(0f)), lerp(pill, size.height, u.coerceAtLeast(0f)), 32.dp.toPx())
+                        shape = Droplet(lerp(pillW, size.width, u.coerceAtLeast(0f)), lerp(pillH, size.height, u.coerceAtLeast(0f)), 32.dp.toPx())
                     } else {
                         clip = false
                     }
