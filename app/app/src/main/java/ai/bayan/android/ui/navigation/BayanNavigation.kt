@@ -1,5 +1,6 @@
 package ai.bayan.android.ui.navigation
 
+import androidx.window.core.layout.WindowSizeClass
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -68,7 +69,14 @@ fun BayanNavigation(sharedText: String?, onSharedTextConsumed: () -> Unit) {
     // Back from another tab's root goes to the home tab before leaving the app.
     BackHandler(enabled = backStack.size == 1 && root != Home) { backStack.selectTab(Home) }
 
-    val type = if (showBar) NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo()) else NavigationSuiteType.None
+    // A phone on its side is short: the tabs go to a rail at the side rather than a bar that takes a fifth of the height.
+    val info = currentWindowAdaptiveInfo()
+    val short = !info.windowSizeClass.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND)
+    val type = when {
+        !showBar -> NavigationSuiteType.None
+        short -> NavigationSuiteType.NavigationRail
+        else -> NavigationSuiteScaffoldDefaults.navigationSuiteType(info)
+    }
     NavigationSuiteScaffold(
         navigationSuiteType = type,
         navigationItems = {

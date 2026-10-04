@@ -1,5 +1,6 @@
 package ai.bayan.android
 
+import android.os.Build
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -36,6 +37,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Bayan's ground reaches into the camera cutout too (screens keep their content clear of it), so a phone on its
+        // side shows no black strip.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
         val app = (application as BayanApp).container
         val settings: StateFlow<Settings?> = app.settings.settings.stateIn(lifecycleScope, SharingStarted.Eagerly, null)
         splash.setKeepOnScreenCondition { settings.value == null }
