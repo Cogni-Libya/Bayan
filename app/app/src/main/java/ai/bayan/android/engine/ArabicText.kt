@@ -38,10 +38,14 @@ object ArabicText {
     private val NUMBER = Regex("\\d+(?:[.,]\\d+)?")
     private val SOURCE_NUMBER = Regex("$DIGIT+(?:[.,]$DIGIT+)?")
     private val LATIN = Regex("[A-Za-z][A-Za-z0-9]*(?:[-.][A-Za-z0-9]+)*")
+    /** Latin tokens as the safety net of #61 counts them (`predict_net.py`): each one, case kept. */
+    private val LATIN_TOKEN = Regex("[A-Za-z][A-Za-z0-9\\-.]*")
     private val NEGATION = Regex("(?:^|\\s)[وف]?(لا|لم|لن|ليس|ليست|ليسوا|لست|غير|دون|بدون|بلا)(?=\\s|$)")
     private const val A = "[أإآا]"
     private const val Y = "[ىي]"
     private const val E = "(?=[\\s،,.؛;:!?؟»)\\]]|$)"
+    /** Condition words (BayanBench's `CONDITION`); bare «إن» is left out, since unvowelled it is mostly the emphatic «إنّ». */
+    private val CONDITION = Regex("(?:^|\\s)[وف]?(إذا|اذا|لو|لولا|كلما|متى|مهما|ما\\s+لم|بشرط|شريطة)$E")
     private val LIMITS = listOf(
         "at least" to Regex("على\\s+ال${A}قل$E|لا\\s+[يت]قل$E|(?:^|\\s)[وك]?(?:ال)?حد\\s+(?:ال)?${A}دن$Y$E"),
         "at most" to Regex("على\\s+ال${A}كثر$E|لا\\s+[يت]زيد$E|(?:^|\\s)[وك]?(?:ال)?حد\\s+(?:ال)?${A}قص$Y$E"),
@@ -199,7 +203,7 @@ object ArabicText {
 
     // ------------------------------------------------------------------------------------------- after the model --
 
-    enum class Fallback { Empty, Drifted, Numbers, LatinWords, Negation, Limits }
+    enum class Fallback { Empty, Drifted, Numbers, LatinWords, Negation, Limits, Conditions }
 
     private fun limitsOf(text: String): List<String> {
         val t = stripTashkeel(text)
@@ -216,7 +220,19 @@ object ArabicText {
             .containsAll(LATIN.findAll(source).map { it.value.lowercase() }.toSet()) -> Fallback.LatinWords
         NEGATION.findAll(stripTashkeel(source)).count() != NEGATION.findAll(stripTashkeel(output)).count() -> Fallback.Negation
         limitsOf(source) != limitsOf(output) -> Fallback.Limits
+        // The checks below come from the safety net Model 3 was benchmarked with (#61), so the app is the system that
+        // was measured; a sentence is kept as the source when either set of checks stops it.
+        latinCountsDropped(source, output) -> Fallback.LatinWords
+        conditionsOf(source) != conditionsOf(output) -> Fallback.Conditions
         else -> null
+    }
+
+    private fun conditionsOf(text: String): Int = CONDITION.findAll(stripTashkeel(text).replace(Regex("\\s+"), " ")).count()
+
+    /** True when a Latin token appears fewer times in the output than in the source (case kept). */
+    private fun latinCountsDropped(source: String, output: String): Boolean {
+        val have = LATIN_TOKEN.findAll(output).groupingBy { it.value }.eachCount()
+        return LATIN_TOKEN.findAll(source).groupingBy { it.value }.eachCount().any { (token, n) -> (have[token] ?: 0) < n }
     }
 
     /** Each number comes back written as the source wrote it (Arabic-Indic, Persian or Western digits). */

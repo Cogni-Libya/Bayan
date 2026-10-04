@@ -65,7 +65,7 @@
     <string name="model_arabart_summary">الأنسب لمعظم الهواتف: حجمه صغير، ويبسّط النص بسرعة جملةً جملة.</string>
     <string name="model_arat5_title">النموذج الكبير</string>
     <string name="model_arat5_summary">حصل على درجة أعلى في اختباراتنا، لكنه أبطأ ويحتاج إلى مساحة أكبر.</string>
-    <string name="model_model3_summary">يبسّط أكثر من النموذج الكبير، لكنه يغيّر المعنى أكثر. يعرض كل جملة حين تكتمل، وهو أبطأ ويحتاج إلى مساحة أكبر.</string>
+    <string name="model_model3_summary">يبسّط أكثر من النموذج الكبير، لكنه يغيّر المعنى أكثر. أبطأ ويحتاج إلى مساحة أكبر.</string>
     <string name="model_model3_title">النموذج الكبير، تبسيط أكثر</string>
     <string name="models_title">نماذج التبسيط</string>
     <string name="models_privacy">تعمل النماذج على هاتفك بالكامل، فلا يغادر نصك جهازك أبدًا.</string>
@@ -109,6 +109,8 @@
     <string name="settings_speech_sample">مرحبًا، هذه سرعة القراءة التي اخترتها.</string>
     <string name="settings_highlight">تمييز الكلمة المقروءة</string>
     <string name="settings_highlight_body">تُظلَّل كل كلمة أثناء قراءتها بصوت لتتابعها بعينك</string>
+    <string name="settings_more_faithful">أدق في المعنى، وأبطأ</string>
+    <string name="settings_more_faithful_body">يوازن بين عدة صياغات قبل أن يختار، فيحافظ على المعنى أكثر. تظهر كل جملة حين تكتمل.</string>
     <string name="settings_voice">محرك الصوت</string>
     <string name="settings_voice_body">اختر الصوت العربي من إعدادات تحويل النص إلى كلام</string>
     <string name="settings_model">نموذج التبسيط</string>

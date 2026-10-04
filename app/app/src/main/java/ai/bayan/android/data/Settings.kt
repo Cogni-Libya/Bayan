@@ -48,6 +48,8 @@ data class Settings(
     /** Start reading aloud as soon as the first simplified sentence is ready. */
     val autoRead: Boolean = false,
     val highlightWhileReading: Boolean = true,
+    /** Beam search for models that offer it (ModelInfo.beams): keeps the meaning more often, slower, not streamed. */
+    val moreFaithful: Boolean = false,
     val wifiOnly: Boolean = true,
 )
 
@@ -68,6 +70,7 @@ class SettingsRepository(private val context: Context) {
         val voice = stringPreferencesKey("voice")
         val autoRead = booleanPreferencesKey("auto_read")
         val highlight = booleanPreferencesKey("highlight_reading")
+        val faithful = booleanPreferencesKey("more_faithful")
         val wifi = booleanPreferencesKey("wifi_only")
     }
 
@@ -89,6 +92,7 @@ class SettingsRepository(private val context: Context) {
             voice = p[Keys.voice] ?: d.voice,
             autoRead = p[Keys.autoRead] ?: d.autoRead,
             highlightWhileReading = p[Keys.highlight] ?: d.highlightWhileReading,
+            moreFaithful = p[Keys.faithful] ?: d.moreFaithful,
             wifiOnly = p[Keys.wifi] ?: d.wifiOnly,
         )
     }
@@ -106,5 +110,6 @@ class SettingsRepository(private val context: Context) {
     suspend fun setVoice(id: String) = context.dataStore.edit { it[Keys.voice] = id }
     suspend fun setAutoRead(v: Boolean) = context.dataStore.edit { it[Keys.autoRead] = v }
     suspend fun setHighlight(v: Boolean) = context.dataStore.edit { it[Keys.highlight] = v }
+    suspend fun setMoreFaithful(v: Boolean) = context.dataStore.edit { it[Keys.faithful] = v }
     suspend fun setWifiOnly(v: Boolean) = context.dataStore.edit { it[Keys.wifi] = v }
 }

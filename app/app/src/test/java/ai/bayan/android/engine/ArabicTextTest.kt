@@ -106,6 +106,20 @@ class ArabicTextTest {
     }
 
     @Test
+    fun theSafetyNetChecksOfIssue61AreAddedToTheGuards() {
+        // condition words: a dropped «إذا» changes what the sentence says
+        val cond = "يحق للموظف أن يأخذ إجازة إضافية إذا عمل أكثر من عشر سنوات في الشركة نفسها دون انقطاع."
+        assertEquals(ArabicText.Fallback.Conditions, ArabicText.fallback(cond, "يحق للموظف أن يأخذ إجازة إضافية. وقد عمل أكثر من عشر سنوات في الشركة نفسها دون انقطاع.", 0.35f))
+        assertNull(ArabicText.fallback(cond, "يحق للموظف إجازة إضافية إذا عمل أكثر من عشر سنوات في الشركة نفسها دون انقطاع.", 0.35f))
+        assertEquals(ArabicText.Fallback.Conditions, ArabicText.fallback("سنخرج إلى الحديقة غدا في الصباح الباكر بشرط أن يتوقف المطر كما تتوقع الأرصاد.", "سنخرج إلى الحديقة غدا في الصباح الباكر، وسيتوقف المطر كما تتوقع الأرصاد.", 0.35f))
+        // Latin tokens are counted one by one and case is kept: a repeated name or a changed case is caught
+        val latin = "يستخدم نظام GPS في الهاتف، ويعمل GPS حتى دون اتصال بالإنترنت في معظم الأماكن."
+        assertEquals(ArabicText.Fallback.LatinWords, ArabicText.fallback(latin, "يستخدم نظام GPS في الهاتف، ويعمل حتى دون اتصال بالإنترنت في معظم الأماكن.", 0.35f))
+        assertEquals(ArabicText.Fallback.LatinWords, ArabicText.fallback(latin, "يستخدم نظام gps في الهاتف، ويعمل gps حتى دون اتصال بالإنترنت في معظم الأماكن.", 0.35f))
+        assertNull(ArabicText.fallback(latin, "يستخدم الهاتف نظام GPS، ويعمل GPS حتى دون اتصال بالإنترنت في معظم الأماكن.", 0.35f))
+    }
+
+    @Test
     fun aCutOffSelectionKeepsItsOpenEnding() {
         assertTrue(ArabicText.isOpenEnded("ويتم تحديد صحة المفاهيم من خلال"))
         assertFalse(ArabicText.isOpenEnded("ويتم تحديد صحة المفاهيم بالاختبار."))

@@ -28,8 +28,9 @@ data class ModelSpec(
     val max_output_tokens: Int = 256,
     val no_repeat_ngram_size: Int = 3,
     /**
-     * 1: greedy decoding, streamed token by token. More: beam search with that many beams (transformers'
-     * `generate(num_beams=…)`, where `max_output_tokens` is its `max_length`), shown a sentence at a time.
+     * The decoding [Seq2SeqEngine.generate] uses when the caller does not choose: 1 is greedy decoding, streamed token
+     * by token; more is beam search with that many beams (transformers' `generate(num_beams=…)`, where
+     * `max_output_tokens` is its `max_length`), shown a sentence at a time.
      */
     val num_beams: Int = 1,
     val length_penalty: Float = 1f,
@@ -65,8 +66,8 @@ class Seq2SeqEngine(dir: File, threads: Int = defaultThreads()) : Closeable {
         }
     }
     private val decoderInputs = decoder.inputNames
-    /** Scores beams in parallel while the decoder is idle between steps; only beam-search models start it. */
-    private val beamPoolLazy = lazy { Executors.newFixedThreadPool((spec.num_beams - 1).coerceAtLeast(1)) { Thread(it, "bayan-beams").apply { isDaemon = true } } }
+    /** Scores beams in parallel while the decoder is idle between steps; started by the first beam search. */
+    private val beamPoolLazy = lazy { Executors.newFixedThreadPool(3) { Thread(it, "bayan-beams").apply { isDaemon = true } } }
     private val beamPool by beamPoolLazy
 
     /** The model's input for [sentence]: the prefix and the sentence, tokenized and cut to `max_input_tokens`. */
@@ -74,16 +75,19 @@ class Seq2SeqEngine(dir: File, threads: Int = defaultThreads()) : Closeable {
 
     internal fun decode(ids: IntArray): String = tokenizer.decode(ids)
 
-    /** True when this model decodes with beam search, so its sentences arrive whole rather than token by token. */
-    val streams: Boolean get() = spec.num_beams <= 1
-
     /**
-     * Simplifies one sentence. [isCancelled] is polled between decoding steps. With greedy decoding [onPartial]
-     * receives the text decoded so far after every token, so the caller can stream it. Beam search can still change
-     * earlier tokens until it finishes, so it never calls [onPartial]: the sentence is shown when it is final.
+     * Simplifies one sentence with [beams] beams (1 = greedy). [isCancelled] is polled between decoding steps. With
+     * greedy decoding [onPartial] receives the text decoded so far after every token, so the caller can stream it. Beam
+     * search can still change earlier tokens until it finishes, so it never calls [onPartial]: the sentence is shown
+     * when it is final.
      */
-    fun generate(sentence: String, isCancelled: () -> Boolean = { false }, onPartial: ((String) -> Unit)? = null): String {
-        if (!streams) return tokenizer.decode(beamTokens(inputIds(sentence), isCancelled))
+    fun generate(
+        sentence: String,
+        isCancelled: () -> Boolean = { false },
+        beams: Int = spec.num_beams,
+        onPartial: ((String) -> Unit)? = null,
+    ): String {
+        if (beams > 1) return tokenizer.decode(beamTokens(inputIds(sentence), beams, isCancelled))
         val ids = tokenizer.encode(spec.prefix + sentence, spec.max_input_tokens)
         val n = ids.size.toLong()
         val inputIds = OnnxTensor.createTensor(env, LongBuffer.wrap(ids.map { it.toLong() }.toLongArray()), longArrayOf(1, n))
@@ -167,8 +171,8 @@ class Seq2SeqEngine(dir: File, threads: Int = defaultThreads()) : Closeable {
      * step), and the self-attention cache is reordered to follow the beams whenever they swap parents. The
      * cross-attention cache, made at the first step, is the same for every beam and is never reordered.
      */
-    internal fun beamTokens(ids: IntArray, isCancelled: () -> Boolean = { false }): IntArray {
-        val beams = spec.num_beams
+    internal fun beamTokens(ids: IntArray, beams: Int = spec.num_beams, isCancelled: () -> Boolean = { false }): IntArray {
+        require(beams >= 2) { "beam search needs at least 2 beams" }
         val n = ids.size.toLong()
         val open = ArrayList<AutoCloseable>()
         fun <T : AutoCloseable> keep(t: T): T = t.also { open += it }
