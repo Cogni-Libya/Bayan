@@ -5,6 +5,10 @@
     <!-- The system splash: the launcher icon on the theme's background, as for any app. -->
     <style name="Theme.Bayan.Splash" parent="Theme.SplashScreen">
         <item name="postSplashScreenTheme">@style/Theme.Bayan</item>
+        <!-- The book opening and the sun rising (splash_icon) on Bayan's paper, or its night ground in dark mode. -->
+        <item name="windowSplashScreenBackground">@color/bayan_ground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenAnimationDuration">1100</item>
     </style>
 
     <!-- The "تبسيط" sheet opens over the app the text came from. -->

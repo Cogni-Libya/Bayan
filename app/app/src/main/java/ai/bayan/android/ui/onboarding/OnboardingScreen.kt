@@ -1,5 +1,7 @@
 package ai.bayan.android.ui.onboarding
 
+import ai.bayan.android.ui.components.LogoLockup
+import ai.bayan.android.ui.components.BayanLogo
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
@@ -117,17 +119,8 @@ private fun PageTitle(title: String, body: String) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun WelcomePage() {
-    Box(
-        Modifier.size(128.dp).clip(MaterialShapes.Cookie9Sided.toShape()).background(MaterialTheme.colorScheme.primaryContainer),
-        contentAlignment = Alignment.Center,
-    ) {
-        Image(
-            painterResource(R.drawable.ic_launcher_foreground),
-            null,
-            Modifier.size(168.dp),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
-        )
-    }
+    // The stacked logo (book and بيان), with its clear space: the sun's diameter all round.
+    BayanLogo(LogoLockup.Stacked, Modifier.padding(top = 24.dp).height(112.dp), sunrise = true)
     PageTitle(stringResource(R.string.onboarding_welcome_title), stringResource(R.string.onboarding_welcome_body))
     Spacer(Modifier.height(24.dp))
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {

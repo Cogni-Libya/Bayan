@@ -1,5 +1,8 @@
 package ai.bayan.android.ui.home
 
+import androidx.compose.foundation.layout.height
+import ai.bayan.android.ui.components.LogoLockup
+import ai.bayan.android.ui.components.BayanLogo
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -135,7 +138,8 @@ fun HomeScreen(
         modifier = Modifier.nestedScroll(appBar.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
+                // The logo (book and بيان) in place of the name; it reads as the name to screen readers.
+                title = { BayanLogo(LogoLockup.Mark, Modifier.height(44.dp)) },
                 subtitle = active?.let { { Text(stringResource(it.info.title)) } },
                 scrollBehavior = appBar,
             )
