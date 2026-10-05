@@ -428,6 +428,7 @@ TOKEN_RE = re.compile(
 
 PLAIN_MAP = [
     ("\\%", "%"), ("\\&", "&"), ("\\#", "#"), ("\\_", "_"),
+    ("\\-", ""),  # discretionary hyphen
     ("\\enspace", " "), ("\\,", " "), ("\\;", " "),
     ("---", "—"), ("--", "–"),
     ("``", "“"), ("''", "”"),
@@ -470,6 +471,7 @@ def rich_runs(text: str, size=21, bold=False, italic=False, color=BODY_COLOR) ->
     text = re.sub(r"\\color\{[^{}]*\}", "", text)
     text = re.sub(r"\\textcolor\{[^{}]*\}\{([^{}]*)\}", r"\1", text)
     text = text.replace("\\%", "%").replace("\\&", "&").replace("\\#", "#").replace("\\_", "_")
+    text = text.replace("\\-", "")
     text = re.sub(r"\\[=`'\"^~.]\s*\{?([A-Za-z])\}?", r"\1", text)
     text = re.sub(r"\\[dHctvb]\{([A-Za-z])\}", r"\1", text)
     out = []
@@ -653,21 +655,23 @@ def clean_cell(text: str, size=18) -> list:
     t = t.replace("\\cellcolor{sichead}", "")
     t = t.replace("\\centering", "").replace("\\arraybackslash", "")
     t = t.replace("\\bfseries", "")
-    # \makecell{...} brace-aware
+    # \makecell{...} brace-aware → stacked lines (as in the LaTeX PDF)
+    makecell_parts = None
     while "\\makecell{" in t:
         i = t.find("\\makecell{")
         inner, end = grab_braced(t, i + 9)
         inner = re.sub(r"\\tiny|\\small|\\scriptsize|\\footnotesize", "", inner)
         inner = re.sub(r"\[-\d+(?:\.\d+)?pt\]", "", inner)
-        inner = inner.replace(r"\\", " / ")
-        # unwrap leftover {…} groups (CI brackets)
+        inner = inner.replace("\\%", "%").replace("\\-", "")
         while True:
             m = re.search(r"\{([^{}]*)\}", inner)
             if not m:
                 break
             inner = inner[:m.start()] + m.group(1) + inner[m.end():]
-        inner = re.sub(r"\s+", " ", inner).strip(" {}")
-        t = t[:i] + inner + t[end:]
+        parts = [re.sub(r"\s+", " ", p).strip(" {}") for p in inner.split("\\\\")]
+        parts = [p for p in parts if p]
+        t = t[:i] + " ".join(parts) + t[end:]
+        makecell_parts = parts
     t = re.sub(r"\[-\d+(?:\.\d+)?pt\]", "", t)
     # unwrap orphan braces only — never \cmd{...} (those must reach rich_runs)
     out = []
@@ -700,6 +704,13 @@ def clean_cell(text: str, size=18) -> list:
         i += 1
     t = "".join(out)
     t = t.replace("^*", "∗")
+    if makecell_parts and len(makecell_parts) >= 2:
+        runs_ = rich_runs(makecell_parts[0], size=size, bold=is_head)
+        br_run = el("r")
+        br_run.append(el("br"))
+        runs_.append(br_run)
+        runs_.extend(rich_runs(" ".join(makecell_parts[1:]), size=size - 1, bold=is_head))
+        return runs_
     runs_ = rich_runs(t, size=size, bold=is_head)
     return runs_
 
@@ -892,6 +903,7 @@ def emit_table(body: str, caption: str | None):
             band_rows.append(i)
             t = re.sub(r"\\multicolumn\{\d+\}\{[^{}]*\}", "", joined)
             t = t.replace("\\cellcolor{sichead}", "").replace("\\bfseries", "")
+            t = t.replace("\\%", "%").replace("\\&", "&").replace("\\#", "#").replace("\\-", "")
             t = re.sub(r"\\[a-zA-Z]+\{([^{}]*)\}", r"\1", t)
             t = re.sub(r"\\[a-zA-Z]+", " ", t)
             t = t.replace("{", "").replace("}", "")
@@ -1469,6 +1481,17 @@ def main():
     new_kids = list(kids_now[:content_idx])
     for n in toc_nodes:
         new_kids.append(n)
+    def drop_empty_paras(kids, keep_before=50):
+        out = []
+        for i, n in enumerate(kids):
+            if i >= keep_before and n.tag == W + "p":
+                txt = "".join(t.text or "" for t in n.iter(W + "t")).strip()
+                has_draw = n.find(".//" + W + "drawing") is not None
+                if not txt and not has_draw:
+                    continue
+            out.append(n)
+        return out
+
     # body content (toc_nodes already ends with a page break)
     for n in nodes:
         if isinstance(n, tuple) and n[0] == "IMAGE":
@@ -1504,6 +1527,26 @@ def main():
             new_kids.append(n)
     else:
         new_kids.append(sectPr)
+
+    # drop leftover template spacer paragraphs after the cover
+    new_kids = drop_empty_paras(new_kids, keep_before=50)
+
+    def compact_tables(kids):
+        for n in kids:
+            if n.tag != W + "tbl":
+                continue
+            for tr in n.findall(W + "tr"):
+                trPr = tr.find(W + "trPr")
+                if trPr is None:
+                    trPr = el("trPr")
+                    tr.insert(0, trPr)
+                if trPr.find(W + "cantSplit") is None:
+                    trPr.append(el("cantSplit"))
+                if trPr.find(W + "tblHeader") is None and tr is n.find(W + "tr"):
+                    trPr.append(el("tblHeader"))
+        return kids
+
+    new_kids = compact_tables(new_kids)
 
     # rebuild body
     for child in list(body):
