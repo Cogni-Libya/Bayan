@@ -46,9 +46,10 @@ trained on a 22,733-pair mix lower linguistic load at a cost to meaning: the
 medium strength setting of AraT5v2 cuts \bvHTfiveClause{} words from the longest
 clause and keeps the meaning in \bvHTfiveKept\% of outputs. A second corpus written
 by Gemma~4 31B (14,975 rows) and a third model trained on it cut about
-\mThreeTClauseAbs{} more words from the longest clause than model~2 in the app,
-but keep the meaning less often on the test split (by \mThreeTKeptAbs{} points), so
-the app keeps model~2 and offers model~3 as an option. A small meaning judge catches 95.5\% of planted errors. On a
+\mBeamTClauseAbs{} more words from the longest clause than model~2 in the app and,
+decoded with four beams, keep the meaning as often (a difference of \mBeamTKeptDiff{}
+points [\mBeamTKeptCi] on the test split, not significant), so the app offers model~3 as
+an option next to model~2. A small meaning judge catches 95.5\% of planted errors. On a
 Snapdragon 870 phone the first word of a rewrite appears 82--172\,ms after the
 request with the int8 AraBART bundle (222\,MB, the default) and 177--318\,ms with
 the optional AraT5v2 bundles (471\,MB).\vspace{2pt}}}
@@ -1144,24 +1145,29 @@ clause [\mThreeClauseCi], the reading level falls \mThreeLevelAbs{} more
 and every number is kept. On test, run once to confirm, the simplification holds
 (\mThreeTClauseAbs{} more words cut [\mThreeTClauseCi], reading level
 \mThreeTLevelAbs{} lower [\mThreeTLevelCi], \mThreeTHardAbs{} more hard words removed
-[\mThreeTHardCi]), but meaning kept falls by \mThreeTKeptAbs{} points
+[\mThreeTHardCi]), but with greedy decoding meaning kept falls by \mThreeTKeptAbs{} points
 [\mThreeTKeptCi], a significant loss (\mThreeTPaired{} of \mThreeTCore{} items
-scored for both). Model~3 is the stronger model on its own (against model~2 as a raw
-model it keeps the meaning as often and simplifies more), but the app's guards
-narrow model~2's meaning losses more than model~3's. Since a wrong meaning costs a
-reader more than a long clause, the app keeps model~2 as its large model and lists
-model~3 as an option that simplifies more, decided on Sunday 4 October.
+scored for both).
 
-The app has since gained beam search (\#61, \#62, \#66), offered for model~3 as a
-setting that is off by default, as \#61 proposed: in the runs reported there, on model~3's int8 bundle,
-four beams kept the meaning 4--8 points more often than greedy decoding, at a small
-cost in simplification. Run with four beams through the same text step, model~3
-still cuts \mBeamTClauseAbs{} more words from the longest clause than the app's large
-model on test [\mBeamTClauseCi] (\mBeamClauseAbs{} on dev), leaves easy text unchanged
-\mBeamTEasyAbs{} points more often (\mBeamEasyAbs{} on dev), and keeps every number.
-Its meaning rate in the app is not yet known: \mBeamTScored{} of \mBeamTCore{} test
-core items have a score, and the scored ones lean toward unchanged copies, which
-count as kept. The gate numbers above are therefore for greedy decoding.
+Beam search closes that gap. \#61 (Khengari) measured on model~3's int8 bundle that
+four beams keep the meaning 4--8 points more often than greedy decoding, and the app
+gained beam search with transformers' exact tokens (\#62) as a setting, \emph{More
+faithful, slower} (\#66). Run with four beams by the app's own engine and through
+the same text step, with every core item scored, model~3 keeps the meaning as often
+as the app's large model: \mBeamTKept\% on test, a difference of \mBeamTKeptDiff{}
+points [\mBeamTKeptCi], and \mBeamKept\% on dev, \mBeamKeptDiff{} [\mBeamKeptCi],
+neither significant. It still simplifies more: \mBeamTClauseAbs{} more words cut from
+the longest clause on test [\mBeamTClauseCi] (\mBeamClauseAbs{} on dev
+[\mBeamClauseCi]), easy text left unchanged \mBeamTEasyAbs{} points more often
+(\mBeamEasyAbs{} on dev), and every number kept. Against its own greedy decoding,
+four beams keep the meaning \mBGTKeptAbs{} points more often on test [\mBGTKeptCi]
+(\mBGKeptDiff{} on dev [\mBGKeptCi]) and cut \mBGTClauseAbs{} fewer words from the
+longest clause, which is not significant [\mBGTClauseCi]. Model~3 with four beams
+therefore matches model~2 on meaning and simplifies more. The app keeps model~2 as
+its large model because the match needs the beam setting, which is off by default
+and about three times slower per sentence (\autoref{tab:device}), and lists model~3
+as the option that simplifies more, with the setting to keep its meaning
+(decided Sunday 4 October, confirmed on the complete scores on Monday 5 October).
 
 \subsection{User Interface}
 
@@ -1333,8 +1339,9 @@ O1 Beat copying on changed rows; lower linguistic load without losing meaning &
   Model~1: \greedychanged{} vs \copytestchanged{} on SAMER test (\greedygain{}). Model~2
   lowers clause length and hard words, but keeps the meaning in
   \bvHminKept--\bvHmaxKept\% of outputs, and raters kept the meaning of
-  \hBartSameMin--\hAppTfiveSame\% of changed outputs. Model~3 in the app simplifies
-  more but keeps the meaning \mThreeTKeptAbs{} points less often on test & partly met \\ \hline
+  \hBartSameMin--\hAppTfiveSame\% of changed outputs. Model~3 with four beams
+  simplifies more than model~2 in the app and keeps the meaning as often
+  (\mBeamTKeptDiff{} points [\mBeamTKeptCi] on test) & partly met \\ \hline
 O2 Diacritize without changing letters & Libtashkeel in the app (a setting): DER
   6.91\% without case endings, no letter changed in 743 + 300 sentences, 4.8\,MB &
   met \\ \hline
@@ -1358,9 +1365,9 @@ linguistic load, but not for free: every setting trades meaning for
 simplification, the safest one simplifies least, and AraT5v2 keeps the meaning
 of \bvHTfiveKept--\bvHAppTfiveKept\% of outputs, more than AraBART. Removing the
 strength tag helps meaning, so the untagged bundles the app ships are safer than
-the tagged settings. Model~3 does not escape the trade-off: behind the app's code guards it
-simplifies more than model~2 and leaves easy text alone more often, but keeps the
-meaning less often on test. \textbf{RQ3:} yes for AraBART, in part for AraT5v2. Streamed output
+the tagged settings. Model~3 moves the trade-off: behind the app's code guards and with four beams it
+simplifies more than model~2 and leaves easy text alone more often while keeping the
+meaning as often; decoded greedily it keeps the meaning less often on test. \textbf{RQ3:} yes for AraBART, in part for AraT5v2. Streamed output
 reaches the reader in under a third of a second on a mid-range phone with either
 bundle (model~3 with the beam setting on shows a whole sentence in about
 1.2\,s); the default int8 AraBART bundle fits the 250\,MB budget, the optional
@@ -1421,10 +1428,10 @@ comprehension, would turn ratings into evidence about reading.
       differences.
 \item \textbf{One phone.} On-device figures come from one mid-range phone; the
       optional AraT5v2 bundles (471\,MB) need more storage than the default.
-\item \textbf{Model~3's test comparison is partly scored.} It covers the
-      \mThreeTPaired{} of \mThreeTCore{} test core items scored for both systems;
-      model~3 with four beams, the app's optional setting, has a meaning score for
-      \mBeamTScored{} of \mBeamTCore{}; and no person has rated model~3's outputs.
+\item \textbf{Model~3's meaning rests on the judge.} With four beams every test
+      core item is scored, but no significant difference is not proof of none: the
+      interval on test runs from \mBeamTKeptCi{} points. The human rating round on
+      model~3's outputs was still open at submission.
 \item \textbf{One run per configuration.} Each model was trained once, with one
       seed, so the comparison between architectures carries no estimate of
       training variance.
