@@ -1,0 +1,17 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Feedback" -->
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script><script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="../../_ds_bundle.js"></script></head>
+<body style="padding:24px;box-sizing:border-box"><div id="root"></div>
+<script type="text/babel">
+const NS=Object.values(window).find(v=>v&&typeof v==='object'&&v.Button&&v.Card)||{};
+const {Button,IconButton,Badge,Tag,Card,Input,Select,Checkbox,Radio,Switch,Tabs,Dialog,Toast,Tooltip}=NS;
+const Row=({children,gap=12})=><div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap}}>{children}</div>;
+const I=({n})=><i data-lucide={n} style={{width:18,height:18,strokeWidth:1.75}}></i>;
+function App(){React.useEffect(()=>{window.lucide&&lucide.createIcons({attrs:{'stroke-width':1.75,width:18,height:18}});});return <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:24,alignItems:'start',background:'var(--paper-3)',margin:-24,padding:24,minHeight:312,boxSizing:'border-box'}}>
+<Dialog inline width={360} title="حذف الملاحظة؟" actions={<><Button variant="ghost" size="sm">إلغاء</Button><Button variant="danger" size="sm">حذف</Button></>}>سيُحذف هذا الاقتباس من دفترك. لا يمكن التراجع عن هذا الإجراء.</Dialog>
+<div style={{display:'grid',gap:10,justifyItems:'start'}}><Toast tone="success" action="تراجع">أُضيف الكتاب إلى رفّك</Toast><Toast tone="accent">وصل فصل جديد</Toast><Toast tone="danger" onClose={()=>{}}>تعذّر الحفظ</Toast></div>
+</div>;}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>

@@ -5,9 +5,9 @@ template (templates are copyrighted by Samsung — keep this repository **privat
 
 | Folder | Deliverable | SIC template | Status |
 |---|---|---|---|
-| [`01_action_plan/`](01_action_plan/) | Action Plan | `SIC_AI_Capstone Project_Action Plan.docx` | In progress — due **Tue 22 Sep 2026, 23:00** |
+| [`01_action_plan/`](01_action_plan/) | Action Plan | `SIC_AI_Capstone Project_Action Plan.docx` | Done — final draft merged in #25 |
 | [`02_work_breakdown_structure/`](02_work_breakdown_structure/) | WBS workbook — detailed tasks, owners, daily status | `SIC_AI_Capstone Project_Work Breakdown Structure.xlsx` | In progress — 8 phases, 38 work packages |
-| [`03_final_report/`](03_final_report/) | Final Report | `SIC_AI_Capstone Project_Final Report.docx` | Not started |
+| [`03_final_report/`](03_final_report/) | Final Report | `SIC_AI_Capstone Project_Final Report.docx` | Draft in progress on branch `docs/final-report-draft` (no PR yet) |
 | [`04_presentation/`](04_presentation/) | Presentation slides | `SIC_AI_Capstone Project_Presentation Slide Template.pptx` | Not started — **no owner yet** |
 | [`05_demo/`](05_demo/) | Demo video / screenshots of the working prototype | — | Not started |
 

@@ -2,35 +2,192 @@
 <resources>
     <string name="app_name">بيان</string>
     <string name="process_text_label">تبسيط</string>
-    <string name="app_subtitle">تبسيط النصوص العربية لدعم القراء ذوي عسر القراءة وتيسير الفهم القرائي</string>
 
-    <!-- Model Status Card -->
-    <string name="model_status_title">حالة نموذج الذكاء الاصطناعي</string>
-    <string name="model_status_name">AraT5v2-base-1024 int8 ~164MB</string>
-    <string name="model_status_ready">جاهز للاختبار (محرك تجريبي — جاهز لدمج نموذج AraT5 ONNX)</string>
-    <string name="model_status_specs">حجم النموذج: ~164 ميجابايت (يعمل محلياً على المعالج دون إنترنت)</string>
+    <!-- Navigation -->
+    <string name="nav_simplify">تبسيط</string>
+    <string name="nav_history">السجل</string>
+    <string name="nav_settings">الإعدادات</string>
 
-    <!-- Interactive Sandbox -->
-    <string name="sandbox_title">تجربة التبسيط المباشر</string>
-    <string name="input_hint">الصق أو اكتب النص العربي هنا لتجريبه...</string>
-    <string name="btn_paste">لصق من الحافظة</string>
-    <string name="btn_simplify">تبسيط النص</string>
-    <string name="empty_text_warning">يرجى إدخال نص أولاً للتبسيط</string>
-    <string name="clipboard_empty_warning">الحافظة فارغة أو لا تحتوي على نص</string>
+    <!-- Common actions -->
+    <string name="action_simplify">بسّط النص</string>
+    <string name="action_stop_simplifying">إيقاف</string>
+    <string name="action_listen">استمع</string>
+    <string name="action_stop">أوقف القراءة</string>
+    <string name="action_copy">نسخ</string>
+    <string name="action_share">مشاركة</string>
+    <string name="action_paste">لصق</string>
+    <string name="action_clear">مسح النص</string>
+    <string name="action_clear_all">مسح الكل</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_undo">تراجع</string>
+    <string name="action_retry">إعادة المحاولة</string>
+    <string name="action_back">رجوع</string>
+    <string name="action_close">إغلاق</string>
+    <string name="action_install_voice">تثبيت الصوت العربي</string>
+    <string name="copied">نُسخ النص</string>
 
-    <!-- Instructions -->
-    <string name="instructions_title">كيفية استخدام بيان في التطبيقات الأخرى:</string>
-    <string name="instruction_step_1">1. حدد أي نص عربي في أي تطبيق (المتصفح، واتساب، الملاحظات).</string>
-    <string name="instruction_step_2">2. اختر «تبسيط» من قائمة الخيارات العائمة.</string>
-    <string name="instruction_step_3">3. اقرأ النص المبسط والواضح مباشرة داخل النافذة السفلية.</string>
+    <!-- Home -->
+    <string name="home_input_placeholder">الصق النص هنا أو اكتبه…</string>
+    <string name="home_needs_model_title">نموذج التبسيط غير مُنزَّل بعد</string>
+    <string name="home_needs_model_body">يعمل بيان على هاتفك دون إنترنت، لكنه يحتاج إلى تنزيل نموذج التبسيط مرة واحدة.</string>
+    <string name="home_needs_model_action">اختيار نموذج وتنزيله</string>
+    <string name="home_loading_model">جارٍ تجهيز النموذج…</string>
+    <string name="home_progress">جارٍ تبسيط الجملة %1$d من %2$d</string>
+    <string name="home_result_placeholder">سيظهر النص المبسّط هنا…</string>
+    <string name="home_failed_title">تعذّر تبسيط النص</string>
+    <string name="home_failed_body">حدث خطأ غير متوقع، فحاول مرة أخرى.</string>
+    <string name="home_tip_title">بسّط أي نص في أي تطبيق</string>
+    <string name="home_tip_body">حدّد نصًا في المتصفح أو في أي تطبيق آخر، ثم اختر «تبسيط» من القائمة التي تظهر.</string>
+    <string name="result_simplified">المبسّط</string>
+    <string name="result_original">الأصلي</string>
+    <string name="result_unchanged">النص واضح بما يكفي، فأبقاه بيان كما هو.</string>
+    <string name="result_meta">%1$s · %2$.1f ثانية</string>
+    <plurals name="word_count">
+        <item quantity="zero">لا كلمات</item>
+        <item quantity="one">كلمة واحدة</item>
+        <item quantity="two">كلمتان</item>
+        <item quantity="few">%d كلمات</item>
+        <item quantity="many">%d كلمة</item>
+        <item quantity="other">%d كلمة</item>
+    </plurals>
 
-    <!-- Bottom Sheet Strings -->
-    <string name="sheet_header_title">تبسيط بيان</string>
-    <string name="original_text_title">النص الأصلي</string>
-    <string name="simplified_text_title">النص المبسط للقراءة الميسرة</string>
-    <string name="action_listen">▶ استمع</string>
-    <string name="action_copy">⧉ نسخ</string>
-    <string name="action_settings">⚙ إعدادات</string>
-    <string name="action_disabled_notice">الميزات الصوتية والنسخ المتقدم قيد التطوير</string>
+    <!-- History -->
+    <string name="history_empty_title">لا شيء هنا بعد</string>
+    <string name="history_empty_body">ستظهر هنا النصوص التي تبسّطها، وتبقى محفوظة على هاتفك فقط.</string>
+    <string name="history_deleted">حُذف النص</string>
+    <string name="history_clear">مسح السجل</string>
+    <string name="history_clear_title">مسح السجل كله؟</string>
+    <string name="history_clear_body">ستُحذف كل النصوص المحفوظة من هاتفك، ولا يمكن التراجع عن ذلك.</string>
+
+    <!-- Models -->
+    <string name="model_arabart_title">النموذج السريع</string>
+    <string name="model_arabart_summary">الأنسب لمعظم الهواتف: حجمه صغير، ويبسّط النص بسرعة جملةً جملة.</string>
+    <string name="model_arat5_title">النموذج الكبير السابق</string>
+    <string name="model_arat5_summary">يُظهر النص كلمةً كلمة، لكنه يبسّط أقل من النموذج الكبير. بالحجم نفسه.</string>
+    <string name="model_model3_summary">أفضل نماذجنا: يحافظ على المعنى ويبسّط أكثر من غيره. أبطأ ويحتاج إلى مساحة أكبر، وتظهر كل جملة حين تكتمل.</string>
+    <string name="model_model3_title">النموذج الكبير</string>
+    <string name="models_title">نماذج التبسيط</string>
+    <string name="models_privacy">تعمل النماذج على هاتفك بالكامل، فلا يغادر نصك جهازك أبدًا.</string>
+    <string name="models_download">تنزيل (%1$s)</string>
+    <string name="models_downloading">%1$s من %2$s</string>
+    <string name="models_waiting">في انتظار بدء التنزيل…</string>
+    <string name="models_failed">تعذّر التنزيل: %1$s</string>
+    <string name="models_speed_fast">سريع</string>
+    <string name="models_speed_slower">أبطأ بنحو %1$d مرات</string>
+    <string name="models_delete_title">حذف %1$s؟</string>
+    <string name="models_delete_body">سيُحذف النموذج من هاتفك لتتوفر مساحة %1$s، ويمكنك تنزيله مجددًا في أي وقت.</string>
+    <string name="models_download_options">التنزيل</string>
+    <string name="models_wifi_only">التنزيل عبر Wi-Fi فقط</string>
+    <string name="models_wifi_only_body">حتى لا تُستهلك باقة بيانات الهاتف</string>
+    <string name="models_import">استيراد نموذج من ملف</string>
+    <string name="models_import_body">ملف مضغوط (ZIP) يحتوي على نموذج بيان</string>
+    <string name="models_imported">ثُبّت النموذج وأصبح قيد الاستخدام</string>
+    <string name="models_import_failed">تعذّر استيراد الملف:</string>
+
+    <!-- Settings -->
+    <string name="settings_section_reading">القراءة</string>
+    <string name="settings_section_listening">الاستماع</string>
+    <string name="settings_section_model">النموذج</string>
+    <string name="settings_section_appearance">المظهر</string>
+    <string name="settings_section_about">حول التطبيق</string>
+    <string name="settings_preview_text">تصبح القراءة أسهل حين تكون الجمل قصيرة، والكلمات مألوفة، والمسافات مريحة للعين.</string>
+    <string name="settings_font">الخط</string>
+    <string name="font_naskh">نسخ</string>
+    <string name="settings_size">حجم الخط</string>
+    <string name="settings_line_height">المسافة بين الأسطر</string>
+    <string name="settings_word_spacing">المسافة بين الكلمات</string>
+    <string name="spacing_normal">عادية</string>
+    <string name="spacing_wider">+%1$d٪</string>
+    <string name="settings_surface">خلفية القراءة</string>
+    <string name="surface_cream">كريمي</string>
+    <string name="surface_mint">نعناعي</string>
+    <string name="surface_paper">ورقي</string>
+    <string name="surface_night">ليلي</string>
+    <string name="settings_reset_reading">استعادة الإعدادات الأصلية</string>
+    <string name="settings_speech_rate">سرعة القراءة بصوت</string>
+    <string name="settings_speech_sample">مرحبًا، هذه سرعة القراءة التي اخترتها.</string>
+    <string name="settings_highlight">تمييز الكلمة المقروءة</string>
+    <string name="settings_highlight_body">تُظلَّل كل كلمة أثناء قراءتها بصوت لتتابعها بعينك</string>
+    <string name="settings_more_faithful">أدق في المعنى، وأبطأ</string>
+    <string name="settings_more_faithful_body">يوازن بين عدة صياغات قبل أن يختار، فيحافظ على المعنى أكثر. تظهر كل جملة حين تكتمل.</string>
+    <string name="settings_voice">محرك الصوت</string>
+    <string name="settings_voice_body">اختر الصوت العربي من إعدادات تحويل النص إلى كلام</string>
+    <string name="settings_model">نموذج التبسيط</string>
+    <string name="settings_theme">السمة</string>
+    <string name="theme_system">تلقائي</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="settings_language">لغة التطبيق</string>
+    <string name="settings_language_body">العربية أو الإنجليزية</string>
+    <string name="settings_privacy">خصوصيتك</string>
+    <string name="settings_privacy_body">يجري التبسيط على هاتفك، ولا يُرسَل أي نص إلى الإنترنت.</string>
+    <string name="settings_fonts">الخطوط</string>
+    <string name="settings_fonts_body">⁨Readex Pro⁩ و⁨Noto Sans Arabic⁩ و⁨Noto Naskh Arabic⁩، برخصة ⁨SIL Open Font License⁩</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">تخطي</string>
+    <string name="onboarding_next">التالي</string>
+    <string name="onboarding_start">ابدأ</string>
+    <string name="onboarding_welcome_title">أهلًا بك في بيان</string>
+    <string name="onboarding_welcome_body">يعيد بيان كتابة النص العربي بجمل أقصر وكلمات مألوفة، ليصبح أسهل في القراءة.</string>
+    <string name="onboarding_example_before">يعد الاحتباس الحراري من أبرز التحديات التي تواجه البشرية في العصر الحديث، إذ يؤدي إلى ارتفاع منسوب مياه البحار وذوبان الأنهار الجليدية.</string>
+    <string name="onboarding_example_after">الاحتباس الحراري مشكلة كبيرة تواجه العالم اليوم، فهو يرفع مياه البحار ويذيب الجليد.</string>
+    <string name="onboarding_anywhere_title">يعمل في أي تطبيق</string>
+    <string name="onboarding_anywhere_body">حدّد نصًا في أي تطبيق، ثم اختر «تبسيط» من القائمة، فتظهر النسخة الأسهل فوقه مباشرة.</string>
+    <string name="onboarding_toolbar_copy">نسخ</string>
+    <string name="onboarding_toolbar_select_all">تحديد الكل</string>
+    <string name="onboarding_model_title">نزّل نموذج التبسيط</string>
+    <string name="onboarding_model_body">يعمل النموذج على هاتفك دون إنترنت بعد تنزيله، فلا يغادر نصك جهازك.</string>
+
+    <!-- The "تبسيط" sheet -->
+    <string name="sheet_replace">استبدال النص المحدد</string>
+    <string name="sheet_needs_model_body">افتح بيان لتنزيل نموذج التبسيط، ثم أعد المحاولة.</string>
+    <string name="sheet_open_app">فتح بيان</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_downloads">تنزيل النماذج</string>
+    <string name="notification_downloading">جارٍ تنزيل %1$s</string>
+    <string name="models_section">النماذج المتاحة</string>
+    <string name="models_facts">%1$s · %2$s</string>
+    <string name="history_today">اليوم</string>
+    <string name="history_yesterday">أمس</string>
+    <string name="surface_default">تلقائي</string>
+    <string name="font_system">خط النظام</string>
+    <string name="font_readex">Readex Pro</string>
+    <string name="settings_style">الشكل</string>
+    <string name="style_bayan">بيان</string>
+    <string name="style_bayan_body">ورق دافئ وخطّ صُمّم للقراءة</string>
+    <string name="style_system">ألوان هاتفك</string>
+    <string name="style_system_body">من خلفية شاشتك وخط النظام</string>
+    <string name="onboarding_style_title">اختر شكل بيان</string>
+    <string name="onboarding_style_body">يمكنك تغييره متى شئت من الإعدادات.</string>
+    <string name="language_follows_phone">%1$s (لغة الهاتف)</string>
+    <string name="settings_version_title">الإصدار</string>
+    <string name="sheet_working">جارٍ التبسيط…</string>
+    <string name="voices_title">صوت القراءة</string>
+    <string name="voices_section">الأصوات</string>
+    <string name="voices_section_behaviour">طريقة القراءة</string>
+    <string name="voices_preview">استماع إلى عينة</string>
+    <string name="voices_download">تنزيل الصوت</string>
+    <string name="voices_auto_read">القراءة التلقائية</string>
+    <string name="voices_auto_read_body">يبدأ بيان القراءة بصوت مسموع فور اكتمال أول جملة</string>
+    <string name="voices_note">تعمل الأصوات المنزّلة على هاتفك دون إنترنت، وتبدأ القراءة قبل انتهاء التبسيط، فتُقرأ كل جملة فور اكتمالها.</string>
+    <string name="voice_sample">مرحبًا، أنا بيان، أقرأ لك النص بهذا الصوت.</string>
+    <string name="voice_system_title">صوت الهاتف</string>
+    <string name="voice_system_summary">محرك تحويل النص إلى كلام المثبّت في هاتفك</string>
+    <string name="voice_nabra_title">نبرة</string>
+    <string name="voice_nabra_summary">صوت عربي فصيح طبيعي، صغير وسريع جدًا</string>
+    <string name="voice_miro_title">ميرو</string>
+    <string name="voice_dii_title">دي</string>
+    <string name="voice_piper_summary">صوت عربي من Piper، للاستخدام غير التجاري</string>
+    <string name="voice_kareem_title">كريم</string>
+    <string name="voice_kareem_summary">صوت رجل من Piper، وحجمه أكبر</string>
+    <string name="sheet_expand">تكبير اللوحة</string>
+    <string name="sheet_minimize">تصغير</string>
+    <string name="notification_channel_reading">القراءة بصوت مسموع</string>
+    <string name="floating_title">إبقاء بيان على الشاشة</string>
+    <string name="floating_body">ليبقى بيان يقرأ لك في نافذة صغيرة بينما تستخدم التطبيق، اسمح له بالظهور فوق التطبيقات الأخرى.</string>
+    <string name="floating_allow">السماح</string>
+    <string name="floating_not_now">ليس الآن</string>
 </resources>
-

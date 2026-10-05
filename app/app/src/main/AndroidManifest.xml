@@ -1,33 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Only for downloading the models; simplification itself runs offline. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Only for the minimized reading panel, which floats over the app the text came from. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Read-aloud needs to see the installed text-to-speech engines (Android 11+). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 
     <application
-        android:name=".BayanApplication"
+        android:name=".BayanApp"
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Bayan">
 
-        <!-- Standalone Launcher / Home Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Bayan"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Bayan.Splash"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter android:label="@string/process_text_label">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
         </activity>
 
-        <!-- PROCESS_TEXT Trampoline Activity -->
+        <!-- "تبسيط" in the text-selection menu of every app. -->
         <activity
-            android:name=".ProcessTextActivity"
+            android:name=".ui.process.ProcessTextActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
             android:label="@string/process_text_label"
-            android:theme="@style/Theme.Bayan.Translucent"
-            android:windowSoftInputMode="stateHidden">
+            android:taskAffinity=""
+            android:theme="@style/Theme.Bayan.Overlay"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.PROCESS_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -35,7 +63,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Reading aloud continues here after the "تبسيط" panel is minimized, with media controls. -->
+        <service
+            android:name=".speech.ReadingService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Model downloads run as a data-sync foreground service so they survive leaving the app. -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
     </application>
 
 </manifest>
-

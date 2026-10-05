@@ -17,23 +17,22 @@ design:
    (Quran/Hadith/Old Testament/New Testament by BAREC's Source tag) --
    scripture is routed out regardless of its assessed level: canonical text
    is preserved verbatim, not simplified because it happened to score easy.
-   Confirmed necessary against a real pilot run: 28 scripture sentences were
-   sent to the generator before this existed, including an actual ayah (with
-   its verse number) and a hadith still carrying the Prophet's honorific,
-   both reworded. Known gap: this catches BAREC's document-level tagging,
-   not a quotation embedded inside some other source's text.
+   Known gap: this catches BAREC's document-level tagging, not a quotation
+   embedded inside some other source's text.
 4. Easy and scripture -> identity pairs. No generation, no cost, no risk.
 5. Hard -> one DSPy Generator call producing NUM_CANDIDATES candidate
    rewrites, one DSPy equivalence-validator call scoring all of them
-   against the original (0.0-1.0 each), and one local CAMeL readability
-   pass (no API call) scoring how much easier each one is than the
-   original -- 2 LM calls per hard sentence total, not NUM_CANDIDATES*3.
-   Candidates whose P(easy) rose by at least TAU over the original AND that
-   score above EQUIVALENCE_THRESHOLD
-   outrank ones that don't; the best-scoring candidate is kept even when
-   none of the NUM_CANDIDATES attempts fully pass (same downstream `passed`
-   filter as always). See simplify_and_validate()'s docstring for the
-   full ranking rule and the TSAR 2025/EhiMeNLP precedent behind
+   against the original (0.0-1.0 each), and two local (no API call) scoring
+   passes -- CAMeL readability (how much easier each one is than the
+   original) and lexical difficulty (AoA + word length) -- 2 LM calls per
+   hard sentence total, not NUM_CANDIDATES*3. Candidates whose P(easy) rose
+   by at least TAU over the original AND that score above
+   EQUIVALENCE_THRESHOLD outrank ones that don't; among those, the
+   easiest-vocabulary one is kept, not the most faithful one (faithfulness
+   is already assured by clearing EQUIVALENCE_THRESHOLD). This happens even
+   when none of the NUM_CANDIDATES attempts fully pass (same downstream
+   `passed` filter as always). See simplify_and_validate()'s docstring for
+   the full ranking rule and the TSAR 2025/EhiMeNLP precedent behind
    generate-then-rerank.
 
 Usage:
@@ -51,14 +50,16 @@ calls once past the dry-run stage. Run it yourself when ready.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-# numpy/onnxruntime must be imported before dspy: dspy's lazy-import machinery, if it runs
-# first, corrupts numpy's own C-core initialization (TypeError: data type 'bool' not understood)
-# in a way that then breaks onnxruntime's internal numpy dependency too. Confirmed by isolating
-# the failure -- reordering these two lines above `import dspy` is the entire fix.
+# numpy/onnxruntime must be imported before dspy: dspy's lazy-import machinery, if it runs first,
+# corrupts numpy's own C-core initialization (TypeError: data type 'bool' not understood) in a way
+# that then breaks onnxruntime's internal numpy dependency too.
 import numpy as np
 import onnxruntime
 import dspy
@@ -67,6 +68,10 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from camel_readability import CamelReadability
+from corpus_constraints import (
+    has_verse_marker, is_short, mcq_stem, normalize_candidate, readability_units, strip_tashkeel, structure_gates,
+)
+from lexical_scorer import DIAC, TOKEN, LexicalScorer
 from validation import TAU, load_readability_classifier, score_readability
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -77,7 +82,7 @@ PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 # flushed to disk right away) -- not held in memory until the whole run finishes. A run that
 # gets interrupted (crash, hang, laptop sleep killing the connection) keeps everything already
 # processed, and re-running the script picks up where it left off instead of starting over.
-HARD_CHECKPOINT_PATH = PROCESSED_DIR / "barec_hard_pilot_checkpoint.jsonl"
+HARD_CHECKPOINT_PATH = PROCESSED_DIR / "barec_hard_v1_checkpoint.jsonl"  # v0 (DeepSeek) is barec_hard_pilot_checkpoint.jsonl
 
 # Superseded by the local CAMeL readability model (camel_readability.py, loaded once in
 # configure_dspy() and reused for every candidate: no API call, no per-candidate cost, and it
@@ -90,11 +95,25 @@ COMPILED_LEVEL_CLASSIFIER_PATH = PROJECT_ROOT / "scripts" / "compiled" / "level_
 # against human-annotated ground truth via MIPROv2 -- loaded automatically below if present.
 COMPILED_EQUIVALENCE_VALIDATOR_PATH = PROJECT_ROOT / "scripts" / "compiled" / "equivalence_validator.json"
 
-DEEPSEEK_MODEL = "deepseek/deepseek-flash"  # DeepSeek V4.1 Flash's current API model id.
-# Confirmed via DeepSeek's own docs: the legacy name "deepseek-v4-flash" still works but is a
-# deprecated alias that routes to this same model; "deepseek-flash" is the current, correct id.
+DEEPSEEK_MODEL = "deepseek/deepseek-flash"  # DeepSeek V4.1 Flash's current API model id; the
+# legacy "deepseek-v4-flash" alias still works but routes here.
 
-KEEP_COLS = ["ID", "Sentence", "Word_Count", "Readability_Level_5", "Domain", "Source", "Text_Class"]
+# --backend vllm: self-hosted OpenAI-compatible servers, one model per GPU. The generator and the judge
+# are different model families on purpose -- a model grading its own rewrites was measured to pass far
+# more content-dropping candidates (references/04_dataset_construction, part 5).
+VLLM_GENERATOR_MODEL = "google/gemma-4-31B-it-qat-w4a16-ct"
+VLLM_JUDGE_MODEL = "RedHatAI/Qwen3.8-27B-INT4"
+
+KEEP_COLS = [
+    "ID", "Sentence", "Word_Count", "Readability_Level_5", "Readability_Level_19", "Domain", "Source", "Text_Class",
+    "barec_split",
+]  # barec_split ("train"/"dev"/"test", tagged in load_and_clean_barec) labels every row's origin
+# instead of silently filtering it -- callers decide their own train/dev/test policy explicitly.
+# See barec_provenance.py for the same idea applied to already-generated data, including
+# cross-split-duplicate detection (a train row's text can still match test under a different ID,
+# which this column alone doesn't catch). Readability_Level_19 is the gold, non-predicted BAREC
+# level, kept for per-source audit stratification that doesn't depend on this pipeline's own
+# predictions.
 
 # This pipeline's readability scale is BAREC's 5-level collapse with level 5 dropped, so 4
 # levels remain (1 = simplest ... 4 = hardest). This is NOT BAREC's native 19-level scale --
@@ -103,18 +122,47 @@ EASY_LEVELS = (1, 2)
 HARD_LEVELS = (3, 4)
 EASY_LEVEL_CEILING = 2  # `is_easy` = predicted_level <= this; informational for generated pairs (the gate is the rise in P(easy))
 
-# CheckSemanticEquivalence outputs a continuous 0.0-1.0 score, not a boolean -- this threshold
-# is what simplify_and_validate() uses to derive the pass/fail gate (and, now, to break ties
-# among reranked candidates). Calibrated from data/processed/equivalence_validator_eval_results.parquet
-# (the MIPROv2-compiled validator's real predictions on the 25-pair held-out annotated set): a
-# threshold sweep found 0.70-0.75 as a broad, stable optimum (84% accuracy there vs. 64% at the
-# original guessed 0.8), meaning the compiled validator's scores run a bit more conservative than
-# a naive 0.8 cutoff assumed -- consistent with the earlier finding that the raw zero-shot judge
-# was already biased toward over-flagging valid simplifications as "not equivalent". Picked 0.7
-# (the lower/safer edge of that plateau) rather than the exact sweep peak, since the sweep itself
-# was measured on the same 25-example set being reported -- treat as directional, not exact;
-# revisit with more annotations.
+# CheckSemanticEquivalence outputs a continuous 0.0-1.0 score, not a boolean -- this threshold is
+# what simplify_and_validate() uses to derive the pass/fail gate and to break ties among reranked
+# candidates. Calibrated via a threshold sweep against a held-out annotated set (0.70-0.75 was a
+# broad, stable optimum); picked the lower/safer edge of that plateau rather than the exact peak,
+# since the sweep set is small -- treat as directional, revisit with more annotations.
 EQUIVALENCE_THRESHOLD = 0.7
+
+# Both gates passing (equivalent AND readability_passed) is necessary but not sufficient to rule
+# out fluent-but-unfaithful output: human labeling found holistic readers miss fluent meaning
+# changes far more often than crude/mechanical ones, and a winner sitting right at
+# EQUIVALENCE_THRESHOLD is exactly the population that blind spot hits hardest.
+# TIER_A_EQ_THRESHOLD raises the bar for "confidently trainable" data without a separate
+# claim-coverage judge -- cheap insurance against a known failure mode, not a new faithfulness
+# measurement. Tier B (both gates pass, eq in [0.70, 0.85)) is backfill-only, an assembly-time
+# decision made downstream of this pipeline; this module only records which tier a winner falls
+# in. Tier C is any candidate that fails either gate -- flagged, never training data.
+TIER_A_EQ_THRESHOLD = 0.85
+
+
+def acceptance_tier(equivalent: bool, readability_passed: bool, equivalence_score: float) -> str:
+    if not (equivalent and readability_passed):
+        return "C"
+    return "A" if equivalence_score >= TIER_A_EQ_THRESHOLD else "B"
+
+
+# Reranking among already-valid candidates (see simplify_and_validate's ranking rule): fitted by
+# logistic regression on 8,310 real SAMER full-sentence human-simplification pairs (L5 vs L3 of the
+# same underlying sentence, data/processed/readability_compare_inputs/samer_train.parquet --
+# `scripts/fit_ease_score_weights.py`), predicting which of a pair's two texts is the easier one
+# from CAMeL logit(P(easy)) and mean AoA. Held-out (5-fold CV) recall at a ~10% reversed-pair
+# false-accept rate: CAMeL alone 59.6%, this combination 75.1%. Fit on SAMER's TRAIN split, not
+# test -- an earlier version of this formula was fit on samer_test.parquet, which is the project's
+# own locked eval set (data/test_manifest.json); found and fixed in review. Full derivation and
+# data provenance: pipeline_architecture.tex Section 4.
+EASE_W_CAMEL_LOGIT = 0.1121
+EASE_W_MEAN_AOA = -0.5777
+EASE_INTERCEPT = 1.7292
+EASE_FORMULA_VERSION = "samer_train_2feat_v3"  # bump whenever the weights above change -- logged
+# per row so an audit or ablation can tell which formula version produced a given result. v2 (this
+# constant's prior value, "samer_fullsentence_2feat_v2") was fit on the locked SAMER test split;
+# retired, not reused.
 
 # Reranking: generate this many candidate simplifications per hard sentence and keep the
 # best-scoring one, instead of generating once and gating pass/fail -- informed by the TSAR 2025
@@ -124,15 +172,27 @@ EQUIVALENCE_THRESHOLD = 0.7
 # call volume (and $ cost) of the original single-candidate pipeline.
 NUM_CANDIDATES = 5
 
-# Quranic verses, hadith, and biblical text must be preserved verbatim regardless of assessed
-# difficulty -- these are canonical/scriptural text, not prose to be paraphrased. Confirmed via
-# the completed pilot: 28 sentences from these sources were sent to the generator before this
-# guard existed, including an actual ayah (with its verse number) and a hadith still carrying
-# the Prophet's honorific, both reworded. BAREC tags this cleanly by Source; routed as identity
-# pairs unconditionally, the same mechanism already used for the easy band, just triggered by a
-# different reason (canonical text, not "already simple"). Known gap: this catches BAREC's
-# document-level tagging, not a quotation embedded inside some other source's text.
-SCRIPTURE_SOURCES = {"Quran", "Hadith", "Old Testament", "New Testament"}
+# A rewrite must be at least this many CAMeL levels (expected level on the native 19-level scale) easier
+# than its source to count as a simplification at all.
+MIN_READABILITY_LEAD = 2.0
+SELECTION_RULE = "v1: structure gates, eq>=threshold, lead>=MIN_READABILITY_LEAD; then eq>=tierA, max lead, eq"
+# Logged per row; configure_dspy() sets them to the models actually serving the run.
+GENERATOR_MODEL_ID = DEEPSEEK_MODEL
+JUDGE_MODEL_ID = DEEPSEEK_MODEL
+PROMPT_VARIANT = "base"
+
+# Scripture and classical poetry come back unchanged in the app, so the model must never learn to
+# paraphrase them: routed as identity pairs regardless of assessed difficulty. BAREC tags these by
+# Source; a verse quoted inside some other source's text is caught separately by
+# corpus_constraints.has_verse_marker (see route_of).
+PROTECTED_SOURCES = {"Quran", "Hadith", "Old Testament", "New Testament", "Hanging Odes"}
+
+# Every BAREC row gets exactly one route (column `route`, set in load_and_clean_barec):
+#   protected -- PROTECTED_SOURCES, or any row quoting a verse          -> identity, pair_type "protected"
+#   short     -- SHORT_MAX_WORDS words or fewer (headings, labels, cut half-lines) -> identity, "short"
+#   easy      -- levels 1-2                                               -> identity candidates
+#   hard      -- levels 3-4                                               -> the generator
+ROUTES = ("protected", "short", "easy", "hard")
 
 
 # --------------------------------------------------------------------------------------
@@ -140,11 +200,30 @@ SCRIPTURE_SOURCES = {"Quran", "Hadith", "Old Testament", "New Testament"}
 # --------------------------------------------------------------------------------------
 
 
+def route_of(source: str, sentence: str, level: int) -> str:
+    if source in PROTECTED_SOURCES or has_verse_marker(sentence):
+        return "protected"
+    if is_short(sentence):
+        return "short"
+    return "easy" if level in EASY_LEVELS else "hard"
+
+
 def load_and_clean_barec() -> pl.DataFrame:
-    splits = [pl.read_csv(BAREC_DIR / f"{name}.csv", encoding="utf8-lossy") for name in ("train", "dev", "test")]
+    """All three BAREC splits, level 5 dropped, tashkeel and tatweel stripped from every sentence (the
+    app strips them before simplifying, so no pair should carry them on either side; CAMeL's input
+    variant drops them anyway, so readability scores are unaffected), and a `route` per row."""
+    splits = [
+        pl.read_csv(BAREC_DIR / f"{name}.csv", encoding="utf8-lossy").with_columns(pl.lit(name).alias("barec_split"))
+        for name in ("train", "dev", "test")
+    ]
     df = pl.concat(splits).select(KEEP_COLS)
     df = df.filter(pl.col("Readability_Level_5") != 5)
-    return df
+    df = df.with_columns(pl.col("Sentence").map_elements(strip_tashkeel, return_dtype=pl.Utf8))
+    return df.with_columns(
+        pl.struct(["Source", "Sentence", "Readability_Level_5"])
+        .map_elements(lambda r: route_of(r["Source"], r["Sentence"], r["Readability_Level_5"]), return_dtype=pl.Utf8)
+        .alias("route")
+    )
 
 
 def stratified_sample(df: pl.DataFrame, fraction: float, seed: int) -> pl.DataFrame:
@@ -214,9 +293,41 @@ class SimplifyToEasyArabic(dspy.Signature):
 
     Favor high-frequency words over rare or classical/literary vocabulary.
     Split long or compound sentences into shorter ones where that helps.
-    Reduce unnecessary subordinate clauses. Where a clearer phrasing
-    exists, prefer it over a phrasing that stacks many attached
-    prefixes/suffixes onto one word.
+    Reduce unnecessary subordinate clauses.
+
+    Morphological complexity, specifically: across every study we have on
+    Arabic reading difficulty in dyslexic readers (a developmental study
+    spanning grades 3, 6, 9, and 12; a 16-study review), morphological
+    complexity predicts reading difficulty more strongly than phonology or
+    vowelization -- this is not a minor style point, it is the single
+    biggest lever available. Four concrete, checkable things to act on:
+    (1) Do not stack more than two attached prefixes/suffixes on one word
+    (conjunctions, prepositions, the definite article, and attached
+    pronouns all count) -- split into separate words instead of a longer
+    chain. (2) When a genuinely simpler synonym exists, prefer an
+    unaugmented (Form I) verb or noun over one built from a derived
+    pattern (Form II-X and their derivatives, e.g. مفتاح-style instrument
+    nouns or استفعل-pattern verbs) -- derived forms are longer and carry
+    more processing load. (3) Where a sound plural (-ون/-ين/-ات) is a
+    natural alternative, prefer it over a broken/irregular plural -- but
+    many common nouns have no sound-plural form, so do not force an
+    unnatural one. (4) Between two equally simple, equally common
+    synonyms, prefer the one whose root letters stay visually intact over
+    one where a root letter is dropped, mutated, or merged into a shadda
+    -- but never trade away a common, high-frequency word for a rarer one
+    just to satisfy this; most basic Arabic vocabulary (قال, جاء, كان)
+    already has a mutated root, so this is a tie-breaker between otherwise
+    equal choices, not a reason to avoid ordinary words.
+
+    Dyslexia-specific style, beyond general simplicity: state the literal
+    meaning directly rather than a metaphor, idiom, or other figurative
+    expression -- rewording a figure of speech into its plain sense is a
+    valid simplification, not a change of meaning, as long as the
+    underlying claim survives. Prefer active voice over passive voice
+    where the choice does not affect meaning. Avoid double negatives or
+    stacked negation. If splitting a sentence in two would leave a later
+    part's pronoun referring back unclearly, repeat the noun instead of
+    using the pronoun.
 
     Do not add, remove, or alter any fact, entity, number, name, date, or
     claim from the source sentence. Do not add explanations, examples, or
@@ -227,7 +338,26 @@ class SimplifyToEasyArabic(dspy.Signature):
     substitute.
 
     Output grammatically correct Modern Standard Arabic only -- no dialect,
-    no other language, no transliteration.
+    no other language, no transliteration. Write no diacritics (tashkeel)
+    and no tatweel.
+
+    Keep the source's form -- these are checked automatically, and a
+    candidate that breaks one is thrown away:
+    (1) Quiz and multiple-choice items: simplify the question stem and the
+    wording inside each option, but keep every option label -- (أ), (ب),
+    (ج), (د) -- in the same order, each followed by its own option. Never
+    merge the options into one sentence, never drop or add an option, and
+    never state an option as a fact. A true/false item stays a statement
+    to be judged: do not answer it, and do not reword it so the answer
+    shows.
+    (2) Copy any quoted Quran verse or hadith text word for word.
+    (3) Keep every religious honorific exactly where the source has it:
+    صلى الله عليه وسلم، عليه السلام، رضي الله عنه / عنها / عنهم، كرم الله
+    وجهه، عز وجل، سبحانه وتعالى، جل جلاله. Keep people's full names.
+    (4) The source may be a cut piece of a longer sentence -- ending with
+    «،» or «؛» or «:» or with no mark at all. Then the rewrite is the same
+    piece: end it the same way, and do not add words to finish the
+    thought.
 
     Make the candidates genuinely different from each other -- vary word
     choice, sentence order, and how (or whether) the sentence is split into
@@ -237,7 +367,8 @@ class SimplifyToEasyArabic(dspy.Signature):
     """
 
     original_text: str = dspy.InputField(
-        desc="A single Modern Standard Arabic sentence at level 3 or 4 of this pipeline's 4-level scale."
+        desc="A Modern Standard Arabic sentence (or a cut piece of one, or a quiz item) at level 3 or 4 "
+        "of this pipeline's 4-level scale."
     )
     simplified_candidates: list[str] = dspy.OutputField(
         desc=f"Exactly {NUM_CANDIDATES} different candidate rewrites of original_text, each one "
@@ -245,6 +376,49 @@ class SimplifyToEasyArabic(dspy.Signature):
         "the original's meaning exactly. The candidates must be meaningfully different from each "
         "other, not trivial variants."
     )
+
+
+STRONG_SIMPLIFICATION = """
+Simplify hard -- a light touch is not enough. Every rewrite must read at least two full grade levels
+easier than the source. Concretely, in every candidate:
+- Keep each sentence to about 10 words or fewer. Split any longer sentence into several short ones, each
+  stating one fact, and repeat the noun instead of a pronoun where needed.
+- Replace every formal, rare, literary or technical word that has an everyday equivalent with the most
+  common word a 10-year-old would know. Keep a term only when no common word says the same thing.
+- Remove relative clauses (الذي، التي، الذين), participle phrases and nominalizations; use a short verb
+  sentence instead (write "بدأ الناس يستعملون" rather than "بدأ استعمال").
+- At most one attached prefix or suffix per word where a separate word can carry it.
+All of the rules above still hold: no fact, name, number or negation may be added, dropped or changed,
+and every quiz option, verse and honorific stays as required."""
+
+SimplifyToEasyArabicStrong = SimplifyToEasyArabic.with_instructions(
+    SimplifyToEasyArabic.instructions + "\n" + STRONG_SIMPLIFICATION
+)
+
+# Targets the meaning errors an audit of 1,156 accepted pairs found: most came from the generator misreading
+# the source the same way in every candidate -- a qualifier's scope lost, "voluntary" turned into "must", the
+# speaker or the agent swapped, a hedge or quantifier dropped, a legal idiom misread.
+FAITHFUL_SIMPLIFICATION = """
+Before writing any candidate, read the source for these and keep every one of them, with the same meaning,
+in every candidate:
+- Who does what to whom: the agent, the action and the one it is done to. In dialogue, who is speaking
+  and to whom. Never swap them, and never turn "X caused Y" into "Y caused X".
+- Modality and force: must / may / should / voluntary / forbidden / "under penalty of", possibility vs
+  certainty, a claim vs an allegation vs a fact. Never make a statement stronger or weaker.
+- Scope: a qualifier such as "on religious or tribal grounds", "in Jordan" or "public" limits whatever it
+  attaches to; when you split a sentence, repeat it wherever it applies so no sentence claims more than
+  the source.
+- Hedges and quantifiers: about, at least, only, most, some, often, usually, may, perhaps (حوالي، نحو،
+  على الأقل، فقط، معظم، بعض، غالبا، عادة، قد، ربما). Keep each one.
+- Numbers, dates, names, titles and technical or legal terms exactly as given.
+If a phrase is an idiom, a fixed legal formula or unclear, keep its wording rather than guess its meaning."""
+
+SimplifyToEasyArabicStrict = SimplifyToEasyArabic.with_instructions(
+    SimplifyToEasyArabic.instructions + "\n" + STRONG_SIMPLIFICATION + "\n" + FAITHFUL_SIMPLIFICATION
+)
+GENERATOR_SIGNATURES = {
+    "base": SimplifyToEasyArabic, "strong": SimplifyToEasyArabicStrong, "strict": SimplifyToEasyArabicStrict,
+}
 
 
 class CheckSemanticEquivalence(dspy.Signature):
@@ -347,16 +521,73 @@ class ClassifyReadabilityLevel(dspy.Signature):
 # --------------------------------------------------------------------------------------
 
 
-def configure_dspy() -> tuple[dspy.Module, dspy.Module, CamelReadability]:
-    """Build the generator, the equivalence validator, and the local CAMeL readability model.
+def raise_fd_limit() -> None:
+    """litellm leaks roughly one socket per call under a thread pool; at the usual soft limit of 1024 open
+    files a long run starts failing every call with "Too many open files" after ~2k calls. Raise the soft
+    limit to the hard limit (which varies by host; asking for more than it fails)."""
+    import resource
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (hard, hard))
+    print(f"open-file limit raised {soft} -> {hard}")
+
+
+def _vllm_lm(model: str, api_base: str, temperature: float, max_tokens: int) -> dspy.LM:
+    # enable_thinking=False: both Gemma 4 and Qwen3.8 think by default, which spends the token budget
+    # before the structured fields DSPy parses (the same failure DeepSeek's thinking mode caused).
+    # timeout=300: a busy local server queues requests instead of rejecting them.
+    return dspy.LM(
+        f"openai/{model}", api_base=api_base, api_key="local", temperature=temperature, max_tokens=max_tokens,
+        timeout=300, num_retries=2, extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    )
+
+
+def configure_dspy(
+    backend: str = "deepseek",
+    generator_url: str | None = None,
+    judge_url: str | None = None,
+    generator_model: str = VLLM_GENERATOR_MODEL,
+    judge_model: str = VLLM_JUDGE_MODEL,
+    prompt: str = "base",
+) -> tuple[dspy.Module, dspy.Module, CamelReadability, LexicalScorer]:
+    """Build the generator, the equivalence validator, the local CAMeL readability model, and the
+    local lexical-difficulty scorer (AoA + word length).
+
+    backend "vllm": generator and judge are self-hosted OpenAI-compatible servers (generator_url,
+    judge_url). The generator is a plain dspy.Predict there, not ChainOfThought -- its separate
+    reasoning field roughly doubles the generated tokens, which is the dominant GPU cost, and the
+    docstring already carries the guidance that field was for.
 
     Generation gets a higher temperature (varied phrasing is fine, even
     desirable, and NUM_CANDIDATES candidates in one call need genuine
     variety to be worth reranking); the equivalence judge gets temperature 0
     (consistent verdicts matter more than varied ones for a judge). Readability
-    scoring never goes through an LLM call -- see COMPILED_LEVEL_CLASSIFIER_PATH's
-    comment for why the local CAMeL model replaced it (free, can't parse-fail).
+    and lexical-difficulty scoring never go through an LLM call at pipeline runtime -- see
+    COMPILED_LEVEL_CLASSIFIER_PATH's comment for why the local CAMeL model replaced readability's
+    LLM call, and lexical_scorer.py's own docstring for the (offline, one-time) LLM AoA ratings
+    LexicalScorer loads from disk here rather than calling anything live.
     """
+    # Import litellm fully here, on one thread: dspy imports it lazily on the first call, and with a thread
+    # pool that first call happens on dozens of threads at once, which fails every one of them with
+    # "partially initialized module 'litellm' has no attribute 'completion'".
+    import litellm
+    litellm.completion  # noqa: B018
+    raise_fd_limit()
+    if backend == "vllm":
+        global GENERATOR_MODEL_ID, JUDGE_MODEL_ID
+        GENERATOR_MODEL_ID, JUDGE_MODEL_ID = generator_model, judge_model
+        generation_lm = _vllm_lm(generator_model, generator_url, temperature=0.7, max_tokens=2048)
+        judge_lm = _vllm_lm(judge_model, judge_url, temperature=0.0, max_tokens=2048)
+        dspy.configure(lm=generation_lm, adapter=dspy.ChatAdapter(use_json_adapter_fallback=False))
+        generator = dspy.Predict(GENERATOR_SIGNATURES[prompt])
+        generator.set_lm(generation_lm)
+        global PROMPT_VARIANT
+        PROMPT_VARIANT = prompt
+        equivalence_validator = dspy.Predict(CheckSemanticEquivalence)
+        if COMPILED_EQUIVALENCE_VALIDATOR_PATH.exists():
+            equivalence_validator.load(str(COMPILED_EQUIVALENCE_VALIDATOR_PATH))
+        equivalence_validator.set_lm(judge_lm)
+        return generator, equivalence_validator, load_readability_classifier(), LexicalScorer()
+
     load_dotenv(PROJECT_ROOT / ".env")
     api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
@@ -367,33 +598,22 @@ def configure_dspy() -> tuple[dspy.Module, dspy.Module, CamelReadability]:
         )
 
     # thinking={"type": "disabled"}: DeepSeek V4.1 Flash defaults to an internal "thinking" pass
-    # (returned in a separate reasoning_content field) that, left on, consumed the entire
-    # max_tokens budget on nearly every call before the model ever wrote the actual structured
-    # answer DSPy needs -- confirmed against the real API as the cause of near-total call
-    # failure. Disabling it is what our own dspy.ChainOfThought "reasoning" field is already
-    # for; the two were fighting over the same token budget.
-    # timeout=90: without this, a request that stalls (e.g. the underlying connection dying
-    # silently -- confirmed to happen across a laptop sleep/resume) hangs indefinitely instead
-    # of failing. A failure gets caught and skipped by run_hard_pipeline's own try/except; a
-    # hang blocks the whole run with no way to recover short of killing the process.
+    # (a separate reasoning_content field) that, left on, consumes the max_tokens budget before the
+    # model writes the actual structured answer DSPy needs. Disabling it is what our own
+    # dspy.ChainOfThought "reasoning" field is already for; the two compete for the same budget.
+    # timeout=90: without this, a stalled connection hangs indefinitely instead of failing -- a
+    # failure gets caught and skipped by run_hard_pipeline's try/except, a hang blocks the run.
     common_kwargs = dict(api_key=api_key, thinking={"type": "disabled"}, timeout=90)
-    # max_tokens=2048: generation now produces NUM_CANDIDATES=5 candidates in one response
-    # instead of one, so it needs real headroom over the original single-candidate 1024 budget.
-    generation_lm = dspy.LM(DEEPSEEK_MODEL, temperature=0.7, max_tokens=2048, **common_kwargs)
-    # max_tokens=4096: the equivalence judge now returns NUM_CANDIDATES=5 reasoning strings AND
-    # 5 scores in one response (batched scoring, see CheckSemanticEquivalence's docstring) --
-    # substantially more output per call than the single reasoning+score pair the original
-    # 1024/2048 budgets were sized for. Explicitly tested at 4096 with thinking mode disabled
-    # (this is a different setting than the thinking-mode experiment that failed at the same
-    # 4096 ceiling -- that failure was thinking eating the whole budget before writing the
-    # visible answer at all; plain (non-thinking) longer structured output is a different,
-    # much more predictable consumer of the same budget).
-    judge_lm = dspy.LM(DEEPSEEK_MODEL, temperature=0.0, max_tokens=4096, **common_kwargs)
+    # Both budgets have real headroom above the minimum that works: NUM_CANDIDATES=5 candidates
+    # (generation) and 5 reasoning strings + 5 scores (judging) in one batched call have enough
+    # length variance that a tighter budget risks the reasoning field eating the whole allowance
+    # before any candidate/score gets written, silently truncating the response.
+    generation_lm = dspy.LM(DEEPSEEK_MODEL, temperature=0.7, max_tokens=4096, **common_kwargs)
+    judge_lm = dspy.LM(DEEPSEEK_MODEL, temperature=0.0, max_tokens=8192, **common_kwargs)
     # use_json_adapter_fallback=False: DSPy's default behavior retries a parse failure via a
-    # JSON-mode adapter, which sends a `response_format` param DeepSeek's endpoint currently
-    # rejects (confirmed against the real API) -- turning a single truncated/malformed response
-    # into a fatal crash instead of a recoverable one. Plain ChatAdapter parses our fields fine
-    # on its own; max_tokens raised from 512 to reduce how often truncation triggers this at all.
+    # JSON-mode adapter, which sends a `response_format` param DeepSeek's endpoint rejects --
+    # turning a single truncated/malformed response into a fatal crash instead of a recoverable
+    # one. Plain ChatAdapter parses our fields fine on its own.
     dspy.configure(lm=generation_lm, adapter=dspy.ChatAdapter(use_json_adapter_fallback=False))
 
     generator = dspy.ChainOfThought(SimplifyToEasyArabic)
@@ -417,28 +637,49 @@ def configure_dspy() -> tuple[dspy.Module, dspy.Module, CamelReadability]:
     equivalence_validator.set_lm(judge_lm)
 
     readability = load_readability_classifier()
+    lexical_scorer = LexicalScorer()
 
-    return generator, equivalence_validator, readability
+    return generator, equivalence_validator, readability, lexical_scorer
+
+
+def hardest_sentence_leads(readability: CamelReadability, original_text: str, candidates: list[str]) -> list[float]:
+    """Per candidate: CAMeL expected level of the source (scored whole -- it is one BAREC sentence; MCQs on
+    the stem) minus the level of the candidate's HARDEST sentence. CAMeL is a sentence-level model: scoring
+    a multi-sentence rewrite as one text reads short sentences as one long one and hides the gain from
+    splitting, while the hardest sentence keeps one hard sentence from hiding behind easy ones."""
+    units = [readability_units(c) for c in candidates]
+    texts = list(dict.fromkeys([mcq_stem(original_text)] + [u for us in units for u in us]))
+    level = dict(zip(texts, readability.expected_level(readability.predict_probs(texts))))
+    src = float(level[mcq_stem(original_text)])
+    return [src - max(float(level[u]) for u in us) for us in units]
 
 
 def simplify_and_validate(
     generator: dspy.Module,
     equivalence_validator: dspy.Module,
     readability: CamelReadability,
+    lexical_scorer: LexicalScorer,
     original_text: str,
 ) -> dict:
     """Generate NUM_CANDIDATES simplifications in ONE call, score all of them for equivalence in
     ONE call, score their readability locally (free, no API call; each candidate's P(easy) against
-    the original's), and keep the best-scoring one -- 2 API calls per hard sentence total, not
+    the original's) and their lexical difficulty locally too (free; AoA + word length via
+    LexicalScorer), and keep the best-scoring one -- 2 API calls per hard sentence total, not
     NUM_CANDIDATES*3 (see NUM_CANDIDATES's own comment for the TSAR 2025/EhiMeNLP precedent behind
     generating multiple candidates and reranking).
 
-    Ranking: candidates that pass both checks (equivalent AND readability rose) always outrank ones that
-    don't; within either group, the higher equivalence_score wins. This means: if ANY candidate
-    passes, we return the most faithful passing one; if NONE pass, we still return the most
-    faithful failure available (a better fallback than an arbitrary single attempt) rather than
-    nothing -- downstream code still filters on `passed`, so a non-passing "best of 5" is
-    handled exactly like a non-passing single attempt always was.
+    Every candidate is first normalized to what would ship (corpus_constraints.normalize_candidate:
+    no tashkeel, the source's own ending mark) and checked against the deterministic structure gates
+    (MCQ option labels, honorifics, quoted verses). Only candidates passing those are sent to the
+    judge -- a structurally broken candidate is never eligible, so judging it would only spend tokens.
+
+    Eligible (`passed`) = equivalence_score >= EQUIVALENCE_THRESHOLD AND readability_lead >=
+    MIN_READABILITY_LEAD (CAMeL's expected 19-level readability dropped by at least that many levels). Among eligible candidates the winner is chosen by
+    (equivalence_score >= TIER_A_EQ_THRESHOLD, readability_lead, equivalence_score): a confidently
+    faithful rewrite always beats a merely acceptable one, and within that tier the largest readability
+    gain wins. The objective is the biggest faithful readability gain, not moving a sentence into the
+    easy band, so the P(easy) rise (d_logit) is logged but no longer gates. If nothing is eligible the
+    most faithful candidate is still returned (tier C, never shipped) so the record stays auditable.
 
     Defensive against list-length mismatches: batched list outputs are a real new failure mode a
     single-field output never had (the model can under/over-generate items, or the three lists
@@ -448,24 +689,67 @@ def simplify_and_validate(
     run_hard_pipeline's existing per-sentence try/except, same as any other failure).
     """
     gen_out = generator(original_text=original_text)
-    candidate_texts = list(gen_out.simplified_candidates)[:NUM_CANDIDATES]
-    if not candidate_texts:
+    raw_candidates = [str(c) for c in list(gen_out.simplified_candidates)[:NUM_CANDIDATES]]
+    if not raw_candidates:
         raise ValueError("generator returned zero candidates")
+    normalized = list(dict.fromkeys(t for t in (normalize_candidate(original_text, c) for c in raw_candidates) if t))
+    gate_results = {t: structure_gates(original_text, t) for t in normalized}
+    candidate_texts = [t for t in normalized if all(gate_results[t].values())]
+    rejected_by_gates = [{"simplified_text": t, **gate_results[t]} for t in normalized if not all(gate_results[t].values())]
+    # Readability is local and nearly free, the judge is the expensive call: a candidate below
+    # MIN_READABILITY_LEAD can never be eligible, so it is scored here and never sent to the judge.
+    below_lead, sentence_lead = [], {}
+    if candidate_texts:
+        leads = hardest_sentence_leads(readability, original_text, candidate_texts)
+        sentence_lead = dict(zip(candidate_texts, leads))
+        below_lead = [{"simplified_text": t, "readability_lead": l}
+                      for t, l in zip(candidate_texts, leads) if l < MIN_READABILITY_LEAD]
+        candidate_texts = [t for t, l in zip(candidate_texts, leads) if l >= MIN_READABILITY_LEAD]
+    if not candidate_texts:
+        best_below = max(below_lead, key=lambda c: c["readability_lead"], default=None)
+        return {
+            "original_text": original_text,
+            "simplified_text": best_below["simplified_text"] if best_below else (normalized or raw_candidates)[0],
+            "equivalence_score": 0.0, "equivalent": False,
+            "equivalence_reasoning": "not judged: no candidate passed the structure gates and the readability-lead floor",
+            "readability_lead": best_below["readability_lead"] if best_below else 0.0,
+            "readability_passed": False, "passed": False, "acceptance_tier": "C",
+            "num_candidates": 0, "num_passed": 0, "n_candidates_generated": len(raw_candidates),
+            "n_rejected_by_gates": len(rejected_by_gates), "rejected_by_gates": rejected_by_gates,
+            "n_below_lead": len(below_lead), "below_lead": below_lead,
+            "all_candidates": [], "equivalence_threshold": EQUIVALENCE_THRESHOLD,
+            "min_readability_lead": MIN_READABILITY_LEAD, "tier_a_eq_threshold": TIER_A_EQ_THRESHOLD,
+            "selection_rule": SELECTION_RULE, "generator_model": GENERATOR_MODEL_ID, "judge_model": JUDGE_MODEL_ID,
+            "prompt_variant": PROMPT_VARIANT,
+        }
 
     eq_out = equivalence_validator(original_text=original_text, simplified_candidates=candidate_texts)
     scores = list(eq_out.equivalence_scores)
     reasons = list(eq_out.reasoning_per_candidate)
 
-    n = min(len(candidate_texts), len(scores), len(reasons))  # shortest common length -- see docstring
+    n_generated = len(candidate_texts)
+    n = min(n_generated, len(scores), len(reasons))  # shortest common length -- see docstring
     if n == 0:
         raise ValueError(
             f"equivalence validator returned mismatched/empty lists: "
-            f"{len(candidate_texts)} candidates, {len(scores)} scores, {len(reasons)} reasons"
+            f"{n_generated} candidates, {len(scores)} scores, {len(reasons)} reasons"
+        )
+    list_mismatch = n < n_generated
+    if list_mismatch:
+        # min() truncates the TAIL of candidate_texts, so if the judge returns fewer items than it
+        # was sent, the dropped candidates are always the LAST ones, not a random subset -- a
+        # positional selection bias worth logging rather than assuming benign.
+        print(
+            f"  WARNING: equivalence validator list mismatch -- sent {n_generated} candidates, "
+            f"got {len(scores)} scores / {len(reasons)} reasons; keeping the first {n} "
+            f"(candidates at positions {n}..{n_generated - 1} silently dropped)."
         )
     candidate_texts, scores, reasons = candidate_texts[:n], scores[:n], reasons[:n]
 
     # Local and free: every text is scored on its own, and each candidate is compared with the original.
     r = score_readability(readability, [original_text] * n, candidate_texts)
+
+    original_word_count = len(TOKEN.findall(original_text)) or 1  # denominator for length_ratio below
 
     candidates = []
     for i, (text, raw_score, reasoning) in enumerate(zip(candidate_texts, scores, reasons)):
@@ -474,7 +758,34 @@ def simplify_and_validate(
         equivalent = equivalence_score >= EQUIVALENCE_THRESHOLD
         predicted_level = int(r["predicted_level"][i])
         d_logit = float(r["d_logit"][i])
-        readability_passed = d_logit >= TAU
+        readability_passed = sentence_lead[text] >= MIN_READABILITY_LEAD
+        mean_aoa, mean_zipf, _ = lexical_scorer.text(text)
+        # DIAC.sub: strip diacritics/tatweel before measuring length -- TOKEN's character class
+        # includes them (so a diacritized word stays one token, correctly), but counting them
+        # toward len() overstates how long the word actually reads, confirmed against a real
+        # batch: 153/482 texts carried diacritics, inflating mean_word_len from 3.93 to 4.65.
+        words = [DIAC.sub("", w) for w in TOKEN.findall(text)]
+        mean_word_len = float(np.mean([len(w) for w in words])) if words else 0.0
+        word_count = len(words)
+        length_ratio = word_count / original_word_count  # this candidate's word count vs the
+        # original's -- an audit/diagnostic field (expansion vs. truncation), not currently an
+        # input to ease_score itself.
+        # p_easy_simplified is THIS candidate's own absolute P(easy) (not the pair-delta d_logit
+        # above) -- the SAMER fit used each text's own logit(P(easy)), not a delta, since reranking
+        # compares candidates against each other, not against the original.
+        p_easy_clip = min(max(float(r["p_easy_simplified"][i]), 1e-6), 1 - 1e-6)
+        camel_logit = float(np.log(p_easy_clip / (1 - p_easy_clip)))
+        # mean_word_len is still computed and logged (below, and in all_candidates) as a diagnostic
+        # field -- it just isn't in the formula itself, see EASE_W_CAMEL_LOGIT's comment for why.
+        ease_score = EASE_W_CAMEL_LOGIT * camel_logit + EASE_W_MEAN_AOA * mean_aoa + EASE_INTERCEPT
+        # readability_lead: how hard the original was and how many (continuous, native 19-level)
+        # levels it moved -- see CamelReadability.expected_level's docstring. A per-candidate field
+        # like ease_score/d_logit, not a formula input; meant for post-hoc reporting on the accepted
+        # (tier A/B) pairs, e.g. "average lead by source level", not for gating or reranking.
+        expected_level_original = float(r["expected_level_original"][i])
+        expected_level_simplified = float(r["expected_level_simplified"][i])
+        readability_lead = sentence_lead[text]  # hardest-sentence lead: the gate and the ranking key
+        readability_lead_whole = float(r["readability_lead"][i])  # the rewrite scored as one text, reference only
         candidates.append(
             {
                 "simplified_text": text,
@@ -483,15 +794,34 @@ def simplify_and_validate(
                 "equivalence_reasoning": str(reasoning),
                 "predicted_level": predicted_level,
                 "is_easy": predicted_level <= EASY_LEVEL_CEILING,
+                "expected_level_original": expected_level_original,
+                "expected_level_simplified": expected_level_simplified,
+                "readability_lead": readability_lead,
+                "readability_lead_whole": readability_lead_whole,
                 "p_easy_original": float(r["p_easy_original"][i]),
                 "p_easy_simplified": float(r["p_easy_simplified"][i]),
                 "d_logit": d_logit,
                 "readability_passed": readability_passed,
                 "passed": equivalent and readability_passed,
+                "acceptance_tier": acceptance_tier(equivalent, readability_passed, equivalence_score),
+                "mean_aoa": mean_aoa,
+                "mean_zipf": mean_zipf,
+                "mean_word_len": mean_word_len,
+                "word_count": word_count,
+                "char_count": len(text),
+                "length_ratio": length_ratio,
+                "camel_logit": camel_logit,
+                "ease_score": ease_score,
             }
         )
 
-    best = max(candidates, key=lambda c: (c["passed"], c["equivalence_score"]))
+    def rank(c: dict) -> tuple:  # SELECTION_RULE; see the docstring
+        if c["passed"]:
+            return (1, c["equivalence_score"] >= TIER_A_EQ_THRESHOLD, c["readability_lead"], c["equivalence_score"])
+        return (0, False, 0.0, c["equivalence_score"])
+
+    winner_index = max(range(len(candidates)), key=lambda idx: rank(candidates[idx]))
+    best = candidates[winner_index]
     num_passed = sum(1 for c in candidates if c["passed"])
 
     return {
@@ -507,8 +837,36 @@ def simplify_and_validate(
         "d_logit": best["d_logit"],
         "readability_passed": best["readability_passed"],
         "passed": best["passed"],
+        "acceptance_tier": best["acceptance_tier"],
+        "expected_level_original": best["expected_level_original"],
+        "expected_level_simplified": best["expected_level_simplified"],
+        "readability_lead": best["readability_lead"],
+        "mean_aoa": best["mean_aoa"],
+        "mean_zipf": best["mean_zipf"],
+        "mean_word_len": best["mean_word_len"],
+        "ease_score": best["ease_score"],
         "num_candidates": len(candidates),
         "num_passed": num_passed,
+        "n_candidates_generated": len(raw_candidates),
+        "n_rejected_by_gates": len(rejected_by_gates),
+        "rejected_by_gates": rejected_by_gates,
+        "n_below_lead": len(below_lead),
+        "below_lead": below_lead,
+        "min_readability_lead": MIN_READABILITY_LEAD,
+        "list_mismatch": list_mismatch,
+        # Full record (all candidates, not just the winner) plus the selection index and the
+        # threshold/formula versions in force -- makes the accept/reject decision replayable and
+        # auditable against every candidate, not just whichever one won.
+        "winner_index": winner_index,
+        "all_candidates": candidates,
+        "equivalence_threshold": EQUIVALENCE_THRESHOLD,
+        "readability_tau": TAU,
+        "tier_a_eq_threshold": TIER_A_EQ_THRESHOLD,
+        "ease_formula_version": EASE_FORMULA_VERSION,
+        "selection_rule": SELECTION_RULE,
+        "prompt_variant": PROMPT_VARIANT,
+        "generator_model": GENERATOR_MODEL_ID,
+        "judge_model": JUDGE_MODEL_ID,
     }
 
 
@@ -529,11 +887,38 @@ def load_checkpoint() -> list[dict]:
     return rows
 
 
+def _process_row(
+    row: dict,
+    generator: dspy.Module,
+    equivalence_validator: dspy.Module,
+    readability: CamelReadability,
+    lexical_scorer: LexicalScorer,
+) -> tuple[dict, dict | None, Exception | None]:
+    """One source's worth of work, factored out so it can run on any thread: the DeepSeek calls
+    (generation + judging) dominate the wall time and are I/O-bound (network round trips), so
+    ThreadPoolExecutor gets real concurrency despite the GIL. The local CAMeL scoring inside
+    simplify_and_validate is a single shared onnxruntime.InferenceSession, which is documented
+    safe for concurrent run() calls from multiple threads -- no per-thread model copy needed."""
+    try:
+        result = simplify_and_validate(generator, equivalence_validator, readability, lexical_scorer, row["Sentence"])
+    except Exception as e:
+        return row, None, e
+    result["ID"] = row["ID"]
+    result["source_level"] = row["Readability_Level_5"]
+    result["source_level_19"] = row["Readability_Level_19"]  # gold, not predicted -- see KEEP_COLS
+    for col in ("Source", "Domain", "barec_split"):
+        result[col] = row[col]
+    return row, result, None
+
+
 def run_hard_pipeline(
     hard_sample: pl.DataFrame,
     generator: dspy.Module,
     equivalence_validator: dspy.Module,
     readability: CamelReadability,
+    lexical_scorer: LexicalScorer,
+    concurrency: int = 1,
+    max_consecutive_failures: int = 400,
 ) -> pl.DataFrame:
     HARD_CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -546,25 +931,78 @@ def run_hard_pipeline(
     remaining = hard_sample.filter(~pl.col("ID").is_in(done_ids))
 
     failures = 0
-    # Append mode + flush after every write: each result is safely on disk the moment it's
-    # produced, not batched in memory until the whole run finishes.
+    # consecutive_failures resets to 0 on every successful write -- it tracks a *sustained* failure
+    # streak (e.g. the account's API balance hitting zero, where every subsequent call fails but is
+    # still caught and logged below rather than crashing), not the overall failure count. Without
+    # this, a run whose funding runs out mid-flight would grind for hours logging nothing but skips.
+    consecutive_failures = 0
+    stopped_early = False
+    write_lock = threading.Lock()
     with open(HARD_CHECKPOINT_PATH, "a", encoding="utf-8") as f:
-        for row in tqdm(remaining.iter_rows(named=True), total=remaining.shape[0], desc="hard band"):
-            try:
-                result = simplify_and_validate(generator, equivalence_validator, readability, row["Sentence"])
-            except Exception as e:
-                # A single truncated/malformed LM response (or, tonight, a stalled connection
-                # after the machine slept) shouldn't kill a run that's already spent real API
-                # calls on everything before it -- log and move on.
-                failures += 1
-                tqdm.write(f"  skipped ID {row['ID']}: {type(e).__name__}: {str(e)[:150]}")
-                continue
-            result["ID"] = row["ID"]
-            result["source_level"] = row["Readability_Level_5"]
-            f.write(json.dumps(result, ensure_ascii=False) + "\n")
-            f.flush()
-            os.fsync(f.fileno())
+        def _write(result: dict) -> None:
+            with write_lock:
+                f.write(json.dumps(result, ensure_ascii=False) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
 
+        rows = list(remaining.iter_rows(named=True))
+        if concurrency <= 1:
+            for row in tqdm(rows, total=len(rows), desc="hard band"):
+                row, result, err = _process_row(row, generator, equivalence_validator, readability, lexical_scorer)
+                if err is not None:
+                    # A single truncated/malformed LM response (or a stalled connection after the
+                    # machine slept) shouldn't kill a run that's already spent real API calls on
+                    # everything before it -- log and move on.
+                    failures += 1
+                    consecutive_failures += 1
+                    tqdm.write(f"  skipped ID {row['ID']}: {type(err).__name__}: {str(err)[:150]}")
+                    if consecutive_failures >= max_consecutive_failures:
+                        tqdm.write(f"  STOPPING: {consecutive_failures} consecutive failures with no successes "
+                                   f"in between (>= max_consecutive_failures={max_consecutive_failures}) -- likely a "
+                                   "systemic issue (exhausted API balance, an outage), not isolated bad responses. "
+                                   "Already-written results are safely on disk; rerun to resume.")
+                        stopped_early = True
+                        break
+                    continue
+                consecutive_failures = 0
+                _write(result)
+        else:
+            # Concurrent path: each source's 2 DeepSeek calls are independent network round trips,
+            # so a thread pool cuts wall time roughly in proportion to concurrency instead of
+            # serializing every request behind the last one's latency. Submit everything up front
+            # (bounded by ThreadPoolExecutor's own queueing) and drain via as_completed so results
+            # land on disk as soon as each source finishes, not in submission order.
+            with ThreadPoolExecutor(max_workers=concurrency) as pool:
+                futures = {
+                    pool.submit(_process_row, row, generator, equivalence_validator, readability, lexical_scorer): row
+                    for row in rows
+                }
+                for future in tqdm(as_completed(futures), total=len(futures), desc=f"hard band (x{concurrency} concurrent)"):
+                    row, result, err = future.result()
+                    if err is not None:
+                        failures += 1
+                        consecutive_failures += 1
+                        tqdm.write(f"  skipped ID {row['ID']}: {type(err).__name__}: {str(err)[:150]}")
+                        if consecutive_failures >= max_consecutive_failures:
+                            tqdm.write(f"  STOPPING: {consecutive_failures} consecutive failures with no successes "
+                                       f"in between (>= max_consecutive_failures={max_consecutive_failures}) -- "
+                                       "cancelling every not-yet-started source. Already-written results are "
+                                       "safely on disk; rerun to resume.")
+                            stopped_early = True
+                            # Cancel every future that hasn't started yet -- with concurrency workers
+                            # already all rows are submitted up front, so without this the pool would
+                            # keep draining its whole backlog (each failing the same way) instead of
+                            # actually stopping.
+                            for f_ in futures:
+                                f_.cancel()
+                            break
+                        continue
+                    consecutive_failures = 0
+                    _write(result)
+
+    if stopped_early:
+        print(f"stopped early after {failures} total failures ({consecutive_failures} consecutive) -- "
+              f"{len(rows) - failures} of {len(rows)} sources in this run attempted before stopping.")
     if failures:
         print(f"{failures} / {remaining.shape[0]} hard sentences failed and were skipped this run")
 
@@ -572,13 +1010,15 @@ def run_hard_pipeline(
     if not checkpoint_rows:
         # Every attempt failed (or this is a fresh run with nothing to resume) -- pl.DataFrame([])
         # has no columns at all, so filtering on "ID" below would crash with ColumnNotFoundError
-        # rather than reporting "0 succeeded" cleanly. A real network outage hit 20/20 failures
-        # here once already; this shouldn't be a stack trace when it happens again.
+        # rather than reporting "0 succeeded" cleanly.
         print("WARNING: no hard-band results at all (every attempt failed, or nothing has run yet).")
         return pl.DataFrame(schema={"ID": pl.Int64, "passed": pl.Boolean, "equivalent": pl.Boolean, "readability_passed": pl.Boolean})
-    all_done = pl.DataFrame(checkpoint_rows)
-    # Guard against a stale checkpoint from a run with different --sample-fraction/--seed:
-    # only return rows that are actually part of *this* run's hard_sample.
+    # Scalar summary columns only: the nested candidate records vary in shape between rows (a source whose
+    # candidates all failed the structure gates has none), which polars can't infer as one schema.
+    summary_cols = ("ID", "passed", "equivalent", "readability_passed", "acceptance_tier", "equivalence_score",
+                    "readability_lead", "num_passed", "n_rejected_by_gates")
+    all_done = pl.DataFrame([{k: r.get(k) for k in summary_cols} for r in checkpoint_rows], infer_schema_length=None)
+    # Guard against a stale checkpoint from a run with a different selection: only this run's sources.
     return all_done.filter(pl.col("ID").is_in(hard_sample["ID"]))
 
 
@@ -596,7 +1036,43 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Load, clean, and sample only -- print counts and stop before any LM call.",
     )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=1,
+        help="Number of hard-band sources to process concurrently via a thread pool (default: 1, "
+        "sequential -- the original behavior). The per-source work is dominated by 2 network-bound "
+        "DeepSeek calls, so this is I/O concurrency, not CPU parallelism; 20-30 is a reasonable "
+        "starting point before hitting DeepSeek's own rate limits.",
+    )
+    parser.add_argument(
+        "--max-consecutive-failures",
+        type=int,
+        default=400,
+        help="Stop the run if this many sources in a row fail with zero successes in between "
+        "(default: 400) -- the signature of a systemic issue (exhausted API balance, an outage) "
+        "rather than isolated bad responses. Already-written results stay on disk; rerun to resume.",
+    )
+    parser.add_argument("--all", action="store_true", help="The whole non-test hard band, not a stratified sample.")
+    parser.add_argument("--limit", type=int, help="Only the first N sources after a seeded shuffle (a random pilot).")
+    parser.add_argument("--shard", default="0/1", help="i/n: this process handles the sources whose ID hash is i mod n.")
+    parser.add_argument("--ids", type=Path, help="only these source IDs (one per line), e.g. an audit sample")
+    parser.add_argument("--checkpoint", type=Path, default=HARD_CHECKPOINT_PATH, help="Results JSONL (resumed if it exists).")
+    parser.add_argument("--backend", choices=("deepseek", "vllm"), default="deepseek")
+    parser.add_argument("--generator-url", default="http://localhost:8000/v1")
+    parser.add_argument("--judge-url", default="http://localhost:8001/v1")
+    parser.add_argument("--generator-model", default=VLLM_GENERATOR_MODEL)
+    parser.add_argument("--judge-model", default=VLLM_JUDGE_MODEL)
+    parser.add_argument("--eq-threshold", type=float, default=EQUIVALENCE_THRESHOLD,
+                        help="Equivalence gate; recalibrate whenever the judge model changes.")
+    parser.add_argument("--num-candidates", type=int, default=NUM_CANDIDATES)
+    parser.add_argument("--prompt", choices=tuple(GENERATOR_SIGNATURES), default="base",
+                        help="generator instructions: base, or strong (adds STRONG_SIMPLIFICATION)")
     return parser.parse_args()
+
+
+def _shard_of(source_id: int, n: int) -> int:
+    return int(hashlib.md5(str(source_id).encode()).hexdigest(), 16) % n
 
 
 def main() -> None:
@@ -606,77 +1082,54 @@ def main() -> None:
     df = load_and_clean_barec()
     print(f"  after dropping level 5: {df.shape[0]} sentences")
 
-    sample = stratified_sample(df, args.sample_fraction, args.seed)
-    is_scripture = pl.col("Source").is_in(SCRIPTURE_SOURCES)
-    # Scripture is routed out regardless of level -- preserved verbatim for canonicity, not
-    # because it's assessed as easy. Only non-scripture hard-band sentences reach the generator.
-    scripture_sample = sample.filter(is_scripture)
-    easy_sample = sample.filter(~is_scripture & pl.col("Readability_Level_5").is_in(EASY_LEVELS))
-    hard_sample = sample.filter(~is_scripture & pl.col("Readability_Level_5").is_in(HARD_LEVELS))
-    print(
-        f"  {args.sample_fraction:.1%} stratified sample: {sample.shape[0]} sentences "
-        f"({easy_sample.shape[0]} easy / {hard_sample.shape[0]} hard / "
-        f"{scripture_sample.shape[0]} scripture, preserved regardless of level)"
-    )
+    global HARD_CHECKPOINT_PATH, EQUIVALENCE_THRESHOLD, NUM_CANDIDATES
+    HARD_CHECKPOINT_PATH, EQUIVALENCE_THRESHOLD, NUM_CANDIDATES = args.checkpoint, args.eq_threshold, args.num_candidates
 
-    easy_pairs = build_identity_pairs(easy_sample, "identity")
-    scripture_pairs = build_identity_pairs(scripture_sample, "scripture")
+    # BAREC-test is the project's own locked eval set (data/test_manifest.json): excluded here, before
+    # anything is generated, not just at export.
+    pool = df if args.all else stratified_sample(df, args.sample_fraction, args.seed)
+    pool = pool.filter(pl.col("barec_split") != "test")
+    print("  routes (non-test):", dict(sorted(pool.group_by("route").len().iter_rows())))
+    hard_sample = pool.filter(pl.col("route") == "hard").sample(fraction=1.0, shuffle=True, seed=args.seed)
+    shard_i, shard_n = (int(x) for x in args.shard.split("/"))
+    if shard_n > 1:
+        hard_sample = hard_sample.filter(
+            pl.col("ID").map_elements(lambda i: _shard_of(i, shard_n), return_dtype=pl.Int64) == shard_i
+        )
+    if args.ids:
+        hard_sample = hard_sample.filter(pl.col("ID").is_in([int(x) for x in args.ids.read_text().split()]))
+    if args.limit:
+        hard_sample = hard_sample.head(args.limit)
+    print(f"  generating for {hard_sample.shape[0]} hard sources (shard {args.shard}) -> {HARD_CHECKPOINT_PATH}")
 
-    calls_per_sentence = 2  # 1 batched generation call (NUM_CANDIDATES candidates) + 1 batched
-    # equivalence-scoring call (all NUM_CANDIDATES candidates) -- readability scoring is local
-    # (CAMeL), not an API call, so it doesn't add to this count regardless of NUM_CANDIDATES.
     if args.dry_run:
         print("\n--dry-run: stopping before any LM call.")
-        print(f"Would run {hard_sample.shape[0]} hard sentences x {calls_per_sentence} LM calls each "
-              f"(reranking {NUM_CANDIDATES} candidates/sentence, batched) = {hard_sample.shape[0] * calls_per_sentence} total calls.")
         return
 
-    print("\nConfiguring DSPy (DeepSeek V4.1 Flash)...")
-    generator, equivalence_validator, readability = configure_dspy()
-
-    print(f"Running hard band ({hard_sample.shape[0]} sentences x {calls_per_sentence} calls each, reranking {NUM_CANDIDATES} candidates, batched)...")
-    hard_results = run_hard_pipeline(hard_sample, generator, equivalence_validator, readability)
+    generator, equivalence_validator, readability, lexical_scorer = configure_dspy(
+        args.backend, args.generator_url, args.judge_url, args.generator_model, args.judge_model, args.prompt,
+    )
+    print(f"generator {GENERATOR_MODEL_ID} / judge {JUDGE_MODEL_ID}, {NUM_CANDIDATES} candidates, "
+          f"eq threshold {EQUIVALENCE_THRESHOLD}")
+    hard_results = run_hard_pipeline(
+        hard_sample, generator, equivalence_validator, readability, lexical_scorer,
+        concurrency=args.concurrency, max_consecutive_failures=args.max_consecutive_failures,
+    )
 
     if hard_results.shape[0] == 0:
-        # Every attempt failed (confirmed real cause once already: a network outage took out
-        # 20/20 calls with DNS resolution errors, nothing to do with the pipeline logic itself).
         # .mean() on an empty column is None, which can't be :.1%-formatted -- report plainly and
         # stop here rather than crash on that, so a bad run is an honest "0 results", not a traceback.
         print("\nNo hard-band results to report (every attempt failed) -- check the errors above and retry.")
         return
 
-    print(f"\npass rate: {hard_results['passed'].mean():.1%}")
-    print(f"  equivalence pass rate: {hard_results['equivalent'].mean():.1%}")
-    print(f"  readability pass rate (P(easy) rose by >= {TAU}): {hard_results['readability_passed'].mean():.1%}")
-    print(f"  informational: easy-band (level <= {EASY_LEVEL_CEILING}) rate: {hard_results['is_easy'].mean():.1%}")
-    # num_passed=0 means none of the NUM_CANDIDATES attempts passed for that sentence (we still
-    # returned the best-scoring failure) -- worth knowing separately from the overall pass rate,
-    # since it's the "reranking couldn't rescue this one at all" rate, not just "didn't win the tiebreak."
-    print(f"  sentences where 0/{NUM_CANDIDATES} candidates passed: {(hard_results['num_passed'] == 0).mean():.1%}")
-
-    hard_pairs = hard_results.filter(pl.col("passed")).select(
-        pl.col("ID"),
-        pl.col("original_text"),
-        pl.col("simplified_text"),
-        pl.col("source_level"),
-        pl.col("predicted_level"),
-        pl.col("equivalent"),
-        pl.col("equivalence_reasoning"),
-        pl.col("is_easy"),
-        pl.lit("generated").alias("pair_type"),
-    )
-
-    pilot_dataset = pl.concat([easy_pairs, scripture_pairs, hard_pairs])
-    print(
-        f"\npilot dataset: {pilot_dataset.shape[0]} pairs "
-        f"({easy_pairs.shape[0]} identity + {scripture_pairs.shape[0]} scripture + "
-        f"{hard_pairs.shape[0]} generated)"
-    )
-
-    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    pilot_dataset.write_parquet(PROCESSED_DIR / "barec_simplification_pilot.parquet")
-    hard_results.write_parquet(PROCESSED_DIR / "barec_hard_pilot_raw_results.parquet")
-    print(f"saved pilot_dataset and raw hard-band results to {PROCESSED_DIR}/")
+    print(f"\n{hard_results.shape[0]} sources in the checkpoint for this selection")
+    print(f"  accepted (tier A+B): {hard_results['passed'].mean():.1%}  tiers: "
+          f"{dict(hard_results['acceptance_tier'].value_counts().iter_rows())}")
+    print(f"  equivalent: {hard_results['equivalent'].mean():.1%}  lead > 0: {hard_results['readability_passed'].mean():.1%}")
+    print(f"  mean lead of accepted: {hard_results.filter(pl.col('passed'))['readability_lead'].mean()}")
+    print(f"  sources with >=1 candidate rejected by the structure gates: "
+          f"{(hard_results['n_rejected_by_gates'].fill_null(0) > 0).sum()}; "
+          f"no eligible candidate at all: {(hard_results['num_passed'] == 0).mean():.1%}")
 
 
 if __name__ == "__main__":

@@ -1,84 +1,93 @@
 package ai.bayan.android
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
+import android.os.Build
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
-import ai.bayan.android.engine.SimplifierProvider
-import ai.bayan.android.ui.SimplifiedBottomSheetDialogFragment
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import ai.bayan.android.data.Settings
+import ai.bayan.android.ui.components.LocalAppContainer
+import ai.bayan.android.ui.navigation.BayanNavigation
+import ai.bayan.android.ui.onboarding.OnboardingScreen
+import ai.bayan.android.ui.theme.BayanTheme
+import ai.bayan.android.ui.theme.isDark
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-/**
- * Standalone launcher home activity for testing Arabic text simplification and checking model status.
- */
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var tilInputText: TextInputLayout
-    private lateinit var etInputText: TextInputEditText
-    private lateinit var btnPaste: Button
-    private lateinit var btnSimplify: Button
-    private lateinit var tvModelStatusName: TextView
-    private lateinit var tvModelStatusDesc: TextView
-    private lateinit var tvModelStatusSpecs: TextView
+class MainActivity : ComponentActivity() {
+    /** Text shared into Bayan from another app, waiting for the home screen to pick it up. */
+    private val sharedText = MutableStateFlow<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        // Bayan's ground reaches into the camera cutout too (screens keep their content clear of it), so a phone on its
+        // side shows no black strip.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        val app = (application as BayanApp).container
+        val settings: StateFlow<Settings?> = app.settings.settings.stateIn(lifecycleScope, SharingStarted.Eagerly, null)
+        splash.setKeepOnScreenCondition { settings.value == null }
+        // The sunrise plays to the end, then the splash gives way: the logo lifts a little and fades as the paper
+        // dissolves into the app (after Google AI Edge Gallery's splash exit).
+        splash.setOnExitAnimationListener { view ->
+            val icon = view.iconView
+            // starts while the glow is still settling, so the logo never just sits there
+            val left = (view.iconAnimationStartMillis + view.iconAnimationDurationMillis - 280 - System.currentTimeMillis()).coerceIn(0L, 900L)
+            view.view.animate().alpha(0f).setStartDelay(left + 60).setDuration(360)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .withEndAction { view.remove() }.start()
+            icon.animate().translationY(-icon.height * 0.08f).scaleX(0.94f).scaleY(0.94f).alpha(0f)
+                .setStartDelay(left).setDuration(460).setInterpolator(android.view.animation.PathInterpolator(0.3f, 0f, 0f, 1f)).start()
+        }
+        if (savedInstanceState == null) receive(intent)
 
-        tilInputText = findViewById(R.id.tilInputText)
-        etInputText = findViewById(R.id.etInputText)
-        btnPaste = findViewById(R.id.btnPaste)
-        btnSimplify = findViewById(R.id.btnSimplify)
-        tvModelStatusName = findViewById(R.id.tvModelStatusName)
-        tvModelStatusDesc = findViewById(R.id.tvModelStatusDesc)
-        tvModelStatusSpecs = findViewById(R.id.tvModelStatusSpecs)
-
-        updateModelStatusCard()
-        setupListeners()
-    }
-
-    private fun updateModelStatusCard() {
-        val engineInfo = SimplifierProvider.getInstance().getEngineInfo()
-        tvModelStatusName.text = engineInfo.name
-        tvModelStatusDesc.text = engineInfo.status
-        tvModelStatusSpecs.text = getString(R.string.model_status_specs)
-    }
-
-    private fun setupListeners() {
-        btnPaste.setOnClickListener {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-            val clip = clipboard?.primaryClip
-            if (clip != null && clip.itemCount > 0) {
-                val item = clip.getItemAt(0)
-                val text = item.coerceToText(this).toString()
-                if (text.isNotBlank()) {
-                    etInputText.setText(text)
-                    etInputText.setSelection(text.length)
-                    tilInputText.error = null
-                } else {
-                    Toast.makeText(this, R.string.clipboard_empty_warning, Toast.LENGTH_SHORT).show()
+        setContent {
+            val current by settings.collectAsStateWithLifecycle()
+            val s = current ?: return@setContent
+            val shared by sharedText.collectAsStateWithLifecycle()
+            val dark = s.themeMode.isDark()
+            DisposableEffect(dark) {
+                val style = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark }
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+                onDispose {}
+            }
+            CompositionLocalProvider(LocalAppContainer provides app) {
+                BayanTheme(s.themeMode, s.style) {
+                    AnimatedContent(s.onboardingDone, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "onboarding") { done ->
+                        if (done) BayanNavigation(shared, onSharedTextConsumed = { sharedText.value = null })
+                        else OnboardingScreen(onFinish = { app.scope.launch { app.settings.setOnboardingDone() } })
+                    }
                 }
-            } else {
-                Toast.makeText(this, R.string.clipboard_empty_warning, Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
-        btnSimplify.setOnClickListener {
-            val text = etInputText.text?.toString()?.trim().orEmpty()
-            if (text.isEmpty()) {
-                tilInputText.error = getString(R.string.empty_text_warning)
-                return@setOnClickListener
-            }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        receive(intent)
+    }
 
-            tilInputText.error = null
-            val sheet = SimplifiedBottomSheetDialogFragment.newInstance(text, isReadOnly = false)
-            sheet.show(supportFragmentManager, SimplifiedBottomSheetDialogFragment.TAG)
+    private fun receive(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            intent.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() }?.let { sharedText.value = it }
         }
     }
 }
-
