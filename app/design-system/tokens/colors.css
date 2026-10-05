@@ -1,0 +1,92 @@
+:root{
+  /* Paper — sampled from logo ground #F6F2E6 */
+  --paper-0:#FBF8F0;
+  --paper-1:#F6F2E6;
+  --paper-2:#EFE9D9;
+  --paper-3:#E6DFCC;
+  --paper-4:#DCD4BF;
+  /* Ink — sampled from logo stroke #282824 */
+  --ink-1:#282824;
+  --ink-2:#4A4842;
+  --ink-3:#6F6B5E;
+  --ink-4:#A29D8C;
+  /* Ochre — sampled from the sun/dot #C6986B */
+  --ochre-50:#F6EDE1;
+  --ochre-100:#EEDDC7;
+  --ochre-300:#DDBB95;
+  --ochre-500:#C6986B;
+  --ochre-600:#A87A4D;
+  --ochre-700:#8A5E35;
+  /* Semantic */
+  --olive-600:#5B7447;  --olive-50:#E9EDDC;
+  --brick-600:#A2463A;  --brick-50:#F4E1DA;
+  --slate-600:#4C6573;  --slate-50:#E1E7E6;
+
+  /* Aliases */
+  --surface-page:var(--paper-1);
+  --surface-raised:var(--paper-0);
+  --surface-sunken:var(--paper-2);
+  --surface-inverse:var(--ink-1);
+  --text-primary:var(--ink-1);
+  --text-secondary:var(--ink-2);
+  --text-muted:var(--ink-3);
+  --text-disabled:var(--ink-4);
+  --text-inverse:var(--paper-1);
+  --text-accent:var(--ochre-700);
+  --border-subtle:var(--paper-3);
+  --border-default:var(--paper-4);
+  --border-strong:var(--ink-1);
+  --accent:var(--ochre-500);
+  --accent-hover:var(--ochre-600);
+  --accent-soft:var(--ochre-50);
+  --focus-ring:var(--ochre-500);
+  --success:var(--olive-600); --success-soft:var(--olive-50);
+  --danger:var(--brick-600);  --danger-soft:var(--brick-50);
+  --info:var(--slate-600);    --info-soft:var(--slate-50);
+  --warning:var(--ochre-700); --warning-soft:var(--ochre-50);
+  --danger-hover:#8C3B30;
+  --scrim:rgba(40,40,36,.36);
+  /* Reading assistance */
+  --read-highlight:var(--ochre-100);      /* current word during read-aloud */
+  --read-highlight-ink:var(--ink-1);
+  --read-spoken:var(--ink-3);             /* words already read */
+  --read-line-focus:var(--paper-0);       /* focused line band */
+  --read-dim:rgba(246,242,230,.72);       /* veil over unfocused lines */
+  --read-ruler:var(--ochre-500);
+  --read-syllable-a:var(--ink-1);
+  --read-syllable-b:var(--ochre-700);
+  color-scheme:light;
+}
+
+/* Dark mode — from the dark logo: night ground #1A1A14, cream stroke #F2EFE2, same ochre sun.
+   The paper and ink scales swap roles, so every component inverts without code changes:
+   "paper" = ground scale, "ink" = foreground scale. Apply with <html data-theme="dark">. */
+[data-theme="dark"]{
+  --paper-0:#212119;
+  --paper-1:#1A1A14;
+  --paper-2:#26261E;
+  --paper-3:#302F27;
+  --paper-4:#3D3C33;
+  --ink-1:#F2EFE2;
+  --ink-2:#D2CEBF;
+  --ink-3:#A19D8E;
+  --ink-4:#6C695E;
+  --ochre-50:#2E261C;
+  --ochre-100:#3E3222;
+  --ochre-300:#D4AC80;
+  --ochre-500:#C6986B;
+  --ochre-600:#D4AC80;
+  --ochre-700:#DDBB95;
+  --olive-600:#9DB585;  --olive-50:#232A1C;
+  --brick-600:#D98A7E;  --brick-50:#33201B;
+  --slate-600:#93AEBB;  --slate-50:#1C2529;
+  --danger-hover:#E4A095;
+  --scrim:rgba(0,0,0,.6);
+  --read-highlight:#4A3A26;
+  --read-dim:rgba(26,26,20,.72);
+  --read-syllable-b:#DDBB95;
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 4px 12px -2px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
+  --shadow-3:0 16px 40px -8px rgba(0,0,0,.6), 0 4px 10px rgba(0,0,0,.35);
+  color-scheme:dark;
+}

@@ -55,7 +55,7 @@ changes a negation, limit or condition word, or loses too much of its text is re
 
 Constraints: ONNX Runtime Mobile only, no Python or GPU at runtime, and a download budget of about 250 MB
 (AraBART fits; the AraT5v2 bundles do not). Reasoning: [`docs/decisions/0001-product-form.md`](docs/decisions/0001-product-form.md);
-app build and layout: [`app/`](app/).
+app build and layout: [`app/`](app/); brand, logo, colours and reading rules: [`app/design-system/`](app/design-system/readme.md).
 
 ## 3. Data
 
@@ -152,6 +152,7 @@ Bayan/
 ├── CONTRIBUTING.md                # Team workflow: branches, PRs, reviews
 ├── .github/                       # CODEOWNERS, PR and issue templates
 ├── app/                           # Android plugin (PROCESS_TEXT), Jetpack Compose + Material 3 Expressive
+│   └── design-system/             # Bayan design system: logo, tokens, components, banners, reading guidelines
 ├── bayanbench/                    # BayanBench v2.0: the task benchmark (package, tests, README)
 ├── deliverables/                  # SIC capstone deliverables (action plan, WBS, report, slides, demo)
 ├── docs/                          # Model results, the diacritization comparison
