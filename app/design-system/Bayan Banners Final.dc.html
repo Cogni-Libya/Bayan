@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E9E4D6;font-family:'Readex Pro',system-ui,sans-serif;color:#282824;-webkit-font-smoothing:antialiased}a{color:#8A5E35}a:hover{color:#282824}</style>
+</helmet>
+<main style="padding:96px 96px 128px;display:grid;gap:72px;width:1500px">
+  <header style="display:grid;gap:14px;padding-bottom:40px;border-bottom:1px solid #D3CAB2">
+    <div style="display:flex;align-items:center;gap:14px;font:500 13px/1 'Readex Pro';letter-spacing:.1em;text-transform:uppercase;color:#8A5E35"><span>Bayan</span><span style="width:4px;height:4px;border-radius:50%;background:#C6986B"></span><span>Social banners</span><span style="width:4px;height:4px;border-radius:50%;background:#C6986B"></span><span>Final</span></div>
+    <div style="font:500 48px/1.15 'Readex Pro';letter-spacing:-.01em">Banner set</div>
+    <div style="font:400 17px/1.6 'Readex Pro';color:#4A4842;max-width:760px;text-wrap:pretty">Six 1500×500 banners from the selected Turn 2 and Turn 3 sets in <a href="Bayan Banners.dc.html">Bayan Banners</a>. They use one type scale, 150px side margins, and keep the bottom-left corner clear for the profile photo.</div>
+  </header>
+
+  <div id="f1" style="display:grid;gap:16px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 14px/1 'Readex Pro';color:#8A5E35;font-variant-numeric:tabular-nums">01</span><span style="font:500 18px/1.3 'Readex Pro'">Lockup · light</span><span style="font:400 14px/1.3 'Readex Pro';color:#6F6B5E;margin-inline-start:auto">bayan-banner-lockup-light.png</span></div>
+    <div style="width:1500px;height:500px;background:#F6F2E6;display:grid;place-items:center;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(40,40,36,.06),0 12px 32px -12px rgba(40,40,36,.18)">
+      <img src="assets/logo/bayan-horizontal-light.svg" alt="Bayan" style="height:168px;display:block;margin-top:-12px">
+      <sc-if value="{{ showSafe }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;pointer-events:none"><div style="position:absolute;left:0;right:0;top:0;height:60px;background:rgba(200,60,40,.1);border-bottom:1px dashed rgba(200,60,40,.6)"></div><div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(200,60,40,.1);border-top:1px dashed rgba(200,60,40,.6)"></div><div style="position:absolute;left:48px;top:300px;width:220px;height:220px;border-radius:50%;background:rgba(200,60,40,.14);border:1px dashed rgba(200,60,40,.7)"></div></div></sc-if>
+    </div>
+  </div>
+
+  <div id="f2" style="display:grid;gap:16px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 14px/1 'Readex Pro';color:#8A5E35;font-variant-numeric:tabular-nums">02</span><span style="font:500 18px/1.3 'Readex Pro'">Lockup · dark</span><span style="font:400 14px/1.3 'Readex Pro';color:#6F6B5E;margin-inline-start:auto">bayan-banner-lockup-dark.png</span></div>
+    <div style="width:1500px;height:500px;background:#1A1A14;display:grid;place-items:center;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(40,40,36,.06),0 12px 32px -12px rgba(40,40,36,.3)">
+      <img src="assets/logo/bayan-horizontal-dark.svg" alt="Bayan" style="height:168px;display:block;margin-top:-12px">
+      <sc-if value="{{ showSafe }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;pointer-events:none"><div style="position:absolute;left:0;right:0;top:0;height:60px;background:rgba(230,90,70,.14);border-bottom:1px dashed rgba(230,90,70,.7)"></div><div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(230,90,70,.14);border-top:1px dashed rgba(230,90,70,.7)"></div><div style="position:absolute;left:48px;top:300px;width:220px;height:220px;border-radius:50%;background:rgba(230,90,70,.18);border:1px dashed rgba(230,90,70,.8)"></div></div></sc-if>
+    </div>
+  </div>
+
+  <div id="f3" style="display:grid;gap:16px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 14px/1 'Readex Pro';color:#8A5E35;font-variant-numeric:tabular-nums">03</span><span style="font:500 18px/1.3 'Readex Pro'">Editorial · light</span><span style="font:400 14px/1.3 'Readex Pro';color:#6F6B5E;margin-inline-start:auto">bayan-banner-editorial-light.png</span></div>
+    <div style="width:1500px;height:500px;background:#F6F2E6;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(40,40,36,.06),0 12px 32px -12px rgba(40,40,36,.18)">
+      <div dir="rtl" style="position:absolute;inset:0;display:flex;align-items:center;gap:64px;padding:0 150px 12px;box-sizing:border-box">
+        <img src="assets/logo/bayan-mark-light.svg" alt="بيان" style="height:176px;display:block;flex:none">
+        <div style="width:1.5px;height:176px;background:#DCD4BF;flex:none"></div>
+        <div style="display:grid;gap:14px">
+          <div style="font:500 76px/1.15 'Readex Pro';color:#282824">اقرأ بوضوح</div>
+          <div style="font:400 28px/1.5 'Readex Pro';color:#4A4842;word-spacing:.1em">مساعدك الذكي للقراءة، مصمَّم للقرّاء ذوي عُسر القراءة</div>
+          <div dir="ltr" style="font:400 21px/1.4 'Readex Pro';color:#5C5A51;text-align:right;margin-top:4px">An AI Reading Assistant for Arabic Readers with Dyslexia</div>
+        </div>
+      </div>
+      <sc-if value="{{ showSafe }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;pointer-events:none"><div style="position:absolute;left:0;right:0;top:0;height:60px;background:rgba(200,60,40,.1);border-bottom:1px dashed rgba(200,60,40,.6)"></div><div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(200,60,40,.1);border-top:1px dashed rgba(200,60,40,.6)"></div><div style="position:absolute;left:48px;top:300px;width:220px;height:220px;border-radius:50%;background:rgba(200,60,40,.14);border:1px dashed rgba(200,60,40,.7)"></div></div></sc-if>
+    </div>
+  </div>
+
+  <div id="f4" style="display:grid;gap:16px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 14px/1 'Readex Pro';color:#8A5E35;font-variant-numeric:tabular-nums">04</span><span style="font:500 18px/1.3 'Readex Pro'">Editorial · dark</span><span style="font:400 14px/1.3 'Readex Pro';color:#6F6B5E;margin-inline-start:auto">bayan-banner-editorial-dark.png</span></div>
+    <div style="width:1500px;height:500px;background:#1A1A14;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(40,40,36,.06),0 12px 32px -12px rgba(40,40,36,.3)">
+      <div dir="rtl" style="position:absolute;inset:0;display:flex;align-items:center;gap:64px;padding:0 150px 12px;box-sizing:border-box">
+        <img src="assets/logo/bayan-mark-dark.svg" alt="بيان" style="height:176px;display:block;flex:none">
+        <div style="width:1.5px;height:176px;background:#3D3C33;flex:none"></div>
+        <div style="display:grid;gap:14px">
+          <div style="font:500 76px/1.15 'Readex Pro';color:#F2EFE2">اقرأ بوضوح</div>
+          <div style="font:400 28px/1.5 'Readex Pro';color:#D2CEBF;word-spacing:.1em">مساعدك الذكي للقراءة، مصمَّم للقرّاء ذوي عُسر القراءة</div>
+          <div dir="ltr" style="font:400 21px/1.4 'Readex Pro';color:#B3AFA0;text-align:right;margin-top:4px">An AI Reading Assistant for Arabic Readers with Dyslexia</div>
+        </div>
+      </div>
+      <sc-if value="{{ showSafe }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;pointer-events:none"><div style="position:absolute;left:0;right:0;top:0;height:60px;background:rgba(230,90,70,.14);border-bottom:1px dashed rgba(230,90,70,.7)"></div><div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(230,90,70,.14);border-top:1px dashed rgba(230,90,70,.7)"></div><div style="position:absolute;left:48px;top:300px;width:220px;height:220px;border-radius:50%;background:rgba(230,90,70,.18);border:1px dashed rgba(230,90,70,.8)"></div></div></sc-if>
+    </div>
+  </div>
+
+  <div id="f5" style="display:grid;gap:16px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 14px/1 'Readex Pro';color:#8A5E35;font-variant-numeric:tabular-nums">05</span><span style="font:500 18px/1.3 'Readex Pro'">Product · light</span><span style="font:400 14px/1.3 'Readex Pro';color:#6F6B5E;margin-inline-start:auto">bayan-banner-product-light.png</span></div>
+    <div style="width:1500px;height:500px;background:#F6F2E6;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(40,40,36,.06),0 12px 32px -12px rgba(40,40,36,.18)">
+      <div dir="rtl" style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 580px;align-items:center;gap:72px;padding:0 150px 0 290px;box-sizing:border-box">
+        <div style="display:grid;gap:20px;justify-items:start">
+          <img src="assets/logo/bayan-mark-light.svg" alt="بيان" style="height:88px;display:block;margin-bottom:6px">
+          <div style="font:500 68px/1.15 'Readex Pro';color:#282824">اقرأ بوضوح</div>
+          <div dir="ltr" style="font:400 21px/1.4 'Readex Pro';color:#5C5A51;text-align:right;max-width:360px;text-wrap:balance">An AI Reading Assistant for Arabic Readers with Dyslexia</div>
+        </div>
+        <div style="background:#FBF8F0;border:1px solid #E2DAC6;border-radius:24px;padding:34px 38px 30px;display:grid;gap:24px;box-shadow:0 1px 2px rgba(40,40,36,.05),0 24px 48px -16px rgba(40,40,36,.2)">
+          <div style="font:400 30px/2.1 'Readex Pro';color:#282824;word-spacing:.16em"><span style="color:#8C8878">جلسَ أحمدُ قربَ</span> <span style="background:#EEDDC7;border-radius:8px;padding:2px 10px">النافذةِ</span> وبدأَ يقرأُ قصّتَه بهدوء.</div>
+          <div style="display:flex;align-items:center;gap:16px;padding-top:20px;border-top:1px solid #EAE3D2">
+            <div style="width:44px;height:44px;border-radius:999px;background:#282824;display:grid;place-items:center;flex:none"><div style="display:flex;gap:4px"><div style="width:4px;height:14px;background:#F6F2E6;border-radius:1px"></div><div style="width:4px;height:14px;background:#F6F2E6;border-radius:1px"></div></div></div>
+            <div style="flex:1;height:4px;background:#E6DFCC;border-radius:4px;position:relative"><div style="position:absolute;inset-block:0;inset-inline-start:0;width:46%;background:#C6986B;border-radius:4px"></div><div style="position:absolute;top:-4px;inset-inline-start:calc(46% - 6px);width:12px;height:12px;border-radius:50%;background:#C6986B;box-shadow:0 0 0 3px #FBF8F0"></div></div>
+            <div style="font:500 16px/1 'Readex Pro';color:#5C5A51;font-variant-numeric:tabular-nums">٠:١٢</div>
+          </div>
+        </div>
+      </div>
+      <sc-if value="{{ showSafe }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;pointer-events:none"><div style="position:absolute;left:0;right:0;top:0;height:60px;background:rgba(200,60,40,.1);border-bottom:1px dashed rgba(200,60,40,.6)"></div><div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(200,60,40,.1);border-top:1px dashed rgba(200,60,40,.6)"></div><div style="position:absolute;left:48px;top:300px;width:220px;height:220px;border-radius:50%;background:rgba(200,60,40,.14);border:1px dashed rgba(200,60,40,.7)"></div></div></sc-if>
+    </div>
+  </div>
+
+  <div id="f6" style="display:grid;gap:16px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 14px/1 'Readex Pro';color:#8A5E35;font-variant-numeric:tabular-nums">06</span><span style="font:500 18px/1.3 'Readex Pro'">Sunrise · dark</span><span style="font:400 14px/1.3 'Readex Pro';color:#6F6B5E;margin-inline-start:auto">bayan-banner-sunrise-dark.png</span></div>
+    <div style="width:1500px;height:500px;background:#1A1A14;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(40,40,36,.06),0 12px 32px -12px rgba(40,40,36,.3)">
+      <div style="position:absolute;left:0;right:0;top:356px;height:1.5px;background:#3D3C33"></div>
+      <div style="position:absolute;left:520px;top:0;width:400px;height:356px;overflow:hidden">
+        <div style="position:absolute;left:0;top:156px;width:400px;height:400px;border-radius:50%;background:#C6986B"></div>
+      </div>
+      <div dir="rtl" style="position:absolute;right:150px;top:0;height:356px;display:flex;flex-direction:column;justify-content:center;gap:18px;align-items:flex-start">
+        <img src="assets/logo/bayan-mark-mono-cream.svg" alt="بيان" style="height:100px;display:block;margin-bottom:4px">
+        <div style="font:500 64px/1.15 'Readex Pro';color:#F2EFE2">اقرأ بوضوح</div>
+      </div>
+      <div dir="ltr" style="position:absolute;right:150px;top:384px;font:400 21px/1.4 'Readex Pro';color:#B3AFA0">An AI Reading Assistant for Arabic Readers with Dyslexia</div>
+      <sc-if value="{{ showSafe }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;pointer-events:none"><div style="position:absolute;left:0;right:0;top:0;height:60px;background:rgba(230,90,70,.14);border-bottom:1px dashed rgba(230,90,70,.7)"></div><div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:rgba(230,90,70,.14);border-top:1px dashed rgba(230,90,70,.7)"></div><div style="position:absolute;left:48px;top:300px;width:220px;height:220px;border-radius:50%;background:rgba(230,90,70,.18);border:1px dashed rgba(230,90,70,.8)"></div></div></sc-if>
+    </div>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showSafeZones&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Review&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return { showSafe: this.props.showSafeZones ?? false };
+  }
+}
+</script>
+</body>
+</html>
