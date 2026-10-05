@@ -12,11 +12,18 @@ interface Downloadable {
     @get:StringRes val title: Int
     val files: List<ModelFile>
     val bytes: Long get() = files.sumOf { it.bytes }
+    /** Its folder on the model host, for files without their own [ModelFile.url]. */
+    val folder: String get() = id
 }
 
 /** A downloadable on-device simplification model, fine-tuned on dyslexia-friendly Arabic. */
 data class ModelInfo(
+    /** The app's own key for the model: its folder on the phone and the saved setting. Never changes. */
     override val id: String,
+    /** The model's public name (Hugging Face Congi-libya/<name>), shown above its title. */
+    val name: String,
+    /** Its folder on the model host (BayanSimplify-ONNX). */
+    override val folder: String,
     @StringRes override val title: Int,
     @StringRes val summary: Int,
     val architecture: String,
@@ -27,7 +34,7 @@ data class ModelInfo(
     val relativeSpeed: Double,
     /**
      * Beams for the "more faithful" setting; 1 = the setting is not offered. Only models whose beam search was
-     * benchmarked get it (#61: model 3 int8 keeps the meaning 4 to 8 points more often with 4 beams).
+     * benchmarked get it (#61: BayanSimplify-v0.3 int8 keeps the meaning 4 to 8 points more often with 4 beams).
      */
     val beams: Int = 1,
 ) : Downloadable
@@ -36,6 +43,8 @@ object ModelCatalog {
     val models = listOf(
         ModelInfo(
             id = "arabart",
+            name = "BayanSimplify-v0.2-Fast",
+            folder = "v0.2-Fast",
             title = R.string.model_arabart_title,
             summary = R.string.model_arabart_summary,
             architecture = "AraBART",
@@ -49,10 +58,12 @@ object ModelCatalog {
             relativeSpeed = 1.0,
         ),
         ModelInfo(
-            // Model 3, the large model: AraT5v2 on corpus v1, int8, decoding with 4 beams by default (the "more faithful"
+            // BayanSimplify-v0.3, the large model: AraT5v2 on corpus v1, int8, decoding with 4 beams by default (the "more faithful"
             // setting, on unless the reader turns it off; #61, #62). It outperforms every earlier model on BayanBench (test
             // core: meaning kept 82%, longest clause 5.2 words shorter; #68). Its sentences arrive whole instead of streaming.
             id = "model3",
+            name = "BayanSimplify-v0.3",
+            folder = "v0.3",
             title = R.string.model_model3_title,
             summary = R.string.model_model3_summary,
             architecture = "AraT5v2",
@@ -68,8 +79,10 @@ object ModelCatalog {
             beams = 4,
         ),
         ModelInfo(
-            // Model 2 AraT5, the earlier large model: greedy, streams word by word, simplifies less than model 3.
+            // BayanSimplify-v0.2 (AraT5v2), the earlier large model: greedy, streams word by word, simplifies less than v0.3.
             id = "arat5",
+            name = "BayanSimplify-v0.2",
+            folder = "v0.2",
             title = R.string.model_arat5_title,
             summary = R.string.model_arat5_summary,
             architecture = "AraT5v2",

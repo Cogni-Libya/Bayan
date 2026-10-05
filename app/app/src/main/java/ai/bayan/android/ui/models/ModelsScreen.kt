@@ -184,7 +184,7 @@ fun ModelList(vm: ModelsViewModel) {
                 onClick = { if (installed) { haptics.performHapticFeedback(HapticFeedbackType.SegmentTick); vm.activate(model.id) } },
                 shapes = ListItemDefaults.segmentedShapes(i, ModelCatalog.models.size),
                 leadingContent = { RadioButton(selected = selected, onClick = null, enabled = installed) },
-                overlineContent = { Text(model.architecture) },
+                overlineContent = { Text("${model.name} · ${model.architecture}") },
                 supportingContent = { ModelDetails(model, state) },
                 trailingContent = { ModelAction(model, state, onDownload = { vm.download(model.id) }, onCancel = { vm.cancel(model.id) }, onDelete = { vm.delete(model.id) }) },
             ) { Text(stringResource(model.title)) }

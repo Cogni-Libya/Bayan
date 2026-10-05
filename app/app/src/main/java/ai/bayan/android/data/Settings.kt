@@ -49,7 +49,7 @@ data class Settings(
     val autoRead: Boolean = false,
     val highlightWhileReading: Boolean = true,
     /** Beam search for models that offer it (ModelInfo.beams): keeps the meaning more often, slower, not streamed. On by
-     *  default, so the large model (model 3) runs as it was benchmarked. */
+     *  default, so the large model (BayanSimplify-v0.3) runs as it was benchmarked. */
     val moreFaithful: Boolean = true,
     /** Short vowels (tashkeel) on the simplified text. Off by default: full marks can crowd a line for some readers. */
     val tashkeel: Boolean = false,

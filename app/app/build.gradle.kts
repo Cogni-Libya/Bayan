@@ -18,7 +18,7 @@ android {
         // ONNX Runtime ships ~35 MB of native code per ABI; 32-bit x86 has no current devices.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
         // Where the app downloads the on-device model bundles from (one folder per model id).
-        buildConfigField("String", "MODEL_BASE_URL", "\"https://huggingface.co/Congi-libya/bayan-onnx/resolve/main\"")
+        buildConfigField("String", "MODEL_BASE_URL", "\"https://huggingface.co/Congi-libya/BayanSimplify-ONNX/resolve/main\"")
     }
 
     androidResources {
