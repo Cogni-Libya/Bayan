@@ -25,7 +25,7 @@ SPEECH = [{'scene': 'S1Cover',
              "these letters can be kataba, kutiba or kutub, because short vowels aren't written."),
             ('Left: shorter clauses help the weakest readers most. Right: our scope',
              'Shorter clauses help the weakest readers most. So Bayan reduces reading load: long clauses, '
-             "hard words. Not decoding, and we don't yet claim it helps readers with dyslexia.")]},
+             "hard words. Tashkeel is a setting in the app, and we don't yet claim it helps readers with dyslexia.")]},
  {'scene': 'S3Data',
   'speaker': 1,
   'title': 'Data: how we got to corpus v1',

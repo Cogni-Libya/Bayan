@@ -194,7 +194,7 @@ def s2b(prs, layout):
     chip_c(c, sx + hw / 2, hy + 1.15, "we reduce reading load", size=15, fill=PAPER, color=SUN_DK, max_w=hw - 0.5)
     chip_c(c, sx + hw / 2, hy + 1.85, "long clauses · hard words", size=14, fill=PAPER, color=INK2, bold=False,
            max_w=hw - 0.5)
-    chip_c(c, sx + hw / 2, hy + 2.55, "not decoding · no reader claim yet", size=13, fill=WARN_LT, color=WARN,
+    chip_c(c, sx + hw / 2, hy + 2.55, "tashkeel is a setting · no reader claim yet", size=13, fill=WARN_LT, color=WARN,
            bold=False, max_w=hw - 0.5)
     c.finish(slide_notes("S2Problem"))
 
@@ -381,8 +381,9 @@ def s5a(prs, layout):
         c.text(ML + 3.4, y + 0.06, 1.3, 0.32, f"{kept:.0f}%", 13, SUN_DK, True, "c")
         cutlab = "0" if cut < 0.05 else f"{cut:.1f}"
         c.text(ML + 4.85, y + 0.06, 1.7, 0.32, cutlab, 13, SUN_DK if cut >= 0.05 else WARN, True, "c")
-    c.text(ML, 5.35, tw, 0.28,
-           "test core items, as trained · words cut = longest clause, before minus after", 10, INK3, align="c")
+    c.text(ML, 5.35, tw, 0.42,
+           "test core items, as trained (float, greedy) · the shipped app model with four beams is on the results slide",
+           10, INK3, align="c")
 
     bx, by, bw, bh = ML + tw + 0.35, 2.5, 2.55, 2.85
     c.card(bx, by, bw, bh, SUN_LT, SUN, 0.12)
@@ -430,24 +431,22 @@ def s5b(prs, layout):
     c.line(gem_x + gem_w + 0.08, cy_flow, out_cx - out_probe / 2 - 0.08, cy_flow, SUN, 2, arrow=True)
 
     def qcard(x, title, rows, hi=None, sub=None):
-        w, h = 4.85, 3.55
-        y = 3.1
+        w, h = 4.85, 3.95
+        y = 2.9
         c.card(x, y, w, h)
-        c.text(x, y + 0.18, w, 0.38, title, 16, SUN_DK, True, "c")
-        # uniform pills: one width, one height, one font for the whole card
-        chip_w, chip_h, pad = w - 0.55, 0.42, 0.14
-        size = 12.5
-        while size > 10.0 and max(text_w(r.replace("\n", " "), size) for r in rows) + 0.35 > chip_w:
-            size -= 0.5
-        cy = y + 0.72
+        c.text(x, y + 0.16, w, 0.36, title, 15, SUN_DK, True, "c")
+        # every pill is tall enough for two lines, so the long rule never spills
+        chip_w, chip_h, pad = w - 0.28, 0.58, 0.12
+        size = 10.5
+        cy = y + 0.62
         for i, r in enumerate(rows):
             flat = r.replace("\n", " ")
             cx = x + (w - chip_w) / 2
-            c.card(cx, cy, chip_w, chip_h, SUN if i == hi else PAPER, SUN if i == hi else PAPER,
-                   radius=0.09, text=flat, size=size, color=NIGHT if i == hi else INK2, bold=(i == hi))
+            shape = c.card(cx, cy, chip_w, chip_h, SUN if i == hi else PAPER, SUN if i == hi else PAPER,
+                           radius=0.09, text=flat, size=size, color=NIGHT if i == hi else INK2, bold=(i == hi))
             cy += chip_h + pad
         if sub:
-            c.text(x + 0.2, y + h - 0.42, w - 0.4, 0.32, sub, 10.5, INK3, align="c")
+            c.text(x + 0.2, y + h - 0.36, w - 0.4, 0.28, sub, 9.5, INK3, align="c")
 
     qcard(ML, "Meaning · 4 questions",
           ["same meaning?  kept = yes ≥ 0.5\nand every number kept", "adds a fact?", "drops a fact?", "contradicts?"],
@@ -517,15 +516,15 @@ def s5d(prs, layout):
 def s6a(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 6, "05 · Results", "v0.3 is our best model")
-    # scatter — same points, labels and sides as S6Results in scenes.py
-    ox, oy, pw, ph = 2.35, 2.05, 5.05, 3.55  # plot box top-left + size
+    # scatter — same points as S6Results in scenes.py, with labels clear of each other
+    ox, oy, pw, ph = 2.55, 1.95, 4.85, 3.55  # plot box top-left + size
     c.line(ox, oy + ph, ox + pw, oy + ph, INK4, 1.75)  # x axis
     c.line(ox, oy, ox, oy + ph, INK4, 1.75)            # y axis
     c.text(ox, oy + ph + 0.12, pw, 0.28, "meaning kept (%)  →", 11.5, INK3, align="c")
-    # rotated y-axis label (HTML: "simplification: words cut from the longest clause  →")
-    yl = c.text(0, 0, 3.6, 0.28, "simplification: words cut from the longest clause  →", 11.5, INK3, align="c")
+    # rotated y-axis label, centered just left of the axis (rotates about the box centre)
+    yl = c.text(0, 0, 3.4, 0.28, "simplification: words cut from the longest clause  →", 11, INK3, align="c")
     yl.rotation = 270
-    yl.left = Inches(ox - 0.52)
+    yl.left = Inches(ox - 0.42 - 3.4 / 2)
     yl.top = Inches(oy + ph / 2 - 0.14)
     x0, x1, y0, y1 = 30, 105, -0.6, 7.6
 
@@ -533,14 +532,15 @@ def s6a(prs, layout):
         return ox + (x - x0) / (x1 - x0) * pw, oy + ph - (y - y0) / (y1 - y0) * ph
 
     # (label, meaning kept, clause words shorter, color, side, size)
+    # sides chosen so the clustered left-hand points do not overlap
     points = [
         ("Copy the input", 100.0, 0.0, INK4, "up", 12),
-        ("v0.1", F("bt_m1_kept"), 0.0, INK3, "up", 12),
-        ("v0.2 in the app", F("v02_app_kept"), F("v02_app_clause"), INK3, "up", 12),
+        ("v0.1", F("bt_m1_kept"), 0.0, INK3, "down", 12),
+        ("v0.2 in the app", F("v02_app_kept"), F("v02_app_clause"), INK3, "down", 12),
         ("v0.2 (no tag)", F("t5_untag_kept"), F("t5_untag_clause"), INK3, "left", 11),
-        ("v0.2 + tag", F("t5_tag_kept"), F("t5_tag_clause"), INK3, "down", 11),
-        ("v0.2-Fast (no tag)", F("bart_untag_kept"), F("bart_untag_clause"), INK3, "down", 11),
-        ("v0.2-Fast + tag", F("bart_tag_kept"), F("bart_tag_clause"), INK3, "right", 11),
+        ("v0.2 + tag", F("t5_tag_kept"), F("t5_tag_clause"), INK3, "right", 11),
+        ("v0.2-Fast (no tag)", F("bart_untag_kept"), F("bart_untag_clause"), INK3, "up", 11),
+        ("v0.2-Fast + tag", F("bart_tag_kept"), F("bart_tag_clause"), INK3, "up", 11),
         ("v0.3 in the app", F("v03_kept"), F("v03_clause"), SUN_DK, "right", 13),
     ]
     halo = None
@@ -684,6 +684,12 @@ def s8b(prs, layout):
     c.finish(slide_notes("S8Close"))
 
 
+def s9end(prs):
+    """SIC template closer — one slide on the template's own `last` layout."""
+    layout = next(l for l in prs.slide_layouts if l.name == "last")
+    prs.slides.add_slide(layout)
+
+
 STEPS = [s1, s2a, s2b, s3a, s3b, s3c, s3d, s4a, s4b, s4c, s5a, s5b, s5c, s5d, s6a, s6b, s6c, s7, s8a, s8b]
 
 
@@ -696,6 +702,7 @@ def main():
     layout = next(l for l in prs.slide_layouts if l.name == "Body")
     for build in STEPS:
         build(prs, layout)
+    s9end(prs)
     prs.save(OUT)
     print(f"{OUT.name}: {len(prs.slides)} slides, {OUT.stat().st_size / 1e6:.2f} MB")
 

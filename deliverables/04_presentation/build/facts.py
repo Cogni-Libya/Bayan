@@ -251,7 +251,7 @@ SCATTER = [
     ("app-arabart", 54.7, 4.0, "app"),
     ("model2-arabart-notag", 55.6, 3.6, "model2"),
     ("model2-arabart", 41.9, 6.0, "model2"),
-    ("model 3 + net", 83.0, 5.1, "ship"),
+    ("model 3 + net", 82.0, 5.2, "ship"),
 ]
 SCATTER_SRC = "PR #58 body + benchmark-report docs/benchmark_report (meaning-vs-simplicity plot)"
 SCATTER_NOTE = "test core, paired vs today's app; meaning kept = P(same) >= 0.5 and every number kept"

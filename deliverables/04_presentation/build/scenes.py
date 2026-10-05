@@ -90,7 +90,7 @@ class S2Problem(Deck):
         s_t = T("Bayan's scope", 20, SUN_DK, SEMIBOLD).move_to(scope.get_top() + DOWN * 0.45)
         s_a = chip("we reduce reading load", fill=PAPER, color=SUN_DK, size=16, weight=SEMIBOLD)
         s_b = chip("long clauses · hard words", fill=PAPER, color=INK2, size=15)
-        s_c = chip("not decoding · no reader claim yet", fill=WARN_LT, color=WARN, size=14)
+        s_c = chip("tashkeel is a setting · no reader claim yet", fill=WARN_LT, color=WARN, size=14)
         s_all = fit(VGroup(s_a, s_b, s_c).arrange(DOWN, buff=0.22), 4.2).move_to(scope.get_center() + DOWN * 0.35)
         self.play(FadeOut(step1), run_time=0.5)
         self.play(FadeIn(helps), FadeIn(h_t), FadeIn(scope), FadeIn(s_t), run_time=0.7)
@@ -287,7 +287,7 @@ class S5Measure(Deck):
             cutlab = "0" if cut < 0.05 else f"{cut:.1f}"
             u = T(cutlab, 15, SUN_DK if cut >= 0.05 else WARN, SEMIBOLD).move_to([c_cut + 0.55, y, 0])
             table.add(VGroup(bg, n, k, u))
-        foot = T("Words cut = the longest clause of a sentence, before minus after · BayanSimplify models, test core items, as trained", 11, INK3)
+        foot = T("test core items, as trained (float, greedy) · the shipped app model with four beams is on the results slide", 11, INK3)
         fit(foot, 6.4).move_to([-1.75, -2.45, 0])
         bench = card(3.0, 3.0, fill=SUN_LT, stroke=SUN).move_to([3.7, 0.1, 0])
         b_n = T(f"{F('bench_items'):,}", 44, SUN_DK, SEMIBOLD).move_to(bench.get_top() + DOWN * 0.75)
@@ -419,12 +419,12 @@ class S6Results(Deck):
         pts = VGroup()
         for lab, x, y, col, side, size in [
             ("Copy the input", 100.0, 0.0, INK4, UP, 12),
-            ("v0.1", F("bt_m1_kept"), 0.0, INK3, UP, 12),
-            ("v0.2 in the app", F("v02_app_kept"), F("v02_app_clause"), INK3, UP, 12),
+            ("v0.1", F("bt_m1_kept"), 0.0, INK3, DOWN, 12),
+            ("v0.2 in the app", F("v02_app_kept"), F("v02_app_clause"), INK3, DOWN, 12),
             ("v0.2 (no tag)", F("t5_untag_kept"), F("t5_untag_clause"), INK3, LEFT, 11),
-            ("v0.2 + tag", F("t5_tag_kept"), F("t5_tag_clause"), INK3, DOWN, 11),
-            ("v0.2-Fast (no tag)", F("bart_untag_kept"), F("bart_untag_clause"), INK3, DOWN, 11),
-            ("v0.2-Fast + tag", F("bart_tag_kept"), F("bart_tag_clause"), INK3, RIGHT, 11),
+            ("v0.2 + tag", F("t5_tag_kept"), F("t5_tag_clause"), INK3, RIGHT, 11),
+            ("v0.2-Fast (no tag)", F("bart_untag_kept"), F("bart_untag_clause"), INK3, UP, 11),
+            ("v0.2-Fast + tag", F("bart_tag_kept"), F("bart_tag_clause"), INK3, UP, 11),
             ("v0.3 in the app", F("v03_kept"), F("v03_clause"), SUN_DK, RIGHT, 14),
         ]:
             best = lab.startswith("v0.3")
@@ -531,3 +531,32 @@ class S8Close(Deck):
         thanks.next_to(nxt, DOWN, buff=0.3)
         self.play(LaggedStart(*[FadeIn(m, shift=UP * 0.1) for m in limits], lag_ratio=0.3, run_time=1.0))
         self.play(FadeIn(nxt), FadeIn(thanks), run_time=0.7)
+
+
+# ---------------------------------------------------------------- 9. SIC template closer
+class S9End(Deck):
+    """The SIC template's closing slide: photo + blue overlay + Enabling People lockup + copyright."""
+
+    NUM, DARK, TOTAL = 9, True, TOTAL
+
+    def build(self):
+        bg = ImageMobject(str(ASSETS / "sic-close-bg.jpg")).scale_to_fit_width(W + 0.02)
+        overlay = Rectangle(width=W + 0.02, height=H + 0.02, fill_color="#1428A0", fill_opacity=0.898,
+                            stroke_width=0)
+        logo = ImageMobject(str(ASSETS / "samsung-white.png")).scale_to_fit_width(1.7)
+        logo.move_to([-W / 2 + 1.15, H / 2 - 0.55, 0])
+        lockup = ImageMobject(str(ASSETS / "sic-enabling-people.png")).scale_to_fit_width(3.6)
+        lockup.move_to([0, -0.15, 0])
+        # copyright block, bottom-left, as in the template layout
+        lines = [
+            "ⓒ2025 SAMSUNG. All rights reserved.",
+            "Samsung Electronics Corporate Citizenship Office holds the copyright of book.",
+            "This book is a literary property protected by copyright law so reprint and reproduction without permission are prohibited.",
+            "To use this book other than the curriculum of Samsung Innovation Campus or to use the entire or part of this book, you must receive written consent from copyright holder.",
+        ]
+        body = VGroup(*[T(t, 11, CREAM) for t in lines]).arrange(DOWN, buff=0.12, aligned_edge=LEFT)
+        fit(body, W - 1.2).move_to([-W / 2 + 0.7, -H / 2 + 1.05, 0], aligned_edge=LEFT)
+        self.play(FadeIn(bg), run_time=0.6)
+        self.play(FadeIn(overlay), run_time=0.5)
+        self.play(FadeIn(logo), FadeIn(lockup), run_time=0.8)
+        self.play(FadeIn(body), run_time=0.6)
