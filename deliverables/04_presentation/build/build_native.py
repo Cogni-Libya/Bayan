@@ -397,38 +397,21 @@ def s5a(prs, layout):
 def s5b(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
-    # flow row — Manim: chip | card(2.9, 0.95) | chip, centered at y=1.65, buff 0.9
-    def place_chip(cx, cy, text, **kw):
-        size = kw.get("size", 13)
-        max_w = kw.get("max_w")
-        if max_w:
-            while size > 10.5 and text_w(text, size) + 0.5 > max_w:
-                size -= 0.5
-        w = min(text_w(text, size) + 0.52, max_w or CW)
-        h = text_h(text, size) + 0.16
-        x, y = cx - w / 2, cy - h / 2
-        shape = c.card(x, y, w, h, kw.get("fill", SUN_LT), kw.get("fill", SUN_LT), radius=0.09,
-                       text=text, size=size, color=kw.get("color", SUN_DK),
-                       bold=kw.get("bold", True), align="c")
-        return shape, w, h
+    # flow row — positions from the hand-tuned deck (slide 12): wider spread, higher on the slide
+    src_x, src_y, src_w, src_h = 0.33, 1.815, 2.42, 0.435
+    gem_x, gem_y, gem_w, gem_h = 3.571, 1.575, 2.90, 0.95
+    out_x, out_y, out_w, out_h = 7.10, 1.833, 3.584, 0.435
+    cy_flow = gem_y + gem_h / 2
 
-    gem_w, gem_h = 2.9, 0.95
-    cy_flow = 2.05
-    gem_x = (SW - gem_w) / 2
-    gap = 0.55
-    # measure chip widths first so the row stays centered
-    src_probe = text_w("original + rewrite", 15) + 0.52
-    out_probe = text_w("7 yes/no questions → P(yes)", 15) + 0.52
-    src_cx = gem_x - gap - src_probe / 2
-    out_cx = gem_x + gem_w + gap + out_probe / 2
-
-    place_chip(src_cx, cy_flow, "original + rewrite", size=15, fill=PAPER2, color=INK2, bold=False)
-    c.card(gem_x, cy_flow - gem_h / 2, gem_w, gem_h, SUN_LT, SUN, 0.12)
-    c.text(gem_x, cy_flow - gem_h / 2 + 0.14, gem_w, 0.34, "Gemma 4 31B", 18, SUN_DK, True, "c")
-    c.text(gem_x, cy_flow - gem_h / 2 + 0.52, gem_w, 0.28, "open model · reruns anywhere", 11, INK3, align="c")
-    place_chip(out_cx, cy_flow, "7 yes/no questions → P(yes)", size=15, fill=PAPER2, color=INK2, bold=False)
-    c.line(src_cx + src_probe / 2 + 0.08, cy_flow, gem_x - 0.08, cy_flow, SUN, 2, arrow=True)
-    c.line(gem_x + gem_w + 0.08, cy_flow, out_cx - out_probe / 2 - 0.08, cy_flow, SUN, 2, arrow=True)
+    c.card(src_x, src_y, src_w, src_h, PAPER2, PAPER2, radius=0.09,
+           text="original + rewrite", size=15, color=INK2, bold=False)
+    c.card(gem_x, gem_y, gem_w, gem_h, SUN_LT, SUN, 0.12)
+    c.text(gem_x, gem_y + 0.14, gem_w, 0.34, "Gemma 4 31B", 18, SUN_DK, True, "c")
+    c.text(gem_x, gem_y + 0.52, gem_w, 0.28, "open model · reruns anywhere", 11, INK3, align="c")
+    c.card(out_x, out_y, out_w, out_h, PAPER2, PAPER2, radius=0.09,
+           text="7 yes/no questions → P(yes)", size=15, color=INK2, bold=False)
+    c.line(src_x + src_w + 0.08, cy_flow, gem_x - 0.08, cy_flow, SUN, 2, arrow=True)
+    c.line(gem_x + gem_w + 0.08, cy_flow, out_x - 0.08, cy_flow, SUN, 2, arrow=True)
 
     def qcard(x, title, rows, hi=None, sub=None):
         w, h = 4.85, 3.95
