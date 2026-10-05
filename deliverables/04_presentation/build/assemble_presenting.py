@@ -26,15 +26,14 @@ OUT = DECK_DIR / "Bayan_Presenting.pptx"
 PDF = DECK_DIR / "Bayan_Presenting_static.pdf"
 
 SLIDES = [  # (scene, alt text, notes: None = taken from script_data)
-    ("S1Cover", "Cover: Bayan, on-device Arabic text simplification for readers with dyslexia, Team Cogni, Samsung logo", None),
-    ("S2Problem", "About 11% of Arab primary-school children have dyslexia; the word كتب has three readings", None),
-    ("S3Gap", "Table comparing SAMER, BAREC, Baseet and DAASI: none is made for dyslexia", None),
-    ("S4Verdict", "Three product options; the Android plugin in the text-selection menu is chosen", None),
-    ("S5Data", "9.3% of Baseet overlapped the locked test sets; the 22,733-pair training set by source tag", None),
-    ("S6Candidates", "AraT5v2 (368M), AraBART (139M) and HPLT T5 (about 294M, reserve) trained with one shared recipe", None),
-    ("S7Model1", "SARI on human-changed rows: copy the input 56.06, Model 1 61.83", None),
-    ("S8Model2", "Model 2 changes: keep unchanged pairs, add filtered everyday text, add strength tags S0 to SA", None),
-    ("S9Close", "Simplify where you read. Next: BayanBench, a real phone, readers with dyslexia", None),
+    ("S1Cover", "Cover: Bayan, simplify Arabic where you read, on the phone, offline. Team Cogni, Samsung Innovation Campus", None),
+    ("S2Problem", "11% of Arab primary-school children have developmental dyslexia; the word كتب has three readings; shorter clauses help, and Bayan's scope", None),
+    ("S3Data", "Corpus v1 pipeline: BAREC, strip tashkeel, route, Gemma 4 31B, code, readability and meaning gates, 14,975 rows", None),
+    ("S4Models", "Three model lanes: model 1 (SAMER), model 2 (more data and tags), model 3 (corpus v1); dropped branches", None),
+    ("S5Measure", "BayanBench: copy trap, three kinds of measure, the scorer checked against six raters (AUC 0.85), one reader with dyslexia", None),
+    ("S6Results", "Trade-off scatter; model 3 minus the shipped large model with intervals: simplifies more, keeps less meaning, copies more", None),
+    ("S7Phone", "Phone recording slot; what the app does; AraBART default 222 MB and AraT5v2 optional 471 MB on a Xiaomi Mi 11X", None),
+    ("S8Close", "Simplify where you read. Limits: no reader has used Bayan, scorer stricter than people, simplifying more costs meaning", None),
 ]
 
 # Same mechanism manim-slides uses: a root-level video node with delay 0 starts playback when the slide appears.

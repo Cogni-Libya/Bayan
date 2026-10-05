@@ -22,31 +22,30 @@ def main():
         rows.append(f"| {n} | {s['title']} | {SPEAKERS[s['speaker']]} | {len(s['steps'])} | {w} | {dur:.0f} s | {clock(t + dur)} |")
         blocks.append(f"### {n} · {s['title']}  ·  {SPEAKERS[s['speaker']]}  ·  {clock(t)} to {clock(t + dur)}\n")
         for k, (cue, text) in enumerate(s["steps"], 1):
-            when = "plays on arrival" if k == 1 else f"click {k - 1}"
+            when = "on arrival" if k == 1 else f"click {k - 1}"
             blocks.append(f"**Step {k}** ({when}) · *on screen: {cue}*\n\n> {text}\n")
         t += dur
     total_w = sum(sum(words(x) for _, x in s["steps"]) for s in SPEECH)
-    per = {sp: sum(sum(words(x) for _, x in s["steps"]) for s in SPEECH if s["speaker"] == sp) for sp in SPEAKERS}
 
     md = f"""# Bayan pitch: presenter script
 
-Five minutes, two speakers, idea → verdict → data → training. **{total_w} words, about {clock(t)} at {WPM} words a minute**
-({SPEAKERS[1]} {clock(per[1] / WPM * 60)}, {SPEAKERS[2]} {clock(per[2] / WPM * 60)}), which leaves about {clock(300 - t)} of the five minutes for
-clicks, the handoff and breathing. Generated from `build/script_data.py`; the same text is in the speaker notes of both decks.
+Four minutes, one speaker (Sanad), problem → data → models → measuring → results → phone → close. **{total_w} words, about {clock(t)} at {WPM} words a minute**
+(one speaker), which leaves about {clock(240 - t)} of the four minutes for clicks, the demo video and breathing.
+Generated from `build/script_data.py`; the same text is in the speaker notes of both decks.
 
 ## Run sheet
 
-| # | Slide | Who | Steps | Words | Time | Clock |
+| # | Beat | Who | Steps | Words | Time | Clock |
 |---|---|---|---|---|---|---|
 {chr(10).join(rows)}
 
-## How the clicks work
+## How the beats work
 
-- **Step 1 of every slide plays by itself** when the slide appears. Start talking as it starts.
-- Every further step needs **one click** (or right arrow). The animation takes 2 to 6 seconds: say the sentence while it plays, not after.
-- In the presenting deck each step is its own slide, so a click looks like the same animation continuing. In the native deck the
-  clicks stay on one slide. The numbering above is the same in both.
-- Numbers are spoken as words on purpose (“seventy-five point nine”). تبسيط is said *tabseet*.
+- **Every step waits for a click.** Each step plays once and holds on its last frame; start talking as it starts.
+  (`make_html.py --auto` and `manim-slides present` flow steps on automatically instead.)
+- In the presenting deck each step is its own slide, so a transition looks like the same animation continuing.
+  In the native deck the steps stay on one slide. The numbering above is the same in both.
+- Numbers are spoken as words on purpose ("seventy-four percent"). تبسيط is said *tabseet*.
 
 ## Script
 
