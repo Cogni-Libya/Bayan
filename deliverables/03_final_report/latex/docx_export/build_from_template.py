@@ -360,6 +360,14 @@ def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
         b.set(W + "color", SIC_RULE)
         borders.append(b)
     tblPr.append(borders)
+    # tight cell margins so numeric columns don't wrap
+    mar = el("tblCellMar")
+    for edge in ("top", "left", "bottom", "right"):
+        m = el(edge)
+        m.set(W + "w", "40")
+        m.set(W + "type", "dxa")
+        mar.append(m)
+    tblPr.append(mar)
     tbl.append(tblPr)
 
     ncols = max(len(r) for r in rows_of_cells) if rows_of_cells else 1
@@ -386,10 +394,16 @@ def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
             set_cell_shading(tc, SIC_HEAD)
             set_tc_borders(tc)
             content = cells[0]
-            if isinstance(content, etree.Element):
-                tc.append(content)
-            else:
+            # OOXML requires w:p inside w:tc — a bare w:r is dropped by LO/Word
+            if isinstance(content, list):
                 tc.append(paragraph(*content, after=20, line=240))
+            elif isinstance(content, etree.Element) and content.tag == W + "p":
+                tc.append(content)
+            elif isinstance(content, etree.Element):
+                tc.append(paragraph(content, after=20, line=240))
+            else:
+                tc.append(paragraph(run(str(content), size=18, bold=True),
+                                    after=20, line=240))
             tr.append(tc)
             tbl.append(tr)
             continue
@@ -400,10 +414,12 @@ def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
             if ri < header_rows:
                 set_cell_shading(tc, SIC_HEAD)
             content = cells[ci] if ci < len(cells) else ""
-            if isinstance(content, etree.Element):
-                tc.append(content)
-            elif isinstance(content, list):
+            if isinstance(content, list):
                 tc.append(paragraph(*content, after=20, line=240))
+            elif isinstance(content, etree.Element) and content.tag == W + "p":
+                tc.append(content)
+            elif isinstance(content, etree.Element):
+                tc.append(paragraph(content, after=20, line=240))
             else:
                 tc.append(paragraph(run(str(content), size=18, bold=ri < header_rows),
                                     after=20, line=240))
@@ -836,14 +852,15 @@ def parse_column_widths(spec: str) -> list[int] | None:
             widths.append(1800)
     if not widths:
         return None
+    # keep numeric columns wide enough for "100.0%" at ~8.5pt
+    min_w = 720
+    widths = [max(w, min_w) for w in widths]
     if flexible:
         total = 9010
-        fixed = sum(widths)
+        fixed = sum(w for w in widths)
         nflex = sum(1 for g in spec.split("|") if g.strip() in ("L", "X"))
         if nflex and fixed < total:
             extra = (total - fixed) // nflex
-            widths = [w if w != 1800 or False else w for w in widths]
-            # assign extra to flexible cols
             idx = 0
             neww = []
             for g in spec.split("|"):
@@ -851,9 +868,9 @@ def parse_column_widths(spec: str) -> list[int] | None:
                 if not g:
                     continue
                 if g in ("L", "X"):
-                    neww.append(1800 + extra)
+                    neww.append(min_w + extra)
                 else:
-                    neww.append(widths[idx] if idx < len(widths) else 1800)
+                    neww.append(widths[idx] if idx < len(widths) else min_w)
                 idx += 1
             widths = neww
     # normalize to 9010
@@ -909,7 +926,7 @@ def emit_table(body: str, caption: str | None):
             t = t.replace("{", "").replace("}", "")
             processed.append([run(re.sub(r"\s+", " ", t).strip(), size=18, bold=True)])
             continue
-        processed.append([clean_cell(c) for c in cells])
+        processed.append([clean_cell(c, size=17) for c in cells])
     out.append(make_table(processed, col_dxa, header_rows=1, band_rows=band_rows))
     return out
 
