@@ -38,6 +38,7 @@ import androidx.compose.material.icons.rounded.SpaceBar
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Texture
+import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -109,6 +110,7 @@ class SettingsViewModel(private val app: AppContainer) : ViewModel() {
     fun surface(v: ReaderSurface) = set { repo.setSurface(v) }
     fun speechRate(v: Float) = set { repo.setSpeechRate(v) }
     fun highlight(v: Boolean) = set { repo.setHighlight(v) }
+    fun moreFaithful(v: Boolean) = set { repo.setMoreFaithful(v) }
     fun theme(v: ThemeMode) = set { repo.setThemeMode(v) }
     fun style(v: AppStyle) = set { repo.setStyle(v) }
     fun resetReader() = set {
@@ -181,7 +183,17 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
                 Item(2, 3, Icons.Rounded.RecordVoiceOver, R.string.voices_title, stringResource(VoiceCatalog.get(settings.voice).title), onClick = onOpenVoices)
 
                 SectionHeader(stringResource(R.string.settings_section_model))
-                Item(0, 1, Icons.Rounded.Memory, R.string.settings_model, stringResource(ModelCatalog.get(settings.activeModel).title), onClick = onOpenModels)
+                // The "more faithful" switch only for models whose beam search was benchmarked (ModelInfo.beams).
+                val offersBeams = ModelCatalog.get(settings.activeModel).beams > 1
+                Item(0, if (offersBeams) 2 else 1, Icons.Rounded.Memory, R.string.settings_model, stringResource(ModelCatalog.get(settings.activeModel).title), onClick = onOpenModels)
+                if (offersBeams) SegmentedListItem(
+                    checked = settings.moreFaithful,
+                    onCheckedChange = vm::moreFaithful,
+                    shapes = shapes(1, 2),
+                    leadingContent = { Icon(Icons.Rounded.Verified, null) },
+                    supportingContent = { Text(stringResource(R.string.settings_more_faithful_body)) },
+                    trailingContent = { Switch(checked = settings.moreFaithful, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_more_faithful)) }
 
                 SectionHeader(stringResource(R.string.settings_section_appearance))
                 StylePicker(

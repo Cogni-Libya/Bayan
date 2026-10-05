@@ -35,7 +35,8 @@ class Simplifier(private val store: ModelStore) {
     private var engine: Seq2SeqEngine? = null
     private var engineDir: File? = null
 
-    fun simplify(text: String, modelId: String): Flow<SimplifyEvent> = channelFlow {
+    /** [beams] above 1 decodes with beam search (the "more faithful" setting); 1 is greedy and streamed. */
+    fun simplify(text: String, modelId: String, beams: Int = 1): Flow<SimplifyEvent> = channelFlow {
         val dir = store.installedDir(modelId) ?: throw ModelNotInstalledException(modelId)
         val started = System.currentTimeMillis()
         lock.withLock {
@@ -66,7 +67,7 @@ class Simplifier(private val store: ModelStore) {
                         val t = System.nanoTime()
                         var firstToken = 0L
                         var out = if (!step.toModel) step.text else {
-                            val raw = e.generate(step.input, isCancelled = { !isActive }) { partial ->
+                            val raw = e.generate(step.input, isCancelled = { !isActive }, beams = beams) { partial ->
                                 if (firstToken == 0L) firstToken = System.nanoTime() - t
                                 trySend(SimplifyEvent.Progress(result.toString() + ArabicText.matchDigitStyle(step.text, partial), committed, done, total))
                             }
@@ -74,8 +75,8 @@ class Simplifier(private val store: ModelStore) {
                         }
                         if (k == lastSentence && openEnded) out = ArabicText.keepOpenEnding(step.text, out)
                         val whole = (System.nanoTime() - t) / 1_000_000
-                        Log.i(TAG, if (e.streams) "sentence ${done + 1}/$total: first token ${firstToken / 1_000_000} ms, whole $whole ms"
-                                   else "sentence ${done + 1}/$total: ${e.spec.num_beams} beams, $whole ms")
+                        Log.i(TAG, if (beams <= 1) "sentence ${done + 1}/$total: first token ${firstToken / 1_000_000} ms, whole $whole ms"
+                                   else "sentence ${done + 1}/$total: $beams beams, $whole ms")
                         if (!isActive) return@withLock
                         result.append(out)
                         done++
