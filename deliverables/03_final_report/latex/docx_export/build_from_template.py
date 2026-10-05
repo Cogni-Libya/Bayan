@@ -935,7 +935,7 @@ def parse_column_widths(spec: str) -> list[int] | None:
     return widths
 
 
-def emit_table(body: str, caption: str | None):
+def emit_table(body: str, caption: str | None, cell_size: int = 17):
     global TAB_SEQ
     out = []
     if caption:
@@ -981,7 +981,7 @@ def emit_table(body: str, caption: str | None):
             continue
         if any(s > 1 for s in row_spans):
             spans[i] = row_spans
-        processed.append([clean_cell(c, size=17) for c in cells])
+        processed.append([clean_cell(c, size=cell_size) for c in cells])
     out.append(make_table(processed, col_dxa, header_rows=1, band_rows=band_rows,
                           spans=spans))
     return out
@@ -1404,6 +1404,102 @@ def collect_body_nodes(tex: str) -> list:
     return nodes
 
 
+TEAM_DIR = HERE / "team"
+PHOTO_EMU = int(22 / 25.4 * 914400)  # \includegraphics[width=22mm], circle r=11mm
+
+
+def circle_photo(src: Path) -> Path:
+    """Inscribed-circle crop with transparent corners, as the TikZ \\clip does."""
+    from PIL import Image, ImageDraw
+    TEAM_DIR.mkdir(exist_ok=True)
+    out = TEAM_DIR / (src.stem + "_circle.png")
+    im = Image.open(src).convert("RGBA")
+    side = min(im.size)
+    im = im.crop(((im.width - side) // 2, (im.height - side) // 2,
+                  (im.width + side) // 2, (im.height + side) // 2))
+    scale = 4  # supersampled mask for a smooth edge
+    mask = Image.new("L", (side * scale, side * scale), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, side * scale - 1, side * scale - 1), fill=255)
+    mask = mask.resize((side, side), Image.LANCZOS)
+    alpha = Image.composite(im.getchannel("A"), mask, mask)
+    im.putalpha(alpha)
+    im.save(out)
+    return out
+
+
+def team_nodes(team_tex: str) -> list:
+    """Section 5 body as in main.tex: photo row, "Team Cogni", review table.
+
+    Photo paragraphs carry a "photo-src" attribute that main() turns into an
+    inline image (same relationship path as the figures).
+    """
+    tex = strip_comments(expand(team_tex))
+    tex = tex.split("\\section{Instructor Review", 1)[0]
+    members = re.findall(r"\\member\{([^{}]*)\}\{([^{}]*)\}", tex)
+    nodes = []
+    if members:
+        tbl = el("tbl")
+        tblPr = el("tblPr")
+        tblW = el("tblW")
+        tblW.set(W + "w", "9010")
+        tblW.set(W + "type", "dxa")
+        tblPr.append(tblW)
+        jc = el("jc")
+        jc.set(W + "val", "center")
+        tblPr.append(jc)
+        borders = el("tblBorders")
+        for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+            b = el(edge)
+            b.set(W + "val", "nil")
+            borders.append(b)
+        tblPr.append(borders)
+        layout = el("tblLayout")
+        layout.set(W + "type", "fixed")
+        tblPr.append(layout)
+        tbl.append(tblPr)
+        col = 9010 // len(members)
+        grid = el("tblGrid")
+        for _ in members:
+            gc = el("gridCol")
+            gc.set(W + "w", str(col))
+            grid.append(gc)
+        tbl.append(grid)
+        tr = el("tr")
+        for fname, name in members:
+            tc = el("tc")
+            set_tc_width(tc, col)
+            photo = paragraph(align="center", after=60, line=0, line_rule="auto")
+            # resolved to an inline image in main(), after the figures
+            photo.set("photo-src", str(circle_photo(LATEX / "assets" / "team" / fname)))
+            tc.append(photo)
+            lines = [s.strip() for s in name.split("\\\\")]
+            name_runs = []
+            for k, line in enumerate(lines):
+                if k:
+                    br_run = el("r")
+                    br_run.append(el("br"))
+                    name_runs.append(br_run)
+                name_runs.append(run(line, size=19, bold=True))
+            tc.append(paragraph(*name_runs, align="center", after=0, line=240,
+                                line_rule="auto"))
+            tr.append(tc)
+        tbl.append(tr)
+        nodes.append(paragraph(run(""), after=0, line=120))
+        nodes.append(tbl)
+        team_m = re.search(r"\\centering\\small\s*([^\\{}]+?)\\par", tex)
+        nodes.append(paragraph(run(team_m.group(1).strip() if team_m else "Team Cogni",
+                                   size=19),
+                               align="center", before=40, after=160, line=240,
+                               line_rule="auto"))
+    tab = re.search(r"\\begin\{tabularx\}", tex)
+    if tab:
+        parsed = match_tabular_env(tex[tab.start():])
+        if parsed:
+            spec, inner, _ = parsed
+            nodes.extend(emit_table("{" + spec + "}" + inner, None, cell_size=20))
+    return nodes
+
+
 def fill_cover_sdt(sdt, text: str, *, font=FONT_B, size=24, color=BODY_COLOR, bold=True):
     content = sdt.find(W + "sdtContent")
     if content is None:
@@ -1619,12 +1715,31 @@ def main():
             new_kids.append(n)
 
     # team review banner + real template tables
+    photo_paths = []
     if team_idx is not None:
-        for n in kids_now[team_idx:]:
-            text = "".join(x.text or "" for x in n.iter(W + "t"))
-            if "Instructor Review" in text:
-                new_kids.append(page_break())
+        # keep the template's section 5 banner, replace its placeholder
+        # ("<ATTACH A TEAM PICTURE HERE>" + empty NAME/REVIEW table) with the
+        # photos, names and reviews from main.tex
+        new_kids.append(kids_now[team_idx])
+        for n in team_nodes(team_tex):
+            for p in n.iter(W + "p"):
+                src = p.get("photo-src")
+                if src:
+                    del p.attrib["photo-src"]
+                    shape_id += 1
+                    p.set("img-rid", f"rIdImg{shape_id}")
+                    add_image_para(p, Path(src), PHOTO_EMU, PHOTO_EMU, shape_id)
+                    del p.attrib["img-rid"]
+                    photo_paths.append(Path(src))
             new_kids.append(n)
+        in_instructor = False
+        for n in kids_now[team_idx + 1:]:
+            text = "".join(x.text or "" for x in n.iter(W + "t"))
+            if "Instructor Review" in text and not in_instructor:
+                in_instructor = True
+                new_kids.append(page_break())
+            if in_instructor or n is sectPr:
+                new_kids.append(n)
     else:
         new_kids.append(sectPr)
 
@@ -1709,6 +1824,7 @@ def main():
     for n in nodes:
         if isinstance(n, tuple) and n[0] == "IMAGE":
             img_paths.append(n[1])
+    img_paths += photo_paths  # team photos come after every figure in the body
 
     zin.close()
     _write_with_images(OUT, TEMPLATE, root, img_paths, new_footer)
