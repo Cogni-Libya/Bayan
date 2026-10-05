@@ -108,7 +108,7 @@ STRUCTURAL = {
     "scriptsize", "footnotesize", "tiny", "centering", "center", "fcolorbox",
     "parbox", "dimexpr", "linewidth", "enspace", "begin", "end", "mbox",
     "mathrm", "hat", "alpha", "geq", "leq", "times", "approx", "cdot",
-    "newcommand", "vOne", "vTwo", "vTwoFast", "vThree", "done", "wip", "todo",
+    "newcommand", "done", "wip", "todo",
     "cat", "score", "siccover", "siccontents", "addcontentsline", "clearpage",
     "null", "thispagestyle", "setlength", "setcounter", "renewcommand",
     "pagestyle", "fancyhf", "fancyfoot", "textwidth", "thebibliography",
@@ -126,8 +126,9 @@ def expand(text: str) -> str:
     for name, val in MACROS.items():
         if name in STRUCTURAL:
             continue
+        # consume optional empty {} after parameterless macros (\vOne{} → value)
         text = re.sub(
-            r"\\" + re.escape(name) + r"(?![A-Za-z@])",
+            r"\\" + re.escape(name) + r"(?![A-Za-z@])\s*(\{\})?",
             lambda m, _v=val: _v,
             text,
         )
@@ -135,7 +136,72 @@ def expand(text: str) -> str:
 
 
 def strip_comments(tex: str) -> str:
+    # keep escaped \% ; only strip real comments
     return "\n".join(re.sub(r"(?<!\\)%.*", "", line) for line in tex.splitlines())
+
+
+CITE_ORDER: dict[str, int] = {}
+AUTOREF: dict[str, str] = {}
+
+
+def build_cite_order(tex: str) -> None:
+    CITE_ORDER.clear()
+    m = re.search(r"\\begin\{thebibliography\}\{[^}]*\}(.*?)\\end\{thebibliography\}", tex, re.S)
+    if not m:
+        return
+    n = 0
+    for bm in re.finditer(r"\\bibitem\{([^}]*)\}", m.group(1)):
+        n += 1
+        for key in bm.group(1).split(","):
+            CITE_ORDER[key.strip()] = n
+
+
+def build_autoref_map(tex: str) -> None:
+    """Map \\label{...} → human autoref text used in the PDF."""
+    AUTOREF.clear()
+    sec = sub = tab = fig = 0
+    # walk the document in order for numbering
+    pos = 0
+    pat = re.compile(
+        r"\\section\*?\{[^{}]*\}"
+        r"|\\subsection\*?\{[^{}]*\}"
+        r"|\\caption\{"
+        r"|\\label\{([^}]*)\}"
+        r"|\\begin\{figure\}"
+        r"|\\begin\{table\}"
+    )
+    last_caption_kind = None
+    for m in pat.finditer(tex):
+        tok = m.group(0)
+        if tok.startswith("\\section") and not tok.startswith("\\section*"):
+            sec += 1
+            sub = 0
+            last_caption_kind = None
+        elif tok.startswith("\\subsection"):
+            sub += 1
+            last_caption_kind = None
+        elif tok.startswith("\\begin{figure}"):
+            last_caption_kind = "fig"
+        elif tok.startswith("\\begin{table}"):
+            last_caption_kind = "tab"
+        elif tok.startswith("\\caption{"):
+            if last_caption_kind == "fig":
+                fig += 1
+            elif last_caption_kind == "tab":
+                tab += 1
+        elif tok.startswith("\\label{"):
+            label = m.group(1)
+            if label.startswith("sec:"):
+                if sub and not label.endswith("glance"):
+                    AUTOREF[label] = f"subsection {sec}.{sub}" if sec else f"section {sec}"
+                else:
+                    AUTOREF[label] = f"section {sec}"
+            elif label.startswith("tab:"):
+                AUTOREF[label] = f"Table {tab}"
+            elif label.startswith("fig:"):
+                AUTOREF[label] = f"Figure {fig}"
+            else:
+                AUTOREF[label] = label
 
 
 # ------------------------------------------------------------------ XML utils
@@ -178,6 +244,11 @@ def run(text: str, *, font=FONT, size=21, bold=False, italic=False,
         rPr.append(el("rtl"))
         rPr.append(el("rtlCs"))
     r.append(rPr)
+    # last-ditch cleanup of TeX crumbs
+    text = text.replace("\\rightarrow", "→").replace("\\leftarrow", "←")
+    text = text.replace("\\dagger", "†").replace("\\to", "→")
+    text = re.sub(r"\\[a-zA-Z]+\{([^{}]*)\}", r"\1", text)
+    text = re.sub(r"\\[a-zA-Z]+", "", text)
     t = el("t")
     t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
     t.text = text
@@ -349,7 +420,7 @@ TOKEN_RE = re.compile(
 )
 
 PLAIN_MAP = [
-    (r"\%", "%"), (r"\&", "&"), (r"\#", "#"), (r"\_", "_"),
+    ("\\%", "%"), ("\\&", "&"), ("\\#", "#"), ("\\_", "_"),
     ("\\enspace", " "), ("\\,", " "), ("\\;", " "),
     ("---", "—"), ("--", "–"),
     ("``", "“"), ("''", "”"),
@@ -363,51 +434,69 @@ def flatten(s: str) -> str:
     return s
 
 
+def _read_cmd(text: str, i: int):
+    """If text[i] is \\cmd{arg}, return (cmd, arg, end). Else None."""
+    if i >= len(text) or text[i] != "\\":
+        return None
+    j = i + 1
+    if j < len(text) and text[j].isalpha():
+        k = j
+        while k < len(text) and text[k].isalpha():
+            k += 1
+        cmd = text[j:k]
+    elif j < len(text) and text[j] in "$%&#_~":
+        return (text[j], text[j], j + 1)
+    else:
+        return None
+    p = k
+    while p < len(text) and text[p] in " \n\t":
+        p += 1
+    if p < len(text) and text[p] == "{":
+        arg, end = grab_braced(text, p)
+        return cmd, arg, end
+    return cmd, None, k
+
+
 def rich_runs(text: str, size=21, bold=False, italic=False, color=BODY_COLOR) -> list:
-    # parent already expanded macros — do not call expand() here (it is O(n*macros))
-    text = re.sub(r"%.*", "", text)
-    text = re.sub(r"\s+", " ", text)
+    """Scanner-based rich text (handles nested braces)."""
+    text = re.sub(r"(?<!\\)%.*", "", text)
+    text = re.sub(r"\\color\{[^{}]*\}", "", text)
+    text = re.sub(r"\\textcolor\{[^{}]*\}\{([^{}]*)\}", r"\1", text)
+    text = text.replace("\\%", "%").replace("\\&", "&").replace("\\#", "#").replace("\\_", "_")
+    text = re.sub(r"\\[=`'\"^~.]\s*\{?([A-Za-z])\}?", r"\1", text)
+    text = re.sub(r"\\[dHctvb]\{([A-Za-z])\}", r"\1", text)
     out = []
-    pos = 0
-    for m in TOKEN_RE.finditer(text):
-        if m.start() > pos:
-            t = flatten(text[pos:m.start()])
-            if t:
-                out.append(run(t, font=MONO if False else FONT, size=size,
-                               bold=bold, italic=italic, color=color))
-        kind = m.lastgroup
-        tok = m.group(0)
-        if kind == "ar":
-            inner = re.sub(r"^\\ar\{|\}$", "", tok)
-            out.append(run(inner, font=ARABIC, size=size, bold=bold,
-                           italic=italic, color=color, rtl=True))
-        elif kind == "lead":
-            inner = re.sub(r"^\\lead\{|\}$", "", tok)
-            out.append(run(inner + " ", size=size, bold=True, color=color))
-        elif kind == "bf":
-            inner = re.sub(r"^\\textbf\{|\}$", "", tok)
-            out.extend(rich_runs(inner, size, True, italic, color))
-        elif kind == "em":
-            inner = re.sub(r"^\\emph\{|\}$", "", tok)
-            out.extend(rich_runs(inner, size, bold, True, color))
-        elif kind == "tt":
-            inner = re.sub(r"^\\texttt\{|\}$", "", tok)
-            out.extend(rich_runs(inner, size - 1, bold, italic, color))
-            # prefer mono
-            for r in out[-1:]:
-                fonts = r.find(W + "rPr").find(W + "rFonts")
-                fonts.set(W + "ascii", MONO)
-                fonts.set(W + "hAnsi", MONO)
-        elif kind == "cite":
-            keys = re.sub(r"^\\cite\{|\}$", "", tok)
-            out.append(run(f"[{keys}]", size=size, bold=bold, color=color))
-        elif kind == "ref":
-            inner = re.sub(r"^\\autoref\{|\}$", "", tok)
-            out.append(run(f"[{inner}]", size=size, bold=bold, color=color))
-        elif kind == "fn":
-            out.append(run("†", size=size - 2, bold=bold, color=color))
-        elif kind == "math":
-            inner = tok.strip("$")
+    i = 0
+    n = len(text)
+    plain = []
+
+    def flush():
+        if plain:
+            s = flatten("".join(plain))
+            plain.clear()
+            if s:
+                out.append(run(s, size=size, bold=bold, italic=italic, color=color))
+
+    while i < n:
+        ch = text[i]
+        if ch == "^" and i + 1 < n and text[i+1] == "{":
+            inner, end = grab_braced(text, i + 1)
+            flush()
+            out.append(run(inner, size=size - 2, bold=bold, italic=True, color=color))
+            i = end
+            continue
+        if ch == "_" and i + 1 < n and text[i+1] == "{":
+            inner, end = grab_braced(text, i + 1)
+            flush()
+            out.append(run(inner, size=size - 2, bold=bold, italic=True, color=color))
+            i = end
+            continue
+        if ch == "$":
+            j = text.find("$", i + 1)
+            if j < 0:
+                plain.append(ch); i += 1; continue
+            flush()
+            inner = text[i+1:j]
             for a, b in [
                 ("\\times", "×"), ("\\geq", "≥"), ("\\ge", "≥"),
                 ("\\approx", "≈"), ("\\alpha", "α"), ("\\hat y", "ŷ"),
@@ -416,19 +505,83 @@ def rich_runs(text: str, size=21, bold=False, italic=False, color=BODY_COLOR) ->
             ]:
                 inner = inner.replace(a, b)
             out.append(run(inner, size=size, bold=bold, italic=True, color=color))
-        else:
-            t = flatten(tok)
-            if t:
-                out.append(run(t, size=size, bold=bold, italic=italic, color=color))
-        pos = m.end()
-    if pos < len(text):
-        t = flatten(text[pos:])
-        if t:
-            out.append(run(t, size=size, bold=bold, italic=italic, color=color))
+            i = j + 1
+            continue
+        if ch == "\\":
+            parsed = _read_cmd(text, i)
+            if not parsed:
+                plain.append(ch); i += 1; continue
+            cmd, arg, end = parsed
+            if cmd == "ar" and arg is not None:
+                flush()
+                out.append(run(arg, font=ARABIC, size=size, bold=bold,
+                               italic=italic, color=color, rtl=True))
+            elif cmd == "lead" and arg is not None:
+                flush()
+                out.append(run(arg + " ", size=size, bold=True, color=color))
+            elif cmd == "textbf" and arg is not None:
+                flush()
+                out.extend(rich_runs(arg, size, True, italic, color))
+            elif cmd in ("emph", "textit") and arg is not None:
+                flush()
+                out.extend(rich_runs(arg, size, bold, True, color))
+            elif cmd == "texttt" and arg is not None:
+                flush()
+                sub = rich_runs(arg, size - 1, bold, italic, color)
+                for r in sub:
+                    fonts = r.find(W + "rPr").find(W + "rFonts")
+                    fonts.set(W + "ascii", MONO)
+                    fonts.set(W + "hAnsi", MONO)
+                out.extend(sub)
+            elif cmd == "cite" and arg is not None:
+                flush()
+                nums = [str(CITE_ORDER.get(k.strip(), k.strip())) for k in arg.split(",")]
+                out.append(run("[" + ", ".join(nums) + "]", size=size, bold=bold, color=color))
+            elif cmd == "autoref" and arg is not None:
+                flush()
+                out.append(run(AUTOREF.get(arg, arg), size=size, bold=bold, color=color))
+            elif cmd == "footnote":
+                flush()
+                out.append(run("†", size=size - 2, bold=bold, color=color))
+            elif cmd in ("enspace", ",", ";", "!", "quad", "qquad"):
+                plain.append(" ")
+            elif cmd in ("%", "&", "#", "_", "~"):
+                plain.append(cmd)
+            elif cmd in ("textminus",):
+                plain.append("−")
+            elif cmd == "dagger":
+                plain.append("†")
+            elif cmd == "rightarrow":
+                plain.append("→")
+            elif cmd == "leftarrow":
+                plain.append("←")
+            elif cmd == "to":
+                plain.append("→")
+            elif cmd in ("hat", "bar", "tilde", "vec") and arg:
+                plain.append(arg)
+            elif cmd in ("rightarrow", "to", "dagger", "leftarrow"):
+                plain.append({
+                    "rightarrow": "→", "to": "→",
+                    "dagger": "†", "leftarrow": "←",
+                }[cmd])
+            elif cmd == "leftarrow":
+                plain.append("←")
+            elif cmd == "mbox" and arg is not None:
+                flush()
+                out.extend(rich_runs(arg, size, bold, italic, color))
+            elif cmd in ("vOne", "vTwo", "vTwoFast", "vThree"):
+                plain.append(MACROS.get(cmd, cmd))
+            else:
+                # unknown command: keep arg text if any, drop the command
+                if arg is not None:
+                    plain.append(arg)
+            i = end
+            continue
+        plain.append(ch)
+        i += 1
+    flush()
     return out
 
-
-# ------------------------------------------------------------------ LaTeX parse
 def expand_structural_macros(tex: str) -> str:
     for name in (
         "resultstable", "barectable", "benchheadtable", "benchothertable",
@@ -469,15 +622,49 @@ def parse_cells(line: str) -> list[str]:
 def clean_cell(text: str, size=18) -> list:
     is_head = "\\head{" in text or "\\cellcolor{sichead}" in text
     t = text
-    t = re.sub(r"\\head\{([^{}]*)\}", r"\1", t)
-    t = re.sub(r"\\multicolumn\{\d+\}\{[^{}]*\}", "", t)
+    # brace-aware \head{...}
+    while "\\head{" in t:
+        i = t.find("\\head{")
+        inner, end = grab_braced(t, i + 5)
+        t = t[:i] + "{" + inner + "}" + t[end:]
+    # strip \multicolumn{n}{spec}{...} → third arg
+    while "\\multicolumn" in t:
+        i = t.find("\\multicolumn")
+        j = i + len("\\multicolumn")
+        for _ in range(2):
+            while j < len(t) and t[j] in " \n\t":
+                j += 1
+            if j < len(t) and t[j] == "{":
+                j = match_braced(t, j)
+        while j < len(t) and t[j] in " \n\t":
+            j += 1
+        if j < len(t) and t[j] == "{":
+            inner, end = grab_braced(t, j)
+            t = t[:i] + "{" + inner + "}" + t[end:]
+        else:
+            t = t[:i] + t[j:]
     t = t.replace("\\cellcolor{sichead}", "")
     t = t.replace("\\centering", "").replace("\\arraybackslash", "")
-    t = re.sub(r"\\makecell\{((?:[^{}]|\{[^{}]*\})*)\}",
-               lambda m: re.sub(r"\\tiny|\\small|\\[-\d.]+pt\]", "",
-                                m.group(1)).replace(r"\\", " / "), t)
-    t = re.sub(r"\\[-\d.]+pt\]", "", t)
     t = t.replace("\\bfseries", "")
+    # \makecell{...} brace-aware
+    while "\\makecell{" in t:
+        i = t.find("\\makecell{")
+        inner, end = grab_braced(t, i + 9)
+        inner = re.sub(r"\\tiny|\\small|\\scriptsize|\\footnotesize", "", inner)
+        inner = re.sub(r"\[-\d+(?:\.\d+)?pt\]", "", inner)
+        inner = inner.replace(r"\\", " / ")
+        # unwrap leftover {…} groups (CI brackets)
+        while True:
+            m = re.search(r"\{([^{}]*)\}", inner)
+            if not m:
+                break
+            inner = inner[:m.start()] + m.group(1) + inner[m.end():]
+        inner = re.sub(r"\s+", " ", inner).strip(" {}")
+        t = t[:i] + inner + t[end:]
+    t = re.sub(r"\[-\d+(?:\.\d+)?pt\]", "", t)
+    # leftover single-level braces from CI cells
+    t = re.sub(r"\{([^{}]*)\}", r"\1", t)
+    t = re.sub(r"\[-\d.]+pt\]", "", t)
     runs_ = rich_runs(t, size=size, bold=is_head)
     return runs_
 
@@ -514,14 +701,35 @@ def parse_tabular(body: str):
         if end > 0:
             body = body[end:]
     body = re.sub(r"\\hline|\\toprule|\\midrule|\\bottomrule", "\n", body)
-    body = body.replace("\\\\", "\n")
+    # split on \\ only outside braces (keep \makecell{a\\b} intact)
+    out = []
+    depth = 0
+    i = 0
+    while i < len(body):
+        if body[i] == "{":
+            depth += 1
+            out.append(body[i]); i += 1
+        elif body[i] == "}":
+            depth -= 1
+            out.append(body[i]); i += 1
+        elif depth == 0 and body.startswith("\\\\", i):
+            # optional [dim]
+            j = i + 2
+            if j < len(body) and body[j] == "[":
+                k = body.find("]", j)
+                j = k + 1 if k >= 0 else j
+            out.append("\n")
+            i = j
+        else:
+            out.append(body[i]); i += 1
+    body = "".join(out)
     rows = []
     for raw in body.split("\n"):
         line = raw.strip()
         if not line:
             continue
         cells = parse_cells(line)
-        cells = [c.replace("\\\\", "").strip() for c in cells]
+        cells = [c.replace("\\\\", " ").strip() for c in cells]
         if any(cells):
             rows.append(cells)
     return rows
@@ -811,6 +1019,7 @@ def collect_body_nodes(tex: str) -> list:
     tex = strip_comments(tex)
     tex = expand_structural_macros(tex)
     tex = expand(tex)
+    build_autoref_map(tex)
 
     # cleanup
     tex = re.sub(r"\\label\{[^}]*\}", "", tex)
@@ -856,9 +1065,9 @@ def collect_body_nodes(tex: str) -> list:
         if m:
             title = m.group(1)
             if not m.group(0).startswith("\\section*"):
-                SEC_NO = globals()["SEC_NO"] + 1
+                globals()["SEC_NO"] = globals().get("SEC_NO", 0) + 1
                 globals()["SUB_NO"] = 0
-                add_banner(title, str(SEC_NO))
+                add_banner(title, str(globals()["SEC_NO"]))
             else:
                 add_banner(title, None)
             tex = tex[m.end():]
@@ -867,9 +1076,9 @@ def collect_body_nodes(tex: str) -> list:
         m = re.match(r"\\subsection\*?\{([^{}]*)\}", tex)
         if m:
             title = m.group(1)
-            globals()["SUB_NO"] = SUB_NO + 1
+            globals()["SUB_NO"] = globals().get("SUB_NO", 0) + 1
             p = paragraph(
-                run(f"{SEC_NO}.{SUB_NO}. ", size=22, bold=True),
+                run(f"{globals().get('SEC_NO', 0)}.{globals()['SUB_NO']}. ", size=22, bold=True),
                 *rich_runs(title, size=22, bold=True),
                 before=220, after=60, line=280,
             )
@@ -994,22 +1203,47 @@ def collect_body_nodes(tex: str) -> list:
             tex = tex[m.end():]
             continue
 
-        # abstract fcolorbox
-        m = re.match(
-            r"\\fcolorbox\{[^{}]*\}\{[^{}]*\}\{\\parbox[^{]*\{[^{}]*\}\{%?(.*?)\}\}\}?",
-            tex, re.S,
-        )
-        if m and "Abstract" in m.group(1)[:100]:
-            runs_ = rich_runs(m.group(1), size=21)
-            # rebuild so Abstract. is blue bold - rich_runs already handles \textbf
-            tbl = make_table([[runs_]], [9010], header_rows=0)
-            for tc in tbl.iter(W + "tc"):
-                set_cell_shading(tc, "FFFFFF")
-                set_tc_borders(tc, SIC_RULE, "6")
-            nodes.append(tbl)
-            nodes.append(paragraph(run(""), after=40, line=120))
-            tex = tex[m.end():]
-            continue
+        # abstract fcolorbox — brace-aware
+        if tex.startswith("\\fcolorbox"):
+            i = 0
+            # \fcolorbox{..}{..}{ content }
+            m2 = re.match(r"\\fcolorbox", tex)
+            i = m2.end()
+            for _ in range(2):
+                while i < len(tex) and tex[i] in " \n\t":
+                    i += 1
+                if i < len(tex) and tex[i] == "{":
+                    i = match_braced(tex, i)
+            while i < len(tex) and tex[i] in " \n\t":
+                i += 1
+            if i < len(tex) and tex[i] == "{":
+                inner, end = grab_braced(tex, i)
+            else:
+                inner, end = "", i
+            if "Abstract" in inner[:120]:
+                # unwrap \parbox{...}{ body } if present
+                body = inner
+                pm = re.search(r"\\parbox", inner)
+                if pm:
+                    j = pm.end()
+                    while j < len(inner) and inner[j] in " \n\t":
+                        j += 1
+                    if j < len(inner) and inner[j] == "{":
+                        j = match_braced(inner, j)  # width
+                    while j < len(inner) and inner[j] in " \n\t":
+                        j += 1
+                    if j < len(inner) and inner[j] == "{":
+                        body, _ = grab_braced(inner, j)
+                body = body.replace("\\vspace{2pt}", "")
+                runs_ = rich_runs(body, size=21)
+                tbl = make_table([[runs_]], [9010], header_rows=0)
+                for tc in tbl.iter(W + "tc"):
+                    set_cell_shading(tc, "FFFFFF")
+                    set_tc_borders(tc, SIC_RULE, "6")
+                nodes.append(tbl)
+                nodes.append(paragraph(run(""), after=40, line=120))
+                tex = tex[end:]
+                continue
 
         # paragraph: stop at next block command
         stop = re.search(
@@ -1064,14 +1298,23 @@ def main():
     # parse body from main.tex
     main_tex = (LATEX / "main.tex").read_text(encoding="utf-8")
     main_tex = strip_comments(main_tex)
-    # body only
     if "\\begin{document}" in main_tex:
         main_tex = main_tex.split("\\begin{document}", 1)[1]
-    # drop cover
-    main_tex = re.sub(
-        r"\\siccover\s*\{.*?\}\s*\{.*?\}\s*\{.*?\}\s*\{.*?\}",
-        "", main_tex, flags=re.S,
-    )
+    build_cite_order(main_tex)
+    build_autoref_map(main_tex)
+    print("cites", len(CITE_ORDER), "autorefs", len(AUTOREF))
+    # drop cover: \siccover{a}{b}{c}{d} — brace-aware, 4 groups
+    if "\\siccover" in main_tex:
+        i = main_tex.find("\\siccover")
+        j = i + len("\\siccover")
+        for _ in range(4):
+            while j < len(main_tex) and main_tex[j] in " \n\t":
+                j += 1
+            if j < len(main_tex) and main_tex[j] == "{":
+                j = match_braced(main_tex, j)
+            else:
+                break
+        main_tex = main_tex[:i] + main_tex[j:]
     main_tex = main_tex.replace("\\siccontents", "")
     # keep team/instructor sections out of generic parse — handled at end
     team_split = re.split(r"\\section\{Team Member Review", main_tex)
