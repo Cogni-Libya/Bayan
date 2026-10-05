@@ -25,7 +25,7 @@ COMPARE_REPORT = BAYAN / "data/processed/meaning_reward/compare/report"
 
 
 # Figures from the newest report are verified against its text in git, not against a worktree.
-REPORT_REF = "origin/docs/final-report-draft"          # Marwan's combined report, 6c5c181 when read
+REPORT_REF = "ba4e299"                                  # Marwan's combined report (PR #70; was origin/docs/final-report-draft)
 REPORT_DIR = "deliverables/03_final_report/latex"
 
 
@@ -40,7 +40,7 @@ def GR(path, needle):
     return f"git:{REPORT_REF}:{path}::{needle}"
 
 
-BENCH_PDF = "origin/khengari77/benchmark-report:docs/benchmark_report/bayan_benchmark_report.pdf"
+BENCH_PDF = "khengari77/benchmark-report:docs/benchmark_report/bayan_benchmark_report.pdf"
 
 
 def P(row):

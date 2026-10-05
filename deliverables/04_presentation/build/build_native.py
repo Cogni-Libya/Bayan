@@ -116,9 +116,9 @@ def chip_c(c, cx, y, text, **kw):
     return chip(c, cx - w / 2, y, text, **kw)
 
 
-def badge(c, x, y, text, size=10.5):
+def badge(c, x, y, text, size=10.5, align="l"):
     c.rect(x, y + 0.03, 0.05, 0.16, SUN)
-    c.text(x + 0.12, y, 6.5, 0.22, text, size, INK3)
+    c.text(x + 0.12, y, 6.5, 0.22, text, size, INK3, align=align)
     return y + 0.22
 
 
@@ -160,7 +160,7 @@ def s2a(prs, layout):
     c.text(ML, 1.85, 3.5, 1.15, "11%", 84, SUN, False, "c")
     c.text(ML, 3.05, 3.5, 0.75, "of Arab primary-school children\nhave developmental dyslexia", 15, INK2,
            align="c", line_spacing=1.05)
-    badge(c, ML + 0.35, 3.95, f"Al-Dakhil 2024 · {F('dyslexia_studies')} studies, N = {F('dyslexia_n'):,}")
+    badge(c, ML + 0.55, 3.95, f"Al-Dakhil 2024 · {F('dyslexia_studies')} studies, N = {F('dyslexia_n'):,}", align="c")
     # right: one form, three readings
     px, py, pw, ph = 4.45, 1.72, 5.75, 3.55
     c.card(px, py, pw, ph)
@@ -430,28 +430,24 @@ def s5b(prs, layout):
     c.line(gem_x + gem_w + 0.08, cy_flow, out_cx - out_probe / 2 - 0.08, cy_flow, SUN, 2, arrow=True)
 
     def qcard(x, title, rows, hi=None, sub=None):
-        w, h = 4.85, 3.35
-        y = 3.2
+        w, h = 4.85, 3.55
+        y = 3.1
         c.card(x, y, w, h)
         c.text(x, y + 0.18, w, 0.38, title, 16, SUN_DK, True, "c")
+        # uniform pills: one width, one height, one font for the whole card
+        chip_w, chip_h, pad = w - 0.55, 0.42, 0.14
+        size = 12.5
+        while size > 10.0 and max(text_w(r.replace("\n", " "), size) for r in rows) + 0.35 > chip_w:
+            size -= 0.5
         cy = y + 0.72
-        max_tw = w - 0.5
         for i, r in enumerate(rows):
-            # Manim's fit() scales a chip to one line — shrink the font until it fits
             flat = r.replace("\n", " ")
-            size = 13.0
-            while size > 10.0 and text_w(flat, size) + 0.55 > max_tw:
-                size -= 0.5
-            tw = min(text_w(flat, size) + 0.55, max_tw)
-            th = size * 1.9 / 72.0 + 0.22
-            cx = x + (w - tw) / 2
-            c.card(cx, cy, tw, th, SUN if i == hi else PAPER, SUN if i == hi else PAPER,
+            cx = x + (w - chip_w) / 2
+            c.card(cx, cy, chip_w, chip_h, SUN if i == hi else PAPER, SUN if i == hi else PAPER,
                    radius=0.09, text=flat, size=size, color=NIGHT if i == hi else INK2, bold=(i == hi))
-            cy += th + 0.16
+            cy += chip_h + pad
         if sub:
-            c.text(x + 0.2, y + h - 0.48, w - 0.4, 0.38, sub, 10.5, INK3, align="c")
-        if sub:
-            c.text(x + 0.2, y + h - 0.48, w - 0.4, 0.38, sub, 10.5, INK3, align="c")
+            c.text(x + 0.2, y + h - 0.42, w - 0.4, 0.32, sub, 10.5, INK3, align="c")
 
     qcard(ML, "Meaning · 4 questions",
           ["same meaning?  kept = yes ≥ 0.5\nand every number kept", "adds a fact?", "drops a fact?", "contradicts?"],
