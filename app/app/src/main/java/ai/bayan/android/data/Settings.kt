@@ -48,8 +48,9 @@ data class Settings(
     /** Start reading aloud as soon as the first simplified sentence is ready. */
     val autoRead: Boolean = false,
     val highlightWhileReading: Boolean = true,
-    /** Beam search for models that offer it (ModelInfo.beams): keeps the meaning more often, slower, not streamed. */
-    val moreFaithful: Boolean = false,
+    /** Beam search for models that offer it (ModelInfo.beams): keeps the meaning more often, slower, not streamed. On by
+     *  default, so the large model (model 3) runs as it was benchmarked. */
+    val moreFaithful: Boolean = true,
     val wifiOnly: Boolean = true,
 )
 

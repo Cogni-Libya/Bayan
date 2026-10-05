@@ -54,10 +54,10 @@
 
     <string name="model_arabart_title">Fast model</string>
     <string name="model_arabart_summary">Best for most phones: small, and simplifies quickly, sentence by sentence.</string>
-    <string name="model_arat5_title">Large model</string>
-    <string name="model_arat5_summary">Scored higher in our tests, but it is slower and needs more space.</string>
-    <string name="model_model3_summary">Our strongest model: simplifies more than the large model and, with \"More faithful\" on, keeps the meaning as well. Same size as the large model.</string>
-    <string name="model_model3_title">Large model, simplifies more</string>
+    <string name="model_arat5_title">Earlier large model</string>
+    <string name="model_arat5_summary">Shows the text word by word, but simplifies less than the large model. Same size.</string>
+    <string name="model_model3_summary">Our best model: keeps the meaning and simplifies the most. Slower and needs more space; each sentence appears when it is finished.</string>
+    <string name="model_model3_title">Large model</string>
     <string name="models_title">Simplification models</string>
     <string name="models_privacy">Models run entirely on your phone. Your text never leaves your device.</string>
     <string name="models_download">Download (%1$s)</string>
