@@ -1,4 +1,4 @@
-# Pitch deck build (4 minutes, two speakers)
+# Pitch deck build (4 minutes, one speaker)
 
 Two decks from the same story and the same numbers. Every figure comes from `facts.py` and is
 verified by `check_numbers.py` before rendering.
@@ -6,38 +6,60 @@ verified by `check_numbers.py` before rendering.
 | | Presenting (Manim + HTML) | Submission (`../Bayan_Submission.pptx`) |
 |---|---|---|
 | Made of | Manim scenes played live or exported to a self-contained HTML file | Native PowerPoint shapes and text, PowerPoint's own animations |
-| Beats | 8 scenes (cover, problem, data, models, measuring, results, phone, close) | **still the 5 Oct 7-slide content; needs a rebuild to the 8 scenes** |
+| Beats | 8 scenes (cover, problem, data, models, measuring, results, phone, close) | 7 slides (cover, problem, data, training, bench, phone, close) |
 | Editable | No (re-render) | Yes |
 | Fonts | baked into the video | must be installed: Readex Pro, Noto Naskh Arabic, Amiri |
 | Source | `scenes.py`, `common.py` | `nativekit.py`, `build_native.py` |
 
-## Build
+## Regenerate from scratch
+
+Clone the repo, then from `deliverables/04_presentation/build/` (this folder is its own `uv`
+project — `pyproject.toml` + `uv.lock` live here and nowhere else):
 
 ```bash
-# numbers check — must pass before anything is rendered
-.venv-slides/bin/python check_numbers.py
+# 0. install the deck toolchain (Python ≥ 3.12)
+uv sync
 
-# presenting deck: render scenes (~1 min each, 1444x1000 @ 30 fps)
-./render_videos.sh [Scene..]
+# fonts (already under fonts/ReadexPro.ttf; also install on the system for Manim/Pango)
+#   Noto Naskh Arabic and Amiri — used for on-slide Arabic
+cp fonts/ReadexPro.ttf ~/.local/share/fonts/ && fc-cache -f
 
-# live player (Qt window)
-manim-slides present S1Cover S2Problem S3Data S4Models S5Measure S6Results S7Phone S8Close
+# 1. numbers check — must pass before anything is rendered
+uv run python check_numbers.py
 
-# portable HTML export (single file, no install needed; one click per step)
-python make_html.py
+# 2. presenting deck: render scenes (~1 min each, 1444x1000 @ 30 fps)
+./render_videos.sh
 
-# submission deck (seconds) -- NOT yet updated to the 8 scenes
-.venv-slides/bin/python build_native.py
+# 3. live player (Qt window)
+uv run manim-slides present S1Cover S2Problem S3Data S4Models S5Measure S6Results S7Phone S8Close
 
-# presenter script
-.venv-slides/bin/python make_script.py
+# 4. portable HTML export (single file, no install needed; one click per step)
+uv run python make_html.py            # -> ../Bayan_Presenting.html
+uv run python make_html.py --auto     # same, steps flow on within a beat
+
+# 5. submission deck (seconds, no Manim)
+uv run python build_native.py         # -> ../Bayan_Submission.pptx
+
+# 6. presenter script (same SPEECH text as both decks' speaker notes)
+uv run python make_script.py          # -> ../Bayan_Presenter_Script.md
 ```
+
+Step 2 is the only slow one. `render_videos.sh` writes `out/media/videos/scenes/1000p30/*.mp4`
+and `slides/<Scene>.json`; both are gitignored regenerable intermediates. `make_html.py` embeds
+those MP4s as base64, so the HTML file travels alone. `build_native.py` needs only `python-pptx`
+and the assets under `assets/` and the SIC template in the parent folder.
+
+If you only changed the submission deck (`build_native.py` / `nativekit.py`), steps 1 and 5 are enough.
+If you only changed wording (`script_data.py`), run 1, 5 and 6 (and re-render if the wording is
+on-slide in `scenes.py`).
 
 ## How the beats work
 
 - HTML player (`make_html.py`): every step plays once and waits for a click. `--auto` honours the
   `auto_next` flags instead (steps flow on; each beat stops at its end), as `manim-slides present` does.
 - `common.Deck` provides `begin_beat()`, `step()` (auto-advance) and `hold()` (pause point).
+- The native deck keeps the same speaker notes as the presenting scenes; slides 5 merges
+  `S5Measure` + `S6Results` into one bench slide.
 - Numbers are spoken as words; تبسيط is said *tabseet*.
 
 ## Number policy
@@ -56,4 +78,8 @@ python make_html.py
 - Native: animations are hand-written PresentationML (`nativekit.build_timing`). Open in real
   PowerPoint, never LibreOffice.
 - Text floor is 11 pt at slide size (`common.MIN_SIZE`).
-- Demo video placeholder is in `S7Phone`. Recording checklist is in the presenter script.
+- Demo video placeholder is in `S7Phone` / native slide 6. Recording checklist is in the
+  presenter script. When `../05_demo/bayan_demo.mp4` exists, pass it to `step(src=...)` in
+  `S7Phone` and call `Canvas.add_movie()` on native slide 6.
+- `Bayan_Presenting.pptx` is obsolete (LibreOffice flashes black between video slides). Use the
+  HTML player or `manim-slides present`.

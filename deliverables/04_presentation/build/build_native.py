@@ -1,24 +1,29 @@
 """SUBMISSION deck: PowerPoint-native. Every element is an editable shape or text box; animations are PowerPoint's own
-entrance/exit effects, one click per step (same steps as the presenting deck). No video, no baked fonts.
+entrance/exit effects. Seven scenes matching the presenting deck's beats.
 
-    python build_native.py  -> ../Bayan_Submission.pptx  
+    python build_native.py  -> ../Bayan_Submission.pptx
 
-Fonts used: Readex Pro (Latin), Noto Naskh Arabic and Amiri (Arabic). Install them on the machine that opens the deck.
+Fonts: Readex Pro (Latin), Noto Naskh Arabic and Amiri (Arabic). Install them before opening.
+Every number comes from facts.py; check_numbers.py must pass first.
 """
 from pathlib import Path
 
 from pptx import Presentation
 
-from assemble_presenting import SLIDES, TEMPLATE
+from facts import FIG, SCATTER
 from script_data import slide_notes
 from nativekit import *  # noqa: F401,F403
 
 HERE = Path(__file__).parent
 ASSETS = HERE / "assets"
 OUT = HERE.parent / "Bayan_Submission.pptx"
-NOTES = {scene: slide_notes(scene) for scene, _, _ in SLIDES}
-MX, CW = 0.65, SW - 1.3  # side margin, content width
-TOTAL = 9
+TEMPLATE = next(HERE.parent.glob("SIC_AI_Capstone*Template.pptx"))
+MX, CW = 0.65, SW - 1.3
+TOTAL = 7
+
+
+def F(key):
+    return FIG[key][0]
 
 
 def chrome(c, num, kicker=None, title=None, dark=False):
@@ -38,279 +43,241 @@ def chip(c, x, y, text, size=12, fill=SUN_LT, color=SUN_DK, h=0.36, w=None, bold
     return c.card(x, y, w, h, fill=fill, line=None, radius=0.18, text=text, size=size, color=color, bold=bold)
 
 
-# ------------------------------------------------------------------------------------------------ 1
+# ---- 1 · Cover ---------------------------------------------------------------
 def s1(prs, layout):
     c = Canvas(prs, layout, NIGHT)
     chrome(c, 1, dark=True)
     logo = c.pic(ASSETS / "bayan-mark-dark.png", (SW - 3.3) / 2, 0.95, 3.3, "Bayan logo: open book with a sun", "Bayan logo")
     title = c.text(0, 3.25, SW, 0.9, "Bayan", 54, CREAM, True, "c")
-    sub = c.text(0, 4.2, SW, 0.4, "On-device Arabic text simplification for readers with dyslexia", 18, CREAM, align="c")
-    team = c.text(0, 4.9, SW, 0.35, "Team Cogni", 16, SUN, True, "c")
-    names = c.text(0, 5.35, SW, 0.3, "Marwan Elamami  ·  Abdulrahman Khengari  ·  Ahmed Alaeb  ·  Sanad Ali  ·  "
+    sub = c.text(0, 4.2, SW, 0.4, "Simplify Arabic where you read", 18, CREAM, align="c")
+    tag = c.text(0, 4.65, SW, 0.35, "on the phone, offline", 14, SUN, align="c")
+    team = c.text(0, 5.2, SW, 0.35, "Team Cogni", 16, SUN, True, "c")
+    names = c.text(0, 5.65, SW, 0.3, "Marwan Elamami  ·  Abdulrahman Khengari  ·  Ahmed Alaeb  ·  Sanad Ali  ·  "
                    "Mohammed Thabet  ·  Abdul Majid Mraied", 10.5, INK4, align="c")
-    c.step((logo, "wipe_left", 0, 1500), (title, "fade", 1300), (sub, "fade", 1700), (team, "fade", 2100),
-           (names, "fade", 2100), auto=True)
-    c.finish(NOTES["S1Cover"])
+    c.step((logo, "wipe_left", 0, 1500), (title, "fade", 1300), (sub, "fade", 1700), (tag, "fade", 1900),
+           (team, "fade", 2100), (names, "fade", 2100), auto=True)
+    c.finish(slide_notes("S1Cover"))
 
 
-# ------------------------------------------------------------------------------------------------ 2
+# ---- 2 · Problem + product ---------------------------------------------------
 def s2(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 2, "01 · The idea", "Arabic hides its own pronunciation")
-    pct = c.text(0.65, 2.15, 3.7, 1.3, "11%", 84, SUN, False, "c")
-    lab = c.text(0.65, 3.55, 3.7, 0.7, "of Arab primary-school children\nhave developmental dyslexia", 16, INK2, align="c")
-    src = c.text(0.65, 4.3, 3.7, 0.3, "pooled over 18 studies, N = 30,243", 11.5, INK3, align="c")
+    chrome(c, 2, "01 · The problem", "Reading in Arabic adds load")
+    pct = c.text(0.65, 1.85, 3.7, 1.2, f"{F('dyslexia_pct')}%", 80, SUN, False, "c")
+    lab = c.text(0.65, 3.15, 3.7, 0.7, "of Arab primary-school children\nhave developmental dyslexia", 15, INK2, align="c")
+    src = c.text(0.65, 3.9, 3.7, 0.3, "Al-Dakhil 2024, meta-analysis", 11, INK3, align="c")
     c.step((pct, "fade"), (lab, "fade", 300), (src, "fade", 500), auto=True)
 
-    panel = c.card(4.7, 1.8, 5.48, 3.55)
-    word = c.text(4.7, 1.95, 5.48, 1.2, "كتب", 72, INK, False, "c", ARABIC_DISPLAY)
-    cap = c.text(4.7, 3.15, 5.48, 0.28, "one written form", 12, INK3, align="c")
+    panel = c.card(4.7, 1.6, 5.48, 3.7)
+    word = c.text(4.7, 1.75, 5.48, 1.1, "كتب", 68, INK, False, "c", ARABIC_DISPLAY)
+    cap = c.text(4.7, 2.85, 5.48, 0.28, "one written form", 12, INK3, align="c")
     cols = [(9.35, "كَتَبَ", "kataba", "he wrote"), (7.44, "كُتِبَ", "kutiba", "it was written"), (5.53, "كُتُب", "kutub", "books")]
     arrows, reads = [], []
     for x, ar, tr, en in cols:
-        arrows.append(c.line(7.44, 3.5, x, 3.85, SUN, 2, arrow=True))
-        reads.append(c.text(x - 0.9, 3.85, 1.8, 0.75, ar, 36, INK, False, "c", ARABIC_DISPLAY))
-        reads.append(c.text(x - 0.9, 4.65, 1.8, 0.55, [(tr, 12, SUN_DK, True, LATIN), (en, 11.5, SUN_DK, False, LATIN)], 12, align="c"))
+        arrows.append(c.line(7.44, 3.25, x, 3.6, SUN, 2, arrow=True))
+        reads.append(c.text(x - 0.9, 3.6, 1.8, 0.7, ar, 32, INK, False, "c", ARABIC_DISPLAY))
+        reads.append(c.text(x - 0.9, 4.35, 1.8, 0.55, [(tr, 12, SUN_DK, True, LATIN), (en, 11, SUN_DK, False, LATIN)], 12, align="c"))
     c.step((panel, "fade"), (word, "fade", 150), (cap, "fade", 400),
            *[(a, "fade", 700 + 250 * i) for i, a in enumerate(arrows)],
            *[(r, "fade", 800 + 250 * (i // 2)) for i, r in enumerate(reads)])
 
-    c1 = c.card(MX, 5.62, 8.6, 0.46, PAPER2, PAPER3, 0.23, "Fused prefixes and suffixes  →  long words that resist chunking", 13, INK2, align="l")
-    c2 = c.card(MX, 6.18, 8.6, 0.46, PAPER2, PAPER3, 0.23, "Clauses chained with و and ف  →  sentences longer than working memory", 13, INK2, align="l")
-    c.step((c1, "fade"), (c2, "fade", 350))
-    c.finish(NOTES["S2Problem"])
+    phone = c.rect(1.0, 4.55, 1.55, 2.55, PAPER, INK, 2.5, 0.22)
+    scr = c.rect(1.15, 4.7, 1.25, 2.25, PAPER2, radius=0.1)
+    sel = c.rect(1.3, 5.15, 0.95, 0.22, SUN, radius=0.06, alpha=0.55)
+    menu = c.card(1.25, 5.5, 1.15, 0.35, SUN, SUN, 0.12, "تبسيط", 13, NIGHT, True, "c")
+    sheet = c.card(1.25, 6.05, 1.15, 0.7, PAPER2, SUN, 0.12)
+    steps = c.card(3.0, 4.75, 5.2, 1.85)
+    s1t = c.text(3.15, 4.85, 4.9, 0.35, "1  Select the hard text in any app", 13, INK2)
+    s2t = c.text(3.15, 5.3, 4.9, 0.35, "2  Tap تبسيط in the menu", 13, SUN_DK, True)
+    s3t = c.text(3.15, 5.75, 4.9, 0.55, "3  A sheet shows the simpler text\n     and reads it aloud", 13, INK2)
+    c.step((phone, "fade"), (scr, "fade", 200), (sel, "fade", 500), (menu, "fade", 800),
+           (sheet, "fade", 1100), (steps, "fade", 1400), (s1t, "fade", 1600), (s2t, "fade", 1800), (s3t, "fade", 2000))
+
+    scope = chip(c, MX, 6.55, "We reduce load: long clauses, hard words.  Not decoding.", 12, SUN_LT, SUN_DK, 0.38, 6.5)
+    c.step((scope, "fade"))
+    c.finish(slide_notes("S2Problem"))
 
 
-# ------------------------------------------------------------------------------------------------ 3
+# ---- 3 · Data processing -----------------------------------------------------
 def s3(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 3, "01 · The idea", "Nobody had built this: no tool, no data")
-    xs = [4.55, 6.2, 7.85, 9.5]
-    heads, subs = [], []
-    for x, n, s in zip(xs, ["SAMER", "BAREC", "Baseet", "DAASI"],
-                       ["15 novels,\n3 levels", "69,441\nsentences", "3 LLM\nlevels", "government &\ninsurance text"]):
-        heads.append(c.text(x - 0.8, 1.85, 1.6, 0.35, n, 16, INK, True, "c"))
-        subs.append(c.text(x - 0.8, 2.2, 1.6, 0.45, s, 10.5, INK3, align="c", line_spacing=0.9))
-    rule = c.line(MX, 2.8, SW - MX, 2.8, PAPER3, 2)
-    rows = [("Rewrites by", ["human", "levels only", "LLM", "human-verified"]),
-            ("Adds a sentence", ["0% of pairs", "n/a", "2–4%", "8%"]),
-            ("Made for dyslexia", ["no", "no", "no", "no"])]
-    ys = [3.35, 4.1, 4.85]
-    band = c.card(MX - 0.1, ys[2] - 0.34, CW + 0.2, 0.68, WARN_LT, WARN_LT, 0.15)
-    items = []
-    for r, ((name, vals), y) in enumerate(zip(rows, ys)):
-        last = r == 2
-        lab = c.text(MX, y - 0.2, 3.0, 0.4, name, 15, WARN if last else INK2, last)
-        cells = [c.text(x - 0.8, y - 0.2, 1.6, 0.4, v, 14, WARN if last else INK2, last, "c") for x, v in zip(xs, vals)]
-        items.append([lab] + cells)
-    c.step(*[(s, "fade", 100 * i) for i, s in enumerate(heads + subs)], (rule, "fade", 300),
-           *[(s, "fade", 500 + 300 * r) for r in (0, 1) for s in items[r]], auto=True)
-    c.step((band, "fade"), *[(s, "fade", 150) for s in items[2]])
-    gap = c.text(MX, 5.65, CW, 0.35, "No deployed Arabic dyslexia tool simplifies text, and no open corpus teaches splitting.", 14, INK2, align="c")
-    dot = c.circle(1.25, 6.28, 0.09, SUN)
-    plan = c.text(1.5, 6.08, SW - 2.2, 0.4, "So we built our own data, our own models and our own benchmark.", 16, INK, True)
-    c.step((gap, "fade"), (dot, "fade", 400), (plan, "fade", 400))
-    c.finish(NOTES["S3Gap"])
+    chrome(c, 3, "02 · Data processing", "Corpus v1, built behind gates")
+
+    head = c.text(MX, 1.55, CW, 0.35, "What the first synthetic corpus got wrong", 16, INK, True)
+    defects = [
+        chip(c, MX, 2.05, f"{F('v0_tashkeel')}% of rows had tashkeel we strip anyway", 12, WARN_LT, WARN, 0.36, 4.8),
+        chip(c, MX, 2.5, f"{F('v0_completed')}% of cut-off sources were simply completed", 12, WARN_LT, WARN, 0.36, 4.8),
+        chip(c, MX, 2.95, f"{F('v0_short_rewritten')}% of short sources were rewritten", 12, WARN_LT, WARN, 0.36, 4.8),
+        chip(c, MX, 3.4, f"only {F('v0_levels')}% of pairs were 2+ levels easier", 12, WARN_LT, WARN, 0.36, 4.8),
+    ]
+    why = c.text(MX, 3.95, CW, 0.3, "So every gate in corpus v1 exists because of a failure we saw.", 13, INK2)
+    c.step((head, "fade"), *[(d, "fade", 200 + 150 * i) for i, d in enumerate(defects)], (why, "fade", 900), auto=True)
+
+    # pipeline: source -> generation -> gates -> total
+    stages = [
+        ("BAREC train + dev", "test never enters", None),
+        ("strip tashkeel / tatweel", "every text", None),
+        ("route each source", "protected · short · hard", f"{F('route_hard'):,} hard"),
+        ("Gemma 4 31B writes candidates", "hard band only", f"{F('gen_responses'):,} responses"),
+        ("code gates", "numbers · quotes · options", None),
+        ("readability + meaning gates", f"≥ 2 CAMeL levels · Qwen ≥ {F('meaning_gate')}", f"{F('accepted_tier_a'):,} accepted"),
+    ]
+    x0, y0, sw, sh, gap = MX, 4.55, 1.55, 0.85, 0.12
+    cards, arrows = [], []
+    for i, (title, sub, count) in enumerate(stages):
+        x = x0 + i * (sw + gap)
+        box = c.card(x, y0, sw, sh, PAPER2, PAPER3, 0.1)
+        t = c.text(x + 0.05, y0 + 0.05, sw - 0.1, 0.35, title, 10, INK, True, "c")
+        s = c.text(x + 0.05, y0 + 0.4, sw - 0.1, 0.35, sub, 8.5, INK3, align="c")
+        cards += [box, t, s]
+        if count:
+            cards.append(c.text(x, y0 + sh + 0.08, sw, 0.25, count, 9.5, SUN_DK, True, "c"))
+        if i > 0:
+            arrows.append(c.line(x - gap, y0 + sh / 2, x, y0 + sh / 2, SUN, 1.5, arrow=True))
+    c.step(*[(s, "fade", 200 * i) for i, s in enumerate(cards)], *[(a, "fade", 1200) for a in arrows])
+
+    box = c.card(MX, 5.85, CW, 0.7, SUN_LT, SUN, 0.15)
+    big = c.text(MX, 5.9, CW, 0.35, f"{F('corpus_rows'):,} rows  ·  0 rule violations  ·  0 leakage vs BAREC test", 15, SUN_DK, True, "c")
+    audit = c.text(MX, 6.3, CW, 0.25, f"blind audit of {F('audit_n'):,} pairs: {F('audit_changed')}% meaning changed", 11, INK2, align="c")
+    c.step((box, "fade"), (big, "fade", 300), (audit, "fade", 600))
+    c.finish(slide_notes("S3Data"))
 
 
-# ------------------------------------------------------------------------------------------------ 4
+# ---- 4 · Training evolution --------------------------------------------------
 def s4(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 4, "02 · The verdict", "Simplify where the reader already is")
-    q = c.text(MX, 1.6, 6.3, 0.35, "Where does a reader meet hard Arabic?  Inside other apps.", 14, INK2)
-    opts = []
-    for i, (tag, name, why) in enumerate([("A", "Chrome extension", "desktop-first; reading happens on the phone"),
-                                          ("B", "Android plugin", "«تبسيط» in the selection menu of every app"),
-                                          ("C", "Standalone app", "copy, paste, leave the app: the friction we remove")]):
-        y = 2.15 + i * 1.12
-        box = c.card(MX, y, 5.95, 0.95)
-        badge = c.circle(MX + 0.5, y + 0.475, 0.26, SUN if tag == "B" else INK4)
-        c.text(0, 0, 0, 0, tag, 15, PAPER, True, "c", shape=badge)
-        txt = c.text(MX + 0.95, y + 0.1, 4.9, 0.75, [(name, 16, INK, True, LATIN), (why, 12, INK3, False, LATIN)], 12)
-        opts.append((box, badge, txt))
-    c.step((q, "fade"), *[(s, "fade", 200 * i) for i, o in enumerate(opts) for s in o], auto=True)
+    chrome(c, 4, "03 · Training", "Each model answered the last failure")
 
-    ph = c.rect(7.45, 1.7, 2.7, 4.85, PAPER, INK, 3, 0.3)
-    widths = [2.0, 2.2, 1.9, 2.2, 1.5, 2.2, 2.0]
-    lines = [c.rect(9.95 - w, 2.05 + i * 0.3, w, 0.11, PAPER3, radius=0.05) for i, w in enumerate(widths)]
-    sel = [c.rect(9.95 - widths[i], 2.02 + i * 0.3, widths[i], 0.17, SUN, radius=0.06, alpha=0.55) for i in (2, 3, 4)]
-    menu = c.card(7.6, 2.5, 2.4, 0.5, "FFFFFF", PAPER3, 0.14)
-    m1 = c.text(7.7, 2.5, 0.6, 0.5, "Copy", 11, INK3, align="c")
-    m2 = c.text(8.35, 2.5, 0.75, 0.5, "تبسيط", 17, SUN_DK, True, "c", ARABIC)
-    m3 = c.text(9.15, 2.5, 0.75, 0.5, "Share", 11, INK3, align="c")
-    sheet = c.card(7.6, 4.3, 2.4, 2.1, PAPER2, INK4, 0.22)
-    handle = c.rect(8.55, 4.4, 0.5, 0.07, INK4, radius=0.03)
-    outs = [c.rect(9.75 - w, 4.65 + i * 0.28, w, 0.12, SUN, radius=0.05) for i, w in enumerate([1.95, 1.65, 1.85])]
-    play = c.circle(7.95, 5.95, 0.2, SUN)
-    tri = c.rect(7.9, 5.88, 0.12, 0.14, PAPER)
-    tri.auto_shape_type  # (a plain square stands in for the triangle; replaced below)
-    c.sh._spTree.remove(tri._element)
-    tri = c.sh.add_shape(MSO_SHAPE.ISOSCELES_TRIANGLE, Inches(7.89), Inches(5.87), Inches(0.14), Inches(0.16))
-    tri.rotation = 90
-    c._style(tri, PAPER)
-    menu_grp = [menu, m1, m2, m3]
-    sheet_grp = [sheet, handle, *outs, play, tri]
-    c.step((ph, "fade"), *[(l, "fade", 200) for l in lines],
-           *[(s, "wipe_left", 900 + 250 * i, 600) for i, s in enumerate(sel)],
-           *[(s, "fade", 1900) for s in menu_grp],
-           *[(s, "fade_out", 3400) for s in menu_grp],
-           *[(s, "wipe_up", 3500, 800) for s in sheet_grp])
-    dim_a = c.card(MX - 0.05, 2.1, 6.05, 1.05, PAPER, None, 0.16, alpha=0.7)
-    dim_c = c.card(MX - 0.05, 4.34, 6.05, 1.05, PAPER, None, 0.16, alpha=0.7)
-    ring = c.rect(MX, 3.27, 5.95, 0.95, None, SUN, 3.5, 0.16)
-    r1 = [chip(c, MX + 0.15 + k * w, 5.72, t, 12, w=w - 0.1) for k, (t, w) in
-          enumerate([("on-device", 1.35), ("offline", 1.15), ("≤ 250 MB", 1.35)])]
-    r1[1].left = Inches(MX + 0.15 + 1.35)
-    r1[2].left = Inches(MX + 0.15 + 1.35 + 1.15)
-    r2 = chip(c, MX + 0.15, 6.2, "the reader’s text never leaves the phone", 12, w=4.2)
-    c.step((dim_a, "fade"), (dim_c, "fade"), (ring, "fade", 300), *[(s, "fade", 700 + 150 * i) for i, s in enumerate(r1 + [r2])])
-    c.finish(NOTES["S4Verdict"])
+    models = [
+        ("Model 1", "AraT5v2 on SAMER", "SAMER L5→L3,\n14,343 pairs",
+         "Copying scored higher.\nSwapped words, never restructured.", False),
+        ("Model 2", "AraT5v2 and AraBART", "SAMER + DAASI +\nmeaning-filtered external",
+         f"Meaning kept only {F('m2_meaning_tagged')}\nand {F('m2_meaning_arabart')}.", False),
+        ("Model 3", "AraT5v2 on corpus v1", f"corpus v1, {F('corpus_rows'):,} rows,\n+ code safety net",
+         "Every number kept.\nEasy text 74% vs 48%.", True),
+    ]
+    cw2 = 3.05
+    gap2 = 0.35
+    x_start = MX + (CW - 3 * cw2 - 2 * gap2) / 2
+    cols, arrows = [], []
+    for i, (name, what, data, found, highlight) in enumerate(models):
+        x = x_start + i * (cw2 + gap2)
+        lbl = c.text(x, 1.55, cw2, 0.25, what, 10, INK3, align="c")
+        head = c.card(x, 1.85, cw2, 0.55, SUN if highlight else PAPER3, SUN if highlight else PAPER3, 0.12,
+                      name, 15, NIGHT if highlight else INK, True, "c")
+        d = c.card(x, 2.55, cw2, 1.1)
+        dt = c.text(x + 0.08, 2.6, cw2 - 0.16, 1.0, data, 11, INK2, align="c")
+        f = c.card(x, 3.8, cw2, 1.1, WARN_LT, WARN_LT, 0.12)
+        ft = c.text(x + 0.08, 3.85, cw2 - 0.16, 1.0, found, 11, WARN, align="c")
+        cols += [lbl, head, d, dt, f, ft]
+        if i > 0:
+            arrows.append(c.line(x - gap2 + 0.05, 3.1, x - 0.05, 3.1, SUN, 2.5, arrow=True))
+
+    # step 1: model 1
+    c.step(*[(s, "fade") for s in cols[0:6]], auto=True)
+    # step 2: arrow + model 2
+    c.step((arrows[0], "wipe_left", 0, 500), *[(s, "fade", 400) for s in cols[6:12]])
+    # step 3: arrow + model 3
+    c.step((arrows[1], "wipe_left", 0, 500), *[(s, "fade", 400) for s in cols[12:18]])
+
+    # step 4: dropped branches
+    dropped = chip(c, MX, 5.35, "Tried and dropped: MRT  ·  Gemma E2B teacher  ·  student DPO", 11, PAPER2, INK3, 0.36, 5.5)
+    note = c.text(MX + 5.8, 5.35, 3.5, 0.36, "DPO learned the judge's preferences,\nnot meaning safety.", 10, INK3, anchor="m")
+    c.step((dropped, "fade"), (note, "fade", 300))
+    c.finish(slide_notes("S4Models"))
 
 
-# ------------------------------------------------------------------------------------------------ 5
+# ---- 5 · BayanBench ----------------------------------------------------------
 def s5(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "03 · Data", "Audit first, then build the training set")
-    big = c.text(MX, 1.75, 2.9, 1.1, "9.3%", 60, WARN, True, "c")
-    txt = c.text(3.75, 1.85, 6.4, 0.9, "of Baseet overlapped our locked test sets.\nEvery training file now passes a leakage gate.", 17, INK2)
-    c.step((big, "fade"), (txt, "fade", 400), auto=True)
+    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
 
-    title = c.text(MX, 3.05, CW, 0.35, "22,733 training pairs, every one tagged with its source style", 15, INK, True)
-    total = 22733
-    segs = [("[S0]", "14,343", "SAMER · 6,033 unchanged kept", INK, CREAM), ("[S1]", "3,508", "Baseet · light", SUN_DK, CREAM),
-            ("[S2]", "1,954", "Baseet · medium", SUN, INK), ("[S3]", "1,426", "Baseet · strong", "DDBB95", INK),
-            ("[SA]", "1,502", "DAASI · everyday", INK3, CREAM)]
-    x, bars, legend = MX, [], []
-    colw = CW / 5
-    for i, (tag, n, note, col, fg) in enumerate(segs):
-        w = CW * int(n.replace(",", "")) / total
-        b = c.card(x, 3.55, w, 0.75, col, PAPER, 0.0, text=tag, size=14 if w > 0.7 else 11, color=fg, bold=True)
-        bars.append(b)
-        x += w
-        sw = c.rect(MX + colw * i, 4.62, 0.16, 0.16, col)
-        num = c.text(MX + colw * i + 0.24, 4.52, 1.4, 0.36, n, 17, INK, True)
-        nt = c.text(MX + colw * i, 4.9, colw - 0.1, 0.45, note, 11, INK3, anchor="t")
-        legend += [sw, num, nt]
-    c.step((title, "fade"), *[(b, "wipe_left", 250 * i, 700) for i, b in enumerate(bars)],
-           *[(s, "fade", 1300 + 90 * i) for i, s in enumerate(legend)])
-    dot = c.circle(0.85, 6.02, 0.08, SUN)
-    gate = c.text(1.05, 5.82, SW - 1.7, 0.4, "Baseet pairs pass a meaning filter:  LaBSE ≥ 0.646  ·  length ≥ 67% of source  ·  every number kept",
-                  13, INK2)
-    gate2 = c.text(1.05, 6.2, SW - 1.7, 0.3, "each threshold = 5th percentile of human-verified rewrites (DAASI)", 11, INK3)
-    c.step((dot, "fade"), (gate, "fade", 200), (gate2, "fade", 500))
-    c.finish(NOTES["S5Data"])
+    q = c.text(MX, 1.55, 5.5, 0.4, "How do we know a simplification is good?", 18, INK, True)
+    pair = [
+        chip(c, MX, 2.15, "copying the input", 13, PAPER2, INK2, 0.38, 2.8),
+        chip(c, MX, 2.6, "100% of the meaning", 13, SUN_LT, SUN_DK, 0.38, 2.8),
+        chip(c, MX, 3.05, "0 simplification", 13, WARN_LT, WARN, 0.38, 2.8),
+    ]
+    c.step((q, "fade"), *[(p, "fade", 300 + 200 * i) for i, p in enumerate(pair)], auto=True)
+
+    # scatter: hand-drawn axes + points
+    sx, sy, sw2, sh2 = 5.8, 1.7, 4.3, 3.2
+    ax_h = c.line(sx, sy + sh2, sx + sw2, sy + sh2, INK4, 1.5)
+    ax_v = c.line(sx, sy, sx, sy + sh2, INK4, 1.5)
+    xl = c.text(sx, sy + sh2 + 0.12, sw2, 0.25, "meaning kept (%)", 10, INK3, align="c")
+    yl = c.text(sx - 0.85, sy + sh2 / 2 - 0.15, 1.6, 0.3, "clause words\nshorter", 10, INK3, align="c")
+
+    pts_shapes = []
+    for lab, mx, my, mark in SCATTER:
+        px = sx + (mx - 35) / 70 * sw2
+        py = sy + sh2 - (my + 0.5) / 7.5 * sh2
+        col = {"copy": INK4, "app": SUN_DK, "model2": INK3, "ship": WARN, "baseline": INK4}.get(mark, INK3)
+        r = 0.1 if mark != "ship" else 0.14
+        dot = c.circle(px, py, r, col)
+        pts_shapes.append(dot)
+        if mark in ("copy", "ship", "app"):
+            tag_col = WARN if mark == "ship" else INK2
+            tag = c.text(px - 0.7, py - 0.35 if my > 3 else py + 0.15, 1.4, 0.25, lab, 9.5, tag_col, mark == "ship", "c")
+            pts_shapes.append(tag)
+
+    c.step((ax_h, "fade"), (ax_v, "fade"), (xl, "fade", 200), (yl, "fade", 200),
+           *[(s, "fade", 500 + 150 * i) for i, s in enumerate(pts_shapes)])
+
+    badge = chip(c, MX, 3.75, f"frozen rule: meaning kept = same meaning AND every number kept", 11, SUN_LT, SUN_DK, 0.36, 5.2)
+    auc = chip(c, MX, 4.2, f"scorer agrees with {F('rater_n')} human raters at AUC {F('judge_auc')}", 11, PAPER2, INK2, 0.36, 5.2)
+    dropped = chip(c, MX, 4.65, f"dropped the measures that scored {F('v1_measure_auc')} against people", 11, WARN_LT, WARN, 0.36, 5.2)
+    c.step((badge, "fade"), (auc, "fade", 300), (dropped, "fade", 600))
+
+    mark = c.text(MX, 5.25, CW, 0.35, "Simplify most, keep meaning most", 15, WARN, True, "c")
+    c.step((mark, "fade"))
+    c.finish(slide_notes("S5Measure") + "\n\n" + slide_notes("S6Results"))
 
 
-# ------------------------------------------------------------------------------------------------ 6
+# ---- 6 · Demo ----------------------------------------------------------------
 def s6(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 6, "04 · Training", "Two candidates, one recipe")
-    card = c.card(MX, 1.75, CW, 1.25)
-    head = c.text(MX, 1.83, CW, 0.4, "one script (train.py)  ·  identical data  ·  architecture is the only difference", 15, INK, True, "c")
-    labels = ["10 epochs", "fp16", "seed 42", "max length 256", "best SARI on changed rows"]
-    widths = [1.15, 0.85, 0.95, 1.55, 2.75]
-    x = MX + (CW - sum(widths) - 0.15 * 4) / 2
-    chips = []
-    for t, w in zip(labels, widths):
-        chips.append(chip(c, x, 2.4, t, 11, PAPER, INK2, 0.34, w, False))
-        x += w + 0.15
-    c.step((card, "fade"), (head, "fade", 200), *[(s, "fade", 400 + 120 * i) for i, s in enumerate(chips)], auto=True)
+    chrome(c, 6, "05 · On a phone", "")
 
-    specs = [("AraT5v2", 368, INK, "368M params  ·  won Baseet’s head-to-head  ·  models 1 & 2", False),
-             ("AraBART", 139, SUN, "139M params  ·  2.6× smaller  ·  the on-device contender", False),
-             ("HPLT T5", 294, INK4, "≈ 294M params  ·  held in reserve", True)]
-    eff = []
-    for i, (name, m, col, note, dashed) in enumerate(specs):
-        y = 3.4 + i * 1.02
-        n = c.text(MX, y, 1.6, 0.45, name, 16, INK, True)
-        w = 5.6 * m / 368
-        r = c.rect(2.3, y, w, 0.45, col if not dashed else PAPER3, line=col, line_w=2.5)
-        nt = c.text(2.3, y + 0.5, 7.5, 0.3, note, 12, INK3)
-        eff += [(n, "fade", 600 * i), (r, "wipe_left", 600 * i, 700), (nt, "fade", 600 * i + 500)]
-    c.step(*eff)
-    dot = c.circle(0.85, 6.55, 0.08, SUN)
-    tail = c.text(1.05, 6.35, SW - 1.7, 0.4, "46% of AraT5v2 is two embedding tables, so shrinking its vocabulary is the route to phone size.", 13, INK2)
-    c.step((dot, "fade"), (tail, "fade", 300))
-    c.finish(NOTES["S6Candidates"])
+    body = c.rect(3.5, 1.4, 2.8, 4.8, NIGHT, INK4, 2, 0.28)
+    scr = c.rect(3.65, 1.55, 2.5, 4.5, PAPER2, radius=0.15)
+    slot = c.card(3.9, 2.3, 2.0, 2.0, PAPER3, PAPER3, 0.12)
+    icon = c.text(3.9, 2.8, 2.0, 0.6, "▶", 36, INK3, align="c")
+    cap = c.text(3.9, 4.45, 2.0, 0.3, "30 s recording", 13, INK2, True, "c")
+    seq = c.text(3.65, 4.85, 2.5, 0.35, "select → تبسيط → sheet → read aloud", 10, INK3, align="c")
+
+    side_items = [
+        "Text selected in a browser",
+        "Tap تبسيط in the menu",
+        "The sheet shows the simpler text",
+        "and reads it aloud",
+        "The original is one tap away",
+    ]
+    side_shapes = [c.text(6.8, 1.85, 3.5, 0.3, "What you are watching", 14, INK, True)]
+    for i, t in enumerate(side_items):
+        col = SUN_LT if i == 4 else PAPER2
+        tc = SUN_DK if i == 4 else INK2
+        side_shapes.append(chip(c, 6.8, 2.35 + i * 0.52, t, 11, col, tc, 0.38, 3.4))
+
+    c.step((body, "fade"), (scr, "fade", 200), (slot, "fade", 500), (icon, "fade", 700),
+           (cap, "fade", 900), (seq, "fade", 1100), *[(s, "fade", 1400 + 150 * i) for i, s in enumerate(side_shapes)])
+    c.finish(slide_notes("S7Phone"))
 
 
-# ------------------------------------------------------------------------------------------------ 7
+# ---- 7 · Close ---------------------------------------------------------------
 def s7(prs, layout):
-    """Two charts side by side (not one chart that flips): reads correctly even where animations are ignored."""
-    c = Canvas(prs, layout, PAPER)
-    chrome(c, 7, "04 · Training", "Model 1: the score that looked like a failure")
-    base_y, hmax = 4.95, 2.35
-
-    def chart(x0, head, sub, vals, verdict, vcol, why):
-        shapes = [c.text(x0, 1.65, 4.6, 0.36, head, 15, INK, True), c.text(x0, 2.02, 4.6, 0.3, sub, 11, INK3)]
-        axis = c.line(x0, base_y, x0 + 4.5, base_y, INK4, 2.5)
-        bars = []
-        for i, (lab, v, col) in enumerate(vals):
-            h = hmax * v / 100
-            cx = x0 + 1.15 + i * 2.15
-            b = c.rect(cx - 0.6, base_y - h, 1.2, h, col)
-            val = c.text(cx - 0.6, base_y - h - 0.4, 1.2, 0.36, f"{v:.2f}", 16, INK, True, "c")
-            cat = c.text(cx - 1.0, base_y + 0.08, 2.0, 0.3, lab, 12.5, INK2, align="c")
-            bars += [b, val, cat]
-        ver = c.text(x0, 5.5, 4.6, 0.4, verdict, 19, vcol, True)
-        wh = c.text(x0, 5.92, 4.6, 0.55, why, 12.5, INK2, anchor="t")
-        return shapes + [axis], bars, [ver, wh]
-
-    c.line(5.4, 1.7, 5.4, 6.4, PAPER3, 2)
-    h1, b1, v1 = chart(MX, "SARI on all SAMER test rows", "3,277 sentences, half need no change",
-                       [("copy the input", 77.50, INK4), ("Model 1", 75.88, SUN)], "Copying wins?", WARN,
-                       "Half of SAMER needs no change,\nso doing nothing scores well.")
-    h2, b2, v2 = chart(5.75, "SARI on rows a human changed", "1,678 sentences: the bar a model must clear",
-                       [("copy the input", 56.06, INK4), ("Model 1", 61.83, SUN)], "Model 1 clears it", SUN_DK,
-                       "+5.8 points, greedy decoding:\nwhat the phone runs.")
-    c.step(*[(s, "fade") for s in h1], *[(s, "wipe_up", 300, 900) for s in b1], *[(s, "fade", 1300) for s in v1], auto=True)
-    note = c.text(MX, 6.45, CW, 0.32, "But it made mostly one-word edits, and 42% of its training pairs were unchanged sentences.", 12, INK3, align="c")
-    c.step(*[(s, "fade") for s in h2], *[(s, "wipe_up", 300, 900) for s in b2], *[(s, "fade", 1300) for s in v2], (note, "fade", 1900))
-    c.finish(NOTES["S7Model1"])
-
-
-# ------------------------------------------------------------------------------------------------ 8
-def s8(prs, layout):
-    c = Canvas(prs, layout, PAPER)
-    chrome(c, 8, "04 · Training", "Model 2: one fix for each lesson")
-    items = [("It rewards doing nothing", "Keep all 6,033 unchanged pairs;\npick the checkpoint on changed rows only"),
-             ("SAMER is novels: it teaches word swaps", "Add DAASI (everyday, admin) and Baseet\n(educational) through a meaning filter"),
-             ("One strength fits no one", "A strength tag on every source;\nat run time it is the app’s strength setting")]
-    for i, (prob, fix) in enumerate(items):
-        y = 1.8 + i * 1.22
-        p = c.card(MX, y, 3.35, 1.0, WARN_LT, WARN_LT, 0.16, prob, 15, WARN, True)
-        ar = c.line(4.1, y + 0.5, 4.75, y + 0.5, SUN, 3, arrow=True)
-        f = c.card(4.9, y, SW - MX - 4.9, 1.0, PAPER2, PAPER3, 0.16, fix, 13.5, INK2)
-        c.step((p, "fade"), (ar, "wipe_left", 350, 500), (f, "fade", 600), auto=(i == 0))
-    tags = [("[S0]", "minimal"), ("[S1]", "light"), ("[S2]", "medium · default"), ("[S3]", "strong"), ("[SA]", "everyday")]
-    tw, gap = 1.78, 0.1575
-    cards = []
-    for i, (t, m) in enumerate(tags):
-        cards.append(c.card(MX + i * (tw + gap), 5.65, tw, 0.95, PAPER, SUN, 0.15,
-                            [(t, 18, INK, True, LATIN), (m, 11, INK3, False, LATIN)], 12))
-    dot = c.circle(MX + 2 * (tw + gap) + tw / 2, 5.5, 0.09, SUN)
-    c.step(*[(s, "fade", 200 * i) for i, s in enumerate(cards)], (dot, "fade", 1300))
-    c.finish(NOTES["S8Model2"])
-
-
-# ------------------------------------------------------------------------------------------------ 9
-def s9(prs, layout):
     c = Canvas(prs, layout, NIGHT)
-    chrome(c, 9, dark=True)
+    chrome(c, 7, dark=True)
     logo = c.pic(ASSETS / "bayan-horizontal-dark.png", (SW - 3.9) / 2, 1.25, 3.9, "Bayan logo", "Bayan logo")
     line = c.text(0, 3.2, SW, 0.7, "Simplify where you read.", 34, CREAM, True, "c")
     c.step((logo, "fade"), (line, "fade", 500), auto=True)
-    nxt = c.text(0, 4.35, SW, 0.4, "Next: does it work?", 18, SUN, True, "c")
-    labels = ["BayanBench: a benchmark for the reader’s task", "On a real phone", "Readers with dyslexia"]
-    widths = [4.75, 1.75, 2.15]
-    x = (SW - sum(widths) - 0.3) / 2
-    chips = []
-    for t, w in zip(labels, widths):
-        chips.append(chip(c, x, 5.0, t, 12.5, NIGHT2, CREAM, 0.42, w, False))
-        x += w + 0.15
-    slogan = c.pic(ASSETS / "sic-slogan-white.png", (SW - 1.9) / 2, 5.85, 1.9, "Samsung Innovation Campus slogan", "SIC slogan")
-    c.step((nxt, "fade"), *[(s, "fade", 300 + 200 * i) for i, s in enumerate(chips)], (slogan, "fade", 1100))
-    c.finish(NOTES["S9Close"])
+
+    limits = [
+        chip(c, 2.5, 4.2, "no reader has used Bayan yet", 12, NIGHT2, INK4, 0.4, 2.8, False),
+        chip(c, 5.55, 4.2, "Arabic fluency is still a gap", 12, NIGHT2, INK4, 0.4, 2.8, False),
+    ]
+    thanks = c.text(0, 5.15, SW, 0.35, "Thank you  ·  Team Cogni  ·  Samsung Innovation Campus", 13, SUN, align="c")
+    c.step(*[(s, "fade", 200 * i) for i, s in enumerate(limits)], (thanks, "fade", 800))
+    c.finish(slide_notes("S8Close"))
 
 
 def main():
@@ -320,7 +287,7 @@ def main():
         prs.part.drop_rel(sld.rId)
         ids.remove(sld)
     layout = next(l for l in prs.slide_layouts if l.name == "Body")
-    for build in (s1, s2, s3, s4, s5, s6, s7, s8, s9):
+    for build in (s1, s2, s3, s4, s5, s6, s7):
         build(prs, layout)
     prs.save(OUT)
     print(f"{OUT.name}: {len(prs.slides)} slides, {OUT.stat().st_size / 1e6:.2f} MB")

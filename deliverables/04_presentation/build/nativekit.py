@@ -131,6 +131,28 @@ class Canvas:
             p.name = name
         return p
 
+    def add_movie(self, path, x, y, w, h, poster=None, alt="", name=None):
+        """Embed a video that autoplays when the slide appears. `poster` is a PNG path for the
+        first frame; if omitted the first frame of the video is used."""
+        mv = self.sh.add_movie(str(path), Inches(x), Inches(y), Inches(w), Inches(h),
+                               poster_frame_image=str(poster) if poster else None,
+                               mime_type="video/mp4")
+        mv._element.nvPicPr.cNvPr.set("descr", alt)
+        if name:
+            mv.name = name
+        # autoplay timing: same mechanism as assemble_presenting.py
+        from lxml import etree as _et
+        timing_xml = (
+            '<p:timing xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'
+            '<p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot">'
+            '<p:childTnLst><p:video><p:cMediaNode vol="80000">'
+            f'<p:cTn id="2" fill="hold" display="0"><p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn>'
+            f'<p:tgtEl><p:spTgt spid="{mv.shape_id}"/></p:tgtEl>'
+            '</p:cMediaNode></p:video></p:childTnLst></p:cTn></p:par></p:tnLst></p:timing>'
+        )
+        self.slide._element.append(_et.fromstring(timing_xml))
+        return mv
+
     def group(self, shapes, name=None):
         g = self.sh.add_group_shape(shapes)
         if name:
