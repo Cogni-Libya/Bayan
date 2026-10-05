@@ -227,8 +227,9 @@ architectures, exported to the phone, tested on a device, and scored on a
 benchmark built for the task. The last week replaced the benchmark's closed
 meaning judge with an open scorer and checked that scorer against human ratings;
 model~3, trained on a second corpus, was then gated against the shipped model in
-the app's own pipeline; it passed on dev but lost meaning on test, so on 4 October
-it was added as an option and model~2 stayed the app's large model. \autoref{fig:schedule} shows the timeline;
+the app's own pipeline. Decoded greedily it lost meaning on test, so on 4 October
+it was added as an option and model~2 stayed the app's large model; with beam search
+in the app (5 October) and complete scores, model~3 outperforms every earlier model. \autoref{fig:schedule} shows the timeline;
 \autoref{tab:milestones} compares target and actual dates.
 
 \begin{figure}[h]
@@ -1397,9 +1398,11 @@ The evaluation points to specific next steps. The central one is to move the
 trade-off of F1: a model that simplifies as much as the tagged setting while
 keeping meaning as often as the shipped bundle. The meaning scorer, now checked
 against people, can rank candidate rewrites and select checkpoints, so that
-training is steered by the behaviours readers need rather than by SARI. Model~3 shows
-the next target: its simplification with model~2's meaning rate in the app, which
-a human rating of its outputs would help locate. The AraT5v2 bundles could be made
+training is steered by the behaviours readers need rather than by SARI. Model~3 with four
+beams is the first step: it keeps model~2's meaning rate in the app while cutting
+\mBeamTClause{} words from the longest clause, short of the tagged setting's
+\bvHTfiveClause{}. Making that quality the default needs faster beam decoding on the
+phone, since four beams take about three times as long per sentence as greedy. The AraT5v2 bundles could be made
 smaller by pruning their vocabulary to the pieces Arabic text uses (46\% of their
 parameters sit in two embedding matrices; about 223\,MB pruned), but only if the
 full evaluation shows no loss. Sentence splitting needs
