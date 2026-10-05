@@ -1,0 +1,269 @@
+% Bayan benchmark report. Build: make (see Makefile); every number and figure comes from build/ (generated).
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=1.9cm]{geometry}
+\usepackage{fontspec}
+\usepackage{graphicx,booktabs,longtable,array,xcolor,float,caption,subcaption,enumitem,amssymb}
+\usepackage[most]{tcolorbox}
+\usepackage{amsmath}
+\usepackage[colorlinks,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\usepackage{polyglossia}
+\setdefaultlanguage{english}
+\setotherlanguage{arabic}
+\setmainfont{TeX Gyre Pagella}[Scale=0.98]
+\newfontfamily\arabicfont[Script=Arabic,Scale=1.05]{Amiri}
+\newfontfamily\arabicfontsf[Script=Arabic]{Amiri}
+\newfontfamily\arabicfonttt[Script=Arabic]{Amiri}
+\definecolor{good}{HTML}{1E7B34}\definecolor{bad}{HTML}{B22222}
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=1pt,topsep=3pt}
+\setlength{\parskip}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\setlength{\LTcapwidth}{\textwidth}
+\graphicspath{{build/fig/}}
+\input{build/tab/macros}
+\newcommand{\fig}[3][\textwidth]{\begin{figure}[H]\centering\IfFileExists{build/fig/#2.pdf}{\includegraphics[width=#1]{#2}}{\fbox{missing figure \detokenize{#2}}}\caption{#3}\label{fig:#2}\end{figure}}
+\newcommand{\tab}[2]{\IfFileExists{build/tab/#1.tex}{\input{build/tab/#1}}{\fbox{missing table \detokenize{#1}}}}
+\newtcolorbox{exbox}[1]{colback=white,colframe=black!25,boxrule=0.4pt,arc=1pt,left=4pt,right=4pt,top=2pt,bottom=2pt,
+  fonttitle=\footnotesize\bfseries,coltitle=black,colbacktitle=black!6,title={#1},breakable}
+\newcommand{\exrow}[2]{\par\noindent\begin{minipage}[t]{2.4cm}\footnotesize\textbf{#1}\end{minipage}%
+  \begin{minipage}[t]{\dimexpr\linewidth-2.5cm}\begin{RTL}\textarabic{#2}\end{RTL}\end{minipage}\par\smallskip}
+\newcommand{\ship}{\textbf{model~3, app int8, beam~4 + safety net}}
+
+\title{\textbf{Bayan: benchmark report}\\[2pt]\large Every simplifier we built, on BayanBench v2.0, with the scorer checked against human raters}
+\author{Bayan team (Cogni-Libya) \quad·\quad report generated from \texttt{docs/benchmark\_report}}
+\date{4 October 2026}
+
+\begin{document}
+\maketitle
+\begin{abstract}\noindent
+We compare \NSystems{} systems: copying the input, the two models in today's app, models~1 and~2, the model~3 family
+(AraT5v2 trained on corpus~v1) with every decoding, precision and safety-net variant, a fluency retrain of model~3, and
+two dropped attempts (student DPO and minimum-risk training). All are scored with the frozen BayanBench~v2.0 rules on
+the dev and test splits, with meaning judged by Gemma~4~31B (AUC~\JudgeAUC{} against the human majority). The
+candidate to ship, \ship, is \emph{at least as faithful} as today's app on test (P(same) \TestShipPsame{} vs
+\TestAppPsame; paired difference \TestDiffPsame, an interval that just touches zero), keeps every number
+(\TestShipNum\% vs \TestAppNum\%), changes no negation, limit or condition, and leaves easy and protected text alone far
+more often. It shortens the longest clause clearly more (\TestShipClause{} vs \TestAppClause{} words; paired
+\TestDiffClause), but its reading-level drop is not significantly larger on test (\TestShipLevel{} vs
+\TestAppLevel{}). Two caveats run through the report: int8 quantization costs about half of model~3's float
+simplification, and the ship candidate reaches its meaning score partly by leaving more text unchanged
+(\TestShipUnch\% vs \TestAppUnch\%); on the outputs it does change, P(same) is \TestShipPsameChanged{} vs
+\TestAppPsameChanged{} for the app.
+\end{abstract}
+\tableofcontents
+\newpage
+
+%=====================================================================================================
+\section{Summary}
+\begin{itemize}
+\item \textbf{Recommendation: ship \ship{}} (\texttt{Congi-libya/bayan-arat5-v1-bundle}, 471\,MB): the best balance we
+  have. Against today's app it is never significantly worse on meaning, significantly better on every safety measure,
+  and significantly simpler on clause length on both splits (Table~\ref{tab:gate}, Figure~\ref{fig:gate}).
+\item \textbf{Test, core items, paired against today's app:} P(same) \TestDiffPsame; meaning kept \TestDiffKept{}
+  points; clause \TestDiffClause{} words; reading level \TestDiffLevel{} levels; numbers kept \TestShipNum\% vs
+  \TestAppNum\%; easy text left unchanged \TestShipEasy\% vs \TestAppEasy\%.
+\item \textbf{Dev agrees and is a little stronger:} P(same) \DevDiffPsame; clause \DevDiffClause{} words; level
+  \DevDiffLevel{} (significant on dev).
+\item \textbf{The cost of the phone:} float model~3 with the net shortens the longest clause by \TestMnetClause{} words
+  and drops \TestMnetLevel{} levels; the int8 bundle with beam~4 and the net, \TestShipClause{} and
+  \TestShipLevel{}. Beam~4 and the net buy back meaning, not simplicity (Figure~\ref{fig:factorial}).
+\item \textbf{Copying inflates P(same):} a copy counts as perfect meaning. The ship candidate leaves \TestShipUnch\% of
+  core test items unchanged (app: \TestAppUnch\%). On the outputs it does change, its P(same) is
+  \TestShipPsameChanged{} vs \TestAppPsameChanged{} for the app's (Figure~\ref{fig:violins}): when it rewrites, it
+  rewrites harder and loses more meaning per rewrite. The net and the scorer catch the dangerous cases (numbers,
+  negations), not every omission.
+\item \textbf{The fluency retrain is not worth shipping:} small gains in Gemma's Arabic score, more copying, and under
+  int8 it simplifies less than model~3.
+\item \textbf{Dropped:} student DPO (better proxies, worse on the 31B scorer) and MRT (the judge in the loss made
+  outputs simpler but not more faithful).
+\item \textbf{int8 needs a VNNI-class CPU:} the app's per-channel int8 recipe gives nonsense on an AVX2-only Xeon and
+  fluent output on an AVX-VNNI CPU; ARM phones use the same integer dot-product path as VNNI (Table~\ref{tab:int8}),
+  but this still has to be confirmed on a phone.
+\end{itemize}
+
+\fig{pareto}{Meaning against simplicity for every system (core items; 95\% cluster-bootstrap intervals). Dashed: the
+Pareto frontier (no system is both more faithful and simpler). Star: the ship candidate. Arrows: adding the safety
+net to float model~3; float beam~4 $\rightarrow$ app int8 beam~4 $\rightarrow$ + net.}
+\fig{pareto_main}{The same, main systems only, numbered (95\% intervals).}
+
+%=====================================================================================================
+\section{Systems}
+\label{sec:systems}
+All model~3-family systems use the prefix «\textarabic{بسط: }» (no shadda); model~2 AraT5 used «\textarabic{بسّط: }».
+``App int8'' is the app's own export recipe (optimum export, merged decoder, dynamic QInt8 per-channel on MatMul and
+Gather), run with the app's pipeline (sentence pieces, the app's guards). ``Net'' is the per-sentence safety net: a
+sentence that drops a number or a Latin token, or changes the count of negation, limit or condition words, is shown
+unchanged. ``Hybrid $p$\%'' runs beam~4 only on the $p$\% least confident sentences.
+\tab{systems}{}
+
+%=====================================================================================================
+\section{Benchmark, scorer and statistics}
+\begin{itemize}
+\item \textbf{BayanBench v2.0} (frozen 4 Oct; data v1.0, 731 dev and 1,250 test items). Item sets:
+  \emph{core} (BAREC sentences), \emph{held-out} (news and legal), \emph{outside} (real text from outside BAREC and
+  SAMER) and \emph{written} (medicine leaflets). Tracks: A1--A3 simplify, B hard text, C easy text (should stay), E1--E4
+  edge cases (cut-off endings, lists, dialogue), F protected text (scripture).
+\item \textbf{Meaning} is Gemma~4~31B (int4) in scoring mode: P(yes) for \emph{same}, \emph{added}, \emph{missing}
+  and \emph{contradict}. The official rule: \emph{meaning kept} = P(same) $\ge 0.5$ and every number kept.
+\item \textbf{Simpler} is measured as change: words cut from the longest clause (items with a clause over 15 words),
+  BAREC reading levels dropped by the hardest sentence (items at level 10+), and SAMER level-4/5 words removed.
+\item \textbf{Joint} (meaning kept and simpler) uses our own minimum change, 2 clause words or half a level; v2.0
+  leaves it undecided.
+\item \textbf{Extra questions} (diagnostic): Gemma~31B's P(yes) for ``Arabic correct'', ``easier to read'' and
+  ``coherent''. Their agreement with raters is weak (Section~\ref{sec:judge}), so they are never used for decisions.
+\item \textbf{Intervals} are 95\% cluster-bootstrap intervals over documents (bayanbench's own \texttt{stats.ci});
+  paired differences use the same items for both systems. In tables, $\uparrow$/$\downarrow$ mark paired differences
+  whose interval excludes zero.
+\end{itemize}
+
+%=====================================================================================================
+\section{Can we trust the scorer?}
+\label{sec:judge}
+Six raters rated 290 tasks in the BayanBench v2 round (3 Oct): 245 single outputs (meaning, Arabic, ease) and 45
+side-by-side pairs. Table~\ref{tab:judge} and Figures~\ref{fig:confusion}--\ref{fig:raters} compare the scorer with the
+human majority.
+\begin{table}[H]\centering\small\caption{The scorer against human raters.}\label{tab:judge}\tab{judge}{}\end{table}
+\fig{confusion}{Confusion matrices against the human majority (rows; ``tie'' = no majority). Counts and row
+percentages.}
+\fig{judge_roc}{Left: ROC of P(same) (and of the MiMo second-judge pilot) for the human majority ``same''. Middle: how
+accuracy, balanced accuracy, same-kept rate and changes-caught rate move with the threshold. Right: calibration.}
+\fig{raters}{Agreement between raters, and of each rater with the scorer (binary: same vs changed).}
+\noindent\textbf{Reading.} The meaning scorer separates ``same'' from ``changed'' well (AUC \JudgeAUC), and the
+frozen 0.5 threshold gives a balanced accuracy close to the best cut's (0.79 at 0.5 vs 0.81 at 0.30; Table~\ref{tab:judge}): at 0.5 the scorer lets about a quarter of the human-``same'' pairs fail, so it errs towards strictness. Humans agree only moderately with one another on meaning
+($\alpha$ = \AlphaMeaning{} binary), and barely on Arabic ($\alpha$ = \AlphaArabic) and ease ($\alpha$ =
+\AlphaEase): this is why the extra questions stay diagnostic. MiMo failed the second-judge rule (it sided with the
+humans on only half of Gemma's disagreements).
+
+%=====================================================================================================
+\section{Results: leaderboards}
+Bold: best in the column (copy excluded). Kept, Joint, Num., Easy=, Prot.\ and Neg.$\Delta$ are \%; Clause in words,
+Level in BAREC levels, Hard w.\ in SAMER words. Contra\%: changed outputs with P(contradict) $\ge$ 0.5. Arabic: Gemma's
+``Arabic correct'' (diagnostic). Unch.\%: outputs identical to the input.
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Test split, core items.}\label{tab:leadtest}\tab{lead_test_core}{}\end{table}
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Dev split, core items.}\label{tab:leaddev}\tab{lead_dev_core}{}\end{table}
+\fig{scoreboard_test}{Every measure for every system (test, core). Colour is the rank within the column, green
+better; numbers are the raw values.}
+
+%=====================================================================================================
+\section{Meaning}
+\fig{meaning_bars_test}{P(same), meaning kept and kept-and-simpler on test (core), all systems.}
+\fig{meaning_bars_dev}{The same on dev.}
+\fig{violins}{Distribution of P(same) over the outputs each system actually changed (copies excluded).}
+\fig{failure_modes}{Mean P(added), P(missing) and P(contradict): when meaning is lost, it is mostly by leaving
+something out.}
+\fig[0.6\textwidth]{contradiction}{Share of changed outputs that Gemma reads as contradicting the source.}
+
+%=====================================================================================================
+\section{Simplicity}
+\fig{simplicity}{Clause shortening, reading-level drop and hard-word removal (test, core).}
+\noindent Float model~3 with the net shortens the longest clause by \TestMnetClause{} words and lowers the reading level by
+\TestMnetLevel; the shipping int8 bundle keeps most of the clause shortening (\TestShipClause) but only about half of
+the level drop (\TestShipLevel). Today's app shortens clauses by \TestAppClause{} words and lowers the level by
+\TestAppLevel.
+
+%=====================================================================================================
+\section{Safety and restraint}
+\fig{safety}{Numbers kept, easy text left unchanged (track C), protected text keeps its letters (track F) and
+cut-off endings keep their end mark (E1).}
+\fig[0.62\textwidth]{flags_heatmap}{Risk flags: how often a system changes a negation, limit or condition word, adds a
+mid-sentence full stop, or breaks a house rule. The safety net brings the first three to zero by construction.}
+
+%=====================================================================================================
+\section{Arabic quality (diagnostic)}
+\fig{arabic}{Gemma~31B's extra questions. Model~3's outputs are rated less correct and less coherent than the app's
+lighter edits; raters only weakly agree with these scores.}
+
+%=====================================================================================================
+\section{Precision, decoding and the safety net}
+\fig{factorial}{Every combination of model (model~3, retrain), precision (float, app int8), decoding (greedy, beam~4)
+and safety net. Dotted: today's app.}
+\fig[0.75\textwidth]{hybrid}{Hybrid decoding (float model~3): beam~4 on the least confident share of sentences.
+P(same) rises towards full beam~4 and clause shortening stays roughly flat; no partial share beats full beam~4.}
+\begin{table}[H]\centering\small\caption{The app's int8 recipe on two CPUs: exact matches with PyTorch greedy on
+reference sentences.}\label{tab:int8}\tab{int8}{}\end{table}
+
+%=====================================================================================================
+\section{Item sets}
+\fig{sets}{Ship candidate vs today's app, model~2 and float model~3 + net on each item set (test).}
+
+%=====================================================================================================
+\section{Reference-based scores}
+SARI against corpus~v1 references and SAMER test (human L3 and L4 references), for the float systems scored in the
+all-systems comparison. Copy\%: changed-reference rows the model leaves as a copy. Non-word\%: output words not seen
+in BAREC train; Repeat\%: outputs with a repeated word or 3-gram.
+\begin{table}[H]\centering\scriptsize\caption{Reference-based scores.}\label{tab:refsets}\tab{refsets}{}\end{table}
+
+%=====================================================================================================
+\section{Human ratings}
+\fig{human_systems}{Human ratings of the systems in the rating round (model~3 was not yet built; the round is the
+basis of the scorer validation).}
+\fig[0.85\textwidth]{human_pairs}{Side-by-side preferences: tag vs no tag, AraT5 vs AraBART, and the app vs model~2.}
+
+%=====================================================================================================
+\section{Training}
+\fig{training_curves}{Model~3 and the fluency retrain during training (dev evaluation): SARI on changed rows, copy
+rate and edits to rows that should stay unchanged.}
+\fig{training_other}{Left: retrain checkpoints under the selection rule (pick the highest Gemma Arabic with SARI
+within 1 of the best and P(same) $\ge$ model~3's). Middle: student DPO improved every proxy but lost on Gemma~31B.
+Right: MRT with the judge in the loss.}
+\begin{table}[H]\centering\small\caption{Retrain checkpoint selection (400 corpus v1 dev rows).}\tab{retrain_sel}{}\end{table}
+
+%=====================================================================================================
+\section{On-device cost}
+\begin{table}[H]\centering\small\caption{Size and CPU latency. Hardware differs between rows (last column).}\label{tab:device}\tab{device}{}\end{table}
+\fig[0.55\textwidth]{device}{Size against CPU time per sentence.}
+\begin{table}[H]\centering\small\caption{Model 3 artifacts.}\tab{bundles}{}\end{table}
+
+%=====================================================================================================
+\section{Ship gate: the candidate against today's app}
+\fig{gate}{Paired differences, ship candidate minus today's app (P(same) shown $\times$100). Green: significantly
+better; red: significantly worse; grey: interval includes zero.}
+{\small\setlength{\tabcolsep}{4pt}\tab{gate}{}}
+\captionof{table}{Every BayanBench measure for the ship candidate and today's app (core items), with the paired
+difference.}\label{tab:gate}
+
+%=====================================================================================================
+\section{Examples}
+Test items, chosen at random within each category by fixed rules (\texttt{analyse.py}); scores are Gemma~31B's.
+\tab{examples}{}
+
+%=====================================================================================================
+\section{Limitations}
+\begin{itemize}
+\item \textbf{One scorer.} Meaning rests on Gemma~4~31B (AUC \JudgeAUC{} against humans); the second-judge pilot
+  failed, so there is no independent check yet. The extra questions are diagnostic only.
+\item \textbf{Copies count as perfect meaning.} Systems that copy more look more faithful; we report unchanged rates
+  and P(same) on changed outputs alongside.
+\item \textbf{The joint rate uses our own minimum change} (2 clause words or half a level); v2.0 leaves it open.
+\item \textbf{Human ratings predate model~3.} The rating round covered the app and model~2 only.
+\item \textbf{int8 was checked on two x86 CPUs, not on a phone.} ARM uses the same integer dot-product path as VNNI,
+  but a phone latency and output check is still needed.
+\item \textbf{Latency numbers come from different machines} (Table~\ref{tab:device}).
+\end{itemize}
+
+\appendix
+\section{Per-set leaderboards}
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Test, held-out items (news, legal).}\tab{lead_test_heldout}{}\end{table}
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Test, outside items.}\tab{lead_test_outside}{}\end{table}
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Test, written items (medicine leaflets).}\tab{lead_test_written}{}\end{table}
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Dev, held-out items.}\tab{lead_dev_heldout}{}\end{table}
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Dev, outside items.}\tab{lead_dev_outside}{}\end{table}
+\begin{table}[H]\centering\scriptsize\setlength{\tabcolsep}{2.6pt}\caption{Dev, written items.}\tab{lead_dev_written}{}\end{table}
+
+\section{Paired differences against today's app, every system}
+\subsection*{Test, core items: system minus today's app (paired; $\uparrow$/$\downarrow$: interval excludes zero)}
+{\small\tab{pairdiff_test}{}}
+\subsection*{Dev, core items}
+{\small\tab{pairdiff_dev}{}}
+
+\section{Reproducing this report}
+\texttt{docs/benchmark\_report/README.md} explains how to rebuild every system's outputs, the Gemma~31B scores and the
+scorecards from scratch. With the outputs and score files in place:
+{\footnotesize\begin{verbatim}
+export BAYANBENCH_DATA=<snapshot of Congi-libya/bayanbench-data>   # v1.0 data
+export BAYAN_DATA=<repo>/data/processed/meaning_reward              # system outputs and score files
+export SAMER_DIR=<licensed SAMER copy>                              # hard-word measures (optional)
+python collect.py   # official v2.0 scorecards, every system and split
+make                # analyse.py -> figures.py -> tables.py -> latexmk
+\end{verbatim}}
+\end{document}

@@ -1,0 +1,25 @@
+{
+ "_note": "Measured values that live only in run logs. Each row names its source; nothing here is estimated.",
+ "device": [
+  {"name": "Model 1 (PyTorch fp32)", "size_mb": 1470, "s_per_sentence": 0.912, "hw": "vast.ai CPU, 4 threads, greedy", "src": "compare/out/gen/latency.json", "color": "#ff7f0e"},
+  {"name": "Model 2 AraT5 (PyTorch fp32)", "size_mb": 1470, "s_per_sentence": 0.868, "hw": "vast.ai CPU, 4 threads, greedy", "src": "compare/out/gen/latency.json", "color": "#ff7f0e"},
+  {"name": "Model 2 AraBART (PyTorch fp32)", "size_mb": 557, "s_per_sentence": 0.424, "hw": "vast.ai CPU, 4 threads, greedy", "src": "compare/out/gen/latency.json", "color": "#ff7f0e"},
+  {"name": "Model 3 (PyTorch fp32)", "size_mb": 1470, "s_per_sentence": 0.828, "hw": "vast.ai CPU, 4 threads, greedy", "src": "compare/out/gen/latency.json", "color": "#1f77b4"},
+  {"name": "Model 3 ONNX fp32", "size_mb": 1470, "s_per_sentence": 0.663, "hw": "vast.ai CPU, greedy", "src": "mix/out_all/out/onnx_latency.json", "color": "#1f77b4"},
+  {"name": "Model 3 ONNX int8 per-tensor", "size_mb": 740, "s_per_sentence": 0.449, "hw": "vast.ai CPU, greedy", "src": "mix/out_all/out/onnx_latency.json", "color": "#2ca02c"},
+  {"name": "Model 3 app int8 bundle", "size_mb": 471, "s_per_sentence": 0.17, "hw": "i7-12700 (AVX-VNNI), 4 threads, the app's greedy loop", "src": "mix/bundle_vnni_check.log", "color": "#2ca02c", "ship": true}
+ ],
+ "int8_cpu": [
+  {"cpu": "Xeon E5-2699 v4 (AVX2, no VNNI)", "recipe": "per-channel, MatMul+Gather (app recipe)", "match": "0/12", "verdict": "nonsense output (saturation)"},
+  {"cpu": "Xeon E5-2699 v4 (AVX2, no VNNI)", "recipe": "per-channel, MatMul only", "match": "0/6", "verdict": "nonsense output"},
+  {"cpu": "Xeon E5-2699 v4 (AVX2, no VNNI)", "recipe": "per-tensor", "match": "1/6", "verdict": "fluent, copies more"},
+  {"cpu": "Xeon E5-2699 v4 (AVX2, no VNNI)", "recipe": "per-channel, reduce_range", "match": "1/6", "verdict": "fluent"},
+  {"cpu": "i7-12700 (AVX-VNNI)", "recipe": "per-channel, MatMul+Gather (app recipe)", "match": "3/12", "verdict": "fluent; 0.17 s/sentence"}
+ ],
+ "bundles": [
+  {"repo": "Congi-libya/bayan-arat5-v1", "what": "model 3, float weights", "size": "1.47 GB"},
+  {"repo": "Congi-libya/bayan-arat5-v1-bundle", "what": "model 3, app int8 bundle (encoder 170 MB, decoder 285 MB, tokenizer 15 MB)", "size": "471 MB"},
+  {"repo": "Congi-libya/bayan-arat5-v1-mix", "what": "fluency retrain, float weights", "size": "1.47 GB"},
+  {"repo": "Congi-libya/bayan-arat5-v1-mix-bundle", "what": "fluency retrain, app int8 bundle", "size": "471 MB"}
+ ]
+}
