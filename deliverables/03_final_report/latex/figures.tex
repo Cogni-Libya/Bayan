@@ -1,0 +1,385 @@
+% Figures for the Bayan final report. Every number plotted is measured; the
+% source of each series is named in the caption that uses it.
+
+\tikzset{
+  flow/.style={-{Stealth[length=4pt]}, draw=black!80, line width=0.6pt},
+  built/.style={draw=sicblue, line width=0.8pt, fill=white, rounded corners=2pt,
+                minimum height=9mm, align=center, inner xsep=4pt},
+  chosen/.style={built, fill=figpale, dash pattern=on 3pt off 1.5pt},
+  pending/.style={draw=figgrey, line width=0.7pt, dashed, fill=white,
+                  rounded corners=2pt, minimum height=9mm, align=center,
+                  inner xsep=4pt, text=black!70},
+  gate/.style={draw=figwarm, line width=0.9pt, fill=figpale, rounded corners=2pt,
+               minimum height=9mm, align=center, inner xsep=4pt},
+}
+
+% ------------------------------------------------------------- schedule --
+% Gantt of the timeline as executed, 13 Sep (day 0) to 3 Oct (day 20). 4.3mm per day.
+\newcommand{\figschedule}{%
+\begin{tikzpicture}[font=\scriptsize, x=4.3mm, y=-4.3mm]
+  \def\lab{-0.6}
+  \foreach \d/\t in {0/13,2/15,4/17,6/19,8/21,10/23,12/25,14/27,16/29,18/1,20/3,22/5} {
+    \draw[black!12] (\d,0.3) -- (\d,19.9);
+    \node[anchor=south, text=black!60] at (\d,0.3) {\t};
+  }
+  \node[anchor=south east, text=black!60] at (\lab,0.3) {September \enspace$|$\enspace day};
+  \node[anchor=south, text=black!60] at (19.5,-0.35) {October};
+  \foreach \r/\s/\e/\t in {
+    1/0/5/{Scoping, literature audit, brief},
+    2/4/6/{Repository and review workflow \#1--\#3},
+    3/6/8/{Product-form decision \#9},
+    4/6/9/{Validators, readability check \#10 \#17},
+    5/6/10/{Evaluation scripts, locked tests \#7 \#19},
+    6/6/9/{Diacritization benchmark \#6},
+    7/6/10/{SAMER conversion, v0.1 \#5},
+    8/7/9/{Android plugin shell \#14},
+    9/5/11/{Action Plan \#25},
+    10/9/11/{BayanSimplify-v0.1 on the locked tests; diagnosis},
+    11/10/11/{v0.2 recipe and data \#27 \#33 \#34},
+    12/11/13/{v0.2 trained: AraT5v2, AraBART \#28 \#29},
+    13/6/13/{Synthetic corpus exported \#8 \#38},
+    14/12/14/{On-device engine and app; phone test},
+    15/13/15/{BayanBench built},
+    16/15/15.6/{v0.2 scored on the BayanBench test split},
+    17/17/18/{BayanBench v2: open meaning scorer \#48},
+    18/18/20/{Human rating round, six raters \#48}} {
+    \fill[sicblue] (\s,\r-0.32) rectangle (\e,\r+0.32);
+    \node[anchor=east] at (\lab,\r) {\t};
+  }
+  \foreach \d/\t/\a in {6/{M1}/north, 9/{AP}/north east, 10/{M2}/north west,
+                         22/{Submit}/north east, 23/{Pitch}/north west} {
+    \node[fill=black, diamond, inner sep=1.3pt] at (\d,19.4) {};
+    \node[anchor=\a, font=\tiny] at (\d,19.7) {\t};
+  }
+  \node[anchor=east] at (\lab,19.4) {Milestones};
+\end{tikzpicture}}
+
+% ---------------------------------------------------------- architecture --
+\newcommand{\figarchitecture}{%
+\begin{tikzpicture}[font=\footnotesize]
+  \node[built, minimum width=29mm] (host) {Any app\\{\scriptsize message, web page, PDF}};
+  \node[built, right=8mm of host, minimum width=31mm] (intent)
+       {\texttt{PROCESS\_TEXT}\\{\scriptsize menu entry \ar{تبسيط}}};
+  \node[built, right=8mm of intent, minimum width=33mm] (sheet)
+       {Overlay over the app\\{\scriptsize simplified $\leftrightarrow$ original}};
+  \draw[flow] (host) -- (intent);
+  \draw[flow] (intent) -- (sheet);
+
+  \node[built, below=22mm of host.west, anchor=west, minimum width=21mm]
+       (strip) {strip tashkeel,\\split sentences};
+  \node[built, right=3mm of strip, minimum width=27mm] (simp)
+       {simplifier, int8\\{\scriptsize streamed, or 4 beams}};
+  \node[built, right=3mm of simp, minimum width=22mm] (guard)
+       {guards\\{\scriptsize keep the source}};
+  \node[built, right=3mm of guard, minimum width=22mm] (tts)
+       {read-aloud\\{\scriptsize word highlight}};
+  \draw[flow] (strip) -- (simp);
+  \draw[flow] (simp) -- (guard);
+  \draw[flow] (guard) -- (tts);
+  \node[built, below=6mm of guard, minimum width=27mm] (diac) {diacritizer\\{\scriptsize Libtashkeel, a setting}};
+  \draw[flow, densely dashed] (guard.south) -- (diac.north);
+  \draw[flow, densely dashed] (diac.east) -| (tts.south);
+  \begin{scope}[on background layer]
+    \node[draw=figgrey, line width=0.6pt, rounded corners=3pt, inner xsep=6pt,
+          inner ysep=6pt, fit=(strip)(simp)(guard)(tts)(diac)] (dev) {};
+  \end{scope}
+  \node[anchor=north west, font=\scriptsize\itshape, text=black!65]
+       at ([yshift=-1pt]dev.south west) (devlab) {on the device: ONNX Runtime (simplifier, diacritizer), sherpa-onnx (voices); no network after download};
+  \draw[flow] (intent.south) -- ++(0,-6mm) -| (strip.north);
+  \draw[flow] (tts.north) -- ++(0,6mm) -| (sheet.south);
+
+  \node[built, minimum height=3mm, minimum width=6mm, below=3mm of devlab.south west,
+        anchor=north west] (k1) {};
+  \node[right=1mm of k1, font=\scriptsize] (l1) {built and running on a phone};
+  \draw[flow, densely dashed] ([xshift=5mm]l1.east) -- ++(6mm,0) node[right, font=\scriptsize] {optional step};
+\end{tikzpicture}}
+
+% --------------------------------------------------------------- pipeline --
+\newcommand{\figpipeline}{%
+\begin{tikzpicture}[font=\footnotesize, node distance=7mm]
+  \node[built, minimum width=36mm] (src) {source corpora\\{\scriptsize SAMER, DAASI, external pairs}};
+  \node[gate, below=of src, minimum width=36mm] (leak) {leakage check\\{\scriptsize exact + 5-gram Jaccard}};
+  \node[gate, below=of leak, minimum width=36mm] (mean) {meaning filter, strength tags\\{\scriptsize external pairs only}};
+  \node[built, below=of mean, minimum width=36mm] (train) {fine-tuning\\{\scriptsize AraT5v2 and AraBART}};
+  \node[built, below=of train, minimum width=36mm] (eval) {scoring\\{\scriptsize copy baseline; BayanBench}};
+  \draw[flow] (src) -- (leak);
+  \draw[flow] (leak) -- node[right, font=\scriptsize, text=figwarm] {clean rows only} (mean);
+  \draw[flow] (mean) -- (train);
+  \draw[flow] (train) -- (eval);
+
+  \node[built, left=20mm of leak, minimum width=30mm, dash pattern=on 4pt off 2pt]
+       (test) {locked test sets\\{\scriptsize SHA-256 manifest}};
+  \draw[flow] (test) -- (leak);
+  \draw[flow] (test.south) |- node[pos=0.8, below, font=\scriptsize] {final models only} (eval.west);
+
+  \node[built, right=20mm of src, minimum width=30mm] (gen) {LLM generation\\{\scriptsize from BAREC sources}};
+  \node[gate, right=20mm of leak, minimum width=30mm] (judge) {validators\\{\scriptsize equivalence, readability}};
+  \node[built, right=20mm of mean, minimum width=30mm] (pub) {synthetic corpus\\{\scriptsize v1: 14,975 rows, public}};
+  \draw[flow] (judge) -- (pub);
+\end{tikzpicture}}
+
+% -------------------------------------------------------------------- EDA --
+\newcommand{\figlengths}{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=55mm, font=\footnotesize,
+  xlabel={source sentence length (words)}, ylabel={share of sentences (\%)},
+  symbolic x coords={1--5,6--10,11--15,16--20,21--25,26--30,31--35,36--40,$>$40},
+  xtick=data, ymin=0, ymax=45, grid=major, grid style={black!8},
+  axis x line*=bottom, axis y line*=left,
+  legend style={at={(0.98,0.97)}, anchor=north east, draw=black!25, font=\scriptsize},
+  every axis plot/.append style={line width=1pt, mark size=1.4pt}]
+  \addplot[sicblue, mark=*] coordinates {(1--5,37.17)(6--10,39.41)(11--15,15.58)(16--20,5.31)(21--25,1.49)(26--30,0.66)(31--35,0.15)(36--40,0.11)($>$40,0.10)};
+  \addlegendentry{SAMER train (14,343)}
+  \addplot[figgrey, mark=square*] coordinates {(1--5,29.05)(6--10,22.82)(11--15,17.28)(16--20,12.45)(21--25,7.80)(26--30,4.65)(31--35,2.54)(36--40,1.39)($>$40,2.01)};
+  \addlegendentry{BAREC train (54,845)}
+  \addplot[black, dashed, mark=o] coordinates {(1--5,19.15)(6--10,25.38)(11--15,27.77)(16--20,18.09)(21--25,6.36)(26--30,2.12)(31--35,0.66)(36--40,0.46)($>$40,0.00)};
+  \addlegendentry{DAASI (1,509)}
+\end{axis}
+\end{tikzpicture}}
+
+% ---------------------------------------------------------- training run --
+\newcommand{\figtraining}{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=56mm, font=\footnotesize,
+  xlabel={training step}, ylabel={copy rate (\%)},
+  xmin=100, xmax=3350, ymin=58, ymax=95,
+  axis y line*=left, axis x line*=bottom,
+  legend style={at={(0.02,0.03)}, anchor=south west, draw=black!25, font=\scriptsize},
+  grid=major, grid style={black!8}]
+  \addplot[figwarm, line width=1pt, mark=*, mark size=1.1pt] coordinates {
+    (200,91.4)(400,90.2)(600,88.2)(800,85.6)(1000,77.8)(1200,75.2)(1400,68.8)
+    (1600,71.8)(1800,70.2)(2000,69.0)(2200,68.6)(2400,67.6)(2600,66.8)
+    (2800,63.6)(3000,65.2)(3200,64.8)(3250,64.8)};
+  \addlegendentry{copy rate (left axis)}
+  \addlegendimage{sicblue, line width=1pt, mark=square*, mark size=1.1pt}
+  \addlegendentry{SARI (right axis)}
+\end{axis}
+\begin{axis}[
+  width=\linewidth, height=56mm, font=\footnotesize,
+  xmin=100, xmax=3350, ymin=71, ymax=77.5,
+  axis y line*=right, axis x line=none, ylabel={SARI, 500-row dev subset}]
+  \addplot[sicblue, line width=1pt, mark=square*, mark size=1.1pt] coordinates {
+    (200,72.35)(400,73.69)(600,73.99)(800,74.13)(1000,73.75)(1200,74.17)
+    (1400,74.34)(1600,74.87)(1800,75.27)(2000,74.90)(2200,75.29)(2400,75.14)
+    (2600,75.61)(2800,75.42)(3000,75.74)(3200,75.56)(3250,75.56)};
+  \draw[black!50, line width=0.6pt, dotted] (axis cs:2200,71) -- (axis cs:2200,77.5);
+  \node[font=\scriptsize, text=black!60, anchor=north east, align=right]
+    at (axis cs:2170,77.3) {validation loss\\bottoms here};
+  \draw[black!50, line width=0.6pt, dotted] (axis cs:3000,71) -- (axis cs:3000,77.5);
+  \node[font=\scriptsize, text=black!60, anchor=south east, align=right]
+    at (axis cs:2970,71.2) {checkpoint\\selected};
+\end{axis}
+\end{tikzpicture}}
+
+% ------------------------------------------------------- v0.2 training ---
+% From the committed notebooks (scripts/training/model2/*.ipynb): 20 evaluations
+% each, on the 600 changed rows (SARI) and all 900 rows (copy rate) of select_dev.
+\newcommand{\figtrainingtwo}{%
+\begin{tikzpicture}
+\begin{axis}[
+  name=a, width=0.52\linewidth, height=52mm, font=\scriptsize,
+  xlabel={epoch}, ylabel={SARI, 600 changed rows}, xmin=0.3, xmax=10.2, ymin=55, ymax=67.5,
+  grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left,
+  title={(a) selection metric}, title style={font=\scriptsize\bfseries},
+  legend style={at={(0.97,0.03)}, anchor=south east, draw=black!25, font=\tiny},
+  every axis plot/.append style={line width=0.9pt, mark size=1pt}]
+  \addplot[sicblue, mark=*] coordinates {(0.5,55.91)(1,58.84)(1.5,59.70)(2,61.00)(2.5,61.61)(3,61.96)(3.5,62.65)(4,63.88)(4.5,63.85)(5,64.77)(5.5,65.36)(6,65.13)(6.5,65.69)(7,65.96)(7.5,66.26)(8,66.17)(8.5,66.24)(9,66.47)(9.5,66.56)(10,66.58)};
+  \addlegendentry{AraT5v2 (368M)}
+  \addplot[figwarm, mark=triangle*] coordinates {(0.5,56.08)(1,57.65)(1.5,59.30)(2,59.28)(2.5,60.99)(3,61.06)(3.5,62.59)(4,63.05)(4.5,63.19)(5,63.45)(5.5,63.96)(6,64.20)(6.5,64.51)(7,64.31)(7.5,64.61)(8,64.54)(8.5,64.53)(9,64.71)(9.5,64.55)(10,64.50)};
+  \addlegendentry{AraBART (139M)}
+\end{axis}
+\begin{axis}[
+  at={(a.east)}, anchor=west, xshift=13mm,
+  width=0.52\linewidth, height=52mm, font=\scriptsize,
+  xlabel={epoch}, ylabel={copy rate, all 900 rows (\%)}, xmin=0.3, xmax=10.2, ymin=28, ymax=95,
+  grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left,
+  title={(b) outputs identical to the input}, title style={font=\scriptsize\bfseries},
+  every axis plot/.append style={line width=0.9pt, mark size=1pt}]
+  \addplot[sicblue, mark=*] coordinates {(0.5,79.89)(1,78.33)(1.5,73.89)(2,68.33)(2.5,62.78)(3,61.78)(3.5,60.00)(4,60.44)(4.5,59.33)(5,57.00)(5.5,54.00)(6,54.00)(6.5,53.11)(7,51.67)(7.5,52.11)(8,52.33)(8.5,51.11)(9,51.22)(9.5,50.67)(10,51.00)};
+  \addplot[figwarm, mark=triangle*] coordinates {(0.5,91.22)(1,84.56)(1.5,73.11)(2,70.22)(2.5,66.89)(3,62.67)(3.5,61.44)(4,61.78)(4.5,60.00)(5,59.78)(5.5,55.89)(6,53.33)(6.5,54.78)(7,52.44)(7.5,53.89)(8,51.67)(8.5,51.56)(9,51.44)(9.5,52.11)(10,52.00)};
+  \draw[black!60, dashed, line width=0.7pt] (axis cs:0.3,33.33) -- (axis cs:10.2,33.33);
+  \node[font=\tiny, text=black!60, anchor=south east] at (axis cs:10.1,33.6) {human references: 33.3\%};
+\end{axis}
+\end{tikzpicture}}
+
+% --------------------------------------------------------------------- UI --
+\newcommand{\figui}{%
+\begin{tikzpicture}[font=\scriptsize]
+  \node[inner sep=0] (a) {\includegraphics[height=70mm]{assets/ui_select.jpg}};
+  \node[inner sep=0, right=4mm of a] (b) {\includegraphics[height=70mm]{assets/ui_sheet.jpg}};
+  \node[inner sep=0, right=4mm of b] (c) {\includegraphics[height=70mm]{assets/ui_floating.jpg}};
+  \node[inner sep=0, right=4mm of c] (d) {\includegraphics[height=70mm]{assets/ui_settings.jpg}};
+  \foreach \n/\t in {a/{(a) select text in any app, then \emph{Simplify}}, b/{(b) the result, read aloud word by word},
+                     c/{(c) minimised over the page, still reading}, d/{(d) the reader's settings, with a live preview}}
+    \node[below=1.5mm of \n, font=\scriptsize\bfseries, text width=33mm, align=center] {\t};
+\end{tikzpicture}}
+
+% ------------------------------------------------- meaning vs simplification --
+% Data: \tradeoffDev / \tradeoffTest from make_bench_v2.py (BayanBench v2, core items):
+% {x = words cut from the longest clause / y = meaning kept % / x-err low / x-err high / y-err low / y-err high / style}.
+% AraT5v2 blue, AraBART orange; square = [S2] tag, circle = no tag, triangle = int8 app bundle.
+\pgfplotsset{
+  pcopy/.style={black, mark=diamond*, mark size=2.6pt},
+  ptfives/.style={sicblue, mark=square*, mark size=2.1pt},
+  pbarts/.style={figwarm, mark=square*, mark size=2.1pt},
+  ptfiven/.style={sicblue, mark=*, mark size=2.2pt},
+  pbartn/.style={figwarm, mark=*, mark size=2.2pt},
+  ptfivea/.style={sicblue, mark=triangle*, mark size=2.8pt},
+  pbarta/.style={figwarm, mark=triangle*, mark size=2.8pt},
+}
+\newcommand{\figtradeoff}[1]{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth, height=66mm, font=\footnotesize,
+  xlabel={simpler: words cut from the longest clause (mean, clauses over 15 words)},
+  ylabel={meaning kept (\%)}, xmin=-0.5, xmax=8.2, ymin=30, ymax=104,
+  grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left,
+  legend columns=4, legend style={at={(0.5,-0.24)}, anchor=north, draw=black!25, font=\scriptsize,
+    /tikz/every even column/.append style={column sep=2mm}}]
+  \foreach \x/\y/\xl/\xh/\yl/\yh/\st in #1 {
+    \edef\tmp{\noexpand\addplot+[\st, only marks, forget plot, error bars/.cd, x dir=both, x explicit,
+      y dir=both, y explicit, error bar style={line width=0.5pt, black!35}]
+      coordinates {(\x,\y) -= (\xl,\yl) += (\xh,\yh)};}\tmp
+  }
+  \addlegendimage{pcopy, only marks}\addlegendentry{copy the input}
+  \addlegendimage{ptfives, only marks}\addlegendentry{AraT5v2 \texttt{[S2]}}
+  \addlegendimage{ptfiven, only marks}\addlegendentry{AraT5v2 no tag}
+  \addlegendimage{ptfivea, only marks}\addlegendentry{AraT5v2 int8 app}
+  \addlegendimage{empty legend}\addlegendentry{}
+  \addlegendimage{pbarts, only marks}\addlegendentry{AraBART \texttt{[S2]}}
+  \addlegendimage{pbartn, only marks}\addlegendentry{AraBART no tag}
+  \addlegendimage{pbarta, only marks}\addlegendentry{AraBART int8 app}
+\end{axis}
+\end{tikzpicture}}
+
+% ------------------------------------------------- the scorer against people --
+% Data: make_human.py. (a) ROC of the scorer's P(same) against the raters' majority verdict;
+% (b) every rated output, by the raters' majority answer, against the scorer's P(same) (jittered rows).
+\newcommand{\figscorer}{%
+\begin{tikzpicture}
+\begin{axis}[
+  name=a, width=0.46\linewidth, height=58mm, font=\scriptsize,
+  xlabel={share of lost-meaning outputs passed}, ylabel={share of kept outputs passed},
+  ylabel style={align=center},
+  xmin=0, xmax=1, ymin=0, ymax=1, grid=major, grid style={black!8},
+  axis x line*=bottom, axis y line*=left, title={(a) ROC}, title style={font=\scriptsize\bfseries},
+  legend style={at={(0.97,0.03)}, anchor=south east, draw=black!25, font=\tiny},
+  xticklabel style={/pgf/number format/fixed}, yticklabel style={/pgf/number format/fixed}]
+  \addplot[sicblue, line width=1pt] coordinates {\rocsame};
+  \addlegendentry{kept = majority ``same'' (AUC \hAucSame)}
+  \addplot[figwarm, line width=1pt, dashed] coordinates {\rocnotmajor};
+  \addlegendentry{kept = not ``major'' (AUC \hAucNotMajor)}
+  \addplot[black!40, line width=0.5pt, dotted] coordinates {(0,0)(1,1)};
+\end{axis}
+\begin{axis}[
+  at={(a.east)}, anchor=west, xshift=16mm,
+  width=0.50\linewidth, height=58mm, font=\scriptsize,
+  xlabel={scorer: P(same meaning)}, xmin=-0.03, xmax=1.03, ymin=0.5, ymax=3.5,
+  ytick={1,2,3}, yticklabels={major change,{minor change\\or split vote},same meaning},
+  yticklabel style={align=right}, axis x line*=bottom, axis y line*=left,
+  title={(b) each rated output}, title style={font=\scriptsize\bfseries},
+  xticklabel style={/pgf/number format/fixed}, grid=major, grid style={black!8}]
+  \addplot[only marks, mark=*, mark size=1.1pt, sicblue, opacity=0.55] coordinates {\stripSame};
+  \addplot[only marks, mark=*, mark size=1.1pt, figgrey, opacity=0.75] coordinates {\stripMinor};
+  \addplot[only marks, mark=*, mark size=1.3pt, figwarm] coordinates {\stripMajor};
+  \draw[black!70, dashed, line width=0.7pt] (axis cs:0.5,0.5) -- (axis cs:0.5,3.5);
+  \node[font=\tiny, text=black!70, anchor=south west, rotate=90] at (axis cs:0.53,0.55) {frozen cut-off 0.5};
+\end{axis}
+\end{tikzpicture}}
+
+% ----------------------------------------------- raters vs scorer per system --
+% Data: \dumbbell from make_human.py: row / raters' same-meaning % / scorer kept %, even sample.
+\newcommand{\figdumbbell}{%
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.8\linewidth, height=52mm, font=\footnotesize,
+  xlabel={same meaning, \% of the 35 rated outputs per system}, xmin=40, xmax=100,
+  ymin=-0.6, ymax=5.6, ytick={0,...,5}, y dir=reverse,
+  yticklabels={AraT5v2 int8 app, AraT5v2 no tag, AraT5v2 \texttt{[S2]}, AraBART int8 app, AraBART no tag, AraBART \texttt{[S2]}},
+  grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left,
+  legend style={at={(0.02,0.97)}, anchor=north west, draw=black!25, font=\scriptsize}]
+  \foreach \i/\h/\g in \dumbbell {
+    \edef\tmp{\noexpand\draw[black!35, line width=1.2pt] (axis cs:\g,\i) -- (axis cs:\h,\i);}\tmp
+    \edef\tmp{\noexpand\addplot[only marks, mark=*, mark size=2.4pt, sicblue, forget plot] coordinates {(\h,\i)};}\tmp
+    \edef\tmp{\noexpand\addplot[only marks, mark=square*, mark size=2.1pt, figwarm, forget plot] coordinates {(\g,\i)};}\tmp
+  }
+  \addlegendimage{only marks, mark=*, mark size=2.4pt, sicblue}\addlegendentry{raters (strict majority)}
+  \addlegendimage{only marks, mark=square*, mark size=2.1pt, figwarm}\addlegendentry{scorer, P(same) $\geq$ 0.5}
+\end{axis}
+\end{tikzpicture}}
+
+% ------------------------------------------------- data cleaning, corpus v1 --
+% The pipeline that produced corpus v1 (scripts/assemble_corpus_v1.py,
+% barec_simplification_pipeline.py, corpus_constraints.py, check_corpus.py).
+\newcommand{\figcleaning}{%
+\begin{tikzpicture}[font=\scriptsize, node distance=5mm and 6mm,
+    box/.style={built, text width=27mm, minimum height=12mm},
+    gbox/.style={gate, text width=27mm, minimum height=12mm}]
+  % row 1
+  \node[box] (src) {BAREC train + dev\\sources\\{\tiny BAREC test never enters}};
+  \node[box, right=of src] (clean) {strip tashkeel\\and tatweel\\{\tiny every text, in and out}};
+  \node[gbox, right=of clean] (route) {route each source\\{\tiny protected, short,\\quiz, or hard}};
+  \node[box, right=of route] (prot) {protected or short:\\copied unchanged\\{\tiny scripture, poetry, hadith,\\headings of $\le$5 words}};
+  \draw[flow] (src) -- (clean);
+  \draw[flow] (clean) -- (route);
+  \draw[flow] (route) -- (prot);
+  % row 2, right to left
+  \node[box, below=10mm of route] (gen) {Gemma 4 31B\\writes candidates\\{\tiny hard sources only}};
+  \node[gbox, left=of gen] (code) {code gates\\{\tiny option labels, honorifics,\\quoted verses, ending,\\no tashkeel}};
+  \node[gbox, left=of code] (lead) {readability gate\\{\tiny CAMeL, hardest sentence\\$\ge$2 levels easier}};
+  \node[gbox, left=of lead] (judge) {meaning gate\\{\tiny Qwen judge $\ge$ 0.75}};
+  \draw[flow] (route) -- node[right, font=\tiny] {hard} (gen);
+  \draw[flow] (gen) -- (code);
+  \draw[flow] (code) -- (lead);
+  \draw[flow] (lead) -- (judge);
+  % row 3
+  \node[box, below=10mm of judge] (win) {tier A/B winners\\{\tiny the pairs that teach\\how to simplify}};
+  \node[box, right=of win] (mix) {assemble the mix\\{\tiny + 2,900 easy identity,\\750 short, protected}};
+  \node[gbox, right=of mix] (split) {grouped split\\{\tiny by normalised text;\\test from BAREC train only}};
+  \node[gbox, right=of split] (audit) {audit\\{\tiny check\_corpus: 0 violations;\\leakage vs BAREC test}};
+  \node[built, right=of audit, fill=figpale, text width=27mm, minimum height=12mm] (out)
+       {\textbf{corpus v1}\\14,975 rows};
+  \draw[flow] (judge) -- node[left, font=\tiny] {pass} (win);
+  \draw[flow] (win) -- (mix);
+  \draw[flow] (mix) -- (split);
+  \draw[flow] (split) -- (audit);
+  \draw[flow] (audit) -- (out);
+  \coordinate[below=5mm of code.south] (lane);
+  \draw[flow] (prot.south) -- (prot.south |- lane) -- (mix.north |- lane) -- (mix.north);
+\end{tikzpicture}}
+
+% ---------------------------------------- training pipeline, how it evolved --
+\newcommand{\figevolution}{%
+\begin{tikzpicture}[font=\scriptsize, node distance=3mm,
+    col/.style={built, text width=51mm, align=left, inner sep=3pt},
+    colh/.style={built, fill=sicblue, text=white, text width=51mm, minimum height=7mm, font=\footnotesize\bfseries},
+    found/.style={gate, text width=51mm, align=left, inner sep=3pt}]
+  \node[colh] (h1) {BayanSimplify-v0.1: AraT5v2 on SAMER};
+  \node[colh, right=6mm of h1] (h2) {v0.2 and v0.2-Fast: AraT5v2, AraBART};
+  \node[colh, right=6mm of h2] (h3) {BayanSimplify-v0.3: AraT5v2 on corpus v1};
+
+  \node[col, below=of h1] (d1) {\textbf{Data.} SAMER level 5 $\rightarrow$ 3, 14,343 pairs; unchanged
+      pairs capped at 20\%.};
+  \node[col, below=of h2] (d2) {\textbf{Data.} 22,733 pairs: all SAMER pairs, DAASI, and
+      meaning-filtered external pairs; a strength tag \texttt{[S0]}--\texttt{[SA]} on each; leakage check.};
+  \node[col, below=of h3] (d3) {\textbf{Data.} corpus v1: generated pairs plus easy, short and
+      protected identity rows (previous figure). Corpus v0 was written, audited and not used.};
+
+  \node[col, below=of d1] (s1) {\textbf{Checkpoint.} best SARI on a 500-row dev sample that is 43\% unchanged.};
+  \node[col, below=of d2] (s2) {\textbf{Checkpoint.} SARI on the 600 changed rows of a 900-row dev sample.};
+  \node[col, below=of d3] (s3) {\textbf{Around the model.} the app's code guards keep the source when a
+      rewrite loses a number or a negation, and pass protected text through.};
+
+  \node[found, below=of s1] (f1) {\textbf{Found.} copying scores SARI 77.5; the model edits
+      rows that needed no change, substitutes words and never restructures; collapses on tashkeel.};
+  \node[found, below=of s2] (f2) {\textbf{Found.} meaning kept only 0.59 (AraT5v2) and 0.40
+      (AraBART); easy and protected text is edited; int8 changes 62--74\% of outputs.};
+  \node[found, below=of s3] (f3) {\textbf{Found.} easy text unchanged 55\% (was 14\%); protected
+      intact 97.8\% (was 4.4\%). As int8 in the app with four beams: meaning kept
+      \mBeamTKept\% (earlier models at most \bvHmaxKept\%); the app's large model.};
+
+  \draw[flow] (h1) -- (h2);
+  \draw[flow] (h2) -- (h3);
+\end{tikzpicture}}

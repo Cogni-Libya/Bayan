@@ -34,9 +34,9 @@ meaning (vLLM, a 44 GB+ GPU), `[judge]` the v1 Gemini judge. Without `[ease]`, a
 
 1. **Outputs.** For a Hugging Face seq2seq model, run it the way the app runs it (sentence pieces, the app's guards):
    ```bash
-   bayanbench predict --model Congi-libya/bayan-model2-arabart --prefix "بسط: [S2] " --split dev -o preds_dev.jsonl
+   bayanbench predict --model Congi-libya/BayanSimplify-v0.2-Fast --prefix "بسط: [S2] " --split dev -o preds_dev.jsonl
    ```
-   Use the exact prefix the model was trained with: model 2 AraT5 takes «بسّط: » (with the shadda), model 2 AraBART
+   Use the exact prefix the model was trained with: BayanSimplify-v0.1 and v0.2 take «بسّط: » (with the shadda), BayanSimplify-v0.2-Fast and v0.3
    «بسط: ». `predict` needs transformers < 5; under 5 the outputs come out wrong, so run it in its own environment.
    Any other system: write one line per item, `{"id": "<item id>", "output": "<the text the reader sees>"}`, for
    every item of the split (items are in `items/dev.jsonl` of the data repo).
@@ -46,7 +46,7 @@ meaning (vLLM, a 44 GB+ GPU), `[judge]` the v1 Gemini judge. Without `[ease]`, a
    bayanbench score preds_dev.jsonl --baseline other_dev.jsonl        # paired differences on the same items
    ```
    `--samer` (your licensed SAMER copy, read once and cached) turns on the hard-word measures; without it they are
-   reported as not measured. The reference submissions (copy, the shipped app, model 2) are in `baselines/dev/`.
+   reported as not measured. The reference submissions (copy, the shipped app, BayanSimplify-v0.2) are in `baselines/dev/`.
 3. **Declare** whether your training data had news or legal text: that decides whether the held-out set is really
    held out for your model.
 

@@ -1,0 +1,98 @@
+BayanBench 1.0, dev: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/dev/app-arat5.jsonl  (rate % or mean [95% interval])
+  note: thresholds set on the command line: your own analysis, not the official score
+
+== core items (380) ==
+  meaning (open scorer)
+    meaning kept                                                    78.4 [ 73- 83]  n=320, vs app-arabart +23.8 [+18,+30]*
+    P(same meaning)                                                 +0.79 [+0.74, +0.84]  n=320, vs app-arabart +0.24 [+0.19,+0.30]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +1.40 [+0.64, +2.27]  n=106, vs app-arabart -2.36 [-3.61,-1.07]*
+    reading level: levels lower                                     +0.01 [-0.04, +0.07]  n=255, vs app-arabart -0.20 [-0.30,-0.11]*
+    hard words: fewer                                               +0.34 [+0.19, +0.49]  n=148, vs app-arabart -0.12 [-0.22,-0.02]*
+  checks (deterministic)
+    numbers kept                                                    72.0 [ 50- 88]  n=25, vs app-arabart +0.0 [-16,+15]
+    no house-rule break                                            100.0 [100-100]  n=320, vs app-arabart +0.3 [+0,+1]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     40.4 [ 26- 57]  n=47, vs app-arabart +19.1 [+2,+38]*
+    F: letters unchanged                                            48.3 [ 21- 91]  n=60, vs app-arabart +21.7 [+8,+43]*
+    F: exactly unchanged                                             0.0 [  0-  0]  n=60, vs app-arabart +0.0 [+0,+0]
+    E1: end mark kept                                               49.0 [ 38- 59]  n=49, vs app-arabart -6.1 [-16,+4]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                 2.1 [  0-  6]  n=47, vs app-arabart +2.1 [+0,+6]
+    limit changed                                                   13.3 [  0- 33]  n=15, vs app-arabart -6.7 [-26,+20]
+    condition changed                                                6.2 [  0- 15]  n=16, vs app-arabart -6.7 [-21,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                             100.0 [100-100]  n=273, vs app-arabart +8.1 [+6,+10]*
+    no clause over 15 words                                         36.8 [ 28- 48]  n=106, vs app-arabart -23.6 [-34,-14]*
+    negations kept                                                  97.9 [ 94-100]  n=47, vs app-arabart -2.1 [-6,+0]
+    mid-sentence full stop added                                     1.2 [  0-  3]  n=320, vs app-arabart +1.2 [+0,+2]*
+    B: not left as copy                                             84.7 [ 76- 93]  n=59, vs app-arabart -11.9 [-21,-3]*
+
+== held-out items (184) ==
+  meaning (open scorer)
+    meaning kept                                                    86.4 [ 83- 93]  n=184, vs app-arabart +20.1 [+14,+28]*
+    P(same meaning)                                                 +0.86 [+0.83, +0.92]  n=184, vs app-arabart +0.19 [+0.13,+0.28]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.35 [+1.03, +4.38]  n=37, vs app-arabart -0.76 [-2.95,+0.37]
+    reading level: levels lower                                     +0.08 [+0.00, +0.20]  n=118, vs app-arabart -0.07 [-0.31,+0.05]
+    hard words: fewer                                               +0.33 [+0.11, +0.57]  n=97, vs app-arabart -0.04 [-0.19,+0.18]
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=20, vs app-arabart +0.0 [+0,+0]
+    no house-rule break                                            100.0 [100-100]  n=184, vs app-arabart +0.0 [+0,+0]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     31.0 [ 19- 44]  n=58, vs app-arabart +6.9 [-6,+18]
+    E1: end mark kept                                               14.3 [  0- 30]  n=7, vs app-arabart +0.0 [+0,+0]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                 4.5 [  0-  9]  n=22, vs app-arabart -9.1 [-38,+6]
+    limit changed                                                   18.2 [  0- 38]  n=11, vs app-arabart -18.2 [-100,+15]
+    condition changed                                                0.0 [  0-  0]  n=3, vs app-arabart +0.0 [+0,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              99.2 [ 96-100]  n=126, vs app-arabart +7.9 [+1,+13]*
+    no clause over 15 words                                         38.5 [  7- 58]  n=26, vs app-arabart -3.8 [-18,+0]
+    negations kept                                                  95.5 [ 91-100]  n=22, vs app-arabart +9.1 [-6,+38]
+    mid-sentence full stop added                                     0.5 [  0-  1]  n=184, vs app-arabart -0.5 [-1,+0]
+    B: not left as copy                                             90.0 [ 75-100]  n=10, vs app-arabart -10.0 [-25,+0]
+
+== outside items (140) ==
+  meaning (open scorer)
+    meaning kept                                                    74.3 [ 67- 81]  n=140, vs app-arabart +22.1 [+13,+30]*
+    P(same meaning)                                                 +0.74 [+0.67, +0.81]  n=140, vs app-arabart +0.22 [+0.13,+0.30]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.06 [+0.82, +3.51]  n=36, vs app-arabart -2.78 [-4.41,-1.07]*
+    reading level: levels lower                                     +0.09 [-0.01, +0.19]  n=111, vs app-arabart -0.20 [-0.36,-0.06]*
+    hard words: fewer                                               +0.29 [+0.20, +0.40]  n=91, vs app-arabart -0.20 [-0.31,-0.07]*
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=13, vs app-arabart +0.0 [+0,+0]
+    no house-rule break                                            100.0 [100-100]  n=140, vs app-arabart +0.0 [+0,+0]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     45.8 [ 28- 71]  n=24, vs app-arabart +20.8 [+4,+45]*
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                11.5 [  0- 24]  n=26, vs app-arabart -16.0 [-32,+0]
+    limit changed                                                    0.0 [  0-  0]  n=4, vs app-arabart -25.0 [-100,+0]
+    condition changed                                               33.3 [ 12- 64]  n=15, vs app-arabart +0.0 [+0,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              96.6 [ 93- 99]  n=116, vs app-arabart +8.6 [+3,+14]*
+    no clause over 15 words                                         18.4 [  8- 32]  n=38, vs app-arabart -26.3 [-43,-12]*
+    negations kept                                                  95.8 [ 87-100]  n=24, vs app-arabart +16.7 [+0,+33]
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=140, vs app-arabart +0.0 [+0,+0]
+    B: not left as copy                                             80.0 [ 71- 90]  n=35, vs app-arabart -11.4 [-25,+3]
+
+== written items (27) ==
+  meaning (open scorer)
+    meaning kept                                                    85.2 [ 70- 96]  n=27, vs app-arabart +33.3 [+11,+52]*
+    P(same meaning)                                                 +0.86 [+0.72, +0.96]  n=27, vs app-arabart +0.30 [+0.10,+0.50]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +1.67 [+0.00, +5.00]  n=3, vs app-arabart -1.67 [-5.00,+5.00]
+    reading level: levels lower                                     +0.00 [-0.11, +0.11]  n=27, vs app-arabart -0.11 [-0.30,+0.07]
+    hard words: fewer                                               +0.36 [+0.09, +0.64]  n=11, vs app-arabart +0.18 [-0.18,+0.55]
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=3, vs app-arabart +0.0 [+0,+0]
+    no house-rule break                                            100.0 [100-100]  n=27, vs app-arabart +0.0 [+0,+0]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                12.5 [  0- 31]  n=16, vs app-arabart +0.0 [-19,+19]
+    limit changed                                                   16.7 [  0- 50]  n=6, vs app-arabart -16.7 [-50,+0]
+    condition changed                                               12.5 [  0- 38]  n=8, vs app-arabart -12.5 [-38,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                             100.0 [100-100]  n=27, vs app-arabart +3.7 [+0,+11]
+    negations kept                                                  87.5 [ 69-100]  n=16, vs app-arabart +0.0 [-19,+19]
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=27, vs app-arabart +0.0 [+0,+0]

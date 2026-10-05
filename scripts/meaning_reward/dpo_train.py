@@ -1,6 +1,6 @@
 """Student DPO on preference pairs (dpo_pairs.py), seq2seq, with an NLL anchor on the chosen output.
 
-  python dpo_train.py --model Congi-libya/bayan-arat5-v1 --pairs pairs.jsonl --dev v1/dev.jsonl --out runs/dpo
+  python dpo_train.py --model Congi-libya/BayanSimplify-v0.3 --pairs pairs.jsonl --dev v1/dev.jsonl --out runs/dpo
 
 loss = -log sigmoid(beta * ((log pi(c) - log ref(c)) - (log pi(r) - log ref(r)))) + nll * NLL(c) / |c|
 The reference is the starting model, frozen; its log-probs are computed once before training.

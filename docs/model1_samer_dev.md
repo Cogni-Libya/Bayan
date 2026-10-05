@@ -63,7 +63,7 @@ comparison point for the second model (trained on our synthetic data).
 
 ## Artifacts
 
-* Checkpoint: `Congi-libya/samer-arat5v2-base-simplification` (Hugging Face, team org)
+* Checkpoint: `Congi-libya/BayanSimplify-v0.1` (Hugging Face, public)
 * Training notebook: `scripts/training/model1_training.ipynb`
 * Full dev predictions (`ID, original_text, reference, prediction`): kept on Kaggle, **not in the
   repo**. They contain SAMER sentences, and SAMER's licence forbids redistributing its text.

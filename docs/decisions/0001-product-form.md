@@ -147,4 +147,21 @@ and simplifies it in place — with no copying, no pasting, and no separate app 
       including the four build decisions: on-device · tokenizer inside the ONNX graph · greedy
       decoding, no beam search · model downloaded on first run
 - [x] Action Plan updated (v6)
-- [ ] Measured load time and per-sentence latency on a real phone, recorded in §1
+- [x] Measured load time and per-sentence latency on a real phone: see §8 and the final report
+
+---
+
+## 8. Outcome (5 October)
+
+How the decisions held up, from the final report (`deliverables/03_final_report/`):
+
+- **On-device, `PROCESS_TEXT`, download on first run:** shipped as decided.
+- **Size budget:** it holds for the **default download**. BayanSimplify-v0.2-Fast (AraBART int8) is 222 MB. The AraT5v2
+  bundles (BayanSimplify-v0.3, the large model, and BayanSimplify-v0.2) are 471 MB and optional downloads; we kept them
+  whole rather than prune the vocabulary (about 223 MB), because quality came first.
+- **Greedy decoding, no beam search:** greedy stays for v0.2-Fast and v0.2. BayanSimplify-v0.3 decodes with four beams
+  (#61, #62, #66) because that is what makes it our best model; on the Mi 11X a sentence takes about 1.2 s (greedy
+  0.41 s), and a setting turns it off.
+- **Diacritizer:** Libtashkeel, 4.8 MB, bundled in the app (#67) rather than the ~45 MB assumed above.
+- **Latency on a real phone** (Xiaomi Mi 11X, Snapdragon 870): first word 82–172 ms with v0.2-Fast and 177–318 ms
+  with the AraT5v2 bundles; model load 1.0–1.7 s cold for v0.2-Fast.

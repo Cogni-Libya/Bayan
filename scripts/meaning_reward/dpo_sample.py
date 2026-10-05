@@ -1,6 +1,6 @@
 """Candidates for student DPO: greedy output + N top-p samples per corpus-v1 source, from the trained student.
 
-  python dpo_sample.py --model Congi-libya/bayan-arat5-v1 --data v1/train.jsonl --out cands.jsonl --n 8
+  python dpo_sample.py --model Congi-libya/BayanSimplify-v0.3 --data v1/train.jsonl --out cands.jsonl --n 8
 
 Runs under transformers 4.x (AraT5's slow tokenizer, tied weights). One line per source:
 {"id", "candidates": [greedy, sample_1, ..., sample_N]} (duplicates kept; the scorer deduplicates).

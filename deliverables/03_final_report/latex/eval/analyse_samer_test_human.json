@@ -1,0 +1,25 @@
+{
+ "all": {
+  "n": 3277,
+  "sari": 99.99652459905741,
+  "copy_sari": 77.49864936717833
+ },
+ "changed": {
+  "n": 1678,
+  "sari": 99.99321281949412,
+  "copy_sari": 56.056659103839934
+ },
+ "unchanged": {
+  "n": 1599,
+  "sari": 100.0,
+  "copy_sari": 100.0
+ },
+ "untouched_on_changed_pct": 0.0,
+ "changed_on_unchanged_pct": 0.0,
+ "copy_rate_pct": 48.79462923405554,
+ "single_word_edit_pct": 49.463647199046484,
+ "median_len_ratio": 1.0,
+ "source_words_kept_pct": 87.85290344185564,
+ "rows_losing_half_pct": 1.4037229173024108,
+ "empty_outputs": 0
+}

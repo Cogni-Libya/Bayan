@@ -1,6 +1,6 @@
 """Choose the retrain checkpoint on fluency, with simplicity and meaning as guards (rule fixed before results).
 
-  python select_fluency.py gen   --ckpts runs/X/ckpt --ref Congi-libya/bayan-arat5-v1 --dev v1/dev.jsonl --n 400 --out sel/   (transformers 4.x)
+  python select_fluency.py gen   --ckpts runs/X/ckpt --ref Congi-libya/BayanSimplify-v0.3 --dev v1/dev.jsonl --n 400 --out sel/   (transformers 4.x)
   python select_fluency.py pick  --run runs/X --out sel/                                                                    (after scoring)
 
 gen: each checkpoint (and the reference model) rewrites the first --n generated rows of v1 dev; writes sel/pairs.jsonl

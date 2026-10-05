@@ -1,0 +1,98 @@
+BayanBench 1.0, dev: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/dev/model2-arat5-notag.jsonl  (rate % or mean [95% interval])
+  note: thresholds set on the command line: your own analysis, not the official score
+
+== core items (380) ==
+  meaning (open scorer)
+    meaning kept                                                    77.8 [ 72- 83]  n=320, vs model2-arabart-notag +22.2 [+17,+27]*
+    P(same meaning)                                                 +0.78 [+0.73, +0.83]  n=320, vs model2-arabart-notag +0.22 [+0.17,+0.27]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +3.69 [+2.63, +4.74]  n=106, vs model2-arabart-notag +0.34 [-0.89,+1.39]
+    reading level: levels lower                                     +0.00 [-0.08, +0.08]  n=255, vs model2-arabart-notag -0.16 [-0.30,-0.03]*
+    hard words: fewer                                               +0.41 [+0.24, +0.58]  n=148, vs model2-arabart-notag -0.02 [-0.16,+0.09]
+  checks (deterministic)
+    numbers kept                                                    72.0 [ 52- 88]  n=25, vs model2-arabart-notag -4.0 [-17,+10]
+    no house-rule break                                            100.0 [100-100]  n=320, vs model2-arabart-notag +0.3 [+0,+1]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     25.5 [ 16- 35]  n=47, vs model2-arabart-notag +4.3 [-9,+17]
+    F: letters unchanged                                            35.0 [ 14- 67]  n=60, vs model2-arabart-notag +10.0 [-4,+25]
+    F: exactly unchanged                                             0.0 [  0-  0]  n=60, vs model2-arabart-notag +0.0 [+0,+0]
+    E1: end mark kept                                               42.9 [ 31- 55]  n=49, vs model2-arabart-notag -16.3 [-26,-7]*
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                 6.2 [  0- 12]  n=48, vs model2-arabart-notag +0.0 [-6,+5]
+    limit changed                                                    6.7 [  0- 20]  n=15, vs model2-arabart-notag -13.3 [-29,+0]
+    condition changed                                               12.5 [  0- 25]  n=16, vs model2-arabart-notag +0.0 [+0,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              99.3 [ 98-100]  n=273, vs model2-arabart-notag +6.6 [+4,+9]*
+    no clause over 15 words                                         50.0 [ 39- 61]  n=106, vs model2-arabart-notag -7.5 [-18,+3]
+    negations kept                                                  95.7 [ 91-100]  n=47, vs model2-arabart-notag +0.0 [-5,+6]
+    mid-sentence full stop added                                     1.2 [  0-  3]  n=320, vs model2-arabart-notag +0.9 [+0,+2]
+    B: not left as copy                                             96.6 [ 92-100]  n=59, vs model2-arabart-notag +0.0 [-5,+5]
+
+== held-out items (184) ==
+  meaning (open scorer)
+    meaning kept                                                    81.5 [ 79- 86]  n=184, vs model2-arabart-notag +16.3 [+9,+24]*
+    P(same meaning)                                                 +0.81 [+0.78, +0.85]  n=184, vs model2-arabart-notag +0.16 [+0.08,+0.23]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +3.81 [+1.78, +7.16]  n=37, vs model2-arabart-notag -0.30 [-0.64,-0.06]*
+    reading level: levels lower                                     +0.22 [+0.15, +0.37]  n=118, vs model2-arabart-notag -0.03 [-0.31,+0.17]
+    hard words: fewer                                               +0.34 [+0.14, +0.50]  n=97, vs model2-arabart-notag -0.13 [-0.23,+0.04]
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=20, vs model2-arabart-notag +0.0 [+0,+0]
+    no house-rule break                                            100.0 [100-100]  n=184, vs model2-arabart-notag +0.0 [+0,+0]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     25.9 [ 15- 37]  n=58, vs model2-arabart-notag +1.7 [-12,+13]
+    E1: end mark kept                                               14.3 [  0- 30]  n=7, vs model2-arabart-notag +0.0 [+0,+0]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                 9.1 [  0- 24]  n=22, vs model2-arabart-notag -4.5 [-27,+8]
+    limit changed                                                    9.1 [  0- 15]  n=11, vs model2-arabart-notag -30.0 [-100,-6]*
+    condition changed                                               57.1 [ 40-100]  n=7, vs model2-arabart-notag +0.0 [+0,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              96.0 [ 90- 98]  n=126, vs model2-arabart-notag +6.3 [-2,+12]
+    no clause over 15 words                                         38.5 [  7- 58]  n=26, vs model2-arabart-notag +0.0 [+0,+0]
+    negations kept                                                  90.9 [ 76-100]  n=22, vs model2-arabart-notag +4.5 [-8,+27]
+    mid-sentence full stop added                                     1.1 [  0-  2]  n=184, vs model2-arabart-notag +0.0 [+0,+0]
+    B: not left as copy                                             90.0 [ 75-100]  n=10, vs model2-arabart-notag -10.0 [-25,+0]
+
+== outside items (140) ==
+  meaning (open scorer)
+    meaning kept                                                    69.3 [ 62- 76]  n=140, vs model2-arabart-notag +17.1 [+6,+27]*
+    P(same meaning)                                                 +0.69 [+0.62, +0.75]  n=140, vs model2-arabart-notag +0.16 [+0.05,+0.26]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +3.17 [+1.39, +5.03]  n=36, vs model2-arabart-notag -1.17 [-3.12,+1.11]
+    reading level: levels lower                                     +0.31 [+0.16, +0.46]  n=111, vs model2-arabart-notag -0.02 [-0.21,+0.15]
+    hard words: fewer                                               +0.44 [+0.32, +0.58]  n=91, vs model2-arabart-notag -0.04 [-0.16,+0.10]
+  checks (deterministic)
+    numbers kept                                                    92.3 [ 73-100]  n=13, vs model2-arabart-notag -7.7 [-27,+0]
+    no house-rule break                                            100.0 [100-100]  n=140, vs model2-arabart-notag +0.0 [+0,+0]
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     33.3 [ 17- 59]  n=24, vs model2-arabart-notag +8.3 [-7,+28]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                22.2 [  7- 38]  n=27, vs model2-arabart-notag -8.0 [-22,+8]
+    limit changed                                                   40.0 [  0-100]  n=5, vs model2-arabart-notag +0.0 [+0,+0]
+    condition changed                                               37.5 [ 17- 67]  n=16, vs model2-arabart-notag +0.0 [+0,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              93.1 [ 89- 97]  n=116, vs model2-arabart-notag +3.4 [-3,+11]
+    no clause over 15 words                                         31.6 [ 18- 48]  n=38, vs model2-arabart-notag -7.9 [-27,+10]
+    negations kept                                                  87.5 [ 75-100]  n=24, vs model2-arabart-notag +8.3 [-9,+23]
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=140, vs model2-arabart-notag +0.0 [+0,+0]
+    B: not left as copy                                            100.0 [100-100]  n=35, vs model2-arabart-notag +8.6 [+0,+19]
+
+== written items (27) ==
+  meaning (open scorer)
+    meaning kept                                                    66.7 [ 48- 81]  n=27, vs model2-arabart-notag +18.5 [-4,+41]
+    P(same meaning)                                                 +0.73 [+0.57, +0.89]  n=27, vs model2-arabart-notag +0.24 [+0.02,+0.47]*
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.00 [+0.00, +5.00]  n=3, vs model2-arabart-notag -1.33 [-5.00,+5.00]
+    reading level: levels lower                                     +0.00 [-0.15, +0.15]  n=27, vs model2-arabart-notag -0.07 [-0.26,+0.11]
+    hard words: fewer                                               +0.45 [+0.18, +0.73]  n=11, vs model2-arabart-notag +0.27 [+0.00,+0.55]
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=3, vs model2-arabart-notag +0.0 [+0,+0]
+    no house-rule break                                            100.0 [100-100]  n=27, vs model2-arabart-notag +0.0 [+0,+0]
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                12.5 [  0- 31]  n=16, vs model2-arabart-notag -6.2 [-31,+12]
+    limit changed                                                   33.3 [  0- 67]  n=6, vs model2-arabart-notag +0.0 [+0,+0]
+    condition changed                                               12.5 [  0- 38]  n=8, vs model2-arabart-notag -12.5 [-38,+0]
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                             100.0 [100-100]  n=27, vs model2-arabart-notag +7.4 [+0,+19]
+    negations kept                                                  87.5 [ 69-100]  n=16, vs model2-arabart-notag +6.2 [-12,+31]
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=27, vs model2-arabart-notag +0.0 [+0,+0]
