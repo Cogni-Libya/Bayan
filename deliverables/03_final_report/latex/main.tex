@@ -345,7 +345,7 @@ levels. The 14,975 rows have no violation of the rule checks, and an audit of
 \lead{Task and base models.} Given a source sentence $x$ and a strength tag $t$,
 the model produces a rewrite $\hat y = f(t \oplus x)$ that keeps the meaning of
 $x$ and is easier to read; training minimises token-level cross-entropy. We
-considered three pretrained encoder--decoders: AraT5v2-base-1024 \cite{arat5,octopus,t5}
+considered three pretrained encoder--decoders (\autoref{tab:basemodels}): AraT5v2-base-1024 \cite{arat5,octopus,t5}
 (368M parameters, 46\% of them in two untied embedding matrices), AraBART
 \cite{arabart,bart} (139M) and an Arabic HPLT T5 \cite{nort5,hplt}. AraT5v2 came
 first because it beat AraBART at all three levels in the published Baseet
@@ -353,6 +353,34 @@ baselines \cite{baseet}; AraBART, 2.6 times smaller, is the on-device candidate.
 Neither vocabulary was built for diacritized text (1.6\% of AraT5v2's pieces carry
 a diacritic, and AraBART maps every mark to an unknown token), so every model
 receives its source with tashkeel and tatweel removed, in training and in the app.
+
+\begin{table}[h]
+\small
+\caption{Candidate base models. ``Tashkeel'' is measured on 1,000 diacritized
+BAREC dev sentences: vocabulary entries containing a diacritic, and how many more
+tokens the same sentences cost with diacritics than without.}
+\label{tab:basemodels}
+\begin{tabularx}{\linewidth}{|p{27mm}|L|L|L|}
+\hline
+\head{} & \head{AraT5v2-base-1024} & \head{AraBART} & \head{HPLT T5 base (Arabic)} \\ \hline
+Family & T5 \cite{t5}: span-corruption pretraining, relative position buckets &
+  BART \cite{bart}: denoising pretraining, learned positions &
+  T5 in the NorT5 variant \cite{nort5} \\ \hline
+Layers (enc/dec), width & 12/12, $d$=768, 12 heads, gated-GELU FFN 2048 &
+  6/6, $d$=768, 12 heads, GELU FFN 3072 &
+  12/12, $d$=768, 12 heads, FFN 2048 \\ \hline
+Parameters & 368M (46\% in two untied 110k$\times$768 embeddings) & 139M & $\approx$294M \\ \hline
+Vocabulary & 110,208 SentencePiece & 50,002 SentencePiece BPE & 32,768 \\ \hline
+Context & 1,024 tokens & 1,024 positions & 512 positions \\ \hline
+Pretraining & Arabic MSA and dialects \cite{arat5,octopus} &
+  large Arabic corpora \cite{arabart} & HPLT v3 web crawl, Arabic subset \cite{hplt} \\ \hline
+Tashkeel & 1.6\% of pieces; 2.57$\times$ tokens &
+  0 pieces; every mark becomes \texttt{<unk>}; 4.53$\times$ tokens &
+  0 pieces; 1.81$\times$ tokens \\ \hline
+Licence & none stated on the model card & Apache-2.0 & Apache-2.0 \\ \hline
+Used in & \vOne{} and the v0.2 models & \vTwoFast{} & not trained \\ \hline
+\end{tabularx}
+\end{table}
 
 \lead{\vOne{}.} AraT5v2 fine-tuned to rewrite SAMER's level-5 sentences into
 their level-3 simplifications, with the prefix \ar{بسّط:}\ (\emph{simplify:}):
@@ -458,8 +486,11 @@ rather than a writer: it sees the source and the output, never the system's name
 and the probability of \emph{yes} to four questions (same meaning; a fact added;
 a fact dropped; a contradiction) is read from one forward pass. It replaces the
 closed Gemini~3.1~Pro judge of the first version, because anyone can rerun it and
-its graded score can be checked against people; the 0.5 threshold was set before
-the human ratings and kept after them. Every rate carries a 95\% interval from a
+its graded score can be checked against people (about \$0.12 for 2,700 pairs); the
+0.5 threshold was set before the human ratings and kept after them. Scores are
+shared data keyed by the (source, output) pair, an unscored output is reported as
+pending rather than guessed, and the v0.2 training data contains nothing a Gemma
+model wrote or approved, which limits preference leakage \cite{li2026}. Every rate carries a 95\% interval from a
 bootstrap over whole documents (2,000 resamples) \cite{miller2024}, and a
 comparison counts only when the interval of the paired difference excludes zero.
 The benchmark ships as a Python package with its data and scores in a
@@ -663,21 +694,59 @@ would report a working model as worse than doing nothing.}
 \lead{What \vOne{} learned.} It returns \greedycopy\% of test rows unchanged where
 the editors left \humancopy\%, and when it edits, \greedysingle\% of its edits
 change one word (editors: \humansingle\%): it substitutes vocabulary and never
-restructures. On BAREC's \diacn{} test sentences that carry tashkeel, raw input
+restructures (\autoref{fig:behaviour}a). On BAREC's \diacn{} test sentences that carry tashkeel, raw input
 keeps only \diacrawkept\% of the source words and \diacrawlost\% of outputs lose
 more than half the sentence; with tashkeel stripped, \diacstrippedkept\% and
-\diacstrippedlost\%. On DAASI's administrative text it scores \daasisari{} against
+\diacstrippedlost\% (\autoref{fig:behaviour}b). On DAASI's administrative text it scores \daasisari{} against
 a copy baseline of \daasicopysari{} (\daasigain{}). Some of its substitutions
 reverse the meaning: \ar{عزلة} (isolation) became \ar{استعباد} (enslavement). SARI
 is blind to this class of error, which is why BayanBench scores meaning
 separately.
+
+\begin{figure}[h]
+\centering
+\resizebox{\linewidth}{!}{\figbehaviour}
+\caption{\vOne{} behaviour. (a) SAMER test, greedy, against the editors'
+references. (b) BAREC test, the \diacn{} sentences that carry tashkeel, greedy,
+with and without tashkeel stripped.}
+\label{fig:behaviour}
+\end{figure}
 
 \lead{v0.2 training.} Both v0.2 runs clear \vOne{}'s selection score: SARI 66.58
 (AraT5v2) and 64.71 (AraBART) on the 600 changed rows of the selection sample,
 where \vOne{} scored 63.66 on SAMER dev's changed rows. Copying falls from
 80--91\% of rows early in training to about 51\%, against 33.3\% for the editors.
 AraBART trains in 2,600\,s against 6,783\,s and generates 292.8 sentences per
-second against AraT5v2's 80.8.
+second against AraT5v2's 80.8 (\autoref{tab:m2train}, \autoref{fig:training2}).
+
+\begin{table}[h]
+\small
+\caption{The v0.2 runs, one T4 GPU each. SARI and copy rate on the 900-row selection
+sample (600 changed, 300 unchanged SAMER dev rows, tag \texttt{[S0]}). Speed:
+sentences per second on SAMER test sources, fp16, batch 64, greedy.}
+\label{tab:m2train}
+\begin{tabularx}{\linewidth}{|L|C{25mm}|C{25mm}|}
+\hline
+\head{} & \head{AraT5v2} & \head{AraBART} \\ \hline
+Parameters & 368M & 139M \\ \hline
+Training time & 6,783\,s & 2,600\,s \\ \hline
+Best checkpoint (step of 14,210) & 14,200 & 12,780 \\ \hline
+SARI, 600 changed rows & \textbf{66.58} & 64.71 \\ \hline
+SARI, all 900 rows & 75.64 & 73.62 \\ \hline
+Copy rate, 900 rows (editors: 33.3\%) & 51.0\% & 51.4\% \\ \hline
+Generation speed (sentences/s) & 80.8$^{\dagger}$ & \textbf{292.8} \\ \hline
+\multicolumn{3}{|l|}{\footnotesize $^{\dagger}$ measured on \vOne{}, the same architecture and size, in the same run.} \\ \hline
+\end{tabularx}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\figtrainingtwo
+\caption{The v0.2 training, from the committed notebooks: (a) the selection metric
+at each of the 20 evaluations; (b) the share of outputs identical to the input,
+with the editors' rate as a dashed line.}
+\label{fig:training2}
+\end{figure}
 
 \lead{The scorer against people.} On the \hShared{} outputs
 given to every rater, the raters agreed moderately on meaning (Krippendorff's
@@ -688,10 +757,17 @@ outputs the raters kept from the rest with an AUC of \hAucSame{}
 [\hAucSameLo--\hAucSameHi] (\autoref{fig:scorer}). As a pass/fail rule at 0.5 it
 catches \hCaught{} of the \hLosses{} outputs the raters judged changed, including
 all \hMajorCaught{} major changes, and fails \hWrongFail{} of the \hKept{} they
-kept: it is stricter than people, so ``meaning kept'' is a conservative rate. It
-also ranks the systems as the raters do, every AraT5v2 system above every AraBART
-one. The reader with dyslexia found \rEasier{} of \rN{} rewrites easier and
-\rHarder{} harder.
+kept: it is stricter than people, so ``meaning kept'' is a conservative rate. A
+cut-off of 0.3 would have failed seven fewer kept outputs and caught the same
+losses; we kept the 0.5 set before the ratings rather than tune it on the sample
+used to check it. Per system (\autoref{tab:humansys}), the raters kept the meaning
+in \hAppTfiveSame\% of the int8 AraT5v2 bundle's rewrites against \hBartSameMin\%
+for each AraBART system, and the scorer places every AraT5v2 system above every
+AraBART one too. The reader with dyslexia (\autoref{tab:reader}) found \rEasier{}
+of \rN{} rewrites easier, \rSame{} no different and \rHarder{} harder, and agreed
+with the team's majority on \rAgree\% of shared outputs, about as often as two team
+raters agreed on ease; the int8 AraT5v2 bundle, the most cautious system, was the
+only one never found easier.
 
 \begin{figure}[h]
 \centering
@@ -703,6 +779,10 @@ ROC curves for two definitions of a kept meaning; the dotted diagonal is chance.
 P(same); rows are jittered vertically for legibility.}
 \label{fig:scorer}
 \end{figure}
+
+\humansystable
+
+\readertable
 
 \lead{RQ2: the v0.2 models on BayanBench.} Each system was
 run once: the v0.2 models in the medium setting (\texttt{[S2]}), the two int8
@@ -731,7 +811,9 @@ bundles exactly as the app calls them, and copying the input
 \item \textbf{The deployed format buys meaning with ease.} The app's bundles send
       no strength tag, which raises meaning kept and cuts fewer words; int8 moves
       AraT5v2 further toward copying, which makes the shipped AraT5v2 bundle the
-      safest v0.2 system and the least simplifying one.
+      safest v0.2 system and the least simplifying one (\autoref{tab:benchfx}).
+      Int8 rewords most of AraT5v2's outputs: only 234 of 731 dev outputs match
+      the float model's.
 \end{enumerate}
 
 \begin{figure}[h]
@@ -742,6 +824,14 @@ with 95\% document-bootstrap intervals. Copying the input sits at the top left b
 definition. Colour: the model; shape: the setting.}
 \label{fig:tradeoff}
 \end{figure}
+
+\benchefftable
+
+\lead{Across item sets.} Meaning is kept at similar rates on text published after
+every corpus we use (outside) as on core (\autoref{tab:benchsets}), so the results
+do not rest on BAREC's genres; restraint is weak everywhere.
+
+\benchsetstable
 
 \lead{Error analysis.} \autoref{tab:errors} shows test outputs of AraT5v2 in the
 medium setting. The first is the intended behaviour; the second passes every code
@@ -769,6 +859,8 @@ C & \ar{يعتبر منصب الرئيس شاغرا في أي من الحالا�
 E1 & \ar{الشكلَ المنطقي الأساسي في علم المنطق، ويتم تحديد صحة المفاهيم من خلال} &
   \ar{الشكل المنطقي الأساسي في علم المنطق، ويتم تحديد صحة المفاهيم من خلال اختبار صحة المفاهيم.} &
   A cut-off selection completed with invented words and a full stop. \\ \hline
+A2 & \ar{… بنتيجة (۱/۳) في المباراة …} & \ar{… بنتيجة (/) في المباراة …} &
+  Persian-range digits dropped. \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -794,7 +886,11 @@ meaning (\mBeamTKeptDiff{} points on test [\mBeamTKeptCi], \mBeamKeptDiff{} on d
 every number kept. Khengari's benchmark report of 35 systems (\#57, \#58) reaches
 the same verdict: against \vTwo{} in the app it keeps every number (100\% against
 84\%), changes no negation, limit or condition word, leaves easy text unchanged in
-74\% of cases against 48\%, and raises meaning kept by 4 points [+0, +8]. The
+74\% of cases against 48\%, and raises meaning kept by 4 points [+0, +8].\footnote{His report puts the system at 83\% meaning kept and 5.4 words cut on
+test; this section's run gives \mBeamTKept\% and \mBeamTClause{}. Both decode the same int8
+bundle with four beams; his applies the safety net to transformers' outputs on another
+CPU, where int8 rounding differs slightly, while ours runs the app's own decoder and its
+full text step. The comparisons they support point the same way.} The
 headroom it shows is on the phone: int8 keeps about half of the float model's
 drop in reading level, and \vThree{} leaves 47\% of items unchanged (the app's earlier
 model: 19\%), rewriting less often but harder.
@@ -807,8 +903,12 @@ every sentence once. \vThree{} kept the meaning as often as any model
 and was found easier most often: on the outputs it changed, \hmThreeChEasier\%
 against \hmTwoChEasier\% and \hmBartChEasier\%, with none rated harder. Every team
 vote between \vThree{} and \vTwo{} chose \vThree{} (\hmPThreeTwoFirst{} of
-\hmPThreeTwoTotal{}), and the reader with dyslexia chose \vThree{} in every
-comparison that included it. \vThree{} with four beams is therefore the app's
+\hmPThreeTwoTotal{}), and \vThree{} won \hmPThreeBartFirst{} of \hmPThreeBartTotal{}
+votes against the fast model. The reader with dyslexia, who rated all
+\hmReaderTotal{} tasks, chose \vThree{} in every comparison that included it and
+found \hmThreeREasier{} of its \hmThreeRN{} single outputs easier and none harder.
+The round is small, so it confirms the direction of the benchmark rather than
+measuring a size. \vThree{} with four beams is therefore the app's
 large model (5 October); a reader who prefers word-by-word streaming can turn the
 setting off.
 
@@ -866,9 +966,15 @@ Copying scores SARI 77.5 on SAMER test & Copy baseline and changed/unchanged spl
 \vOne{} collapses on diacritized input & Tashkeel stripped before the simplifier, in training and in the app \\ \hline
 \vOne{} chosen on SARI noise over a copy-heavy dev set & The v0.2 models select on changed-row SARI only \\ \hline
 SAMER teaches word substitution & DAASI and meaning-filtered Baseet pairs added, each under its own tag \\ \hline
+LLM-written Baseet targets often summarise & Meaning filter calibrated on human rewrites \\ \hline
+Prediction script omitted the training prefix & Prefix a required setting of every model and bundle \\ \hline
+Length grouping shuffled the evaluation set & Grouping off; alignment check stops the run \\ \hline
 SARI is blind to meaning errors & BayanBench: meaning scored separately, by an open scorer checked against six raters \\ \hline
+Some BayanBench v1 measures did not track human labels & Dropped; v2 keeps only validated measures \\ \hline
+Under \texttt{transformers}~5 the models' outputs changed silently & Prediction refuses to run under version~5 \\ \hline
 The v0.2 models over-edit easy and protected text & Corpus v1 and \vThree{}; scripture and set poetry never reach the model \\ \hline
 The model drops numbers and flips negations & The app keeps the source sentence when a rewrite loses a number, a negation or a limit \\ \hline
+The model invents text around headings and fragments & Sentences under six words pass through unchanged in the app \\ \hline
 \vThree{} greedy lost meaning on test & Beam search in the app; four beams by default \\ \hline
 \end{tabularx}
 \end{table}
@@ -882,7 +988,8 @@ quality for size. On a Xiaomi Mi~11X (Snapdragon 870, Android 13, 6\,GB RAM), wi
 six cold starts each, the reader waits 82--172\,ms for AraBART's first token and
 177--318\,ms for AraT5v2's. With four beams \vThree{} gives up streaming and takes
 1.19\,s per sentence (median over 120 BayanBench dev sentences), against 0.41\,s
-greedy.
+greedy. Quantisation is not neutral for AraT5v2: int8 changed 62--74\% of its
+outputs against the float model, though not the rate at which meaning is kept.
 
 \begin{table}[h]
 \small
@@ -981,8 +1088,9 @@ The central next step is to simplify as much as the boldest setting while keepin
 meaning as well as the safest. The meaning scorer, now checked against people, can
 rank candidate rewrites and select checkpoints, so that training is steered by the
 behaviours readers need rather than by SARI. Faster beam decoding would let
-\vThree{}'s quality arrive word by word; pruning the AraT5v2 vocabulary could
-roughly halve its 471\,MB bundle, if the full evaluation shows no loss; and
+\vThree{}'s quality arrive word by word; pruning the AraT5v2 vocabulary (46\% of its
+parameters sit in two embedding matrices) could bring its 471\,MB bundle to about
+223\,MB, if the full evaluation shows no loss; and
 sentence splitting needs training data that teaches it. Above all, a reading study
 with more readers with dyslexia, measuring reading time and comprehension, would
 turn ratings into evidence about reading.
@@ -998,9 +1106,16 @@ turn ratings into evidence about reading.
       \hAlphaEase{} and \hAlphaArabic{}), so ease is measured through clause
       length, reading level and hard words, and the clause measure credits added
       commas as well as splits.
-\item \textbf{Small samples where it matters}: the \vThree{} human round covers 18
-      sentences, its meaning interval on test runs from \mBeamTKeptCi{} points, and
-      each model was trained once, with one seed, on one phone.
+\item \textbf{\vThree{}'s meaning rests on the judge.} No significant difference is
+      not proof of none: its interval against \vTwo{} on test runs from
+      \mBeamTKeptCi{} points, and its human round covers 18 sentences.
+\item \textbf{Some tracks are small.} E3 and E4 hold 64 and 40 test items, and few
+      core items contain a number, so these rates separate only large differences.
+\item \textbf{No reference-based test score for the v0.2 models}: their test
+      evaluation is BayanBench, which has no human references.
+\item \textbf{One run per configuration, one phone.} Each model was trained once,
+      with one seed, so the comparison between architectures carries no estimate of
+      training variance; on-device figures come from one mid-range phone.
 \end{itemize}
 
 \lead{Conclusion.} Bayan shows that Arabic text can be simplified entirely on a
