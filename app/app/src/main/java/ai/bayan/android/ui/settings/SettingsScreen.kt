@@ -38,6 +38,7 @@ import androidx.compose.material.icons.rounded.SpaceBar
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Texture
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -111,6 +112,7 @@ class SettingsViewModel(private val app: AppContainer) : ViewModel() {
     fun speechRate(v: Float) = set { repo.setSpeechRate(v) }
     fun highlight(v: Boolean) = set { repo.setHighlight(v) }
     fun moreFaithful(v: Boolean) = set { repo.setMoreFaithful(v) }
+    fun tashkeel(v: Boolean) = set { repo.setTashkeel(v) }
     fun theme(v: ThemeMode) = set { repo.setThemeMode(v) }
     fun style(v: AppStyle) = set { repo.setStyle(v) }
     fun resetReader() = set {
@@ -152,20 +154,28 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
                 ReaderText(stringResource(R.string.settings_preview_text), preview, Modifier.padding(bottom = 8.dp))
 
                 SectionHeader(stringResource(R.string.settings_section_reading))
-                Item(0, 6, Icons.Rounded.FontDownload, R.string.settings_font, stringResource(fontLabel(settings.reader.font)), onClick = { choice = Choice.Font })
-                SliderItem(1, 6, Icons.Rounded.TextFields, R.string.settings_size, "${size.roundToInt()}", size, 16f..34f, 8, { size = it }) { vm.size(size) }
-                SliderItem(2, 6, Icons.Rounded.FormatLineSpacing, R.string.settings_line_height, "%.1f×".format(line), line, 1.4f..2.4f, 9, { line = it }) { vm.lineHeight(line) }
+                Item(0, 7, Icons.Rounded.FontDownload, R.string.settings_font, stringResource(fontLabel(settings.reader.font)), onClick = { choice = Choice.Font })
+                SliderItem(1, 7, Icons.Rounded.TextFields, R.string.settings_size, "${size.roundToInt()}", size, 16f..34f, 8, { size = it }) { vm.size(size) }
+                SliderItem(2, 7, Icons.Rounded.FormatLineSpacing, R.string.settings_line_height, "%.1f×".format(line), line, 1.4f..2.4f, 9, { line = it }) { vm.lineHeight(line) }
                 SliderItem(
-                    3, 6, Icons.Rounded.SpaceBar, R.string.settings_word_spacing,
+                    3, 7, Icons.Rounded.SpaceBar, R.string.settings_word_spacing,
                     if (words < 0.01f) stringResource(R.string.spacing_normal) else stringResource(R.string.spacing_wider, (words * 100).roundToInt()),
                     words, 0f..0.3f, 9, { words = it },
                 ) { vm.wordSpacing(words) }
                 SegmentedListItem(
-                    shapes = shapes(4, 6),
+                    shapes = shapes(4, 7),
                     leadingContent = { Icon(Icons.Rounded.Texture, null) },
                     supportingContent = { SurfacePicker(settings.reader.surface, vm::surface) },
                 ) { Text(stringResource(R.string.settings_surface)) }
-                Item(5, 6, Icons.Rounded.RestartAlt, R.string.settings_reset_reading, null, onClick = vm::resetReader)
+                SegmentedListItem(
+                    checked = settings.tashkeel,
+                    onCheckedChange = vm::tashkeel,
+                    shapes = shapes(5, 7),
+                    leadingContent = { Icon(Icons.Rounded.Translate, null) },
+                    supportingContent = { Text(stringResource(R.string.settings_tashkeel_body)) },
+                    trailingContent = { Switch(checked = settings.tashkeel, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_tashkeel)) }
+                Item(6, 7, Icons.Rounded.RestartAlt, R.string.settings_reset_reading, null, onClick = vm::resetReader)
 
                 SectionHeader(stringResource(R.string.settings_section_listening))
                 SliderItem(0, 3, Icons.Rounded.Speed, R.string.settings_speech_rate, "%.1f×".format(rate), rate, 0.5f..1.5f, 9, { rate = it }) {
@@ -210,9 +220,10 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
                 }
 
                 SectionHeader(stringResource(R.string.settings_section_about))
-                Item(0, 3, Icons.Rounded.Lock, R.string.settings_privacy, stringResource(R.string.settings_privacy_body))
-                Item(1, 3, Icons.Rounded.Info, R.string.settings_version_title, BuildConfig.VERSION_NAME)
-                Item(2, 3, Icons.Rounded.FontDownload, R.string.settings_fonts, stringResource(R.string.settings_fonts_body))
+                Item(0, 4, Icons.Rounded.Lock, R.string.settings_privacy, stringResource(R.string.settings_privacy_body))
+                Item(1, 4, Icons.Rounded.Info, R.string.settings_version_title, BuildConfig.VERSION_NAME)
+                Item(2, 4, Icons.Rounded.FontDownload, R.string.settings_fonts, stringResource(R.string.settings_fonts_body))
+                Item(3, 4, Icons.Rounded.Translate, R.string.settings_tashkeel_credit, stringResource(R.string.settings_tashkeel_credit_body))
             }
         }
     }

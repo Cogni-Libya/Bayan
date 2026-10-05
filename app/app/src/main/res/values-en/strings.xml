@@ -101,6 +101,8 @@
     <string name="settings_highlight_body">Each word lights up as it is read, so your eyes can follow</string>
     <string name="settings_more_faithful">More faithful, slower</string>
     <string name="settings_more_faithful_body">Weighs several wordings before choosing one, so the meaning is kept more often. Each sentence appears when it is finished.</string>
+    <string name="settings_tashkeel">Show tashkeel</string>
+    <string name="settings_tashkeel_body">Adds the short vowels to the simplified text, so each word reads one way. Off by default, since full vowels can crowd a line for some readers.</string>
     <string name="settings_voice">Voice engine</string>
     <string name="settings_voice_body">Choose the Arabic voice in text-to-speech settings</string>
     <string name="settings_model">Simplification model</string>
@@ -114,6 +116,8 @@
     <string name="settings_privacy_body">Simplification runs on your phone. No text is sent to the internet.</string>
     <string name="settings_fonts">Fonts</string>
     <string name="settings_fonts_body">Readex Pro, Noto Sans Arabic and Noto Naskh Arabic, SIL Open Font License</string>
+    <string name="settings_tashkeel_credit">Tashkeel</string>
+    <string name="settings_tashkeel_credit_body">Libtashkeel by Musharraf Omer, MIT License</string>
 
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_next">Next</string>

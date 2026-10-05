@@ -220,7 +220,7 @@ object ArabicText {
             .containsAll(LATIN.findAll(source).map { it.value.lowercase() }.toSet()) -> Fallback.LatinWords
         NEGATION.findAll(stripTashkeel(source)).count() != NEGATION.findAll(stripTashkeel(output)).count() -> Fallback.Negation
         limitsOf(source) != limitsOf(output) -> Fallback.Limits
-        // The checks below come from the safety net Model 3 was benchmarked with (#61), so the app is the system that
+        // The checks below come from the safety net BayanSimplify-v0.3 was benchmarked with (#61), so the app is the system that
         // was measured; a sentence is kept as the source when either set of checks stops it.
         latinCountsDropped(source, output) -> Fallback.LatinWords
         conditionsOf(source) != conditionsOf(output) -> Fallback.Conditions

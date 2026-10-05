@@ -45,7 +45,7 @@ class SimplifySession(private val app: AppContainer, private val scope: Coroutin
             val modelId = settings.activeModel
             val beams = if (settings.moreFaithful) ModelCatalog.get(modelId).beams else 1
             try {
-                app.simplifier.simplify(source, modelId, beams).collect { event ->
+                app.simplifier.simplify(source, modelId, beams, settings.tashkeel).collect { event ->
                     _state.value = when (event) {
                         SimplifyEvent.LoadingModel -> SimplifyState.LoadingModel
                         is SimplifyEvent.Progress -> SimplifyState.Running(source, event.text, event.committed, event.done, event.total, run)

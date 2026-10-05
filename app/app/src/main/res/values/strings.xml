@@ -111,6 +111,8 @@
     <string name="settings_highlight_body">تُظلَّل كل كلمة أثناء قراءتها بصوت لتتابعها بعينك</string>
     <string name="settings_more_faithful">أدق في المعنى، وأبطأ</string>
     <string name="settings_more_faithful_body">يوازن بين عدة صياغات قبل أن يختار، فيحافظ على المعنى أكثر. تظهر كل جملة حين تكتمل.</string>
+    <string name="settings_tashkeel">إظهار التشكيل</string>
+    <string name="settings_tashkeel_body">يضيف الحركات إلى النص المبسط، فتُقرأ كل كلمة بوجه واحد. مطفأ افتراضيا، لأن التشكيل الكامل قد يزحم السطر على بعض القراء.</string>
     <string name="settings_voice">محرك الصوت</string>
     <string name="settings_voice_body">اختر الصوت العربي من إعدادات تحويل النص إلى كلام</string>
     <string name="settings_model">نموذج التبسيط</string>
@@ -124,6 +126,8 @@
     <string name="settings_privacy_body">يجري التبسيط على هاتفك، ولا يُرسَل أي نص إلى الإنترنت.</string>
     <string name="settings_fonts">الخطوط</string>
     <string name="settings_fonts_body">⁨Readex Pro⁩ و⁨Noto Sans Arabic⁩ و⁨Noto Naskh Arabic⁩، برخصة ⁨SIL Open Font License⁩</string>
+    <string name="settings_tashkeel_credit">التشكيل</string>
+    <string name="settings_tashkeel_credit_body">⁨Libtashkeel⁩ من ⁨Musharraf Omer⁩، برخصة ⁨MIT⁩</string>
 
     <!-- Onboarding -->
     <string name="onboarding_skip">تخطي</string>

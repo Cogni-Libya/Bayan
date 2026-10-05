@@ -49,8 +49,10 @@ data class Settings(
     val autoRead: Boolean = false,
     val highlightWhileReading: Boolean = true,
     /** Beam search for models that offer it (ModelInfo.beams): keeps the meaning more often, slower, not streamed. On by
-     *  default, so the large model (model 3) runs as it was benchmarked. */
+     *  default, so the large model (BayanSimplify-v0.3) runs as it was benchmarked. */
     val moreFaithful: Boolean = true,
+    /** Short vowels (tashkeel) on the simplified text. Off by default: full marks can crowd a line for some readers. */
+    val tashkeel: Boolean = false,
     val wifiOnly: Boolean = true,
 )
 
@@ -72,6 +74,7 @@ class SettingsRepository(private val context: Context) {
         val autoRead = booleanPreferencesKey("auto_read")
         val highlight = booleanPreferencesKey("highlight_reading")
         val faithful = booleanPreferencesKey("more_faithful")
+        val tashkeel = booleanPreferencesKey("tashkeel")
         val wifi = booleanPreferencesKey("wifi_only")
     }
 
@@ -94,6 +97,7 @@ class SettingsRepository(private val context: Context) {
             autoRead = p[Keys.autoRead] ?: d.autoRead,
             highlightWhileReading = p[Keys.highlight] ?: d.highlightWhileReading,
             moreFaithful = p[Keys.faithful] ?: d.moreFaithful,
+            tashkeel = p[Keys.tashkeel] ?: d.tashkeel,
             wifiOnly = p[Keys.wifi] ?: d.wifiOnly,
         )
     }
@@ -112,5 +116,6 @@ class SettingsRepository(private val context: Context) {
     suspend fun setAutoRead(v: Boolean) = context.dataStore.edit { it[Keys.autoRead] = v }
     suspend fun setHighlight(v: Boolean) = context.dataStore.edit { it[Keys.highlight] = v }
     suspend fun setMoreFaithful(v: Boolean) = context.dataStore.edit { it[Keys.faithful] = v }
+    suspend fun setTashkeel(v: Boolean) = context.dataStore.edit { it[Keys.tashkeel] = v }
     suspend fun setWifiOnly(v: Boolean) = context.dataStore.edit { it[Keys.wifi] = v }
 }

@@ -1,0 +1,7 @@
+out/
+CATT_data_gt.txt
+bayan_texts.json
+tashkeel_tokenizer.py
+xer.py
+bw2ar.py
+utils.py

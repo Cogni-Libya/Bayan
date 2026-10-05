@@ -30,13 +30,19 @@ class ModelNotInstalledException(val modelId: String) : IllegalStateException("M
  * Simplifies whole texts sentence by sentence with the active on-device model: greedy models stream each token as it
  * is decoded, beam-search models show each sentence when it is final.
  */
-class Simplifier(private val store: ModelStore) {
+class Simplifier(private val store: ModelStore, private val newDiacritizer: () -> Diacritizer) {
     private val lock = Mutex()
     private var engine: Seq2SeqEngine? = null
     private var engineDir: File? = null
 
-    /** [beams] above 1 decodes with beam search (the "more faithful" setting); 1 is greedy and streamed. */
-    fun simplify(text: String, modelId: String, beams: Int = 1): Flow<SimplifyEvent> = channelFlow {
+    /** Libtashkeel, loaded the first time tashkeel is asked for (4.8 MB, bundled with the app). */
+    private val diacritizer by lazy { newDiacritizer() }
+
+    /**
+     * [beams] above 1 decodes with beam search (the "more faithful" setting); 1 is greedy and streamed. With [tashkeel],
+     * each finished sentence gets its short vowels (Libtashkeel) before it is shown; protected text keeps its own.
+     */
+    fun simplify(text: String, modelId: String, beams: Int = 1, tashkeel: Boolean = false): Flow<SimplifyEvent> = channelFlow {
         val dir = store.installedDir(modelId) ?: throw ModelNotInstalledException(modelId)
         val started = System.currentTimeMillis()
         lock.withLock {
@@ -74,6 +80,7 @@ class Simplifier(private val store: ModelStore) {
                             shown(step, raw)
                         }
                         if (k == lastSentence && openEnded) out = ArabicText.keepOpenEnding(step.text, out)
+                        if (tashkeel) out = diacritizer.diacritize(out)
                         val whole = (System.nanoTime() - t) / 1_000_000
                         Log.i(TAG, if (beams <= 1) "sentence ${done + 1}/$total: first token ${firstToken / 1_000_000} ms, whole $whole ms"
                                    else "sentence ${done + 1}/$total: $beams beams, $whole ms")
