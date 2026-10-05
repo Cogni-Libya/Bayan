@@ -63,10 +63,10 @@ object ModelCatalog {
             relativeSpeed = 0.28,
         ),
         ModelInfo(
-            // Model 3: AraT5v2 on corpus v1, int8, an option next to model 2. On BayanBench test, through the same text step,
-            // it simplifies more than model 2 AraT5 (longest clause about 4 words shorter) but keeps the meaning less often.
-            // With the "more faithful" setting it decodes with 4 beams (#61, #62): the meaning is kept more often, and
-            // its sentences arrive whole instead of streaming.
+            // Model 3: AraT5v2 on corpus v1, int8, an option next to model 2. With the "more faithful" setting it decodes with
+            // 4 beams (#61, #62) and outperforms every earlier model on BayanBench: through the same text step it keeps the
+            // meaning as often as model 2 AraT5 (test core 82%, −3 [−7, +1]) and cuts 3.4 more words from the longest
+            // clause. Greedy, it keeps the meaning less often (−6 [−10, −1]). Its sentences arrive whole instead of streaming.
             id = "model3",
             title = R.string.model_model3_title,
             summary = R.string.model_model3_summary,

@@ -65,7 +65,7 @@
     <string name="model_arabart_summary">الأنسب لمعظم الهواتف: حجمه صغير، ويبسّط النص بسرعة جملةً جملة.</string>
     <string name="model_arat5_title">النموذج الكبير</string>
     <string name="model_arat5_summary">حصل على درجة أعلى في اختباراتنا، لكنه أبطأ ويحتاج إلى مساحة أكبر.</string>
-    <string name="model_model3_summary">يبسّط أكثر من النموذج الكبير، لكنه يغيّر المعنى أكثر. أبطأ ويحتاج إلى مساحة أكبر.</string>
+    <string name="model_model3_summary">أفضل نماذجنا: يبسّط أكثر من النموذج الكبير، ومع خيار "أدق في المعنى" يحافظ على المعنى مثله. بحجم النموذج الكبير نفسه.</string>
     <string name="model_model3_title">النموذج الكبير، تبسيط أكثر</string>
     <string name="models_title">نماذج التبسيط</string>
     <string name="models_privacy">تعمل النماذج على هاتفك بالكامل، فلا يغادر نصك جهازك أبدًا.</string>
