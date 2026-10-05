@@ -266,8 +266,14 @@ def paragraph(*runs, align=None, before=0, after=100, line=284, line_rule="exact
     spacing = el("spacing")
     spacing.set(W + "before", str(before))
     spacing.set(W + "after", str(after))
-    spacing.set(W + "line", str(line))
-    spacing.set(W + "lineRule", line_rule)
+    if line_rule == "auto" and line is None:
+        pass  # default single spacing
+    elif line_rule == "auto":
+        spacing.set(W + "line", str(line))
+        spacing.set(W + "lineRule", "auto")
+    else:
+        spacing.set(W + "line", str(line))
+        spacing.set(W + "lineRule", line_rule)
     pPr.append(spacing)
     if left or hanging:
         ind = el("ind")
@@ -369,8 +375,8 @@ def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
 
     for ri, cells in enumerate(rows_of_cells):
         tr = el("tr")
-        # band = single merged row
-        if ri in band_rows or (len(cells) == 1 and ncols > 1):
+        # band = explicitly marked multicolumn/header band only
+        if ri in band_rows:
             tc = el("tc")
             tcPr = el("tcPr")
             span = el("gridSpan")
@@ -621,7 +627,7 @@ def parse_cells(line: str) -> list[str]:
 
 
 def clean_cell(text: str, size=18) -> list:
-    is_head = "\\head{" in text or "\\cellcolor{sichead}" in text
+    is_head = "\\head{" in text
     t = text
     # brace-aware \head{...}
     while "\\head{" in t:
@@ -729,36 +735,39 @@ def parse_tabular(body: str):
         end = match_braced(body, 0)
         if end > 0:
             body = body[end:]
-    body = re.sub(r"\\hline|\\toprule|\\midrule|\\bottomrule", "\n", body)
-    # split on \\ only outside braces (keep \makecell{a\\b} intact)
-    out = []
+    # drop hline markers only (do NOT turn source newlines into row breaks)
+    body = re.sub(r"\\hline|\\toprule|\\midrule|\\bottomrule", " ", body)
+    # split rows on \\ only outside braces (keep \makecell{a\\b} intact)
+    parts = []
     depth = 0
+    cur = []
     i = 0
     while i < len(body):
         if body[i] == "{":
             depth += 1
-            out.append(body[i]); i += 1
+            cur.append(body[i]); i += 1
         elif body[i] == "}":
             depth -= 1
-            out.append(body[i]); i += 1
+            cur.append(body[i]); i += 1
         elif depth == 0 and body.startswith("\\\\", i):
-            # optional [dim]
             j = i + 2
             if j < len(body) and body[j] == "[":
                 k = body.find("]", j)
                 j = k + 1 if k >= 0 else j
-            out.append("\n")
+            parts.append("".join(cur))
+            cur = []
             i = j
         else:
-            out.append(body[i]); i += 1
-    body = "".join(out)
+            cur.append(body[i]); i += 1
+    if cur:
+        parts.append("".join(cur))
     rows = []
-    for raw in body.split("\n"):
+    for raw in parts:
         line = raw.strip()
         if not line:
             continue
         cells = parse_cells(line)
-        cells = [c.replace("\\\\", " ").strip() for c in cells]
+        cells = [" ".join(c.split()) for c in cells]
         if any(cells):
             rows.append(cells)
     return rows
@@ -878,20 +887,16 @@ def emit_table(body: str, caption: str | None):
     band_rows = []
     for i, cells in enumerate(rows):
         joined = " ".join(cells)
-        if len(cells) == 1 or "\\multicolumn" in cells[0] or (
-            "\\cellcolor{sichead}" in joined and len(cells) <= 2 and
-            "\\multicolumn" in joined
-        ):
-            if "\\multicolumn" in joined or "\\cellcolor{sichead}" in joined:
-                band_rows.append(i)
-                # flatten band text
-                t = re.sub(r"\\multicolumn\{\d+\}\{[^{}]*\}", "", joined)
-                t = t.replace("\\cellcolor{sichead}", "").replace("\\bfseries", "")
-                t = re.sub(r"\\[a-zA-Z]+\{([^{}]*)\}", r"\1", t)
-                t = re.sub(r"\\[a-zA-Z]+", " ", t)
-                t = t.replace("{", "").replace("}", "")
-                processed.append([run(re.sub(r"\s+", " ", t).strip(), size=18, bold=True)])
-                continue
+        # true category band: \multicolumn spanning the row
+        if "\\multicolumn" in joined:
+            band_rows.append(i)
+            t = re.sub(r"\\multicolumn\{\d+\}\{[^{}]*\}", "", joined)
+            t = t.replace("\\cellcolor{sichead}", "").replace("\\bfseries", "")
+            t = re.sub(r"\\[a-zA-Z]+\{([^{}]*)\}", r"\1", t)
+            t = re.sub(r"\\[a-zA-Z]+", " ", t)
+            t = t.replace("{", "").replace("}", "")
+            processed.append([run(re.sub(r"\s+", " ", t).strip(), size=18, bold=True)])
+            continue
         processed.append([clean_cell(c) for c in cells])
     out.append(make_table(processed, col_dxa, header_rows=1, band_rows=band_rows))
     return out
@@ -990,17 +995,8 @@ def banner_para(title: str, numbered: str | None, docPr_id: int) -> etree.Elemen
     return p
 
 
-def add_image_para(p_el, path: Path, width_emu: int):
+def add_image_para(p_el, path: Path, width_emu: int, height_emu: int):
     """Append a DrawingML inline image to paragraph."""
-    # get image content type
-    suffix = path.suffix.lower()
-    ctype = {
-        ".png": "png",
-        ".jpg": "jpeg",
-        ".jpeg": "jpeg",
-    }.get(suffix, "png")
-    rid = p_el.getroottree().getroot().get("data-rid-counter")
-    # rid is set by caller on element
     rid = p_el.attrib.get("img-rid")
     drawing_xml = f'''<w:drawing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -1008,7 +1004,7 @@ def add_image_para(p_el, path: Path, width_emu: int):
       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
       xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
   <wp:inline distT="0" distB="0" distL="0" distR="0">
-    <wp:extent cx="{width_emu}" cy="{int(width_emu * 0.55)}"/>
+    <wp:extent cx="{width_emu}" cy="{height_emu}"/>
     <wp:effectExtent l="0" t="0" r="0" b="0"/>
     <wp:docPr id="1000" name="Figure"/>
     <wp:cNvGraphicFramePr>
@@ -1028,7 +1024,7 @@ def add_image_para(p_el, path: Path, width_emu: int):
           <pic:spPr>
             <a:xfrm>
               <a:off x="0" y="0"/>
-              <a:ext cx="{width_emu}" cy="{int(width_emu * 0.55)}"/>
+              <a:ext cx="{width_emu}" cy="{height_emu}"/>
             </a:xfrm>
             <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
           </pic:spPr>
@@ -1166,6 +1162,10 @@ def collect_body_nodes(tex: str) -> list:
             tex = tex[m.end():]
             continue
 
+        # drop leftover {\small wrappers before blocks
+        tex = re.sub(r"^\{\s*\\(small|footnotesize|scriptsize|noindent)+\s*", "", tex.lstrip())
+        tex = re.sub(r"^\{\s*", "", tex.lstrip())
+
         tab = match_tabular_env(tex)
         if tab:
             spec, inner, end_i = tab
@@ -1288,10 +1288,8 @@ def collect_body_nodes(tex: str) -> list:
         para = re.sub(r"^\{\s*\\(small|footnotesize|normalsize)\s*", "", para)
         para = re.sub(r"^\{\s*", "", para)
         para = re.sub(r"\\par\s*\}?\s*$", "", para)
-        para = para.strip().strip("}")
-        if para and not para.startswith("\\"):
-            nodes.append(paragraph(*rich_runs(para, size=21), after=100, line=284))
-        elif para.startswith("\\lead"):
+        para = para.strip().strip("{}").strip()
+        if para:
             nodes.append(paragraph(*rich_runs(para, size=21), after=100, line=284))
     return nodes
 
@@ -1475,7 +1473,7 @@ def main():
     for n in nodes:
         if isinstance(n, tuple) and n[0] == "IMAGE":
             _, path, caption = n
-            p = paragraph(align="center", after=40, line=240)
+            p = paragraph(align="center", after=80, line=0, line_rule="auto")
             width_emu = 5735955
             try:
                 from PIL import Image
@@ -1486,14 +1484,7 @@ def main():
                 height_emu = int(width_emu * 0.55)
             rid = f"rIdImg{FIG_SEQ}"
             p.set("img-rid", rid)
-            add_image_para(p, path, width_emu)
-            # fix extent height in drawing
-            for ext in p.iter(WP + "extent"):
-                ext.set("cy", str(height_emu))
-            for ext in p.iter(A + "ext"):
-                if ext.getparent().getparent().tag.endswith("xfrm"):
-                    ext.set("cy", str(height_emu))
-            # remove helper attr before insert
+            add_image_para(p, path, width_emu, height_emu)
             del p.attrib["img-rid"]
             new_kids.append(p)
             new_kids.append(paragraph(
