@@ -123,7 +123,7 @@ uv run python scripts/evaluation/make_manifest.py     # hashes must match what i
 existing manifest, since a hash only proves two people hold the same bytes — it
 says nothing about where those bytes came from. If you add a locked file, write its
 `source` by hand.
-## Scoring a trained model (model 2 onwards)
+## Scoring a trained model (BayanSimplify-v0.2 onwards)
 
 Training writes one `pred_<test set>_<tag>.jsonl` per test file (`id, source, prediction`, strength
 tag already removed): `pred_samer_S0`, `pred_daasi_SA`, `pred_baseet_S1/S2/S3`, `pred_barec_S0..S3`.

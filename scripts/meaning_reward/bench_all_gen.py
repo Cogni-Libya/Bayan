@@ -5,7 +5,7 @@
 models.json: {name: {"path": local dir or HF id, "prefix": "بسط: "}}   (transformers 4.x)
 sets.json:   {set: path}, each a jsonl of {"id", "source", ...}
 Writes gen/<set>__<model>.jsonl ({"id", "prediction"}): whole input, greedy, max 256, no repeated 4-grams (as
-model 2's train.py and dpo_train.py). Then gen/latency.json: parameters, fp32 size, seconds per sentence at batch 1 on
+BayanSimplify-v0.2's train.py and dpo_train.py). Then gen/latency.json: parameters, fp32 size, seconds per sentence at batch 1 on
 CPU with 4 threads over the first --latency-n sources of the first set.
 """
 import argparse, json, os, time

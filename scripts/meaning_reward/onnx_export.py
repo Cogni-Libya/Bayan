@@ -1,6 +1,6 @@
 """Export a seq2seq simplifier to ONNX (encoder + decoder with KV cache) and quantize it to int8 (dynamic, weights).
 
-  python onnx_export.py --model Congi-libya/bayan-arat5-v1 --out onnx/model3
+  python onnx_export.py --model Congi-libya/BayanSimplify-v0.3 --out onnx/v0.3
 
 Writes OUT/fp32 and OUT/int8 (optimum ORTModelForSeq2SeqLM layout, loadable by predict_net.py --backend ort), with
 the tokenizer, and prints the file sizes. This is our own export, not the app's bundle script: no vocabulary pruning,

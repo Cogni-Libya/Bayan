@@ -1,12 +1,12 @@
-"""Model 2's training script (scripts/training/model2/train.py) with vast.ai defaults and three additions.
+"""BayanSimplify-v0.2's training script (scripts/training/model2/train.py) with vast.ai defaults and three additions.
 
-With its defaults this script trains exactly as model 3 was trained (bf16, no time limit, best of the last 3 checkpoints):
+With its defaults this script trains exactly as BayanSimplify-v0.3 was trained (bf16, no time limit, best of the last 3 checkpoints):
   python train_mix.py --run arat5-v1 --train v1/train.jsonl --select v1/dev.jsonl --evals v1/test.jsonl --out runs --prefix "بسط: "
 Additions, all off by default:
   - a row may carry its own "prefix" (build_mix.py's denoising rows use «صحح: »); all others use --prefix;
   - --freeze-embeddings 1 keeps the shared input embeddings fixed (protects what pretraining learned);
   - --keep-ckpts 1 keeps every checkpoint, for select_fluency.py to choose among after training.
---loss-weight-from FIELD weights each row's loss by min(1, row[FIELD]/0.85). See the model 2 script's docstring below.
+--loss-weight-from FIELD weights each row's loss by min(1, row[FIELD]/0.85). See the v0.2 script's docstring below.
 """
 """Train a seq2seq Arabic simplifier (AraT5v2 or AraBART), choose the checkpoint on SARI over the
 dev rows that people changed, then generate greedily on every test file.
@@ -78,7 +78,7 @@ import re as _re
 def untag(s): return _re.sub(r"^\[[A-Z0-9-]+\] ", "", s)   # style tag is input only, never part of the metric
 
 # ---------------------------------------------------------------- model ----
-if "arat5" in a.model.lower():        # the fast tokenizer fails for AraT5v2; model 1 used the slow one
+if "arat5" in a.model.lower():        # the fast tokenizer fails for AraT5v2; BayanSimplify-v0.1 used the slow one
     from huggingface_hub import hf_hub_download
     tok_dir = f"{run_dir}/tokenizer"; os.makedirs(tok_dir, exist_ok=True)
     import shutil
@@ -91,7 +91,7 @@ else:
     tok = AutoTokenizer.from_pretrained(a.model)
 model = AutoModelForSeq2SeqLM.from_pretrained(a.model)
 if "arat5" in a.model.lower():
-    model.config.tie_word_embeddings = False          # as model 1
+    model.config.tie_word_embeddings = False          # as BayanSimplify-v0.1
 if a.freeze_embeddings:
     model.get_input_embeddings().weight.requires_grad_(False)
 log("model", a.model, f"{sum(x.numel() for x in model.parameters()) / 1e6:.0f}M params")

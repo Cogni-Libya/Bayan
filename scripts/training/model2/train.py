@@ -61,7 +61,7 @@ import re as _re
 def untag(s): return _re.sub(r"^\[[A-Z0-9-]+\] ", "", s)   # style tag is input only, never part of the metric
 
 # ---------------------------------------------------------------- model ----
-if "arat5" in a.model.lower():        # the fast tokenizer fails for AraT5v2; model 1 used the slow one
+if "arat5" in a.model.lower():        # the fast tokenizer fails for AraT5v2; BayanSimplify-v0.1 used the slow one
     from huggingface_hub import hf_hub_download
     tok_dir = f"{run_dir}/tokenizer"; os.makedirs(tok_dir, exist_ok=True)
     import shutil
@@ -74,7 +74,7 @@ else:
     tok = AutoTokenizer.from_pretrained(a.model)
 model = AutoModelForSeq2SeqLM.from_pretrained(a.model)
 if "arat5" in a.model.lower():
-    model.config.tie_word_embeddings = False          # as model 1
+    model.config.tie_word_embeddings = False          # as BayanSimplify-v0.1
 log("model", a.model, f"{sum(x.numel() for x in model.parameters()) / 1e6:.0f}M params")
 
 class Pairs(Dataset):

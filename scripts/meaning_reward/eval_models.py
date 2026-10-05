@@ -1,7 +1,7 @@
 """Score several simplifiers on the same corpus-v1 split with the same reward, for a like-for-like comparison.
 
   python eval_models.py --split dev --out compare_dev.json \
-      --model "v1-mle=runs/v1-mle/best|بسط: |" --model "model2-arabart=Congi-libya/bayan-model2-arabart|بسط: |[S2] "
+      --model "v1-mle=runs/v1-mle/best|بسط: |" --model "v0.2-fast=Congi-libya/BayanSimplify-v0.2-Fast|بسط: |[S2] "
 
 Each --model is NAME=PATH|PREFIX|TAG: the input is PREFIX + TAG + source, as that model was trained.
 Reported per model: dev reward on generated rows and per keep-type, exact-copy rate on keep-type rows, SARI on

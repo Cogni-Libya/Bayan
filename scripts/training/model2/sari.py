@@ -1,6 +1,6 @@
 """Faithful port of the SARI implementation HuggingFace `evaluate` wraps
-(Xu et al. 2016 / EASSE), so the numbers are comparable to model 1's reported
-SARI. Validated by reproducing model 1's full-dev figure (77.06) exactly."""
+(Xu et al. 2016 / EASSE), so the numbers are comparable to BayanSimplify-v0.1's reported
+SARI. Validated by reproducing BayanSimplify-v0.1's full-dev figure (77.06) exactly."""
 import re
 import sys
 from collections import Counter

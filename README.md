@@ -35,8 +35,8 @@ All figures are verified in [`references/01_problem_motivation/`](references/01_
 
 | Stage | What it does | Status |
 |---|---|---|
-| **1. Simplify (core)** | Shorten and restructure sentences, replace rare words, keep meaning | **In the app.** Fine-tuned Arabic seq2seq Transformers run on the phone as int8 ONNX bundles: model 2 on AraBART (the fast default, 222 MB) and on AraT5v2 (the large model, 471 MB), plus model 3 (AraT5v2 on corpus v1) as an option that simplifies more but keeps the meaning less often |
-| 2. Diacritize | Restore full tashkeel on the simplified text | **Selected, not in the app yet.** **Libtashkeel** (`text2tashkeel`): MIT, 4.8 MB, exports to ONNX, changed no base letters in our benchmark |
+| **1. Simplify (core)** | Shorten and restructure sentences, replace rare words, keep meaning | **In the app.** The **BayanSimplify** models run on the phone as int8 ONNX bundles: **BayanSimplify-v0.2-Fast** (AraBART, the default download, 222 MB) and **BayanSimplify-v0.3** (AraT5v2, the large model and our best, decoded with four beams, 471 MB); BayanSimplify-v0.2 stays available as the earlier large model |
+| 2. Diacritize | Restore full tashkeel on the simplified text | **In the app** (the *Show tashkeel* setting). **Libtashkeel** (`text2tashkeel`): MIT, 4.8 MB, bundled with the app, never changes a letter |
 | 3. Read aloud | TTS with word-by-word highlighting | **In the app.** **Nabra-7M-Distill** (int8, 8.7 MB) through sherpa-onnx, the spoken word highlighted; three Piper voices as optional downloads |
 
 Order matters: simplify → diacritize → read aloud, because diacritics depend on the final wording.
@@ -53,8 +53,8 @@ Before and after the model, a **text step** in code guards the output: scripture
 untouched, very short sentences are left alone, and a rewritten sentence that drops a number or a Latin token,
 changes a negation, limit or condition word, or loses too much of its text is replaced by the original sentence.
 
-Constraints: ONNX Runtime Mobile only, no Python or GPU at runtime, and a download budget of about 250 MB
-(AraBART fits; the AraT5v2 bundles do not). Reasoning: [`docs/decisions/0001-product-form.md`](docs/decisions/0001-product-form.md);
+Constraints: ONNX Runtime Mobile only, no Python or GPU at runtime, and a default download within 250 MB
+(BayanSimplify-v0.2-Fast, 222 MB); the AraT5v2 bundles (471 MB) are optional downloads, kept whole for quality. Reasoning: [`docs/decisions/0001-product-form.md`](docs/decisions/0001-product-form.md);
 app build and layout: [`app/`](app/); brand, logo, colours and reading rules: [`app/design-system/`](app/design-system/readme.md).
 
 ## 3. Data
@@ -72,13 +72,25 @@ No large, open, parallel Arabic simplification corpus fits the task, so Bayan bu
 - **SAMER** *is* used for training. CAMeL Lab approved fine-tuning on it and publishing the resulting weights for
   non-commercial use. Redistributing the corpus is **not** allowed: SAMER text must never be committed, pasted into an
   issue, or included in any deliverable.
-- **Model 2 training data** (private, 22,733 pairs): SAMER L5→L3 (14,343), DAASI train (1,502) and Baseet (6,888,
+- **BayanSimplify-v0.2 training data** (private, 22,733 pairs, for v0.2 and v0.2-Fast): SAMER L5→L3 (14,343), DAASI train (1,502) and Baseet (6,888,
   filtered for meaning), each source starting with a strength tag (`[S0]`–`[S3]`, `[SA]`). The app sends no tag, which
   keeps the meaning more often (see below).
-- **Model 3** retrains AraT5v2 on corpus v1 ([`scripts/meaning_reward/`](scripts/meaning_reward/)); the meaning judge is in [`scripts/meaning_judge/`](scripts/meaning_judge/).
+- **BayanSimplify-v0.3** retrains AraT5v2 on corpus v1 ([`scripts/meaning_reward/`](scripts/meaning_reward/)); the meaning judge is in [`scripts/meaning_judge/`](scripts/meaning_judge/).
 - **Leakage:** 9.3% of Baseet overlapped our locked test sets; every training file now passes
   [`scripts/evaluation/check_leakage.py`](scripts/evaluation/README.md). 33 BayanBench held-out items appear in corpus v1,
   so models trained on it are reported on the core and outside items only.
+
+## 3a. The BayanSimplify models
+
+Public on Hugging Face under CC BY-NC 4.0 (non-commercial, in line with the training data's terms):
+
+| Model | Base | Training data | In the app |
+|---|---|---|---|
+| [BayanSimplify-v0.1](https://huggingface.co/Congi-libya/BayanSimplify-v0.1) | AraT5v2-base-1024 | SAMER, level 5 → 3 | not shipped |
+| [BayanSimplify-v0.2](https://huggingface.co/Congi-libya/BayanSimplify-v0.2) | AraT5v2-base-1024 | 22,733-pair mix with strength tags | "Earlier large model" |
+| [BayanSimplify-v0.2-Fast](https://huggingface.co/Congi-libya/BayanSimplify-v0.2-Fast) | AraBART | the same mix | "Fast model", the default download |
+| [BayanSimplify-v0.3](https://huggingface.co/Congi-libya/BayanSimplify-v0.3) | AraT5v2-base-1024 | corpus v1 (14,975 rows) | "Large model", four beams; **our best** |
+| [BayanSimplify-ONNX](https://huggingface.co/Congi-libya/BayanSimplify-ONNX) | | the int8 bundles the app downloads | `v0.2-Fast/`, `v0.2/`, `v0.3/` |
 
 ## 4. Results (internal, not peer-reviewed)
 
@@ -89,22 +101,24 @@ The full tables, intervals and figures are in the final report
 | System | Meaning kept | Longest clause, words shorter |
 |---|---|---|
 | copy the input | 100% | 0 |
-| model 2 AraT5v2, `[S2]` / no tag | 59.5% / 68.3% | 6.3 / 4.5 |
-| model 2 AraBART, `[S2]` / no tag | 40.1% / 51.4% | 6.7 / 4.9 |
-| app, AraT5v2 int8 / AraBART int8 (September text step) | 78.6% / 50.5% | 1.9 / 4.8 |
+| BayanSimplify-v0.2 (AraT5v2), `[S2]` / no tag | 59.5% / 68.3% | 6.3 / 4.5 |
+| BayanSimplify-v0.2-Fast (AraBART), `[S2]` / no tag | 40.1% / 51.4% | 6.7 / 4.9 |
+| app, v0.2 int8 / v0.2-Fast int8 (September text step) | 78.6% / 50.5% | 1.9 / 4.8 |
+| **app, BayanSimplify-v0.3 int8, four beams** | **82%** | **5.2** |
 
 - **Meaning and simplification trade off.** Within each architecture the tagged setting simplifies most and keeps the
   meaning least often; AraT5v2 keeps it 17–28 points more often than AraBART at the same setting.
-- **Model 3**, through the app's current text step, cuts 3.9 more words from the longest clause than the large
-  model 2 but keeps the meaning 8 points less often on test (significant; 2 points on dev, not significant), so the
-  app keeps model 2 as its large model and offers model 3 as an option (#59).
+- **BayanSimplify-v0.3 with four beams outperforms every earlier model** (#61, #68): it keeps the meaning more often
+  than any of them and cuts 5.2 words from the longest clause; even against v0.2 behind the app's newest checks it is no
+  worse on meaning and cuts about three times as many words. People agree: in a blind rating its changed outputs were
+  found easier 86% of the time (v0.2: 60%), and every team vote between the two chose v0.3. It is the app's large model.
 - **The scorer tracks people.** Five raters and a reader with dyslexia rated 290 outputs and comparisons: Gemma 4 31B
   separates outputs judged faithful from the rest with AUC 0.85 [0.78, 0.91]; only meaning was rated consistently
   enough to validate (α 0.51). The reader with dyslexia found 17 of 30 rewrites easier, 4 harder.
-- **SARI is not enough.** Copying the input scores 77.5 SARI on SAMER test; model 1 beats copying only on the rows
+- **SARI is not enough.** Copying the input scores 77.5 SARI on SAMER test; BayanSimplify-v0.1 beats copying only on the rows
   people changed (+5.77) and learned one-word substitutions.
 - **On the phone** (Xiaomi Mi 11X, Snapdragon 870): the first word of a rewrite appears 82–172 ms after the request
-  with AraBART and 177–318 ms with AraT5v2.
+  with v0.2-Fast and 177–318 ms with the AraT5v2 models; v0.3 with four beams writes a sentence in about 1.2 s.
 
 ## 4a. BayanBench
 
@@ -206,9 +220,9 @@ uv run python scripts/evaluation/check_leakage.py <training_file> \
 | Member | Role | Responsibilities |
 |---|---|---|
 | Marwan Elamami | Team Leader & Application Lead | Project management; architecture and integration; application; read-aloud with highlighting |
-| Abdulrahman Khengari | Data Lead | Simplification corpus; data quality control; annotation guidelines |
+| Abdulrahman Khengari | Data Lead | Simplification corpus; data quality control; annotation guidelines; BayanSimplify-v0.3; the pitch deck |
 | Ahmed Alaeb | Model Training Lead | Training the simplification model(s) for on-device use; integrating the diacritization model |
-| Sanad Ali | Machine Learning Engineer | Co-training the simplification model(s); data annotation and quality review |
+| Sanad Ali | Machine Learning Engineer | Co-training the simplification model(s); diacritization benchmark; data annotation and quality review; presents the pitch |
 | Mohammed Thabet | Application Engineer | Application; read-aloud with highlighting; data annotation and quality review |
 | Abdul Majid Mraied | Evaluation & Benchmarking Lead | Test set design; benchmarking; automatic and human evaluation |
 
@@ -218,7 +232,6 @@ Never push to `main` — every change goes through a reviewed pull request. See 
 
 ## 11. Open items
 
-- Put Libtashkeel into the app (diacritization is selected and benchmarked, not shipped).
 - Bring the AraT5v2 bundles under 250 MB by pruning the vocabulary to the pieces Arabic text uses (about 223 MB).
-- A model with model 3's simplification and model 2's meaning rate in the app.
+- Faster beam decoding, so BayanSimplify-v0.3's quality also arrives word by word.
 - A reading study with more readers with dyslexia, measuring reading time and comprehension.

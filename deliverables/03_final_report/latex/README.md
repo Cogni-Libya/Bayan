@@ -35,17 +35,19 @@ fonts are not ours to publish.
 | `bayan.sty` | the template's layout and styles |
 | `figures.tex` | timeline, architecture, workflow, EDA, training and UI figures (TikZ/pgfplots) |
 | `results.tex` | **generated** by `make_results.py` — test-set tables, SARI and behaviour charts, and every number quoted from them |
-| `bench_v2.tex` | **generated** by `make_bench_v2.py` from `eval/bench_v2/*.json` — model 2 on BayanBench v2 (headline and other split, item sets, paired effects, trade-off figure data, every number quoted in the prose) |
+| `bench_v2.tex` | **generated** by `make_bench_v2.py` from `eval/bench_v2/*.json` — the v0.2 models on BayanBench v2 (headline and other split, item sets, paired effects, trade-off figure data, every number quoted in the prose) |
 | `eval/bench_v2/` | `run.sh` and the scorecards it writes with `bayanbench score --json` (meaning kept = P(same) >= 0.5 and every number kept); add meaning score files under `scores/` and rerun |
 | `human.tex` | **generated** by `make_human.py` from `ratings/human_ratings_v2.jsonl` — agreement, the scorer against the raters, per-system ratings, the reader with dyslexia, comparisons, figure data |
 | `make_results.py` | reads `score.py` outputs and behaviour statistics, writes `results.tex` |
+| `model3.tex` | **generated** by `make_model3.py` from `eval/model3/*.json` — BayanSimplify-v0.3 against v0.2 through the app's text step (greedy and four beams, dev and test) |
+| `human_m3.tex` | **generated** by `make_human_m3.py <h3 folder>` from the BayanSimplify-v0.3 rating round (the task key and answers stay private) |
 | `extract_template_assets.py` | de-obfuscates the template's embedded fonts; renders its cover page to `assets/sic_cover.pdf` |
 | `eval/` | the numbers behind `results.tex`: `score.py` outputs, behaviour statistics, and the scripts that produced them (no corpus text) |
 | `refs.bib` | the references in BibTeX form, checked against Crossref; the report carries them inline |
 
 ## The evaluation behind `results.tex`
 
-Model 1 (`Congi-libya/samer-arat5v2-base-simplification`) was run once on the
+BayanSimplify-v0.1 (`Congi-libya/BayanSimplify-v0.1`) was run once on the
 locked SAMER and BAREC test sets (hashes checked against
 `data/test_manifest.json`) and on DAASI's 350-pair held-out split:
 
