@@ -1,5 +1,5 @@
 """SUBMISSION deck: PowerPoint-native. Every element is an editable shape or text box; animations are PowerPoint's own
-entrance/exit effects. Seven scenes matching the presenting deck's beats.
+entrance/exit effects. Eight scenes matching the presenting deck's beats.
 
     python build_native.py  -> ../Bayan_Submission.pptx
 
@@ -19,7 +19,7 @@ ASSETS = HERE / "assets"
 OUT = HERE.parent / "Bayan_Submission.pptx"
 TEMPLATE = next(HERE.parent.glob("SIC_AI_Capstone*Template.pptx"))
 MX, CW = 0.65, SW - 1.3
-TOTAL = 7
+TOTAL = 8
 
 
 def F(key):
@@ -187,56 +187,123 @@ def s4(prs, layout):
     c.finish(slide_notes("S4Models"))
 
 
-# ---- 5 · BayanBench ----------------------------------------------------------
+# ---- 5 · Measuring -----------------------------------------------------------
 def s5(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
 
-    q = c.text(MX, 1.55, 5.5, 0.4, "How do we know a simplification is good?", 18, INK, True)
-    pair = [
-        chip(c, MX, 2.15, "copying the input", 13, PAPER2, INK2, 0.38, 2.8),
-        chip(c, MX, 2.6, "100% of the meaning", 13, SUN_LT, SUN_DK, 0.38, 2.8),
-        chip(c, MX, 3.05, "0 simplification", 13, WARN_LT, WARN, 0.38, 2.8),
+    q = c.text(MX, 1.55, CW, 0.35, "Copying is the baseline to beat", 18, INK, True)
+    rows = [
+        ("Copy the input", 100, 0.0, True),
+        ("v0.1", F("bt_m1_kept"), F("bt_m1_clause"), False),
+        ("v0.2 (AraT5v2)", F("t5_untag_kept"), F("t5_untag_clause"), False),
+        ("v0.2-Fast (AraBART)", F("bart_untag_kept"), F("bart_untag_clause"), False),
+        ("v0.3", F("bt_m3_kept"), F("bt_m3_clause"), False),
     ]
-    c.step((q, "fade"), *[(p, "fade", 300 + 200 * i) for i, p in enumerate(pair)], auto=True)
+    y0 = 2.05
+    table, hdr = [], []
+    hdr.append(c.text(MX + 3.4, y0 - 0.32, 1.3, 0.28, "meaning kept", 10, INK3, align="c"))
+    hdr.append(c.text(MX + 4.85, y0 - 0.32, 1.7, 0.28, "words cut from\nlongest clause", 10, INK3, align="c", line_spacing=0.9))
+    for i, (name, kept, cut, base) in enumerate(rows):
+        y = y0 + i * 0.42
+        band = c.card(MX, y, 6.7, 0.36, SUN_LT if base else PAPER2, SUN_LT if base else PAPER3, 0.1)
+        n = c.text(MX + 0.15, y + 0.04, 3.1, 0.28, name, 12, INK, base or name == "v0.3")
+        k = c.text(MX + 3.4, y + 0.04, 1.3, 0.28, f"{kept:.0f}%", 12, SUN_DK, True, "c")
+        cutlab = "0" if cut < 0.05 else f"{cut:.1f}"
+        u = c.text(MX + 4.85, y + 0.04, 1.7, 0.28, cutlab, 12, SUN_DK if cut >= 0.05 else WARN, True, "c")
+        table += [band, n, k, u]
+    foot = c.text(MX, y0 + 5 * 0.42 + 0.12, 6.7, 0.28, "test core items, as trained · words cut = longest clause, before minus after", 9.5, INK3)
+    c.step((q, "fade"), *[(h, "fade", 200) for h in hdr], *[(s, "fade", 400 + 120 * i) for i, s in enumerate(table)],
+           (foot, "fade", 1100), auto=True)
 
-    # scatter: hand-drawn axes + points
-    sx, sy, sw2, sh2 = 5.8, 1.7, 4.3, 3.2
+    bench = c.card(7.55, 2.0, 2.6, 1.7, SUN_LT, SUN, 0.12)
+    b_n = c.text(7.55, 2.15, 2.6, 0.55, f"{F('bench_items'):,}", 36, SUN_DK, True, "c")
+    b_l = c.text(7.55, 2.75, 2.6, 0.3, "items, split by document", 12, INK2, align="c")
+    b_s = c.text(7.55, 3.05, 2.6, 0.28, f"{F('bench_dev')} dev · {F('bench_test'):,} test", 11, INK3, align="c")
+    b_t = c.text(7.55, 3.35, 2.6, 0.3, "BayanBench v2", 13, SUN_DK, True, "c")
+    c.step((bench, "fade"), (b_n, "fade", 200), (b_l, "fade", 350), (b_s, "fade", 500), (b_t, "fade", 650))
+
+    src = chip(c, 7.55, 3.95, "original + rewrite", 11, PAPER2, INK2, 0.34, 2.6, False)
+    gem = c.card(7.55, 4.4, 2.6, 0.85, SUN_LT, SUN, 0.12)
+    g_n = c.text(7.55, 4.5, 2.6, 0.32, "Gemma 4 31B", 14, SUN_DK, True, "c")
+    g_s = c.text(7.55, 4.85, 2.6, 0.28, "open model · reruns anywhere", 9.5, INK3, align="c")
+    out = chip(c, 7.55, 5.4, "7 yes/no → P(yes)", 11, PAPER2, INK2, 0.34, 2.6, False)
+    qa = c.card(MX, 4.55, 3.2, 1.55)
+    qa_t = c.text(MX + 0.1, 4.62, 3.0, 0.3, "Meaning · 4 questions", 12, SUN_DK, True, "c")
+    qa_b = c.text(MX + 0.1, 4.95, 3.0, 1.05,
+                  "same meaning?  kept = yes ≥ 0.5\nand every number kept\nadds a fact?  drops a fact?\ncontradicts?", 10, INK2, line_spacing=0.95)
+    qb = c.card(MX + 3.45, 4.55, 3.2, 1.55)
+    qb_t = c.text(MX + 3.55, 4.62, 3.0, 0.3, "Quality · 3, diagnostic", 12, INK3, True, "c")
+    qb_b = c.text(MX + 3.55, 4.95, 3.0, 1.05,
+                  "Arabic correct?  coherent?\neasier to read?\npeople barely agree: never\nused to decide", 10, INK3, line_spacing=0.95)
+    c.step((src, "fade"), (gem, "fade", 200), (g_n, "fade", 300), (g_s, "fade", 400), (out, "fade", 500),
+           (qa, "fade", 700), (qa_t, "fade", 800), (qa_b, "fade", 900), (qb, "fade", 1000), (qb_t, "fade", 1100), (qb_b, "fade", 1200))
+
+    auc = c.text(MX, 6.35, 2.4, 0.4, f"AUC {F('judge_auc_human')}", 22, SUN, True, "c")
+    auc_l = c.text(MX + 2.5, 6.35, 4.2, 0.4, f"scorer vs {F('rater_n')} human raters\n{F('human_tasks')} tasks", 11, INK2, anchor="m")
+    reader = chip(c, 7.55, 6.35, f"reader with dyslexia: {F('reader_easier')} easier / {F('reader_same')} same / {F('reader_harder')} harder", 10, PAPER2, INK2, 0.4, 2.6, False)
+    c.step((auc, "fade"), (auc_l, "fade", 250), (reader, "fade", 500))
+    c.finish(slide_notes("S5Measure"))
+
+
+# ---- 6 · Results -------------------------------------------------------------
+def s6(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 6, "05 · Results", "v0.3 is our best model")
+
+    sx, sy, sw2, sh2 = 0.9, 1.65, 5.0, 3.7
     ax_h = c.line(sx, sy + sh2, sx + sw2, sy + sh2, INK4, 1.5)
     ax_v = c.line(sx, sy, sx, sy + sh2, INK4, 1.5)
-    xl = c.text(sx, sy + sh2 + 0.12, sw2, 0.25, "meaning kept (%)", 10, INK3, align="c")
-    yl = c.text(sx - 0.85, sy + sh2 / 2 - 0.15, 1.6, 0.3, "clause words\nshorter", 10, INK3, align="c")
+    xl = c.text(sx, sy + sh2 + 0.12, sw2, 0.25, "meaning kept (%)  →", 11, INK3, align="c")
+    yl = c.text(sx - 0.7, sy + sh2 / 2 - 0.2, 1.4, 0.4, "clause words\nshorter  →", 11, INK3, align="c")
 
     pts_shapes = []
     for lab, mx, my, mark in SCATTER:
         px = sx + (mx - 35) / 70 * sw2
         py = sy + sh2 - (my + 0.5) / 7.5 * sh2
         col = {"copy": INK4, "app": SUN_DK, "model2": INK3, "ship": WARN, "baseline": INK4}.get(mark, INK3)
-        r = 0.1 if mark != "ship" else 0.14
+        r = 0.11 if mark != "ship" else 0.15
         dot = c.circle(px, py, r, col)
         pts_shapes.append(dot)
         if mark in ("copy", "ship", "app"):
             tag_col = WARN if mark == "ship" else INK2
-            tag = c.text(px - 0.7, py - 0.35 if my > 3 else py + 0.15, 1.4, 0.25, lab, 9.5, tag_col, mark == "ship", "c")
+            side = -0.75 if (mark == "ship" and mx > 60) else -0.7
+            tag = c.text(px + (0.18 if side > 0 else -1.55), py - 0.32 if my > 3 else py + 0.16, 1.5, 0.25,
+                         lab, 10, tag_col, mark == "ship", "c")
             pts_shapes.append(tag)
-
+    badge = c.text(sx, sy + sh2 + 0.42, 5.0, 0.25, "BayanBench v2 · test core · as trained", 9.5, INK3)
     c.step((ax_h, "fade"), (ax_v, "fade"), (xl, "fade", 200), (yl, "fade", 200),
-           *[(s, "fade", 500 + 150 * i) for i, s in enumerate(pts_shapes)])
+           *[(s, "fade", 500 + 150 * i) for i, s in enumerate(pts_shapes)], (badge, "fade", 1400), auto=True)
 
-    badge = chip(c, MX, 3.75, f"frozen rule: meaning kept = same meaning AND every number kept", 11, SUN_LT, SUN_DK, 0.36, 5.2)
-    auc = chip(c, MX, 4.2, f"scorer agrees with {F('rater_n')} human raters at AUC {F('judge_auc')}", 11, PAPER2, INK2, 0.36, 5.2)
-    dropped = chip(c, MX, 4.65, f"dropped the measures that scored {F('v1_measure_auc')} against people", 11, WARN_LT, WARN, 0.36, 5.2)
-    c.step((badge, "fade"), (auc, "fade", 300), (dropped, "fade", 600))
+    side = [
+        chip(c, 6.35, 1.65, "the more it simplifies,\nthe less meaning it keeps", 11, PAPER2, INK2, 0.55, 3.85, False),
+        chip(c, 6.35, 2.35, f"v0.3 keeps {F('v03_kept')}% meaning\nand cuts {F('v03_clause')} words", 12, SUN, NIGHT, 0.55, 3.85),
+        chip(c, 6.35, 3.05, "the app's large model,\nfour beams + safety net", 11, PAPER2, INK2, 0.55, 3.85, False),
+    ]
+    c.step(*[(s, "fade", 200 * i) for i, s in enumerate(side)])
 
-    mark = c.text(MX, 5.25, CW, 0.35, "Simplify most, keep meaning most", 15, WARN, True, "c")
-    c.step((mark, "fade"))
-    c.finish(slide_notes("S5Measure") + "\n\n" + slide_notes("S6Results"))
+    sub = c.text(MX, 5.55, CW, 0.28, "In the app: v0.3 minus v0.2, same text step · 95% intervals", 11, INK3)
+    rows = [
+        (f"+{F('v03_clause_diff')} words cut from the longest clause", True),
+        (f"+{F('v03_hard_diff')} hard words removed", True),
+        (f"{F('v03_kept_diff')} points meaning kept · not significant", True),
+        (f"+{F('v03_easy_diff')} points more easy text unchanged · every number kept", True),
+    ]
+    chips = [chip(c, MX, 5.9 + i * 0.32, t, 10.5, SUN_LT if ok else WARN_LT, SUN_DK if ok else WARN, 0.28, 6.8, False)
+             for i, (t, ok) in enumerate(rows)]
+    c.step((sub, "fade"), *[(s, "fade", 250 + 180 * i) for i, s in enumerate(chips)])
+
+    head = c.text(MX, 6.55, CW, 0.28,
+                  f"Blind rating, {F('hm_sentences')} sentences: v0.3 easier on {F('hm_v03_easier')}% of changed outputs "
+                  f"(v0.2 {F('hm_v02_easier')}%) · {F('hm_votes')} of {F('hm_votes')} votes", 11, INK, True, "c")
+    c.step((head, "fade"))
+    c.finish(slide_notes("S6Results"))
 
 
-# ---- 6 · Demo ----------------------------------------------------------------
-def s6(prs, layout):
+# ---- 7 · Demo ----------------------------------------------------------------
+def s7(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 6, "05 · On a phone", "")
+    chrome(c, 7, "06 · On a phone", "")
 
     body = c.rect(3.5, 1.4, 2.8, 4.8, NIGHT, INK4, 2, 0.28)
     scr = c.rect(3.65, 1.55, 2.5, 4.5, PAPER2, radius=0.15)
@@ -263,10 +330,10 @@ def s6(prs, layout):
     c.finish(slide_notes("S7Phone"))
 
 
-# ---- 7 · Close ---------------------------------------------------------------
-def s7(prs, layout):
+# ---- 8 · Close ---------------------------------------------------------------
+def s8(prs, layout):
     c = Canvas(prs, layout, NIGHT)
-    chrome(c, 7, dark=True)
+    chrome(c, 8, dark=True)
     logo = c.pic(ASSETS / "bayan-horizontal-dark.png", (SW - 3.9) / 2, 1.25, 3.9, "Bayan logo", "Bayan logo")
     line = c.text(0, 3.2, SW, 0.7, "Simplify where you read.", 34, CREAM, True, "c")
     c.step((logo, "fade"), (line, "fade", 500), auto=True)
@@ -287,7 +354,7 @@ def main():
         prs.part.drop_rel(sld.rId)
         ids.remove(sld)
     layout = next(l for l in prs.slide_layouts if l.name == "Body")
-    for build in (s1, s2, s3, s4, s5, s6, s7):
+    for build in (s1, s2, s3, s4, s5, s6, s7, s8):
         build(prs, layout)
     prs.save(OUT)
     print(f"{OUT.name}: {len(prs.slides)} slides, {OUT.stat().st_size / 1e6:.2f} MB")

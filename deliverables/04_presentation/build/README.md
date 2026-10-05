@@ -6,7 +6,7 @@ verified by `check_numbers.py` before rendering.
 | | Presenting (Manim + HTML) | Submission (`../Bayan_Submission.pptx`) |
 |---|---|---|
 | Made of | Manim scenes played live or exported to a self-contained HTML file | Native PowerPoint shapes and text, PowerPoint's own animations |
-| Beats | 8 scenes (cover, problem, data, models, measuring, results, phone, close) | 7 slides (cover, problem, data, training, bench, phone, close) |
+| Beats | 8 scenes (cover, problem, data, models, measuring, results, phone, close) | 8 slides (same beats as the HTML) |
 | Editable | No (re-render) | Yes |
 | Fonts | baked into the video | must be installed: Readex Pro, Noto Naskh Arabic, Amiri |
 | Source | `scenes.py`, `common.py` | `nativekit.py`, `build_native.py` |
@@ -58,8 +58,7 @@ on-slide in `scenes.py`).
 - HTML player (`make_html.py`): every step plays once and waits for a click. `--auto` honours the
   `auto_next` flags instead (steps flow on; each beat stops at its end), as `manim-slides present` does.
 - `common.Deck` provides `begin_beat()`, `step()` (auto-advance) and `hold()` (pause point).
-- The native deck keeps the same speaker notes as the presenting scenes; slides 5 merges
-  `S5Measure` + `S6Results` into one bench slide.
+- The native deck keeps the same speaker notes and the same 8 beats as the presenting scenes.
 - Numbers are spoken as words; تبسيط is said *tabseet*.
 
 ## Number policy
@@ -78,7 +77,7 @@ on-slide in `scenes.py`).
 - Native: animations are hand-written PresentationML (`nativekit.build_timing`). Open in real
   PowerPoint, never LibreOffice.
 - Text floor is 11 pt at slide size (`common.MIN_SIZE`).
-- Demo video placeholder is in `S7Phone` / native slide 6. Recording checklist is in the
+- Demo video placeholder is in `S7Phone` / native slide 7. Recording checklist is in the
   presenter script. When `../05_demo/bayan_demo.mp4` exists, pass it to `step(src=...)` in
   `S7Phone` and call `Canvas.add_movie()` on native slide 6.
 - `Bayan_Presenting.pptx` is obsolete (LibreOffice flashes black between video slides). Use the
