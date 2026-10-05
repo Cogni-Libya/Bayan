@@ -55,13 +55,29 @@ def text_w(s, size):
     return widest * size / 72.0
 
 
+def wrap_lines(text, size, max_w):
+    """Wrap `text` to max_w inches at `size` pt; returns the list of lines."""
+    out = []
+    for para in text.split("\n"):
+        words = para.split(" ")
+        cur = ""
+        for w in words:
+            trial = (cur + " " + w).strip()
+            if not cur or text_w(trial, size) <= max_w:
+                cur = trial
+            else:
+                out.append(cur)
+                cur = w
+        out.append(cur)
+    return out
+
+
 def text_h(s, size, width=None):
-    lines = s.split("\n")
     if width:
-        est = text_w(s, size)
-        if est > width:
-            lines = lines * int(est / width + 1)  # conservative: assume wrap
-    return len(lines) * size / 72.0 * 1.28
+        lines = wrap_lines(s, size, width)
+    else:
+        lines = s.split("\n")
+    return len(lines) * size / 72.0 * 1.32
 
 
 # ---- primitives --------------------------------------------------------------
@@ -380,26 +396,62 @@ def s5a(prs, layout):
 def s5b(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
-    # flow
-    chip_c(c, 2.3, 1.75, "original + rewrite", size=13, fill=PAPER2, color=INK2, bold=False)
-    gx, gw, gh = 3.85, 2.75, 1.05
-    c.card(gx, 1.65, gw, gh, SUN_LT, SUN, 0.1)
-    c.text(gx, 1.78, gw, 0.35, "Gemma 4 31B", 16, SUN_DK, True, "c")
-    c.text(gx, 2.18, gw, 0.28, "open model · reruns anywhere", 11, INK3, align="c")
-    chip_c(c, 8.55, 1.75, "7 yes/no → P(yes)", size=13, fill=PAPER2, color=INK2, bold=False)
-    c.line(3.35, 2.2, 3.8, 2.2, SUN, 2, arrow=True)
-    c.line(6.65, 2.2, 7.15, 2.2, SUN, 2, arrow=True)
+    # flow row — Manim: chip | card(2.9, 0.95) | chip, centered at y=1.65, buff 0.9
+    def place_chip(cx, cy, text, **kw):
+        size = kw.get("size", 13)
+        max_w = kw.get("max_w")
+        if max_w:
+            while size > 10.5 and text_w(text, size) + 0.5 > max_w:
+                size -= 0.5
+        w = min(text_w(text, size) + 0.52, max_w or CW)
+        h = text_h(text, size) + 0.16
+        x, y = cx - w / 2, cy - h / 2
+        shape = c.card(x, y, w, h, kw.get("fill", SUN_LT), kw.get("fill", SUN_LT), radius=0.09,
+                       text=text, size=size, color=kw.get("color", SUN_DK),
+                       bold=kw.get("bold", True), align="c")
+        return shape, w, h
+
+    gem_w, gem_h = 2.9, 0.95
+    cy_flow = 2.05
+    gem_x = (SW - gem_w) / 2
+    gap = 0.55
+    # measure chip widths first so the row stays centered
+    src_probe = text_w("original + rewrite", 15) + 0.52
+    out_probe = text_w("7 yes/no questions → P(yes)", 15) + 0.52
+    src_cx = gem_x - gap - src_probe / 2
+    out_cx = gem_x + gem_w + gap + out_probe / 2
+
+    place_chip(src_cx, cy_flow, "original + rewrite", size=15, fill=PAPER2, color=INK2, bold=False)
+    c.card(gem_x, cy_flow - gem_h / 2, gem_w, gem_h, SUN_LT, SUN, 0.12)
+    c.text(gem_x, cy_flow - gem_h / 2 + 0.14, gem_w, 0.34, "Gemma 4 31B", 18, SUN_DK, True, "c")
+    c.text(gem_x, cy_flow - gem_h / 2 + 0.52, gem_w, 0.28, "open model · reruns anywhere", 11, INK3, align="c")
+    place_chip(out_cx, cy_flow, "7 yes/no questions → P(yes)", size=15, fill=PAPER2, color=INK2, bold=False)
+    c.line(src_cx + src_probe / 2 + 0.08, cy_flow, gem_x - 0.08, cy_flow, SUN, 2, arrow=True)
+    c.line(gem_x + gem_w + 0.08, cy_flow, out_cx - out_probe / 2 - 0.08, cy_flow, SUN, 2, arrow=True)
 
     def qcard(x, title, rows, hi=None, sub=None):
-        w, h = 4.85, 2.85
-        c.card(x, 3.15, w, h)
-        c.text(x, 3.32, w, 0.35, title, 15, SUN_DK, True, "c")
+        w, h = 4.85, 3.35
+        y = 3.2
+        c.card(x, y, w, h)
+        c.text(x, y + 0.18, w, 0.38, title, 16, SUN_DK, True, "c")
+        cy = y + 0.72
+        max_tw = w - 0.5
         for i, r in enumerate(rows):
-            chip_c(c, x + w / 2, 3.85 + i * 0.42, r, size=11.5,
-                   fill=SUN if i == hi else PAPER, color=NIGHT if i == hi else INK2,
-                   bold=(i == hi), max_w=w - 0.4)
+            # Manim's fit() scales a chip to one line — shrink the font until it fits
+            flat = r.replace("\n", " ")
+            size = 13.0
+            while size > 10.0 and text_w(flat, size) + 0.55 > max_tw:
+                size -= 0.5
+            tw = min(text_w(flat, size) + 0.55, max_tw)
+            th = size * 1.9 / 72.0 + 0.22
+            cx = x + (w - tw) / 2
+            c.card(cx, cy, tw, th, SUN if i == hi else PAPER, SUN if i == hi else PAPER,
+                   radius=0.09, text=flat, size=size, color=NIGHT if i == hi else INK2, bold=(i == hi))
+            cy += th + 0.16
         if sub:
-            c.text(x + 0.2, 3.15 + h - 0.48, w - 0.4, 0.4, sub, 10, INK3, align="c")
+            c.text(x + 0.2, y + h - 0.48, w - 0.4, 0.38, sub, 10.5, INK3, align="c")
+        if sub:
+            c.text(x + 0.2, y + h - 0.48, w - 0.4, 0.38, sub, 10.5, INK3, align="c")
 
     qcard(ML, "Meaning · 4 questions",
           ["same meaning?  kept = yes ≥ 0.5\nand every number kept", "adds a fact?", "drops a fact?", "contradicts?"],
@@ -469,40 +521,67 @@ def s5d(prs, layout):
 def s6a(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 6, "05 · Results", "v0.3 is our best model")
-    # scatter
-    ox, oy, pw, ph = ML + 0.55, 1.85, 5.35, 3.85
-    c.line(ox, oy + ph, ox + pw, oy + ph, INK4, 1.5)
-    c.line(ox, oy, ox, oy + ph, INK4, 1.5)
-    c.text(ox, oy + ph + 0.1, pw, 0.26, "meaning kept (%)  →", 11, INK3, align="c")
-    c.text(ML - 0.05, oy + ph / 2 - 0.35, 1.05, 0.7, "clause words\nshorter  →", 11, INK3, align="c")
+    # scatter — same points, labels and sides as S6Results in scenes.py
+    ox, oy, pw, ph = 2.35, 2.05, 5.05, 3.55  # plot box top-left + size
+    c.line(ox, oy + ph, ox + pw, oy + ph, INK4, 1.75)  # x axis
+    c.line(ox, oy, ox, oy + ph, INK4, 1.75)            # y axis
+    c.text(ox, oy + ph + 0.12, pw, 0.28, "meaning kept (%)  →", 11.5, INK3, align="c")
+    # rotated y-axis label (HTML: "simplification: words cut from the longest clause  →")
+    yl = c.text(0, 0, 3.6, 0.28, "simplification: words cut from the longest clause  →", 11.5, INK3, align="c")
+    yl.rotation = 270
+    yl.left = Inches(ox - 0.52)
+    yl.top = Inches(oy + ph / 2 - 0.14)
     x0, x1, y0, y1 = 30, 105, -0.6, 7.6
 
     def xy(x, y):
         return ox + (x - x0) / (x1 - x0) * pw, oy + ph - (y - y0) / (y1 - y0) * ph
 
-    for lab, x, y, mark in SCATTER:
-        col = {"copy": INK4, "baseline": INK4, "app": SUN_DK, "model2": INK3, "ship": WARN}.get(mark, INK3)
+    # (label, meaning kept, clause words shorter, color, side, size)
+    points = [
+        ("Copy the input", 100.0, 0.0, INK4, "up", 12),
+        ("v0.1", F("bt_m1_kept"), 0.0, INK3, "up", 12),
+        ("v0.2 in the app", F("v02_app_kept"), F("v02_app_clause"), INK3, "up", 12),
+        ("v0.2 (no tag)", F("t5_untag_kept"), F("t5_untag_clause"), INK3, "left", 11),
+        ("v0.2 + tag", F("t5_tag_kept"), F("t5_tag_clause"), INK3, "down", 11),
+        ("v0.2-Fast (no tag)", F("bart_untag_kept"), F("bart_untag_clause"), INK3, "down", 11),
+        ("v0.2-Fast + tag", F("bart_tag_kept"), F("bart_tag_clause"), INK3, "right", 11),
+        ("v0.3 in the app", F("v03_kept"), F("v03_clause"), SUN_DK, "right", 13),
+    ]
+    halo = None
+    for lab, x, y, col, side, size in points:
         px, py = xy(x, y)
-        r = 0.11 if mark != "ship" else 0.14
-        if mark == "ship":
-            c.circle(px, py, r + 0.1, None, line=SUN, line_w=1.5)
+        best = lab.startswith("v0.3")
+        r = 0.16 if best else 0.115
+        if best:
+            halo = (px, py)
+            c.circle(px, py, 0.28, None, line=SUN, line_w=1.75)
         c.circle(px, py, r, col)
-        if mark in ("copy", "baseline", "ship", "app"):
-            tc = WARN if mark == "ship" else INK2
-            if mark == "ship":
-                c.text(px + 0.2, py - 0.16, 1.7, 0.28, lab, 11, tc, True)
-            else:
-                c.text(px - 0.95, py - 0.42, 1.9, 0.26, lab, 11, tc, align="c")
-    badge(c, ox + 0.15, oy + ph + 0.45, "BayanBench v2, test core items")
+        tw = text_w(lab, size) + 0.1
+        th = 0.26
+        if side == "up":
+            tx, ty = px - tw / 2, py - r - 0.08 - th
+        elif side == "down":
+            tx, ty = px - tw / 2, py + r + 0.08
+        elif side == "left":
+            tx, ty = px - r - 0.1 - tw, py - th / 2
+        else:  # right
+            tx, ty = px + r + 0.12, py - th / 2
+        c.text(tx, ty, tw, th, lab, size, WARN if best else INK2, best)
+    badge(c, ox + 0.1, oy + ph + 0.5, "BayanBench v2, test core items")
 
-    side_x = ox + pw + 0.55
+    side_x = ox + pw + 0.45
     side_w = SW - MR - side_x
-    chip(c, side_x, 2.05, "the more it simplifies,\nthe less meaning it keeps", size=13,
-         fill=PAPER2, color=INK2, bold=False, max_w=side_w)
-    chip(c, side_x, 3.05, f"v0.3 keeps the most meaning ({F('v03_kept')}%)\nand still cuts {F('v03_clause')} words",
-         size=13, fill=SUN, color=NIGHT, max_w=side_w)
-    chip(c, side_x, 4.15, "the app's large model,\nfour beams + safety net", size=12,
-         fill=PAPER2, color=INK2, bold=False, max_w=side_w)
+    cy = 2.05
+    for text, fill, color, size, bold in [
+        ("the more it simplifies,\nthe less meaning it keeps, obviously", SUN_LT, SUN_DK, 13.5, True),
+        (f"v0.3 keeps the most meaning ({F('v03_kept')}%)\nand still cuts {F('v03_clause')} words off\nthe longest clause",
+         SUN, NIGHT, 13.5, True),
+        ("v0.3 is the app's large model,\ndecoded with four beams", PAPER2, INK2, 12.5, False),
+    ]:
+        tw = min(max(text_w(ln, size) for ln in text.split("\n")) + 0.5, side_w)
+        th = text_h(text, size) + 0.2
+        c.card(side_x, cy, tw, th, fill, fill, radius=0.1, text=text, size=size, color=color, bold=bold)
+        cy += th + 0.22
     c.finish(slide_notes("S6Results"))
 
 
