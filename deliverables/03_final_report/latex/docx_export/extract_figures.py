@@ -39,39 +39,40 @@ def find_text_pages(doc: fitz.Document, needle: str):
     return hits
 
 
-def crop_above_caption(page: fitz.Page, caption_rect: fitz.Rect, pad_top=8) -> fitz.Rect:
-    """Region from the figure body above the caption (TikZ drawings / images / labels)."""
+def crop_above_caption(page: fitz.Page, caption_rect: fitz.Rect, pad=6) -> fitz.Rect:
+    """Graphics-only region directly above the caption.
+
+    Walk upward from the caption through drawings/images that touch the growing
+    band; stop at the first body-text block (prose, previous caption, table rows,
+    heading). Text is only kept when it sits inside the graphics band (axis and
+    node labels), so surrounding prose never ends up inside the PNG.
+    """
     cap_top = caption_rect.y0
-    # generous fallback — TikZ diagrams can be very tall
-    best_top = cap_top - 380
-    for img in page.get_image_info():
-        r = fitz.Rect(img["bbox"])
-        if r.y1 <= cap_top + 2 and r.y0 < cap_top:
-            best_top = min(best_top, r.y0)
-    try:
-        for d in page.get_drawings():
-            r = d["rect"]
-            if r.y1 <= cap_top + 6 and r.height > 4 and r.y0 < cap_top:
-                best_top = min(best_top, r.y0)
-    except Exception:
-        pass
-    # chart labels / nodes: any short text block above the caption
-    for b in page.get_text("blocks"):
-        x0, y0, x1, y1, text, *_ = b
-        if y1 <= cap_top + 2 and y0 < cap_top and (cap_top - y1) < 420:
-            if len(text) < 400 and (y1 - y0) < 120:
-                best_top = min(best_top, y0)
-    # stop at the previous long prose paragraph or previous caption
-    for b in page.get_text("blocks"):
-        x0, y0, x1, y1, text, *_ = b
-        if y1 <= best_top + 2 and y0 < best_top:
-            if len(text) > 350 or (y1 - y0) > 50:
-                # leave a little gap under that prose
-                best_top = max(best_top, y1 + 4)
-    best_top = max(best_top, 36)
-    width = page.rect.width
-    left, right = 36, width - 36
-    return fitz.Rect(left, best_top - pad_top, right, cap_top - 2)
+    rects = [fitz.Rect(i["bbox"]) for i in page.get_image_info()]
+    rects += [d["rect"] for d in page.get_drawings()]
+    rects = [r for r in rects if r.y1 <= cap_top + 2 and r.height > 0.5]
+
+    # nearest body-text block above the caption = hard ceiling. Short text
+    # (labels) is ignored here; anything long or multi-line counts as prose.
+    ceiling = 36.0
+    for x0, y0, x1, y1, text, *_ in page.get_text("blocks"):
+        if y1 > cap_top - 1:
+            continue
+        inside = any(r.y0 - 2 <= y0 and y1 <= r.y1 + 2 for r in rects)
+        if not inside and (len(text) > 80 or y1 - y0 > 24):
+            ceiling = max(ceiling, y1)
+
+    # grow upward through graphics below the ceiling, allowing small gaps
+    top = cap_top
+    for r in sorted((r for r in rects if r.y0 >= ceiling - 1), key=lambda r: -r.y1):
+        if r.y1 >= top - 30:
+            top = min(top, r.y0)
+    # labels hugging the graphics (panel titles, axis names) above that top
+    for x0, y0, x1, y1, text, *_ in page.get_text("blocks"):
+        if ceiling <= y0 and y1 <= top + 2 and top - y1 < 20 and len(text) <= 80:
+            top = min(top, y0)
+    left, right = 36, page.rect.width - 36
+    return fitz.Rect(left, max(top - pad, ceiling + 1), right, cap_top - 2)
 
 
 def main():
