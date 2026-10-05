@@ -247,6 +247,7 @@ def run(text: str, *, font=FONT, size=21, bold=False, italic=False,
     # last-ditch cleanup of TeX crumbs
     text = text.replace("\\rightarrow", "→").replace("\\leftarrow", "←")
     text = text.replace("\\dagger", "†").replace("\\to", "→")
+    text = text.replace("^*", "∗")
     text = re.sub(r"\\[a-zA-Z]+\{([^{}]*)\}", r"\1", text)
     text = re.sub(r"\\[a-zA-Z]+", "", text)
     t = el("t")
@@ -662,9 +663,37 @@ def clean_cell(text: str, size=18) -> list:
         inner = re.sub(r"\s+", " ", inner).strip(" {}")
         t = t[:i] + inner + t[end:]
     t = re.sub(r"\[-\d+(?:\.\d+)?pt\]", "", t)
-    # leftover single-level braces from CI cells
-    t = re.sub(r"\{([^{}]*)\}", r"\1", t)
-    t = re.sub(r"\[-\d.]+pt\]", "", t)
+    # unwrap orphan braces only — never \cmd{...} (those must reach rich_runs)
+    out = []
+    i = 0
+    while i < len(t):
+        if t[i] == "\\" and i + 1 < len(t):
+            j = i + 1
+            while j < len(t) and t[j].isalpha():
+                j += 1
+            k = j
+            while k < len(t) and t[k] in " \t":
+                k += 1
+            if k < len(t) and t[k] == "{":
+                end = match_braced(t, k)
+                out.append(t[i:end])
+                i = end
+                continue
+            out.append(t[i:j])
+            i = j
+            continue
+        if t[i] == "{":
+            end = match_braced(t, i)
+            if end > i:
+                out.append(t[i + 1:end - 1])
+                i = end
+                continue
+            i += 1
+            continue
+        out.append(t[i])
+        i += 1
+    t = "".join(out)
+    t = t.replace("^*", "∗")
     runs_ = rich_runs(t, size=size, bold=is_head)
     return runs_
 
@@ -1047,9 +1076,8 @@ def collect_body_nodes(tex: str) -> list:
     fig_idx = [0]
     fig_files = [
         "fig01_schedule", "fig02_evolution", "fig03_pipeline", "fig04_architecture",
-        "fig05_cleaning", "fig06_lengths", "fig07_sari", "fig08_training",
-        "fig09_behaviour", "fig10_trainingtwo", "fig11_scorer", "fig12_dumbbell",
-        "fig13_tradeoff", "fig14_ui",
+        "fig05_cleaning", "fig06_lengths", "fig07_sari", "fig08_behaviour",
+        "fig09_trainingtwo", "fig10_scorer", "fig11_tradeoff", "fig12_ui",
     ]
 
     while tex.strip():
@@ -1257,6 +1285,10 @@ def collect_body_nodes(tex: str) -> list:
             para = tex
             tex = ""
         para = re.sub(r"\s+", " ", para).strip()
+        para = re.sub(r"^\{\s*\\(small|footnotesize|normalsize)\s*", "", para)
+        para = re.sub(r"^\{\s*", "", para)
+        para = re.sub(r"\\par\s*\}?\s*$", "", para)
+        para = para.strip().strip("}")
         if para and not para.startswith("\\"):
             nodes.append(paragraph(*rich_runs(para, size=21), after=100, line=284))
         elif para.startswith("\\lead"):
@@ -1398,36 +1430,25 @@ def main():
         (2, "1.2. Motivation and Objective"),
         (2, "1.3. Members and Role Assignments"),
         (2, "1.4. Schedule and Milestones"),
-        (2, "1.5. Related Work"),
         (1, "2. Project Execution"),
         (2, "2.1. Data Acquisition"),
         (2, "2.2. Training Methodology"),
         (2, "2.3. Workflow"),
         (2, "2.4. System Design"),
-        (2, "2.5. BayanBench"),
-        (2, "2.6. Human Rating Protocol"),
-        (2, "2.7. The Meaning Judge"),
         (1, "3. Results"),
         (2, "3.1. Data Preprocessing"),
         (2, "3.2. Exploratory Data Analysis (EDA)"),
         (2, "3.3. Modeling"),
-        (2, "3.4. Human Evaluation"),
-        (2, "3.5. BayanBench Results"),
-        (2, "3.6. User Interface"),
-        (2, "3.7. Testing and Improvements"),
-        (2, "3.8. On the Device"),
+        (2, "3.4. User Interface"),
+        (2, "3.5. Testing and Improvements"),
         (1, "4. Projected Impact"),
         (2, "4.1. Accomplishments and Benefits"),
         (2, "4.2. Future Improvements"),
-        (2, "4.3. Limitations"),
-        (2, "4.4. Conclusion"),
         (2, "References"),
         (1, "5. Team Member Review and Comment"),
         (1, "6. Instructor Review and Comment"),
     ]
     for lvl, title in toc_entries:
-        if title.startswith("5. Team"):
-            toc_nodes.append(page_break())
         if lvl == 1:
             toc_nodes.append(paragraph(
                 run(title, font=FONT_B, size=24, bold=True),
@@ -1450,8 +1471,7 @@ def main():
     new_kids = list(kids_now[:content_idx])
     for n in toc_nodes:
         new_kids.append(n)
-    # body content
-    new_kids.append(page_break())
+    # body content (toc_nodes already ends with a page break)
     for n in nodes:
         if isinstance(n, tuple) and n[0] == "IMAGE":
             _, path, caption = n

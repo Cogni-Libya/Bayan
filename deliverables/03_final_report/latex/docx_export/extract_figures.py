@@ -22,13 +22,11 @@ FIGURE_NAMES = {
     5: "fig05_cleaning",
     6: "fig06_lengths",
     7: "fig07_sari",
-    8: "fig08_training",
-    9: "fig09_behaviour",
-    10: "fig10_trainingtwo",
-    11: "fig11_scorer",
-    12: "fig12_dumbbell",
-    13: "fig13_tradeoff",
-    14: "fig14_ui",
+    8: "fig08_behaviour",
+    9: "fig09_trainingtwo",
+    10: "fig10_scorer",
+    11: "fig11_tradeoff",
+    12: "fig12_ui",
 }
 
 
