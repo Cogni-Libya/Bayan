@@ -27,27 +27,22 @@
 \siccontents
 
 % ================================================================= Abstract
+\vspace{4mm}
 \begin{fullwidth}
-\fcolorbox{sicrule}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
-\vspace{2pt}\textbf{\color{sicblue}Abstract.}\enspace
-Arabic text can be hard to read: clauses chain across whole paragraphs, clitics
-fuse into long words, and short vowels go unwritten. \textbf{Bayan} is an Android
-app that rewrites a selection of Arabic text, from inside any app and entirely on
-the phone, to lower its \emph{linguistic load}: shorter clauses and fewer hard
-words. It addresses readability, not every difficulty that dyslexia brings. Most
-of the work went into evaluation. On SAMER, the main human-written Arabic
-simplification corpus, copying the input scores 77.5 SARI, and a fine-tuned
-AraT5v2 that beats copying on the sentences a human changed still loses to it
-overall. We therefore built \textbf{BayanBench} (1,981 items split by document),
-which scores meaning with an open model whose verdicts agree with human raters
-(AUC \hAucSame{}) and simplification, restraint and correctness with code. Our
-best model, \vThree{}, is AraT5v2 trained on a 14,975-row corpus written by
-Gemma~4 31B. Decoded with four beams it outperforms every earlier model: it keeps
-the meaning in \mBeamTKept\% of test outputs (earlier models at most
-\bvHmaxKept\%) and cuts \mBeamTClause{} words from the longest clause, and team
-raters found the rewrites it made easier \hmThreeChEasier\% of the time. It is the
-app's large model (471\,MB, about 1.2\,s per sentence on a Snapdragon 870 phone);
-the default fast model (222\,MB) shows the first word in 82--172\,ms.\vspace{2pt}}}
+{\fontsize{12}{15}\selectfont\bfseries\color{sicblue}Abstract}\par\vspace{0.5mm}
+{\small
+\textbf{Bayan} is an Android app that rewrites a selection of Arabic text, from
+inside any app and entirely on the phone, to lower its \emph{linguistic load}:
+shorter clauses and fewer hard words. Most of the work went into evaluation. On
+SAMER, the main human-written Arabic simplification corpus, copying the input
+scores 77.5 SARI, so we built \textbf{BayanBench} (1,981 items), which scores
+meaning with an open model that agrees with human raters (AUC \hAucSame{}) and
+simplification, restraint and correctness with code. Our best model, \vThree{},
+decoded with four beams, outperforms every earlier model: it keeps the meaning in
+\mBeamTKept\% of test outputs (earlier models at most \bvHmaxKept\%) and cuts
+\mBeamTClause{} words from the longest clause, and raters found the rewrites it made
+easier \hmThreeChEasier\% of the time. It is the app's large model, at 471\,MB and
+about 1.2\,s per sentence on a mid-range phone.\par}
 \end{fullwidth}
 
 % ============================================================== at a glance
