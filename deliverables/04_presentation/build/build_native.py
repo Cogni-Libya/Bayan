@@ -1,13 +1,11 @@
-"""SUBMISSION deck: PowerPoint-native. Every element is an editable shape or text box; animations are PowerPoint's own
-entrance/exit effects. Eight scenes mirroring the presenting deck's Manim layouts beat for beat.
+"""SUBMISSION deck: PowerPoint-native. One slide per presenting step (same order the HTML player
+clicks through), so the deck looks right in PowerPoint, in a PDF and on paper — not only in an
+animation-aware slideshow.
 
     python build_native.py  -> ../Bayan_Submission.pptx
 
 Fonts: Readex Pro (Latin), Noto Naskh Arabic and Amiri (Arabic). Install them before opening.
 Every number comes from facts.py; check_numbers.py must pass first.
-
-Layout is a direct port of scenes.py: Manim's centered, y-up frame (W x H units) maps to the
-slide's inches with a uniform scale. Stages that Manim fades out are faded out here too.
 """
 from pathlib import Path
 
@@ -21,325 +19,335 @@ HERE = Path(__file__).parent
 ASSETS = HERE / "assets"
 OUT = HERE.parent / "Bayan_Submission.pptx"
 TEMPLATE = next(HERE.parent.glob("SIC_AI_Capstone*Template.pptx"))
-TOTAL = 8
 
-# ---- Manim frame -> slide inches ---------------------------------------------
-# common.py: frame_width = 8 * 9902825 / 6858000, frame_height = 8
-WM, HM = 8 * 9902825 / 6858000, 8.0
-S = SH / HM  # uniform scale (== SW/WM)
+# content frame, inches (slide is 10.83 x 7.5)
+ML, MR = 0.62, 0.62
+CW = SW - ML - MR
+CT, CB = 1.62, 6.72  # below kicker/title, above footer
 
 
 def F(key):
     return FIG[key][0]
 
 
-def X(x):
-    return (x + WM / 2) * S
+def R(x):
+    return int(x + 0.5)
 
 
-def Y(y):
-    return (HM / 2 - y) * S
+# ---- text metrics ------------------------------------------------------------
+def text_w(s, size):
+    """Approximate rendered width in inches for Readex/Naskh at `size` pt."""
+    widest = 0
+    for line in s.split("\n"):
+        w = 0.0
+        for ch in line:
+            if "\u0600" <= ch <= "\u06ff":
+                w += 0.62
+            elif ch in "iljI.,:;'|!":
+                w += 0.28
+            elif ch in "mwMW":
+                w += 0.85
+            elif ch.isupper():
+                w += 0.68
+            else:
+                w += 0.55
+        widest = max(widest, w)
+    return widest * size / 72.0
 
 
-def U(n):
-    return n * S
+def text_h(s, size, width=None):
+    lines = s.split("\n")
+    if width:
+        est = text_w(s, size)
+        if est > width:
+            lines = lines * int(est / width + 1)  # conservative: assume wrap
+    return len(lines) * size / 72.0 * 1.28
 
 
-def box(cx, cy, w, h):
-    """Top-left + size in inches for a Manim-sized box centered at (cx, cy)."""
-    return X(cx) - U(w) / 2, Y(cy) - U(h) / 2, U(w), U(h)
-
-
-def _tw(text, size):
-    """Rough text width in inches (Readex/Naskh at `size` pt)."""
-    lines = text.split("\n")
-    arabic = any("\u0600" <= ch <= "\u06ff" for ch in text)
-    k = 0.072 if arabic else 0.058
-    return max(k * size * len(ln) for ln in lines) / 72 * 72  # size already in pt
-
-
-def fit_size(text, size, max_w_in, min_size=11):
-    """Shrink font so the longest line fits max_w_in (never grows)."""
-    while size > min_size and _tw(text, size) > max_w_in:
-        size -= 0.5
-    return size
-
-
-# ---- shared pieces (ports of common.chrome / chip / source_badge / scatter) ---
+# ---- primitives --------------------------------------------------------------
 def chrome(c, num, kicker=None, title=None, dark=False):
     fg = CREAM if dark else INK
-    items = []
     if kicker:
-        kx, ky, kw, kh = X(-WM / 2 + 0.7), Y(HM / 2 - 0.75), U(6), U(0.34)
-        k = c.text(kx, ky, kw, kh, kicker.upper(), 18, SUN, True, font=LATIN)
-        bar = c.rect(kx - U(0.28), ky - U(0.06), U(0.08), kh + U(0.12), SUN)
-        items += [bar, k]
-        ty = ky + kh + U(0.28)
-        t = c.text(kx, ty, U(WM - 1.4), U(0.7), title, 40, fg, True, font=LATIN)
-        items.append(t)
-    sam = c.pic(ASSETS / ("samsung-white.png" if dark else "samsung-blue.png"), X(-WM / 2 + 0.7), Y(-HM / 2 + 0.5), U(1.25),
-                "Samsung", "Samsung logo")
-    sic = c.text(X(-WM / 2 + 0.7) + U(1.25) + U(0.3), Y(-HM / 2 + 0.5), U(4.5), U(0.28),
-                 "Samsung Innovation Campus  ·  AI Course", 13, CREAM if dark else INK3)
-    n = c.text(X(WM / 2 - 0.7) - U(1.0), Y(-HM / 2 + 0.5), U(1.0), U(0.28), f"{num} / {TOTAL}", 13,
-               CREAM if dark else INK3, align="r")
-    return items + [sam, sic, n]
+        c.rect(ML, 0.52, 0.07, 0.30, SUN)
+        c.text(ML + 0.18, 0.48, CW - 0.2, 0.34, kicker.upper(), 12.5, SUN, True)
+    if title:
+        c.text(ML, 0.88, CW, 0.55, title, 26, fg, True)
+    sam = c.pic(ASSETS / ("samsung-white.png" if dark else "samsung-blue.png"), ML, 6.93, 1.12, "Samsung", "Samsung logo")
+    c.text(ML + 1.28, 6.98, 4.2, 0.28, "Samsung Innovation Campus  ·  AI Course", 10, CREAM if dark else INK3)
+    c.text(SW - MR - 1.0, 6.98, 1.0, 0.28, f"{num} / 8", 10, CREAM if dark else INK3, align="r")
+    return sam
 
 
-def chip(c, cx=0, cy=0, text="", size=15, fill=SUN_LT, color=SUN_DK, bold=True, align="c", left=None):
-    """Rounded label. Positioned by center (cx,cy) in Manim coords, or left-aligned at Manim x=`left`."""
-    pad = U(0.35)
-    tw = _tw(text, size) * 0.98
-    w = tw + 2 * pad
-    h = U(0.32 + size / 72 * 1.35)
-    if left is not None:
-        x = X(left)
-        y = Y(cy) - h / 2
-    else:
-        x, y = X(cx) - w / 2, Y(cy) - h / 2
-    return c.card(x, y, w, h, fill, fill, radius=min(0.2 * S, h / 2), text=text, size=size, color=color,
-                  bold=bold, align=align)
+def chip(c, x, y, text, size=13, fill=SUN_LT, color=SUN_DK, bold=True, max_w=None, align="c"):
+    """Label pill at (x,y) top-left. Width follows the text; `max_w` only shrinks the font."""
+    if max_w:
+        while size > 10.5 and text_w(text, size) + 0.5 > max_w:
+            size -= 0.5
+    w = min(text_w(text, size) + 0.52, max_w or CW)
+    h = text_h(text, size) + 0.16
+    return c.card(x, y, w, h, fill, fill, radius=0.09, text=text, size=size, color=color, bold=bold, align=align)
 
 
-def source_badge(c, x, y, text, size=11):
-    """Sun bar + provenance text. x,y is the text's top-left in inches."""
-    bar = c.rect(x, y + U(0.04), U(0.06), U(size * 0.028), SUN)
-    t = c.text(x + U(0.14) + U(0.14), y, U(6), U(size / 72 * 1.4), text, size, INK3)
-    return [bar, t]
+def chip_c(c, cx, y, text, **kw):
+    """Chip centered on cx (inches)."""
+    size = kw.get("size", 13)
+    max_w = kw.get("max_w")
+    if max_w:
+        while size > 10.5 and text_w(text, size) + 0.5 > max_w:
+            size -= 0.5
+            kw["size"] = size
+    w = min(text_w(text, size) + 0.52, max_w or CW)
+    return chip(c, cx - w / 2, y, text, **kw)
 
 
-def stagger(shapes, start=0, step=150):
-    return [(s, "fade", start + step * i) for i, s in enumerate(shapes)]
+def badge(c, x, y, text, size=10.5):
+    c.rect(x, y + 0.03, 0.05, 0.16, SUN)
+    c.text(x + 0.12, y, 6.5, 0.22, text, size, INK3)
+    return y + 0.22
 
 
-def out(shapes):
-    """fade-out effects for a stage that Manim replaces."""
-    return [(s, "fade_out", 0, 400) for s in shapes]
+def card_text(c, x, y, w, h, title, body, fill=PAPER2, stroke=PAPER3, tcol=INK, bcol=INK2,
+              tsize=15, bsize=12, gap=0.06):
+    card = c.card(x, y, w, h, fill, stroke, 0.12)
+    th = text_h(title, tsize)
+    c.text(x + 0.1, y + 0.12, w - 0.2, th + 0.06, title, tsize, tcol, True, "c")
+    if body:
+        c.text(x + 0.14, y + 0.12 + th + gap, w - 0.28, h - 0.24 - th - gap, body, bsize, bcol, align="c",
+               line_spacing=1.0)
+    return card
 
 
 # =============================================================================
-# 1 · Cover
+# Beat 1 · Cover — 1 slide
 # =============================================================================
 def s1(prs, layout):
     c = Canvas(prs, layout, NIGHT)
     chrome(c, 1, dark=True)
-    mx, my, mw, mh = box(0, 1.75, 3.4, 3.4)
-    logo = c.pic(ASSETS / "bayan-mark-dark.png", mx, my, mw, "Bayan logo: open book with a sun", "Bayan logo")
-    title = c.text(0, Y(1.75 - 1.7 - 0.35 - 0.5), SW, U(1.0), "Bayan", 72, CREAM, True, "c")
-    sub = c.text(0, Y(0.2), SW, U(0.5), "Simplify Arabic where you read", 26, CREAM, align="c")
-    tag = c.text(0, Y(-0.45), SW, U(0.35), "on the phone, offline", 18, SUN, align="c")
-    team = c.text(0, Y(-1.15), SW, U(0.4), "Team Cogni", 22, SUN, True, "c")
-    names = c.text(X(-WM / 2 + 0.8), Y(-1.75), U(WM - 1.6), U(0.3),
-                   "Marwan Elamami · Abdulrahman Khengari · Ahmed Alaeb · Sanad Ali · "
-                   "Mohammed Thabet · Abdul Majid Mraied", 13, INK4, align="c")
-    c.step((logo, "wipe_left", 0, 1500), (title, "fade", 1300), (sub, "fade", 1700),
-           (tag, "fade", 2000), (team, "fade", 2200), (names, "fade", 2300), auto=True)
+    c.pic(ASSETS / "bayan-mark-dark.png", (SW - 3.1) / 2, 0.88, 3.1, "Bayan logo", "Bayan logo")
+    c.text(0, 4.15, SW, 0.85, "Bayan", 56, CREAM, True, "c")
+    c.text(0, 5.05, SW, 0.42, "Simplify Arabic where you read", 20, CREAM, align="c")
+    c.text(0, 5.52, SW, 0.32, "on the phone, offline", 14, SUN, align="c")
+    c.text(0, 6.0, SW, 0.34, "Team Cogni", 15, SUN, True, "c")
+    c.text(ML, 6.38, CW, 0.28,
+           "Marwan Elamami · Abdulrahman Khengari · Ahmed Alaeb · Sanad Ali · "
+           "Mohammed Thabet · Abdul Majid Mraied", 10, INK4, align="c")
     c.finish(slide_notes("S1Cover"))
 
 
 # =============================================================================
-# 2 · Problem
+# Beat 2 · Problem — 2 slides
 # =============================================================================
-def s2(prs, layout):
+def s2a(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 2, "01 · The problem", "Reading in Arabic adds load")
+    # left: prevalence
+    c.text(ML, 1.85, 3.5, 1.15, "11%", 84, SUN, False, "c")
+    c.text(ML, 3.05, 3.5, 0.75, "of Arab primary-school children\nhave developmental dyslexia", 15, INK2,
+           align="c", line_spacing=1.05)
+    badge(c, ML + 0.35, 3.95, f"Al-Dakhil 2024 · {F('dyslexia_studies')} studies, N = {F('dyslexia_n'):,}")
+    # right: one form, three readings
+    px, py, pw, ph = 4.45, 1.72, 5.75, 3.55
+    c.card(px, py, pw, ph)
+    c.text(px, py + 0.18, pw, 0.95, "كتب", 68, INK, False, "c", ARABIC_DISPLAY)
+    c.text(px, py + 1.18, pw, 0.28, "one written form", 12, INK3, align="c")
+    readings = [("كَتَبَ", "kataba", "he wrote"), ("كُتِبَ", "kutiba", "it was written"), ("كُتُب", "kutub", "books")]
+    cw = 1.7
+    x0 = px + (pw - 3 * cw) / 2
+    for i, (ar, tr, en) in enumerate(readings):
+        x = x0 + i * cw
+        c.line(px + pw / 2, py + 1.55, x + cw / 2, py + 1.85, SUN, 2, arrow=True)
+        c.text(x, py + 1.9, cw, 0.55, ar, 30, INK, False, "c", ARABIC_DISPLAY)
+        c.text(x, py + 2.55, cw, 0.55, [(tr, 12, SUN_DK, True, LATIN), (en, 11, SUN_DK, False, LATIN)], 12, align="c")
+    c.finish(slide_notes("S2Problem"))
 
-    # -- step 1: prevalence + one form, three readings
-    num = c.text(X(-3.3) - U(1.4), Y(0.85) - U(0.75), U(2.8), U(1.5), "11%", 110, SUN, False, "c")
-    lab = c.text(X(-3.3) - U(2.2), Y(0.85 - 0.75 - 0.3 - 0.35), U(4.4), U(0.8),
-                 "of Arab primary-school children\nhave developmental dyslexia", 22, INK2, align="c", line_spacing=0.9)
-    src_x, src_y = X(-3.3 - 2.2), Y(0.85 - 0.75 - 0.3 - 0.7 - 0.3) - U(0.1)
-    src = source_badge(c, src_x, src_y, f"Al-Dakhil 2024 · {F('dyslexia_studies')} studies, N = {F('dyslexia_n'):,}")
 
-    px, py, pw, ph = box(2.55, 0.2, 5.0, 3.9)
-    panel = c.card(px, py, pw, ph)
-    word = c.text(px, Y(0.2 + 1.95 - 0.95) - U(0.55), pw, U(1.1), "كتب", 100, INK, False, "c", ARABIC_DISPLAY)
-    cap = c.text(px, Y(0.2 + 1.95 - 0.95 - 0.55 - 0.12) - U(0.2), pw, U(0.3), "one written form", 15, INK3, align="c")
-    cols = [(3.9, "كَتَبَ", "kataba", "he wrote"), (0.0, "كُتِبَ", "kutiba", "it was written"), (-3.9, "كُتُب", "kutub", "books")]
-    arrows, reads = [], []
-    for x, ar, tr, en in cols:
-        ax = X(x)
-        arrows.append(c.line(X(0), Y(-1.25), ax, Y(-1.55), SUN, 2.5, arrow=True))
-        reads.append(c.text(ax - U(0.9), Y(-1.55) - U(0.35), U(1.8), U(0.7), ar, 40, INK, False, "c", ARABIC_DISPLAY))
-        reads.append(c.text(ax - U(0.9), Y(-2.35) - U(0.3), U(1.8), U(0.55),
-                            [(tr, 15, SUN_DK, True, LATIN), (en, 13, SUN_DK, False, LATIN)], 13, align="c"))
-    step1 = [num, lab, *src, panel, word, cap, *arrows, *reads]
-    c.step(*stagger(step1[:3], 0, 300), (panel, "fade", 600), (word, "fade", 800), (cap, "fade", 1000),
-           *[(a, "fade", 1200 + 250 * i) for i, a in enumerate(arrows)],
-           *[(r, "fade", 1300 + 250 * (i // 2)) for i, r in enumerate(reads)], auto=True)
+def s2b(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 2, "01 · The problem", "Reading in Arabic adds load")
+    hw, hh, hy = 4.75, 4.35, 1.9
+    hx, sx = ML, ML + hw + 0.35
+    c.card(hx, hy, hw, hh)
+    c.text(hx, hy + 0.22, hw, 0.38, "What helps", 18, INK, True, "c")
+    c.text(hx + 0.35, hy + 0.95, hw - 0.7, 2.3,
+           "Splitting long clauses into\nshort sentences: read faster,\nunderstood better, most by\nthe weakest readers.",
+           15, INK2, align="c", line_spacing=1.15)
+    badge(c, hx + 0.55, hy + hh - 0.55, "Javourey-Bonnet 2022")
 
-    # -- step 2: what helps + scope (replaces step 1)
-    hx, hy, hw, hh = box(-2.6, 0.1, 4.6, 3.3)
-    helps = c.card(hx, hy, hw, hh)
-    h_t = c.text(hx, hy + U(0.25), hw, U(0.4), "What helps", 20, INK, True, "c")
-    h_b = c.text(hx + U(0.2), hy + U(0.85), hw - U(0.4), U(1.6),
-                 "Splitting long clauses into\nshort sentences: read faster,\nunderstood better, most by\nthe weakest readers.",
-                 16, INK2, align="c", line_spacing=0.95)
-    h_s = source_badge(c, hx + U(0.3), hy + hh - U(0.55), "Javourey-Bonnet 2022")
-    sx, sy, sw, sh = box(2.6, 0.1, 4.6, 3.3)
-    scope = c.card(sx, sy, sw, sh, SUN_LT, SUN, 0.18)
-    s_t = c.text(sx, sy + U(0.25), sw, U(0.4), "Bayan's scope", 20, SUN_DK, True, "c")
-    s_a = chip(c, 2.6, -0.35, "we reduce reading load", 16, PAPER, SUN_DK)
-    s_b = chip(c, 2.6, -0.95, "long clauses · hard words", 15, PAPER, INK2, bold=False)
-    s_c = chip(c, 2.6, -1.55, "not decoding · no reader claim yet", 14, WARN_LT, WARN, bold=False)
-    c.step(*out(step1), (helps, "fade", 400), (h_t, "fade", 500), (scope, "fade", 500), (s_t, "fade", 600),
-           (h_b, "fade", 900), (h_s[0], "fade", 1100), (h_s[1], "fade", 1100),
-           (s_a, "fade", 1200), (s_b, "fade", 1400), (s_c, "fade", 1600))
+    c.card(sx, hy, hw, hh, SUN_LT, SUN, 0.14)
+    c.text(sx, hy + 0.22, hw, 0.38, "Bayan's scope", 18, SUN_DK, True, "c")
+    chip_c(c, sx + hw / 2, hy + 1.15, "we reduce reading load", size=15, fill=PAPER, color=SUN_DK, max_w=hw - 0.5)
+    chip_c(c, sx + hw / 2, hy + 1.85, "long clauses · hard words", size=14, fill=PAPER, color=INK2, bold=False,
+           max_w=hw - 0.5)
+    chip_c(c, sx + hw / 2, hy + 2.55, "not decoding · no reader claim yet", size=13, fill=WARN_LT, color=WARN,
+           bold=False, max_w=hw - 0.5)
     c.finish(slide_notes("S2Problem"))
 
 
 # =============================================================================
-# 3 · Data
+# Beat 3 · Data — 4 slides
 # =============================================================================
-def s3(prs, layout):
+def s3a(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 3, "02 · Data", "How we got to corpus v1")
+    hw, hh, hy = 4.75, 4.45, 1.85
+    for x, title, lines in [
+        (ML, "SAMER · human-written", [
+            "novels, short sentences",
+            f"{F('samer_identity_lo')}–{F('samer_identity_hi')}% of pairs unchanged",
+            f"length ratio {F('samer_ratio'):.2f}: swaps words, never splits"]),
+        (ML + hw + 0.35, "Other sources · LLM-written", [
+            "many targets are summaries",
+            "they drop facts, delete options",
+            f"after a meaning filter: {F('external_kept'):,} pairs"]),
+    ]:
+        c.card(x, hy, hw, hh)
+        c.text(x, hy + 0.22, hw, 0.38, title, 17, INK, True, "c")
+        for i, ln in enumerate(lines):
+            chip_c(c, x + hw / 2, hy + 1.15 + i * 0.85, ln, size=13, fill=PAPER, color=INK2, bold=False,
+                   max_w=hw - 0.45)
+    c.finish(slide_notes("S3Data"))
+
+
+def s3b(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 3, "02 · Data", "How we got to corpus v1")
+    c.text(ML, 1.62, CW, 0.28, "corpus v0, our first synthetic data", 12, INK3, align="c")
+    steps = ["DeepSeek: 5 candidates\nper source", "LLM equivalence\nvalidator", "CAMeL readability\ngate"]
+    bw, gap = 2.7, 0.55
+    x0 = ML + (CW - 3 * bw - 2 * gap) / 2
+    for i, t in enumerate(steps):
+        x = x0 + i * (bw + gap)
+        c.card(x, 2.05, bw, 0.85, PAPER2, PAPER3, 0.1, t, 12, INK2, False)
+        if i:
+            c.line(x - gap, 2.47, x, 2.47, SUN, 2, arrow=True)
+    c.text(ML, 3.25, CW, 0.38, "What the audit found", 17, INK, True)
+    defects = [
+        f"{R(F('v0_tashkeel'))}% of rows had tashkeel",
+        f"{R(F('v0_completed'))}% of cut-off sources were simply completed",
+        f"only {R(F('v0_levels'))}% of pairs were 2+ levels easier",
+    ]
+    for i, t in enumerate(defects):
+        chip(c, ML, 3.72 + i * 0.52, t, size=13, fill=WARN_LT, color=WARN, max_w=CW)
+    chip(c, ML, 5.5, f"the validator accepted {R(F('v0_validator_added'))}% of planted added sentences · "
+                     f"we trained nothing on v0", size=12, fill=PAPER2, color=INK2, bold=False, max_w=CW)
+    c.finish(slide_notes("S3Data"))
+
+
+def s3c(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 3, "02 · Data", "How we got to corpus v1")
 
-    def panel(x, title, lines, fill=PAPER2, stroke=PAPER3, tcol=INK):
-        cx, cy, w, h = box(x, 0.1, 4.6, 3.3)
-        card = c.card(cx, cy, w, h, fill, stroke, 0.18)
-        t = c.text(cx, cy + U(0.25), w, U(0.4), title, 19, tcol, True, "c")
-        chips = []
-        for i, ln in enumerate(lines):
-            chips.append(chip(c, x, -0.55 - 0.55 * i, ln, 14, PAPER, INK2, bold=False))
-        return [card, t, *chips]
-
-    a = panel(-2.6, "SAMER · human-written", [
-        "novels, short sentences",
-        f"{F('samer_identity_lo')}–{F('samer_identity_hi')}% of pairs unchanged",
-        f"length ratio {F('samer_ratio'):.2f}: swaps words, never splits"])
-    b = panel(2.6, "Other sources · LLM-written", [
-        "many targets are summaries",
-        "they drop facts, delete options",
-        f"after a meaning filter: {F('external_kept'):,} pairs"])
-    c.step((a[0], "fade"), (a[1], "fade", 200), *stagger(a[2:], 500, 250),
-           (b[0], "fade", 1400), (b[1], "fade", 1600), *stagger(b[2:], 1900, 250), auto=True)
-    stage1 = a + b
-
-    # -- step 2: corpus v0 + audit
-    flow_titles = ["DeepSeek: 5 candidates\nper source", "LLM equivalence\nvalidator", "CAMeL readability\ngate"]
-    flow, farr = [], []
-    xs = [-2.8, 0.0, 2.8]
-    for i, t in enumerate(flow_titles):
-        flow.append(chip(c, xs[i], 1.55, t, 14, PAPER2, INK2, bold=False))
-        if i:
-            farr.append(c.line(X(xs[i - 1] + 1.3), Y(1.55), X(xs[i] - 1.3), Y(1.55), SUN, 2.5, arrow=True))
-    v0 = c.text(0, Y(2.25), SW, U(0.3), "corpus v0, our first synthetic data", 14, INK3, align="c")
-    head = c.text(X(-WM / 2 + 0.7), Y(0.55) - U(0.2), U(5), U(0.4), "What the audit found", 18, INK, True)
-    defects = [chip(c, cy=0.05 - 0.5 * i, text=t, size=15, fill=WARN_LT, color=WARN,
-                    left=-WM / 2 + 0.7) for i, t in enumerate([
-                        f"{int(F('v0_tashkeel') + 0.5)}% of rows had tashkeel",
-                        f"{int(F('v0_completed') + 0.5)}% of cut-off sources were simply completed",
-                        f"only {int(F('v0_levels') + 0.5)}% of pairs were 2+ levels easier"])]
-    note = chip(c, 0, -2.4,
-                f"the validator accepted {int(F('v0_validator_added') + 0.5)}% of planted added sentences · we trained nothing on v0",
-                14, PAPER2, INK2, bold=False)
-    stage2 = [v0, *flow, *farr, head, *defects, note]
-    c.step(*out(stage1), (v0, "fade", 400), (flow[0], "fade", 500),
-           (farr[0], "fade", 700), (flow[1], "fade", 800), (farr[1], "fade", 900), (flow[2], "fade", 1000),
-           (head, "fade", 1200), *stagger(defects, 1400, 250), (note, "fade", 2200))
-
-    # -- step 3: v1 lanes
-    c.step(*out(stage2), auto=True)
-
-    def lane(caption, cx, rows):
-        parts = []
-        parts.append(c.text(X(cx) - U(2.25), Y(1.85), U(4.5), U(0.28), caption.upper(), 13, SUN, True, "c"))
+    def lane(x, caption, rows):
+        w = 4.75
+        c.text(x, 1.62, w, 0.28, caption.upper(), 11, SUN, True, "c")
         for i, (title, sub) in enumerate(rows):
-            x, y, w, h = box(cx, 0.95 - 1.1 * i, 4.5, 0.82)
-            parts.append(c.card(x, y, w, h, PAPER2, PAPER3, 0.16))
-            ts = fit_size(title, 17, U(4.2) * 72 / 72)
-            parts.append(c.text(x + U(0.15), y + U(0.08), w - U(0.3), U(0.32), title, 17, INK, True, "c"))
-            parts.append(c.text(x + U(0.15), y + U(0.42), w - U(0.3), U(0.28), sub, 12, INK3, align="c"))
+            y = 2.05 + i * 1.28
+            c.card(x, y, w, 1.05, PAPER2, PAPER3, 0.12)
+            c.text(x + 0.12, y + 0.18, w - 0.24, 0.32, title, 14, INK, True, "c")
+            c.text(x + 0.12, y + 0.58, w - 0.24, 0.3, sub, 11, INK3, align="c")
             if i:
-                parts.append(c.line(X(cx), Y(0.95 - 1.1 * (i - 1) - 0.41), X(cx), Y(0.95 - 1.1 * i + 0.41), SUN, 2, arrow=True))
-        return parts
+                c.line(x + w / 2, y - 0.2, x + w / 2, y, SUN, 2, arrow=True)
 
-    left = lane("v1 · from the source", -2.5, [
+    lane(ML, "v1 · from the source", [
         ("BAREC train + dev", "test never enters"),
         ("strip tashkeel and tatweel", "every text"),
         ("route each source", f"protected · short · hard  →  {F('route_hard'):,} hard"),
     ])
-    right = lane("v1 · into the corpus", 2.5, [
+    lane(ML + 4.75 + 0.35, "v1 · into the corpus", [
         ("Gemma 4 31B writes candidates", f"hard band only  →  {F('gen_responses'):,} responses"),
         ("code gates", "numbers · quotes · options"),
         ("readability + meaning gates", f"≥ 2 levels · meaning gate  →  {F('accepted_tier_a'):,} accepted"),
     ])
-    c.step(*stagger(left[:2], 0, 300), *stagger(left[2:], 600, 250),
-           *stagger(right[:2], 1600, 300), *stagger(right[2:], 2200, 250))
+    c.finish(slide_notes("S3Data"))
 
-    # -- step 4: total + audit
-    arrow = c.line(X(-2.5 + 2.25), Y(0.95 + 0.9), X(2.5 - 2.25), Y(0.95 + 0.9), SUN, 3, arrow=True)
-    bx, by, bw, bh = box(-2.5, -2.3, 4.4, 0.95)
-    boxr = c.card(bx, by, bw, bh, SUN_LT, SUN, 0.16)
-    big = c.text(bx, by + U(0.12), bw, U(0.4), f"{F('corpus_rows'):,} rows", 28, SUN_DK, True, "c")
-    sub = c.text(bx, by + U(0.55), bw, U(0.28), "0 rule violations · 0 leakage vs BAREC test", 13, INK2, align="c")
-    audit = chip(c, left=0.45, cy=-2.3, text=f"blind audit of {F('audit_n'):,} pairs: {F('audit_changed')}% meaning changed",
-                 size=15, fill=PAPER2, color=INK2, bold=False)
-    c.step((arrow, "fade"), (boxr, "fade", 300), (big, "fade", 450), (sub, "fade", 600), (audit, "fade", 900))
+
+def s3d(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 3, "02 · Data", "How we got to corpus v1")
+    # keep the lanes as a quiet backdrop row of captions
+    c.text(ML, 1.7, CW, 0.3, "from the source  →  into the corpus", 13, INK3, align="c")
+    bx, by, bw, bh = ML, 2.35, 5.1, 1.25
+    c.card(bx, by, bw, bh, SUN_LT, SUN, 0.12)
+    c.text(bx, by + 0.18, bw, 0.55, f"{F('corpus_rows'):,} rows", 30, SUN_DK, True, "c")
+    c.text(bx, by + 0.78, bw, 0.3, "0 rule violations · 0 leakage vs BAREC test", 12, INK2, align="c")
+    chip(c, ML + bw + 0.4, 2.55,
+         f"blind audit of {F('audit_n'):,} pairs:\n{F('audit_changed')}% meaning changed",
+         size=14, fill=PAPER2, color=INK2, bold=False, max_w=CW - bw - 0.5)
+    chip_c(c, SW / 2, 4.35, "every gate in corpus v1 exists because of a failure we saw",
+           size=14, fill=SUN_LT, color=SUN_DK, max_w=CW)
     c.finish(slide_notes("S3Data"))
 
 
 # =============================================================================
-# 4 · Models
+# Beat 4 · Models — 3 slides
 # =============================================================================
-def s4(prs, layout):
+MODELS = [
+    ("v0.1", "AraT5v2 on SAMER", "SAMER level 5 → 3,\n14,343 pairs",
+     f"Returned {R(F('m1_copy_pct'))}% of rows unchanged\n(editors: {R(F('m1_editor_copy_pct'))}%).\nSwapped words, never restructured."),
+    ("v0.2", "AraT5v2 + AraBART", "SAMER + everyday text +\nmeaning-filtered pairs + tags",
+     f"v0.2 keeps the meaning in {R(F('t5_tag_kept'))}%\nof outputs, v0.2-Fast in {R(F('bart_tag_kept'))}%.\nThe tag costs meaning."),
+    ("v0.3", "AraT5v2 on corpus v1", f"corpus v1, {F('corpus_rows'):,} rows,\nno tag",
+     f"Our best: cuts {F('bt_m3_clause')} words from the\nlongest clause vs {F('t5_untag_clause')}, with about\nthe same meaning (vs v0.2, no tag)."),
+]
+
+
+def _model_col(c, x, y, w, i, show=True):
+    name, what, data, found = MODELS[i]
+    if not show:
+        return
+    c.text(x, y, w, 0.32, what, 11.5, SUN_DK if i == 1 else INK3, i == 1, "c")
+    head_fill = SUN if i == 2 else PAPER3
+    c.card(x, y + 0.38, w, 0.52, head_fill, head_fill, 0.1, name, 17, NIGHT if i == 2 else INK, True)
+    c.card(x, y + 1.02, w, 1.15, PAPER2, PAPER3, 0.1, data, 12, INK2, False)
+    c.card(x, y + 2.28, w, 1.55, WARN_LT, WARN_LT, 0.1)
+    c.text(x + 0.12, y + 2.42, w - 0.24, 1.3, found, 11.5, WARN, align="c", line_spacing=1.08)
+
+
+def s4a(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
+    w = 3.05
+    x = ML + (CW - 3 * w - 2 * 0.55) / 2
+    _model_col(c, x, 2.05, w, 0)
+    c.finish(slide_notes("S4Models"))
 
-    defs = [
-        ("v0.1", "AraT5v2 on SAMER",
-         "SAMER level 5 → 3,\n14,343 pairs",
-         f"Returned {int(F('m1_copy_pct') + 0.5)}% of rows\nunchanged (editors: {int(F('m1_editor_copy_pct') + 0.5)}%).\nSwapped words, never\nrestructured."),
-        ("v0.2", "AraT5v2 (v0.2) and AraBART (v0.2-Fast)",
-         "SAMER + everyday text +\nmeaning-filtered pairs + tags",
-         f"v0.2 keeps the meaning in\n{int(F('t5_tag_kept') + 0.5)}% of outputs, v0.2-Fast\nin {int(F('bart_tag_kept') + 0.5)}%. The tag costs\nmeaning."),
-        ("v0.3", "AraT5v2 on corpus v1",
-         f"corpus v1, {F('corpus_rows'):,} rows,\nno tag",
-         f"Our best: cuts {F('bt_m3_clause')} words from\nthe longest clause vs {F('t5_untag_clause')}, with\nabout the same meaning\n(vs v0.2, no tag)."),
-    ]
-    cols, arrows = [], []
-    cw, gap = 2.95, 0.45
-    x0 = -((3 * cw + 2 * gap) / 2) + cw / 2
-    for i, (name, what, data, found) in enumerate(defs):
-        cx = x0 + i * (cw + gap)
-        parts = []
-        lbl = c.text(X(cx) - U(cw / 2), Y(1.55), U(cw), U(0.55), what, 14 if i == 1 else 13,
-                     SUN_DK if i == 1 else INK3, i == 1, "c")
-        parts.append(lbl)
-        hx, hy, hw, hh = box(cx, 0.95, cw, 0.6)
-        parts.append(c.card(hx, hy, hw, hh, SUN if i == 2 else PAPER3, SUN if i == 2 else PAPER3, 0.12))
-        parts.append(c.text(hx, hy, hw, hh, name, 20, NIGHT if i == 2 else INK, True, "c"))
-        dx, dy, dw, dh = box(cx, 0.15, cw, 1.05)
-        parts.append(c.card(dx, dy, dw, dh))
-        parts.append(c.text(dx + U(0.1), dy + U(0.08), dw - U(0.2), dh - U(0.16), data, 14, INK2, align="c", line_spacing=0.95))
-        fx, fy, fw, fh = box(cx, -1.15, cw, 1.3)
-        parts.append(c.card(fx, fy, fw, fh, WARN_LT, WARN_LT, 0.12))
-        parts.append(c.text(fx + U(0.1), fy + U(0.08), fw - U(0.2), fh - U(0.16), found, 13, WARN, align="c", line_spacing=0.95))
-        cols.append(parts)
+
+def s4b(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
+    w, gap = 3.05, 0.55
+    x0 = ML + (CW - 3 * w - 2 * gap) / 2
+    _model_col(c, x0, 2.05, w, 0)
+    c.line(x0 + w + 0.06, 3.15, x0 + w + gap - 0.06, 3.15, SUN, 2.5, arrow=True)
+    _model_col(c, x0 + w + gap, 2.05, w, 1)
+    c.finish(slide_notes("S4Models"))
+
+
+def s4c(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
+    w, gap = 3.05, 0.55
+    x0 = ML + (CW - 3 * w - 2 * gap) / 2
+    for i in range(3):
+        _model_col(c, x0 + i * (w + gap), 2.05, w, i)
         if i:
-            arrows.append(c.line(X(x0 + (i - 1) * (cw + gap) + cw / 2), Y(0.95),
-                                 X(cx - cw / 2), Y(0.95), SUN, 3, arrow=True))
-
-    c.step(*stagger(cols[0], 0, 120), auto=True)
-    c.step((arrows[0], "wipe_left", 0, 400), *stagger(cols[1], 300, 120))
-    c.step((arrows[1], "wipe_left", 0, 400), *stagger(cols[2], 300, 120),
-           (chip(c, -1.2, -2.35, "Tried and dropped:", 13, PAPER, INK3, bold=False), "fade", 1200),
-           (chip(c, 0.6, -2.35, "student DPO", 12, PAPER2, INK3, bold=False), "fade", 1350),
-           (chip(c, 2.1, -2.35, "minimum-risk training", 12, PAPER2, INK3, bold=False), "fade", 1500),
-           (chip(c, 4.0, -2.35, "fluency retrain", 12, PAPER2, INK3, bold=False), "fade", 1650))
+            c.line(x0 + i * (w + gap) - gap + 0.06, 3.15, x0 + i * (w + gap) - 0.06, 3.15, SUN, 2.5, arrow=True)
+    y = 6.05
+    c.text(ML, y, 1.6, 0.28, "Tried and dropped:", 11, INK3)
+    x = ML + 1.65
+    for t in ["student DPO", "minimum-risk training", "fluency retrain"]:
+        ch = chip(c, x, y - 0.02, t, size=11, fill=PAPER2, color=INK3, bold=False)
+        x += text_w(t, 11) + 0.75
     c.finish(slide_notes("S4Models"))
 
 
 # =============================================================================
-# 5 · Measuring
+# Beat 5 · Measuring — 4 slides
 # =============================================================================
-def s5(prs, layout):
+def s5a(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
-
-    # -- step 1: copy-baseline table + bench card
-    q = c.text(X(-WM / 2 + 0.7), Y(1.95) - U(0.28), U(6.2), U(0.55), "Copying is the baseline to beat", 26, INK, True)
+    c.text(ML, 1.62, 6.6, 0.42, "Copying is the baseline to beat", 20, INK, True)
     rows_def = [
         ("Copy the input", 100, 0.0, True),
         ("v0.1", F("bt_m1_kept"), F("bt_m1_clause"), False),
@@ -347,256 +355,261 @@ def s5(prs, layout):
         ("v0.2-Fast (AraBART)", F("bart_untag_kept"), F("bart_untag_clause"), False),
         ("v0.3", F("bt_m3_kept"), F("bt_m3_clause"), False),
     ]
-    hdr = [
-        c.text(X(-1.1) - U(0.8), Y(1.3) - U(0.18), U(1.6), U(0.35), "meaning kept", 12, INK3, align="c"),
-        c.text(X(0.75 + 0.55) - U(1.0), Y(1.3) - U(0.28), U(2.0), U(0.5), "words cut from\nthe longest clause", 12, INK3,
-               align="c", line_spacing=0.9),
-    ]
-    table = []
+    tw = 6.7
+    c.text(ML + 3.4, 2.12, 1.3, 0.28, "meaning kept", 10.5, INK3, align="c")
+    c.text(ML + 4.85, 2.12, 1.7, 0.28, "words cut from\nthe longest clause", 10.5, INK3, align="c", line_spacing=0.95)
     for i, (name, kept, cut, base) in enumerate(rows_def):
-        y = 0.6 - 0.58 * i
-        bx, by, bw, bh = box(-1.75, y, 6.6, 0.46)
-        table.append(c.card(bx, by, bw, bh, SUN_LT if base else PAPER2, SUN_LT if base else PAPER3, 0.12))
-        table.append(c.text(bx + U(0.15), by, U(3.2), bh, name, 15, INK, base or name == "v0.3"))
-        table.append(c.text(bx + U(3.35), by, U(1.3), bh, f"{kept:.0f}%", 15, SUN_DK, True, "c"))
+        y = 2.5 + i * 0.52
+        c.card(ML, y, tw, 0.44, SUN_LT if base else PAPER2, SUN_LT if base else PAPER3, 0.08)
+        c.text(ML + 0.18, y + 0.06, 3.1, 0.32, name, 13, INK, base or name == "v0.3")
+        c.text(ML + 3.4, y + 0.06, 1.3, 0.32, f"{kept:.0f}%", 13, SUN_DK, True, "c")
         cutlab = "0" if cut < 0.05 else f"{cut:.1f}"
-        table.append(c.text(bx + U(4.8), by, U(1.5), bh, cutlab, 15, SUN_DK if cut >= 0.05 else WARN, True, "c"))
-    foot = c.text(X(-1.75) - U(3.3), Y(-2.45) - U(0.18), U(6.6), U(0.35),
-                  "Words cut = the longest clause of a sentence, before minus after · BayanSimplify models, test core items, as trained",
-                  11, INK3, align="c")
-    bx, by, bw, bh = box(3.7, 0.1, 3.0, 3.0)
-    bench = c.card(bx, by, bw, bh, SUN_LT, SUN, 0.16)
-    b_n = c.text(bx, by + U(0.55), bw, U(0.7), f"{F('bench_items'):,}", 44, SUN_DK, True, "c")
-    b_l = c.text(bx, by + U(1.35), bw, U(0.3), "items, split by document", 15, INK2, align="c")
-    b_s = c.text(bx, by + U(1.75), bw, U(0.3), f"{F('bench_dev')} dev · {F('bench_test'):,} test", 14, INK3, align="c")
-    b_t = c.text(bx, by + bh - U(0.5), bw, U(0.35), "BayanBench v2", 16, SUN_DK, True, "c")
-    step1 = [q, *hdr, *table, foot, bench, b_n, b_l, b_s, b_t]
-    c.step((q, "fade"), *stagger(hdr, 200, 150), *stagger(table, 500, 100),
-           (foot, "fade", 1600), (bench, "fade", 1800), (b_n, "fade", 1900), (b_l, "fade", 2000),
-           (b_s, "fade", 2100), (b_t, "fade", 2200), auto=True)
+        c.text(ML + 4.85, y + 0.06, 1.7, 0.32, cutlab, 13, SUN_DK if cut >= 0.05 else WARN, True, "c")
+    c.text(ML, 5.35, tw, 0.28,
+           "test core items, as trained · words cut = longest clause, before minus after", 10, INK3, align="c")
 
-    # -- step 2: Gemma + question cards (replaces step 1)
-    src_c = chip(c, -3.2, 1.65, "original + rewrite", 15, PAPER2, INK2, bold=False)
-    gx, gy, gw, gh = box(0, 1.65, 2.9, 0.95)
-    gem_box = c.card(gx, gy, gw, gh, SUN_LT, SUN, 0.14)
-    g_n = c.text(gx, gy + U(0.12), gw, U(0.35), "Gemma 4 31B", 20, SUN_DK, True, "c")
-    g_s = c.text(gx, gy + U(0.52), gw, U(0.28), "open model · reruns anywhere", 12, INK3, align="c")
-    out_c = chip(c, 3.2, 1.65, "7 yes/no questions → P(yes)", 15, PAPER2, INK2, bold=False)
-    arr1 = c.line(X(-3.2 + 1.6), Y(1.65), X(-1.45), Y(1.65), SUN, 2.5, arrow=True)
-    arr2 = c.line(X(1.45), Y(1.65), X(3.2 - 1.8), Y(1.65), SUN, 2.5, arrow=True)
+    bx, by, bw, bh = ML + tw + 0.35, 2.5, 2.55, 2.85
+    c.card(bx, by, bw, bh, SUN_LT, SUN, 0.12)
+    c.text(bx, by + 0.35, bw, 0.6, f"{F('bench_items'):,}", 32, SUN_DK, True, "c")
+    c.text(bx, by + 1.05, bw, 0.28, "items, split by document", 12, INK2, align="c")
+    c.text(bx, by + 1.45, bw, 0.28, f"{F('bench_dev')} dev · {F('bench_test'):,} test", 11, INK3, align="c")
+    c.text(bx, by + bh - 0.5, bw, 0.32, "BayanBench v2", 13, SUN_DK, True, "c")
+    c.finish(slide_notes("S5Measure"))
+
+
+def s5b(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
+    # flow
+    chip_c(c, 2.3, 1.75, "original + rewrite", size=13, fill=PAPER2, color=INK2, bold=False)
+    gx, gw, gh = 3.85, 2.75, 1.05
+    c.card(gx, 1.65, gw, gh, SUN_LT, SUN, 0.1)
+    c.text(gx, 1.78, gw, 0.35, "Gemma 4 31B", 16, SUN_DK, True, "c")
+    c.text(gx, 2.18, gw, 0.28, "open model · reruns anywhere", 11, INK3, align="c")
+    chip_c(c, 8.55, 1.75, "7 yes/no → P(yes)", size=13, fill=PAPER2, color=INK2, bold=False)
+    c.line(3.35, 2.2, 3.8, 2.2, SUN, 2, arrow=True)
+    c.line(6.65, 2.2, 7.15, 2.2, SUN, 2, arrow=True)
 
     def qcard(x, title, rows, hi=None, sub=None):
-        cx, cy, w, h = box(x, -0.85, 4.7, 2.75)
-        parts = [c.card(cx, cy, w, h)]
-        parts.append(c.text(cx, cy + U(0.18), w, U(0.35), title, 17, SUN_DK, True, "c"))
+        w, h = 4.85, 2.85
+        c.card(x, 3.15, w, h)
+        c.text(x, 3.32, w, 0.35, title, 15, SUN_DK, True, "c")
         for i, r in enumerate(rows):
-            parts.append(chip(c, x, -0.25 - 0.42 * i, r, 13, SUN if i == hi else PAPER,
-                              NIGHT if i == hi else INK2, bold=(i == hi)))
+            chip_c(c, x + w / 2, 3.85 + i * 0.42, r, size=11.5,
+                   fill=SUN if i == hi else PAPER, color=NIGHT if i == hi else INK2,
+                   bold=(i == hi), max_w=w - 0.4)
         if sub:
-            parts.append(c.text(cx + U(0.15), cy + h - U(0.5), w - U(0.3), U(0.4), sub, 11, INK3, align="c"))
-        return parts
+            c.text(x + 0.2, 3.15 + h - 0.48, w - 0.4, 0.4, sub, 10, INK3, align="c")
 
-    qa = qcard(-2.6, "Meaning · 4 questions",
-               ["same meaning?  kept = yes ≥ 0.5 and every number kept", "adds a fact?", "drops a fact?", "contradicts?"], hi=0)
-    qb = qcard(2.6, "Quality · 3 questions, diagnostic",
-               ["Arabic correct?", "coherent?", "easier to read?"], sub="people barely agree on these: never used to decide")
-    stage_m = [src_c, gem_box, g_n, g_s, out_c, arr1, arr2, *qa, *qb]
-    c.step(*out(step1), (src_c, "fade", 400), (arr1, "fade", 550), (gem_box, "fade", 700), (g_n, "fade", 800),
-           (g_s, "fade", 900), (arr2, "fade", 1000), (out_c, "fade", 1150),
-           *stagger(qa, 1500, 120), *stagger(qb, 2100, 120))
+    qcard(ML, "Meaning · 4 questions",
+          ["same meaning?  kept = yes ≥ 0.5\nand every number kept", "adds a fact?", "drops a fact?", "contradicts?"],
+          hi=0)
+    qcard(ML + 4.85 + 0.35, "Quality · 3 questions, diagnostic",
+          ["Arabic correct?", "coherent?", "easier to read?"],
+          sub="people barely agree on these: never used to decide")
+    c.finish(slide_notes("S5Measure"))
 
-    # -- step 3: four measures (replaces step 2)
+
+def s5c(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
     measures = [
         ("Meaning", "Does it still say the same thing?\nSame meaning, every number intact."),
         ("Simpler", "Are long clauses shorter?\nWords cut from the longest clause."),
         ("Restraint", "Does it leave alone what should\nstay? Easy text, scripture."),
-        ("Copying rate", "How often is the text returned\nunchanged? A copy counts as\nperfect meaning, so we report it."),
+        ("Copying rate", "How often is the text returned unchanged?\nA copy counts as perfect meaning,\nso we report it."),
     ]
-    grid = []
+    w, h, gap = 4.85, 2.15, 0.35
+    x0 = ML + (CW - 2 * w - gap) / 2
     for i, (n, expl) in enumerate(measures):
-        gx, gy, gw, gh = box((-1 if i % 2 == 0 else 1) * 2.5, 1.0 - 2.05 * (i // 2), 4.5, 1.85)
-        grid.append(c.card(gx, gy, gw, gh))
-        grid.append(c.text(gx, gy + U(0.18), gw, U(0.4), n, 24, SUN_DK, True, "c"))
-        grid.append(c.text(gx + U(0.2), gy + U(0.7), gw - U(0.4), U(1.0), expl, 14, INK2, align="c", line_spacing=0.95))
-    c.step(*out(stage_m), *stagger(grid, 400, 180))
+        x = x0 + (i % 2) * (w + gap)
+        y = 1.95 + (i // 2) * (h + gap)
+        c.card(x, y, w, h)
+        c.text(x, y + 0.22, w, 0.42, n, 20, SUN_DK, True, "c")
+        c.text(x + 0.25, y + 0.85, w - 0.5, h - 1.05, expl, 13, INK2, align="c", line_spacing=1.1)
+    c.finish(slide_notes("S5Measure"))
 
-    # -- step 4: people check (replaces step 3)
-    auc = c.text(X(-3.6) - U(1.2), Y(0.9) - U(0.55), U(2.4), U(1.1), f"{F('judge_auc_human')}", 64, SUN, True, "c")
-    auc_l = c.text(X(-3.6) - U(2.0), Y(-0.15), U(4.0), U(0.3), "scorer vs human raters (AUC)", 14, INK2, align="c")
-    auc_s = c.text(X(-3.6) - U(2.0), Y(-0.55), U(4.0), U(0.28),
-                   f"{F('rater_n')} raters · {F('human_tasks')} tasks", 12, INK3, align="c")
-    notes = [
-        chip(c, left=-WM / 2 + 0.7, cy=-1.4, text=f"catches {F('human_caught')} of {F('human_losses')} changed outputs",
-             size=13, fill=PAPER2, color=INK2, bold=False),
-        chip(c, left=-WM / 2 + 0.7, cy=-1.9, text=f"fails {F('human_wrongfail')} of {F('human_kept')} that people kept: stricter",
-             size=13, fill=PAPER2, color=INK2, bold=False),
-        chip(c, left=-WM / 2 + 0.7, cy=-2.4, text="raters barely agree on ease", size=13, fill=WARN_LT, color=WARN, bold=False),
-    ]
-    px, py, pw, ph = box(2.4, -0.05, 5.0, 3.7)
-    panel = c.card(px, py, pw, ph, SUN_LT, SUN, 0.16)
-    r_t = c.text(px + U(0.2), py + U(0.35), pw - U(0.4), U(0.85),
-                 f"A reader with dyslexia\nrated {F('reader_n')} outputs", 26, SUN_DK, True, "c", line_spacing=0.95)
+
+def s5d(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
+    # left: AUC + notes
+    c.text(ML, 2.0, 3.2, 0.95, f"{F('judge_auc_human')}", 60, SUN, False, "c")
+    c.text(ML, 3.05, 3.2, 0.3, "scorer vs human raters (AUC)", 13, INK2, align="c")
+    c.text(ML, 3.4, 3.2, 0.28, f"{F('rater_n')} raters · {F('human_tasks')} tasks", 11, INK3, align="c")
+    for i, t in enumerate([
+        f"catches {F('human_caught')} of {F('human_losses')} changed outputs",
+        f"fails {F('human_wrongfail')} of {F('human_kept')} people kept: stricter",
+        "raters barely agree on ease",
+    ]):
+        chip(c, ML, 4.0 + i * 0.55, t, size=11.5, fill=WARN_LT if i == 2 else PAPER2,
+             color=WARN if i == 2 else INK2, bold=False, max_w=3.6)
+
+    # right: reader panel
+    px, py, pw, ph = ML + 3.85, 1.85, CW - 3.85, 4.35
+    c.card(px, py, pw, ph, SUN_LT, SUN, 0.12)
+    c.text(px + 0.2, py + 0.35, pw - 0.4, 0.85,
+           f"A reader with dyslexia\nrated {F('reader_n')} outputs", 20, SUN_DK, True, "c", line_spacing=1.05)
     total = F("reader_easier") + F("reader_same") + F("reader_harder")
-    segs = []
-    sw = 4.3
-    for n, col in [(F("reader_easier"), SUN), (F("reader_same"), PAPER3), (F("reader_harder"), WARN)]:
-        seg_w = U(sw * n / total)
-        segs.append((seg_w, col))
-    x_off = px + (pw - U(sw)) / 2
-    seg_shapes, labs = [], []
-    for (seg_w, col), (n, name) in zip(segs, [("17", "easier"), ("9", "same"), ("4", "harder")]):
-        seg_shapes.append(c.rect(x_off, py + ph * 0.52, seg_w, U(0.6), col))
-        labs.append((x_off + seg_w / 2, f"{n} {name}"))
-        x_off += seg_w
-    lab_shapes = [c.text(lx - U(0.7), py + ph * 0.52 + U(0.75), U(1.4), U(0.3), t, 15, INK2, align="c") for lx, t in labs]
-    r_c = c.text(px, py + ph - U(0.55), pw, U(0.3), "a sample of one, not a study", 12, INK3, align="c")
-    c.step(*out(grid), (panel, "fade", 400), (r_t, "fade", 550),
-           *stagger(seg_shapes, 800, 200), *stagger(lab_shapes, 1600, 150), (r_c, "fade", 2000),
-           (auc, "fade", 2200), (auc_l, "fade", 2350), (auc_s, "fade", 2500), *stagger(notes, 2700, 200))
+    bw = pw - 1.0
+    x = px + 0.5
+    for n, name, col in [(F("reader_easier"), "easier", SUN), (F("reader_same"), "same", PAPER3),
+                         (F("reader_harder"), "harder", WARN)]:
+        seg = bw * n / total
+        c.rect(x, py + 1.75, seg, 0.55, col)
+        c.text(x, py + 2.45, seg, 0.3, f"{n} {name}", 13, INK2, align="c")
+        x += seg
+    c.text(px, py + ph - 0.55, pw, 0.3, "a sample of one, not a study", 11, INK3, align="c")
     c.finish(slide_notes("S5Measure"))
 
 
 # =============================================================================
-# 6 · Results
+# Beat 6 · Results — 3 slides
 # =============================================================================
-def s6(prs, layout):
+def s6a(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 6, "05 · Results", "v0.3 is our best model")
-
-    # -- step 1: meaning-vs-simplicity scatter
-    pw, ph = 5.2, 3.3
-    px, py = -2.3, -0.25
+    # scatter
+    ox, oy, pw, ph = ML + 0.55, 1.85, 5.35, 3.85
+    c.line(ox, oy + ph, ox + pw, oy + ph, INK4, 1.5)
+    c.line(ox, oy, ox, oy + ph, INK4, 1.5)
+    c.text(ox, oy + ph + 0.1, pw, 0.26, "meaning kept (%)  →", 11, INK3, align="c")
+    c.text(ML - 0.05, oy + ph / 2 - 0.35, 1.05, 0.7, "clause words\nshorter  →", 11, INK3, align="c")
     x0, x1, y0, y1 = 30, 105, -0.6, 7.6
-    ax_h = c.line(X(px - pw / 2), Y(py - ph / 2), X(px + pw / 2), Y(py - ph / 2), INK4, 2)
-    ax_v = c.line(X(px - pw / 2), Y(py - ph / 2), X(px - pw / 2), Y(py + ph / 2), INK4, 2)
-    xl = c.text(X(px) - U(2.5), Y(py - ph / 2) + U(0.12), U(5.0), U(0.28), "meaning kept (%)  →", 12, INK3, align="c")
-    yl = c.text(X(px - pw / 2) - U(0.55), Y(py) - U(1.2), U(0.7), U(2.4), "simplification: words cut\nfrom the longest clause  →",
-                12, INK3, align="c")
 
     def xy(x, y):
-        return X(px - pw / 2 + (x - x0) / (x1 - x0) * pw), Y(py - ph / 2 + (y - y0) / (y1 - y0) * ph)
+        return ox + (x - x0) / (x1 - x0) * pw, oy + ph - (y - y0) / (y1 - y0) * ph
 
-    pts = []
     for lab, x, y, mark in SCATTER:
         col = {"copy": INK4, "baseline": INK4, "app": SUN_DK, "model2": INK3, "ship": WARN}.get(mark, INK3)
-        cx, cy = xy(x, y)
-        r = U(0.17 if mark == "ship" else 0.12)
+        px, py = xy(x, y)
+        r = 0.11 if mark != "ship" else 0.14
         if mark == "ship":
-            pts.append(c.circle(cx, cy, r * 2.1, None, line=SUN, line_w=1.5))
-        pts.append(c.circle(cx, cy, r, col))
+            c.circle(px, py, r + 0.1, None, line=SUN, line_w=1.5)
+        c.circle(px, py, r, col)
         if mark in ("copy", "baseline", "ship", "app"):
-            tag_col = WARN if mark == "ship" else INK2
+            tc = WARN if mark == "ship" else INK2
             if mark == "ship":
-                pts.append(c.text(cx + r + U(0.1), cy - U(0.15), U(1.8), U(0.3), lab, 12, tag_col, True))
-            elif mark in ("app", "baseline", "copy"):
-                pts.append(c.text(cx - U(1.1), cy - U(0.45), U(2.2), U(0.28), lab, 12, tag_col, align="c"))
-    badge = source_badge(c, X(px + pw / 2) - U(2.8), Y(py - ph / 2) + U(0.55), "BayanBench v2, test core items")
-    side = [
-        chip(c, left=1.35, cy=1.15, text="the more it simplifies,\nthe less meaning it keeps, obviously",
-             size=15, fill=SUN_LT, color=SUN_DK, bold=True),
-        chip(c, left=1.35, cy=0.15, text=f"v0.3 keeps the most meaning ({F('v03_kept')}%)\nand still cuts {F('v03_clause')} words off\nthe longest clause",
-             size=15, fill=SUN, color=NIGHT, bold=True),
-        chip(c, left=1.35, cy=-0.95, text="v0.3 is the app's large model,\ndecoded with four beams",
-             size=14, fill=PAPER2, color=INK2, bold=False),
-    ]
-    step1 = [ax_h, ax_v, xl, yl, *pts, *badge, *side]
-    c.step((ax_h, "fade"), (ax_v, "fade"), (xl, "fade", 200), (yl, "fade", 200),
-           *stagger(pts, 500, 120), *[(b, "fade", 1400) for b in badge],
-           *stagger(side, 1700, 250), auto=True)
+                c.text(px + 0.2, py - 0.16, 1.7, 0.28, lab, 11, tc, True)
+            else:
+                c.text(px - 0.95, py - 0.42, 1.9, 0.26, lab, 11, tc, align="c")
+    badge(c, ox + 0.15, oy + ph + 0.45, "BayanBench v2, test core items")
 
-    # -- step 2: forest rows (replaces step 1)
-    sub = c.text(0, Y(1.95) - U(0.15), SW, U(0.3),
-                 "In the app: v0.3 (four beams) minus v0.2, same text step, test core, 95% interval", 13, INK3, align="c")
+    side_x = ox + pw + 0.55
+    side_w = SW - MR - side_x
+    chip(c, side_x, 2.05, "the more it simplifies,\nthe less meaning it keeps", size=13,
+         fill=PAPER2, color=INK2, bold=False, max_w=side_w)
+    chip(c, side_x, 3.05, f"v0.3 keeps the most meaning ({F('v03_kept')}%)\nand still cuts {F('v03_clause')} words",
+         size=13, fill=SUN, color=NIGHT, max_w=side_w)
+    chip(c, side_x, 4.15, "the app's large model,\nfour beams + safety net", size=12,
+         fill=PAPER2, color=INK2, bold=False, max_w=side_w)
+    c.finish(slide_notes("S6Results"))
 
-    def forest_row(label, est, lo, hi, scale, fmt, y):
-        lab = c.text(X(-WM / 2 + 0.7), Y(y) - U(0.15), U(4.3), U(0.3), label, 14, INK2)
-        axx, half = 1.2, 2.6
-        axis = c.line(X(axx - half), Y(y), X(axx + half), Y(y), PAPER3, 3)
-        zero = c.line(X(axx), Y(y - 0.13), X(axx), Y(y + 0.13), INK4, 2)
+
+def s6b(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 6, "05 · Results", "v0.3 is our best model")
+    c.text(ML, 1.62, CW, 0.28,
+           "In the app: v0.3 minus v0.2, same text step · 95% intervals", 12, INK3, align="c")
+
+    def row(y, label, est, lo, hi, scale, fmt):
+        c.text(ML, y, 3.9, 0.28, label, 12, INK2)
+        ax, half = 5.7, 1.85
+        c.line(ax - half, y + 0.16, ax + half, y + 0.16, PAPER3, 3)
+        c.line(ax, y + 0.03, ax, y + 0.29, INK4, 1.5)
 
         def px_of(v):
-            return X(axx + max(-1, min(1, v / scale)) * half)
+            return ax + max(-1, min(1, v / scale)) * half
 
-        ci = c.line(px_of(lo), Y(y), px_of(hi), Y(y), SUN_DK, 6)
-        dot = c.circle(px_of(est), Y(y), U(0.1), SUN_DK)
-        val = c.text(X(axx + half) + U(0.15), Y(y) - U(0.15), U(1.2), U(0.3), fmt(est), 14, SUN_DK, True)
-        return [lab, axis, zero, ci, dot, val]
+        c.line(px_of(lo), y + 0.16, px_of(hi), y + 0.16, SUN_DK, 5)
+        c.circle(px_of(est), y + 0.16, 0.08, SUN_DK)
+        c.text(ax + half + 0.12, y + 0.02, 1.1, 0.28, fmt(est), 12, SUN_DK, True)
 
-    rows = (
-        forest_row("words cut from the longest clause", F("v03_clause_diff"), 2.4, 4.4, 6, lambda v: f"+{v:.1f}", 1.45)
-        + forest_row("hard words removed", F("v03_hard_diff"), 0.14, 0.35, 0.4, lambda v: f"+{v:.2f}", 0.9)
-        + forest_row("reading levels lowered", F("v03_level_diff"), 0.0, 0.16, 0.3, lambda v: f"+{v:.2f}", 0.35)
-        + forest_row("meaning kept (points): no significant difference", F("v03_kept_diff"), -7, 1, 15,
-                     lambda v: f"{v:+.0f}".replace("-", "−"), -0.2)
-    )
-    chipA = chip(c, 0, -1.05,
-                 f"+{F('v03_easy_diff')} points more easy text left unchanged · every number kept ({F('v03_numbers')}%)",
-                 14, SUN_LT, SUN_DK, bold=True)
-    stage2 = [sub, *rows, chipA]
-    c.step(*out(step1), (sub, "fade", 400), *stagger(rows, 700, 200), (chipA, "fade", 2000))
+    rows = [
+        ("words cut from the longest clause", F("v03_clause_diff"), 2.4, 4.4, 6, lambda v: f"+{v:.1f}"),
+        ("hard words removed", F("v03_hard_diff"), 0.14, 0.35, 0.4, lambda v: f"+{v:.2f}"),
+        ("reading levels lowered", F("v03_level_diff"), 0.0, 0.16, 0.3, lambda v: f"+{v:.2f}"),
+        ("meaning kept (points): not significant", F("v03_kept_diff"), -7, 1, 15,
+         lambda v: f"{v:+.0f}".replace("-", "−")),
+    ]
+    for i, r in enumerate(rows):
+        row(2.25 + i * 0.72, *r)
+    chip_c(c, SW / 2, 5.5,
+           f"+{F('v03_easy_diff')} points more easy text unchanged · every number kept ({F('v03_numbers')}%)",
+           size=13, fill=SUN_LT, color=SUN_DK, max_w=CW)
+    c.finish(slide_notes("S6Results"))
 
-    # -- step 3: blind rating (replaces step 2)
-    head = c.text(0, Y(1.95) - U(0.2), SW, U(0.4),
-                  f"Blind rating by the team: {F('hm_sentences')} sentences", 18, INK, True, "c")
-    sub2 = c.text(0, Y(1.95 - 0.45), SW, U(0.28), "outputs the system changed, rated easier to read", 13, INK3, align="c")
-    bars = []
+
+def s6c(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 6, "05 · Results", "v0.3 is our best model")
+    c.text(ML, 1.62, CW, 0.36, f"Blind rating by the team: {F('hm_sentences')} sentences", 17, INK, True, "c")
+    c.text(ML, 2.05, CW, 0.28, "outputs the system changed, rated easier to read", 12, INK3, align="c")
     for i, (name, pct, col) in enumerate([("v0.3", F("hm_v03_easier"), SUN), ("v0.2", F("hm_v02_easier"), PAPER3),
                                           ("v0.2-Fast", F("hm_fast_easier"), PAPER3)]):
-        y = 0.95 - 0.62 * i
-        bars.append(c.text(X(-4.3), Y(y) - U(0.15), U(1.5), U(0.3), name, 15, INK, i == 0))
-        bw = U(6.0 * pct / 100)
-        bars.append(c.rect(X(-2.4), Y(y) - U(0.21), bw, U(0.42), col))
-        bars.append(c.text(X(-2.4) + bw + U(0.12), Y(y) - U(0.15), U(0.9), U(0.3), f"{pct}%", 15, SUN_DK if i == 0 else INK2, True))
-    chipD = chip(c, 0, -1.15,
-                 f"meaning kept in {F('hm_v03_same')}% of ratings (v0.2: {F('hm_v02_same')}%, v0.2-Fast: {F('hm_fast_same')}%) · none rated harder",
-                 14, PAPER2, INK2, bold=False)
-    chipE = chip(c, 0, -1.7, f"{F('hm_votes')} of {F('hm_votes')} team votes chose v0.3 over v0.2", 15, SUN_LT, SUN_DK)
+        y = 2.65 + i * 0.62
+        c.text(ML, y, 1.2, 0.32, name, 13, INK, i == 0)
+        bw = 5.6 * pct / 100
+        c.rect(ML + 1.35, y + 0.02, bw, 0.38, col)
+        c.text(ML + 1.35 + bw + 0.12, y, 0.8, 0.32, f"{pct}%", 13, SUN_DK if i == 0 else INK2, True)
+    chip_c(c, SW / 2, 4.75,
+           f"meaning kept in {F('hm_v03_same')}% of ratings (v0.2: {F('hm_v02_same')}%, "
+           f"v0.2-Fast: {F('hm_fast_same')}%) · none rated harder",
+           size=12, fill=PAPER2, color=INK2, bold=False, max_w=CW)
+    chip_c(c, SW / 2, 5.35, f"{F('hm_votes')} of {F('hm_votes')} team votes chose v0.3 over v0.2",
+           size=13, fill=SUN_LT, color=SUN_DK, max_w=CW)
     n_cmp = F("hm_reader_v03_v02") + F("hm_reader_v03_fast")
-    chipF = chip(c, 0, -2.3,
-                 f"the reader with dyslexia chose v0.3 in {n_cmp} of {n_cmp} comparisons it was in · "
-                 f"{F('hm_sentences')} sentences: a direction, not a size",
-                 13, PAPER2, INK2, bold=False)
-    c.step(*out(stage2), (head, "fade", 400), (sub2, "fade", 550),
-           *stagger(bars, 800, 180), (chipD, "fade", 1800), (chipE, "fade", 2100), (chipF, "fade", 2400))
+    chip_c(c, SW / 2, 5.95,
+           f"the reader with dyslexia chose v0.3 in {n_cmp} of {n_cmp} comparisons · "
+           f"{F('hm_sentences')} sentences: a direction, not a size",
+           size=11.5, fill=PAPER2, color=INK2, bold=False, max_w=CW)
     c.finish(slide_notes("S6Results"))
 
 
 # =============================================================================
-# 7 · On a phone
+# Beat 7 · Phone — 1 slide
 # =============================================================================
 def s7(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 7, "06 · On a phone", "")
-    head = c.text(0, Y(2.0) - U(0.28), SW, U(0.55), "What the app does", 26, INK, True, "c")
-    bx, by, bw, bh = box(0, -0.5, 2.75, 4.3)
-    body = c.rect(bx, by, bw, bh, NIGHT, INK4, 2, 0.3)
-    scr = c.rect(bx + U(0.12), by + U(0.12), bw - U(0.24), bh - U(0.24), PAPER2, radius=0.18)
-    icon = c.text(bx, by + bh / 2 - U(0.55), bw, U(1.0), "▶", 44, INK3, align="c")
-    cap = c.text(bx, by + bh / 2 + U(0.55), bw, U(0.3), "recording goes here", 13, INK3, align="c")
-    c.step((head, "fade"), (body, "fade", 400), (scr, "fade", 550), (icon, "fade", 700), (cap, "fade", 850))
+    c.text(ML, 1.75, CW, 0.45, "What the app does", 22, INK, True, "c")
+    bw, bh = 2.85, 4.15
+    x = (SW - bw) / 2
+    y = 2.35
+    c.rect(x, y, bw, bh, NIGHT, INK4, 2, 0.26)
+    c.rect(x + 0.12, y + 0.12, bw - 0.24, bh - 0.24, PAPER2, radius=0.16)
+    c.text(x, y + bh / 2 - 0.55, bw, 0.85, "▶", 36, INK3, align="c")
+    c.text(x, y + bh / 2 + 0.45, bw, 0.3, "recording goes here", 12, INK3, align="c")
     c.finish(slide_notes("S7Phone"))
 
 
 # =============================================================================
-# 8 · Close
+# Beat 8 · Close — 2 slides
 # =============================================================================
-def s8(prs, layout):
+def s8a(prs, layout):
     c = Canvas(prs, layout, NIGHT)
     chrome(c, 8, dark=True)
-    mx, my, mw = X(0) - U(2.4) / 2, Y(2.0) - U(1.4), U(2.4)
-    logo = c.pic(ASSETS / "bayan-mark-dark.png", mx, my, mw, "Bayan logo", "Bayan logo")
-    line = c.text(0, Y(2.0 - 1.2 - 0.35 - 0.35), SW, U(0.7), "Simplify where you read.", 36, CREAM, True, "c")
-    c.step((logo, "fade"), (line, "fade", 400), auto=True)
-
-    limits = [
-        chip(c, 0, -1.35, "no reader has used Bayan; one reader rated 30 outputs", 15, NIGHT2, INK4, bold=False),
-        chip(c, 0, -1.9, "our scorer is stricter than people", 15, NIGHT2, INK4, bold=False),
-        chip(c, 0, -2.45, f"the comparison with people covers {F('hm_sentences')} sentences", 15, NIGHT2, INK4, bold=False),
-    ]
-    nxt = c.text(0, Y(-3.15), SW, U(0.35), "Next: a reading study with more readers.", 17, SUN, align="c")
-    thanks = c.text(0, Y(-3.65), SW, U(0.3), "Thank you  ·  Team Cogni  ·  Samsung Innovation Campus", 14, INK4, align="c")
-    c.step(*stagger(limits, 0, 250), (nxt, "fade", 1000), (thanks, "fade", 1300))
+    c.pic(ASSETS / "bayan-mark-dark.png", (SW - 2.5) / 2, 1.75, 2.5, "Bayan logo", "Bayan logo")
+    c.text(0, 4.35, SW, 0.65, "Simplify where you read.", 30, CREAM, True, "c")
     c.finish(slide_notes("S8Close"))
+
+
+def s8b(prs, layout):
+    c = Canvas(prs, layout, NIGHT)
+    chrome(c, 8, dark=True)
+    c.text(0, 1.85, SW, 0.55, "Simplify where you read.", 28, CREAM, True, "c")
+    for i, t in enumerate([
+        "no reader has used Bayan; one reader rated 30 outputs",
+        "our scorer is stricter than people",
+        f"the comparison with people covers {F('hm_sentences')} sentences",
+    ]):
+        chip_c(c, SW / 2, 2.85 + i * 0.62, t, size=13, fill=NIGHT2, color=INK4, bold=False, max_w=CW)
+    c.text(0, 5.05, SW, 0.36, "Next: a reading study with more readers.", 15, SUN, align="c")
+    c.text(0, 5.55, SW, 0.3, "Thank you  ·  Team Cogni  ·  Samsung Innovation Campus", 12, INK4, align="c")
+    c.finish(slide_notes("S8Close"))
+
+
+STEPS = [s1, s2a, s2b, s3a, s3b, s3c, s3d, s4a, s4b, s4c, s5a, s5b, s5c, s5d, s6a, s6b, s6c, s7, s8a, s8b]
 
 
 def main():
@@ -606,7 +619,7 @@ def main():
         prs.part.drop_rel(sld.rId)
         ids.remove(sld)
     layout = next(l for l in prs.slide_layouts if l.name == "Body")
-    for build in (s1, s2, s3, s4, s5, s6, s7, s8):
+    for build in STEPS:
         build(prs, layout)
     prs.save(OUT)
     print(f"{OUT.name}: {len(prs.slides)} slides, {OUT.stat().st_size / 1e6:.2f} MB")

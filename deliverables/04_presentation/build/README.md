@@ -6,7 +6,7 @@ verified by `check_numbers.py` before rendering.
 | | Presenting (Manim + HTML) | Submission (`../Bayan_Submission.pptx`) |
 |---|---|---|
 | Made of | Manim scenes played live or exported to a self-contained HTML file | Native PowerPoint shapes and text, PowerPoint's own animations |
-| Beats | 8 scenes (cover, problem, data, models, measuring, results, phone, close) | 8 slides (same beats as the HTML) |
+| Beats | 8 scenes (cover, problem, data, models, measuring, results, phone, close) | 20 slides — one per presenting step, so a static render matches the HTML click-through |
 | Editable | No (re-render) | Yes |
 | Fonts | baked into the video | must be installed: Readex Pro, Noto Naskh Arabic, Amiri |
 | Source | `scenes.py`, `common.py` | `nativekit.py`, `build_native.py` |
@@ -58,7 +58,9 @@ on-slide in `scenes.py`).
 - HTML player (`make_html.py`): every step plays once and waits for a click. `--auto` honours the
   `auto_next` flags instead (steps flow on; each beat stops at its end), as `manim-slides present` does.
 - `common.Deck` provides `begin_beat()`, `step()` (auto-advance) and `hold()` (pause point).
-- The native deck keeps the same speaker notes and the same 8 beats as the presenting scenes.
+- The native deck keeps the same speaker notes as the presenting scenes. Each presenting step is
+  its own PowerPoint slide (no build-up animations), so the deck also reads correctly in a PDF
+  export, in Google Slides and on paper.
 - Numbers are spoken as words; تبسيط is said *tabseet*.
 
 ## Number policy
