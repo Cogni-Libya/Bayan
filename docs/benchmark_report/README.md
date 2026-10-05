@@ -4,6 +4,18 @@
 **BayanBench v2.0** rules. It also checks the meaning scorer against the human raters. Every number, table and figure in
 it is generated from data: nothing is typed by hand, so a rerun rebuilds the whole report (#57).
 
+**Names.** The report was generated on 4 October, before the models got their release names, and uses the working
+names. "Today's app" in it is the app as of 4 October, whose large model was model 2 AraT5; the system it recommends
+now ships as the app's large model (#67).
+
+| In this report | Released as ([Hugging Face](https://huggingface.co/Congi-libya)) |
+|---|---|
+| Model 1 | BayanSimplify-v0.1 |
+| Model 2 AraT5 (app today: AraT5) | BayanSimplify-v0.2 |
+| Model 2 AraBART (app today: AraBART) | BayanSimplify-v0.2-Fast |
+| Model 3 | BayanSimplify-v0.3 |
+| Model 3 app int8 bundle (`bayan-arat5-v1-bundle`) | BayanSimplify-ONNX, `v0.3/` |
+
 ## Pipeline
 
 ```
@@ -58,7 +70,7 @@ come out garbled.
 | model 3 + DPO + net | `predict_net.py` with the DPO checkpoint |
 
 Prefixes: «بسط: » for model 3, the retrain and model 2 AraBART; «بسّط: » (with the shadda) for model 2 AraT5. For model
-2 add the tag (`[S2] `) or not, as the system name says. The `scripts/meaning_reward/` scripts are in PR #53.
+2 add the tag (`[S2] `) or not, as the system name says. The `scripts/meaning_reward/` scripts came with #53.
 
 ### 2. Gemma 4 31B scores (GPU)
 
