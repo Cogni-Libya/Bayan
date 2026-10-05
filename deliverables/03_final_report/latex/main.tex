@@ -84,8 +84,8 @@ Is the text simpler? & Its longest clause is \mBeamTClause{} words shorter; the
   app's model before it managed \bvHAppTfiveClause{} \\ \hline
 Do people agree? & Team raters found model~3 easier on \hmThreeChEasier\% of the
   outputs it changed (model~2: \hmTwoChEasier\%) and chose it over model~2 in
-  \hmPThreeTwoFirst{} of \hmPThreeTwoTotal{} comparisons; the reader with dyslexia found
-  \hmThreeREasier{} of its \hmThreeRN{} outputs easier and none harder \\ \hline
+  \hmPThreeTwoFirst{} of \hmPThreeTwoTotal{} comparisons; the reader with dyslexia chose it in every
+  comparison that included it \\ \hline
 Is it safe? & Every number is kept and no negation is flipped; a sentence that
   would lose either is shown unchanged \\ \hline
 Does it run on a phone? & The fast model shows the first word in 82--172\,ms and
@@ -193,8 +193,8 @@ app can add it back (a setting, off by default) but we have not tested that with
 readers. \emph{Visual layout}: the
 app has typography settings, which we have not tested with readers. \emph{The
 auditory route}: the app reads aloud, which we have not tested. \emph{Fluency and
-working memory}: not measured. No reader has used Bayan, so objective~O4 has not
-started. We therefore make no claim that Bayan helps readers with dyslexia; what
+working memory}: not measured. No reader with dyslexia has used the app itself yet; one
+has rated its rewrites, so objective~O4 has started. We therefore make no claim that Bayan helps readers with dyslexia; what
 we claim is a measured reduction of linguistic load and the means to measure it.
 
 \lead{Contributions.}
@@ -243,7 +243,7 @@ Marwan Elamami & Team lead; integration; on-device model &
   Product-form decision (\#9); evaluation protocol and fixes (\#16, \#18);
   model~1 diagnosis; data acquisition and leakage filtering; model-2 recipe,
   data and task specifications (\#27--\#34); on-device engine and app; phone
-  test; beam search in the app (\#62); BayanBench and its v2 package (\#48);
+  test; beam search and tashkeel in the app (\#62, \#66, \#67); BayanBench and its v2 package (\#48);
   rating site and analysis; Action Plan (\#25); this report \\ \hline
 Abdulrahman Khengari & Data lead &
   Validators for generated pairs (\#10, \#11); CAMeL readability check (\#17,
@@ -251,8 +251,8 @@ Abdulrahman Khengari & Data lead &
   \#39); corpus v1 with the Gemma generator and Qwen judge, and its calibration
   (\#44, \#45); the meaning judge (\#47, \#49); model~3: training, preference
   tuning and the int8 bundle (\#48, \#53); BayanBench v2 design and the open
-  meaning scorer runs (\#48); the beam-search proposal (\#61); pitch decks
-  (\#50) \\ \hline
+  meaning scorer runs (\#48); the beam-search proposal (\#61); the benchmark
+  report of 35 systems (\#57, \#58); pitch decks (\#50) \\ \hline
 Ahmed Alaeb & Model training &
   SAMER conversion; model~1 trained and documented (\#5, \#22); model~2 on
   AraT5v2 trained (\#28, \#40); human ratings (\#48) \\ \hline
@@ -1083,9 +1083,12 @@ against \hmTwoChEasier\% and \hmBartChEasier\%, with none rated harder. In the
 side-by-side comparisons every team vote between model~3 and model~2 chose model~3
 (\hmPThreeTwoFirst{} of \hmPThreeTwoTotal{}), and model~3 won \hmPThreeBartFirst{} of
 the \hmPThreeBartTotal{} votes against the fast model (\hmPThreeBartSecond{} for the fast model, \hmPThreeBartSame{} equal). The
-reader with dyslexia, who had rated \hmReaderDone{} of \hmReaderTotal{} tasks at
-submission, found \hmThreeREasier{} of model~3's \hmThreeRN{} outputs easier and
-none harder, and chose model~3 in both comparisons that included it. The round is
+reader with dyslexia, who rated all \hmReaderTotal{} tasks, chose model~3 in every
+comparison that included it (\hmPThreeTwoRFirst{} of \hmPThreeTwoRTotal{} against
+model~2, \hmPThreeBartRFirst{} of \hmPThreeBartRTotal{} against the fast model); on single
+outputs he found \hmThreeREasier{} of model~3's \hmThreeRN{} easier and none harder,
+against \hmTwoREasier{} of \hmTwoRN{} for model~2 and \hmBartREasier{} of \hmBartRN{}
+for the fast model. The round is
 small, 18 sentences, so it confirms the direction of the benchmark rather than
 measuring a size.
 
@@ -1603,20 +1606,45 @@ boldest setting while keeping meaning as well as the safest.
 \section{Team Member Review and Comment}
 
 \begin{fullwidth}
-\setlength{\fboxrule}{0.5pt}\fcolorbox{sicrule}{white}{\parbox[c][30mm][c]{\dimexpr\linewidth-2\fboxsep-1pt\relax}{%
-  \centering\fontsize{14}{16}\selectfont\color{sicrule}<ATTACH A TEAM PICTURE HERE>}}
+\newcommand{\member}[2]{\begin{minipage}[t]{0.155\linewidth}\centering
+  \begin{tikzpicture}\clip (0,0) circle (11mm);
+    \node at (0,0) {\includegraphics[width=22mm]{assets/team/#1}};\end{tikzpicture}\\[1.5mm]
+  {\small\bfseries #2}\end{minipage}}
+\noindent\hfill\member{Marwan.jpg}{Marwan\\Elamami}\hfill
+\member{bayan-symbol.png}{Abdulrahman\\Khengari}\hfill
+\member{AhmedAlaeb.jpg}{Ahmed\\Alaeb}\hfill
+\member{bayan-symbol.png}{Sanad\\Ali}\hfill
+\member{bayan-symbol.png}{Mohammed\\Thabet}\hfill
+\member{Majid.jpg}{Abdul Majid\\Mraied}\hfill\null
+
+\vspace{1mm}{\centering\small Team Cogni\par}
 
 \vspace{3mm}
-\renewcommand{\arraystretch}{1.9}
-\begin{tabularx}{\linewidth}{|p{38mm}|X|}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\linewidth}{|p{38mm}|L|}
 \hline
 \head{NAME} & \head{REVIEW and COMMENT} \\ \hline
-Marwan Elamami & \\ \hline
-Abdulrahman Khengari & \\ \hline
-Ahmed Alaeb & \\ \hline
-Sanad Ali & \\ \hline
-Mohammed Thabet & \\ \hline
-Abdul Majid Mraied & \\ \hline
+Marwan Elamami & Leading Bayan taught me that the hard part of an AI product is knowing
+  whether it works. I am proudest that we built a benchmark for the task, checked it
+  against people, and let the numbers change our decisions, which is how model~3 with
+  four beams became the app's large model. Next, I want readers with dyslexia to use
+  the app and to measure their reading itself. \\ \hline
+Abdulrahman Khengari & I built the data side, from the first synthetic corpus to corpus v1,
+  the meaning judge and model~3, and the benchmark report that compared 35 systems
+  on the same rules. Measuring every variant the same way is what showed that model~3
+  with four beams is our best model. \\ \hline
+Ahmed Alaeb & Training models 1 and 2 showed me how much the data decides: SAMER taught
+  word swaps, while the corpora we built taught the model to restructure. I am glad the
+  model work ended in an app that runs offline on an ordinary phone. \\ \hline
+Sanad Ali & I benchmarked the diacritizers and chose Libtashkeel, which now adds
+  tashkeel in the app without changing a letter, and trained model~2 on AraBART, whose
+  speed made it the fast default. \\ \hline
+Mohammed Thabet & Building the Android side, from the selection menu and the result sheet
+  to model downloads and typography settings, showed me how much a reading tool depends
+  on small details: spacing, clear states, and never losing the reader's place. \\ \hline
+Abdul Majid Mraied & My part was the evaluation groundwork: scoring and leakage scripts, the
+  locked test sets and the copy baselines. They make sure a score in this report
+  measures what it claims to. \\ \hline
 \end{tabularx}
 \end{fullwidth}
 
