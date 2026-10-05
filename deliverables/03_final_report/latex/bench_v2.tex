@@ -3,11 +3,11 @@
 \newcommand{\benchmeaningcomplete}{yes}
 \newcommand{\benchheadtable}{\begin{table}[h]
 \small
-\caption{Model~2 on BayanBench v2, \textbf{test} split, \emph{core} items (749 of 1250 items; 197 documents in the split), each system run once. Meaning: the open scorer, Gemma~4 31B; a copy of the input keeps its meaning by definition. Simpler: mean change from selection to output, over the items where there is something to simplify. Rates in \%, means with their sign; 95\% intervals from a bootstrap over whole documents in brackets. The two \texttt{[S2]} columns send the medium strength tag the model was trained with; the two \emph{int8 app} columns are the quantised bundles the app downloads, which send no tag. All outputs pass through the app's guards. Bold: the best model on each row. $n$ = items the measure applies to.}
+\caption{The v0.2 models on BayanBench v2, \textbf{test} split, \emph{core} items (749 of 1250 items; 197 documents in the split), each system run once. Meaning: the open scorer, Gemma~4 31B; a copy of the input keeps its meaning by definition. Simpler: mean change from selection to output, over the items where there is something to simplify. Rates in \%, means with their sign; 95\% intervals from a bootstrap over whole documents in brackets. The two \texttt{[S2]} columns send the medium strength tag the model was trained with; the two \emph{int8 app} columns are the quantised bundles the app downloads, which send no tag. All outputs pass through the app's guards. Bold: the best model on each row. $n$ = items the measure applies to.}
 \label{tab:benchhead}
 \begin{tabularx}{\linewidth}{|L|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{7mm}|}
 \hline
-\head{Measure} & \head{Copy the input} & \head{AraT5v2, \texttt{[S2]}} & \head{AraBART, \texttt{[S2]}} & \head{AraT5v2, int8 app} & \head{AraBART, int8 app} & \head{$n$} \\ \hline
+\head{Measure} & \head{Copy the input} & \head{v0.2, \texttt{[S2]}} & \head{v0.2-Fast, \texttt{[S2]}} & \head{v0.2, int8 app} & \head{v0.2-Fast, int8 app} & \head{$n$} \\ \hline
 \multicolumn{7}{|l|}{\cellcolor{sichead}\textbf{Meaning}} \\ \hline
 Meaning kept (P(same) $\geq$ 0.5, numbers kept), \% & 100.0 & \makecell{59.5\\[-2pt]{\tiny[55--64]}} & \makecell{40.1\\[-2pt]{\tiny[36--44]}} & \makecell{\textbf{78.6}\\[-2pt]{\tiny[75--82]}} & \makecell{50.5\\[-2pt]{\tiny[46--55]}} & 659 \\ \hline
 Mean P(same meaning) & 1.00 & \makecell{0.59\\[-2pt]{\tiny[0.55, 0.64]}} & \makecell{0.40\\[-2pt]{\tiny[0.37, 0.45]}} & \makecell{\textbf{0.79}\\[-2pt]{\tiny[0.75, 0.82]}} & \makecell{0.51\\[-2pt]{\tiny[0.47, 0.56]}} & 659 \\ \hline
@@ -28,11 +28,11 @@ Negation count changed & 0.0 & \makecell{23.1\\[-2pt]{\tiny[17--30]}} & \makecel
 \end{table}}
 \newcommand{\benchothertable}{\begin{table}[h]
 \small
-\caption{Model~2 on BayanBench v2, \textbf{dev} split, \emph{core} items (380 of 731 items; 129 documents in the split), each system run once. Meaning: the open scorer, Gemma~4 31B; a copy of the input keeps its meaning by definition. Simpler: mean change from selection to output, over the items where there is something to simplify. Rates in \%, means with their sign; 95\% intervals from a bootstrap over whole documents in brackets. The two \texttt{[S2]} columns send the medium strength tag the model was trained with; the two \emph{int8 app} columns are the quantised bundles the app downloads, which send no tag. All outputs pass through the app's guards. Bold: the best model on each row. $n$ = items the measure applies to.}
+\caption{The v0.2 models on BayanBench v2, \textbf{dev} split, \emph{core} items (380 of 731 items; 129 documents in the split), each system run once. Meaning: the open scorer, Gemma~4 31B; a copy of the input keeps its meaning by definition. Simpler: mean change from selection to output, over the items where there is something to simplify. Rates in \%, means with their sign; 95\% intervals from a bootstrap over whole documents in brackets. The two \texttt{[S2]} columns send the medium strength tag the model was trained with; the two \emph{int8 app} columns are the quantised bundles the app downloads, which send no tag. All outputs pass through the app's guards. Bold: the best model on each row. $n$ = items the measure applies to.}
 \label{tab:benchother}
 \begin{tabularx}{\linewidth}{|L|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{15.4mm}|C{7mm}|}
 \hline
-\head{Measure} & \head{Copy the input} & \head{AraT5v2, \texttt{[S2]}} & \head{AraBART, \texttt{[S2]}} & \head{AraT5v2, int8 app} & \head{AraBART, int8 app} & \head{$n$} \\ \hline
+\head{Measure} & \head{Copy the input} & \head{v0.2, \texttt{[S2]}} & \head{v0.2-Fast, \texttt{[S2]}} & \head{v0.2, int8 app} & \head{v0.2-Fast, int8 app} & \head{$n$} \\ \hline
 \multicolumn{7}{|l|}{\cellcolor{sichead}\textbf{Meaning}} \\ \hline
 Meaning kept (P(same) $\geq$ 0.5, numbers kept), \% & 100.0 & \makecell{62.5\\[-2pt]{\tiny[57--68]}} & \makecell{41.9\\[-2pt]{\tiny[36--49]}} & \makecell{\textbf{78.4}\\[-2pt]{\tiny[73--83]}} & \makecell{54.7\\[-2pt]{\tiny[49--61]}} & 320 \\ \hline
 Mean P(same meaning) & 1.00 & \makecell{0.63\\[-2pt]{\tiny[0.58, 0.68]}} & \makecell{0.42\\[-2pt]{\tiny[0.36, 0.49]}} & \makecell{\textbf{0.79}\\[-2pt]{\tiny[0.74, 0.84]}} & \makecell{0.55\\[-2pt]{\tiny[0.49, 0.61]}} & 320 \\ \hline
@@ -58,19 +58,19 @@ Negation count changed & 0.0 & \makecell{20.4\\[-2pt]{\tiny[9--31]}} & \makecell
 \begin{tabularx}{\linewidth}{|L|C{19mm}|C{19mm}|C{19mm}|C{19mm}|}
 \hline
 \head{System and measure} & \head{Core} & \head{Held-out} & \head{Outside} & \head{Written} \\ \hline
-\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{AraT5v2, \texttt{[S2]}}} \\ \hline
+\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{v0.2, \texttt{[S2]}}} \\ \hline
 Meaning kept, \% & 59.5\,{\tiny(659)} & 64.6\,{\tiny(274)} & 60.8\,{\tiny(204)} & 65.2\,{\tiny(23)} \\ \hline
 Longest clause: words cut & +6.3\,{\tiny(212)} & +5.8\,{\tiny(58)} & +3.5\,{\tiny(65)} & +2.0\,{\tiny(1)} \\ \hline
 Easy text left unchanged, \% & 14.3\,{\tiny(77)} & 6.5\,{\tiny(92)} & 6.1\,{\tiny(33)} & --- \\ \hline
-\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{AraBART, \texttt{[S2]}}} \\ \hline
+\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{v0.2-Fast, \texttt{[S2]}}} \\ \hline
 Meaning kept, \% & 40.1\,{\tiny(659)} & 49.3\,{\tiny(274)} & 37.7\,{\tiny(204)} & 52.2\,{\tiny(23)} \\ \hline
 Longest clause: words cut & +6.7\,{\tiny(212)} & +5.5\,{\tiny(58)} & +4.9\,{\tiny(65)} & +4.0\,{\tiny(1)} \\ \hline
 Easy text left unchanged, \% & 11.7\,{\tiny(77)} & 7.6\,{\tiny(92)} & 21.2\,{\tiny(33)} & --- \\ \hline
-\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{AraT5v2, int8 app}} \\ \hline
+\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{v0.2, int8 app}} \\ \hline
 Meaning kept, \% & 78.6\,{\tiny(659)} & 77.0\,{\tiny(274)} & 75.5\,{\tiny(204)} & 82.6\,{\tiny(23)} \\ \hline
 Longest clause: words cut & +1.9\,{\tiny(212)} & +2.3\,{\tiny(58)} & +2.1\,{\tiny(65)} & -1.0\,{\tiny(1)} \\ \hline
 Easy text left unchanged, \% & 48.1\,{\tiny(77)} & 22.8\,{\tiny(92)} & 27.3\,{\tiny(33)} & --- \\ \hline
-\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{AraBART, int8 app}} \\ \hline
+\multicolumn{5}{|l|}{\cellcolor{sichead}\textbf{v0.2-Fast, int8 app}} \\ \hline
 Meaning kept, \% & 50.5\,{\tiny(659)} & 56.9\,{\tiny(274)} & 46.6\,{\tiny(204)} & 69.6\,{\tiny(23)} \\ \hline
 Longest clause: words cut & +4.8\,{\tiny(212)} & +3.9\,{\tiny(58)} & +4.2\,{\tiny(65)} & +0.0\,{\tiny(1)} \\ \hline
 Easy text left unchanged, \% & 24.7\,{\tiny(77)} & 18.5\,{\tiny(92)} & 12.1\,{\tiny(33)} & --- \\ \hline

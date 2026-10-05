@@ -31,16 +31,16 @@
     4/6/9/{Validators, readability check \#10 \#17},
     5/6/10/{Evaluation scripts, locked tests \#7 \#19},
     6/6/9/{Diacritization benchmark \#6},
-    7/6/10/{SAMER conversion, model 1 \#5},
+    7/6/10/{SAMER conversion, v0.1 \#5},
     8/7/9/{Android plugin shell \#14},
     9/5/11/{Action Plan \#25},
-    10/9/11/{Model 1 on the locked tests; diagnosis},
-    11/10/11/{Model-2 recipe and data \#27 \#33 \#34},
-    12/11/13/{Model 2 trained: AraT5v2, AraBART \#28 \#29},
+    10/9/11/{BayanSimplify-v0.1 on the locked tests; diagnosis},
+    11/10/11/{v0.2 recipe and data \#27 \#33 \#34},
+    12/11/13/{v0.2 trained: AraT5v2, AraBART \#28 \#29},
     13/6/13/{Synthetic corpus exported \#8 \#38},
     14/12/14/{On-device engine and app; phone test},
     15/13/15/{BayanBench built},
-    16/15/15.6/{Model 2 scored on the BayanBench test split},
+    16/15/15.6/{v0.2 scored on the BayanBench test split},
     17/17/18/{BayanBench v2: open meaning scorer \#48},
     18/18/20/{Human rating round, six raters \#48}} {
     \fill[sicblue] (\s,\r-0.32) rectangle (\e,\r+0.32);
@@ -173,7 +173,7 @@
 \end{axis}
 \end{tikzpicture}}
 
-% ------------------------------------------------------ model-2 training --
+% ------------------------------------------------------- v0.2 training ---
 % From the committed notebooks (scripts/training/model2/*.ipynb): 20 evaluations
 % each, on the 600 changed rows (SARI) and all 900 rows (copy rate) of select_dev.
 \newcommand{\figtrainingtwo}{%
@@ -356,9 +356,9 @@
     col/.style={built, text width=51mm, align=left, inner sep=3pt},
     colh/.style={built, fill=sicblue, text=white, text width=51mm, minimum height=7mm, font=\footnotesize\bfseries},
     found/.style={gate, text width=51mm, align=left, inner sep=3pt}]
-  \node[colh] (h1) {Model 1: AraT5v2 on SAMER};
-  \node[colh, right=6mm of h1] (h2) {Model 2: AraT5v2 and AraBART};
-  \node[colh, right=6mm of h2] (h3) {Model 3: AraT5v2 on corpus v1};
+  \node[colh] (h1) {BayanSimplify-v0.1: AraT5v2 on SAMER};
+  \node[colh, right=6mm of h1] (h2) {v0.2 and v0.2-Fast: AraT5v2, AraBART};
+  \node[colh, right=6mm of h2] (h3) {BayanSimplify-v0.3: AraT5v2 on corpus v1};
 
   \node[col, below=of h1] (d1) {\textbf{Data.} SAMER level 5 $\rightarrow$ 3, 14,343 pairs; unchanged
       pairs capped at 20\%.};
@@ -377,8 +377,8 @@
   \node[found, below=of s2] (f2) {\textbf{Found.} meaning kept only 0.59 (AraT5v2) and 0.40
       (AraBART); easy and protected text is edited; int8 changes 62--74\% of outputs.};
   \node[found, below=of s3] (f3) {\textbf{Found.} easy text unchanged 55\% (was 14\%); protected
-      intact 97.8\% (was 4.4\%). As int8 in the app: meaning as well as model~2, \mThreeClauseDiff{} words
-      more cut; ships.};
+      intact 97.8\% (was 4.4\%). As int8 in the app with four beams: meaning kept
+      \mBeamTKept\% (earlier models at most \bvHmaxKept\%); the app's large model.};
 
   \draw[flow] (h1) -- (h2);
   \draw[flow] (h2) -- (h3);

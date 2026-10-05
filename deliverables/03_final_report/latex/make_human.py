@@ -17,9 +17,9 @@ rows = [json.loads(l) for l in open(D / "ratings/human_ratings_v2.jsonl", encodi
 doc = {json.loads(l)["id"]: json.loads(l)["doc"] for l in open(D / "items/dev.jsonl", encoding="utf-8")}
 TEAM = ["sanad", "ahmed", "mohammed", "abdulrahman", "marwan"]
 READER = "ibrahim"
-SYSTEMS = {"app-arat5": "AraT5v2, int8 app", "model2-arat5-notag": "AraT5v2, no tag",
-           "model2-arat5": r"AraT5v2, \texttt{[S2]}", "app-arabart": "AraBART, int8 app",
-           "model2-arabart-notag": "AraBART, no tag", "model2-arabart": r"AraBART, \texttt{[S2]}"}
+SYSTEMS = {"app-arat5": "v0.2, int8 app", "model2-arat5-notag": "v0.2, no tag",
+           "model2-arat5": r"v0.2, \texttt{[S2]}", "app-arabart": "v0.2-Fast, int8 app",
+           "model2-arabart-notag": "v0.2-Fast, no tag", "model2-arabart": r"v0.2-Fast, \texttt{[S2]}"}
 ORD = {"m": {"same": 0, "minor": 1, "major": 2}, "a": {"ok": 0, "minor": 1, "major": 2},
        "e": {"easier": 0, "same": 1, "harder": 2}}
 singles = [r for r in rows if r["kind"] == "single"]
@@ -130,16 +130,16 @@ for s, label in SYSTEMS.items():
     sys_rows.append((label, len(rs), hs, gs, easier, arab))
     tag = s.replace("model2-", "M").replace("app-", "App").replace("-notag", "N").replace("arat5", "Tfive").replace("arabart", "Bart")
     M[f"h{tag}Same"] = f"{hs[0]:.0f}"; M[f"h{tag}Gemma"] = f"{gs[0]:.0f}"; M[f"h{tag}Easier"] = f"{easier[0]:.0f}"
-M["hBartSameMin"] = f"{min(hs[0] for l, n, hs, gs, ez, ar in sys_rows if 'AraBART' in l):.0f}"
-M["hBartSameMax"] = f"{max(hs[0] for l, n, hs, gs, ez, ar in sys_rows if 'AraBART' in l):.0f}"
+M["hBartSameMin"] = f"{min(hs[0] for l, n, hs, gs, ez, ar in sys_rows if 'Fast' in l):.0f}"
+M["hBartSameMax"] = f"{max(hs[0] for l, n, hs, gs, ez, ar in sys_rows if 'Fast' in l):.0f}"
 M["hEasierMin"] = f"{min(ez[0] for l, n, hs, gs, ez, ar in sys_rows):.0f}"
 M["hEasierMax"] = f"{max(ez[0] for l, n, hs, gs, ez, ar in sys_rows):.0f}"
 M["hArabicMin"] = f"{min(ar[0] for l, n, hs, gs, ez, ar in sys_rows):.0f}"
 M["hArabicMax"] = f"{max(ar[0] for l, n, hs, gs, ez, ar in sys_rows):.0f}"
 gaps = [round(hs[0]) - round(gs[0]) for l, n, hs, gs, ez, ar in sys_rows]   # as the table prints them
 M["hGapMin"], M["hGapMax"] = f"{min(gaps):.0f}", f"{max(gaps):.0f}"
-t5 = [(hs[0], gs[0]) for l, n, hs, gs, ez, ar in sys_rows if "AraT5" in l]
-bt = [(hs[0], gs[0]) for l, n, hs, gs, ez, ar in sys_rows if "AraBART" in l]
+t5 = [(hs[0], gs[0]) for l, n, hs, gs, ez, ar in sys_rows if "Fast" not in l]
+bt = [(hs[0], gs[0]) for l, n, hs, gs, ez, ar in sys_rows if "Fast" in l]
 M["hOrderRaters"] = "yes" if min(h for h, g in t5) > max(h for h, g in bt) else "no"
 M["hOrderScorer"] = "yes" if min(g for h, g in t5) > max(g for h, g in bt) else "no"
 M["hPerSystem"] = len([r for r in evenr if r["system"] == "app-arat5"])

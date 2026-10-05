@@ -45,7 +45,7 @@
 \newcommand{\resultstable}{%
 \begin{table}[h]
 \small
-\caption{Model~1 on test data with human references, scored once with
+\caption{BayanSimplify-v0.1 on test data with human references, scored once with
 \texttt{score.py}. SARI is split by whether the human reference changed the
 source (DAASI has no unchanged pairs). BERTScore compares output with source;
 readability drop is the fall in predicted BAREC level (positive = easier).
@@ -56,17 +56,17 @@ DAASI sources and references have tashkeel stripped.}
 \head{System} & \head{SARI all} & \head{SARI changed} & \head{SARI un\-changed} & \head{BLEU} & \head{BERT\-Score} & \head{Read\-ability drop} & \head{Copy rate} \\ \hline
 \multicolumn{8}{|l|}{\cellcolor{sichead}\textbf{SAMER test (3,277 rows, locked, in domain)}} \\ \hline
 Copy the input & 77.50 & 56.06 & 100.00 & 72.03 & 1.00 & 0.00 & 100.0\% \\ \hline
-Model~1, greedy & 75.88 & \textbf{61.83} & 90.62 & 71.68 & 0.98 & 0.08 & 65.3\% \\ \hline
-Model~1, beam 4 & 76.29 & 61.95 & 91.34 & 72.22 & 0.98 & 0.07 & 69.4\% \\ \hline
+v0.1, greedy & 75.88 & \textbf{61.83} & 90.62 & 71.68 & 0.98 & 0.08 & 65.3\% \\ \hline
+v0.1, beam 4 & 76.29 & 61.95 & 91.34 & 72.22 & 0.98 & 0.07 & 69.4\% \\ \hline
 \multicolumn{8}{|l|}{\cellcolor{sichead}\textbf{DAASI held-out (350 pairs, government and insurance text, out of domain)}} \\ \hline
 Copy the input & 45.05 & 45.05 & --- & 25.25 & 1.00 & 0.00 & 100.0\% \\ \hline
-Model~1, greedy & 43.87 & 43.87 & --- & 23.66 & 0.99 & −0.03 & 77.7\% \\ \hline
+v0.1, greedy & 43.87 & 43.87 & --- & 23.66 & 0.99 & −0.03 & 77.7\% \\ \hline
 \end{tabularx}
 \end{table}}
 \newcommand{\barectable}{%
 \begin{table}[h]
 \small
-\caption{Model~1 on the locked BAREC test set (7,286 sentences, no reference
+\caption{BayanSimplify-v0.1 on the locked BAREC test set (7,286 sentences, no reference
 simplifications), greedy decoding. Stripped: tashkeel removed from the source
 before the model sees it, as the application does.}
 \label{tab:barec}
@@ -92,9 +92,9 @@ Raw, with tashkeel & 37.5\% & 0.91 & −0.45 & 78.2\% & 17.5\% \\ \hline
   \addplot[draw=figgrey, fill=figgrey!45] coordinates {(all rows,77.50) (changed rows,56.06) (unchanged rows,100.00)};
   \addlegendentry{copy the input}
   \addplot[draw=sicblue, fill=sicblue!75] coordinates {(all rows,75.88) (changed rows,61.83) (unchanged rows,90.62)};
-  \addlegendentry{model 1, greedy}
+  \addlegendentry{v0.1, greedy}
   \addplot[draw=figwarm, fill=figwarm!70] coordinates {(all rows,76.29) (changed rows,61.95) (unchanged rows,91.34)};
-  \addlegendentry{model 1, beam 4}
+  \addlegendentry{v0.1, beam 4}
 \end{axis}
 \end{tikzpicture}}
 \newcommand{\figbehaviour}{%
@@ -110,7 +110,7 @@ Raw, with tashkeel & 37.5\% & 0.91 & −0.45 & 78.2\% & 17.5\% \\ \hline
   title={(a) SAMER test}, title style={font=\scriptsize\bfseries},
   grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left]
   \addplot[draw=sicblue, fill=sicblue!75] coordinates {(65.3,rows returned unchanged) (45.3,changed rows left untouched) (75.4,single-word edits)};
-  \addlegendentry{model 1}
+  \addlegendentry{v0.1}
   \addplot[draw=figgrey, fill=figgrey!45] coordinates {(48.8,rows returned unchanged) (0,changed rows left untouched) (49.5,single-word edits)};
   \addlegendentry{human}
 \end{axis}

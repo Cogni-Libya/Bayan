@@ -97,7 +97,7 @@ tex += [f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in macros.items()]
 tex.append(r"""\newcommand{\resultstable}{%
 \begin{table}[h]
 \small
-\caption{Model~1 on test data with human references, scored once with
+\caption{BayanSimplify-v0.1 on test data with human references, scored once with
 \texttt{score.py}. SARI is split by whether the human reference changed the
 source (DAASI has no unchanged pairs). BERTScore compares output with source;
 readability drop is the fall in predicted BAREC level (positive = easier).
@@ -108,18 +108,18 @@ DAASI sources and references have tashkeel stripped.}
 \head{System} & \head{SARI all} & \head{SARI changed} & \head{SARI un\-changed} & \head{BLEU} & \head{BERT\-Score} & \head{Read\-ability drop} & \head{Copy rate} \\ \hline
 \multicolumn{8}{|l|}{\cellcolor{sichead}\textbf{SAMER test (3,277 rows, locked, in domain)}} \\ \hline
 """ + row("Copy the input", g[C]) + "\n"
-    + row("Model~1, greedy", g[M], bold=(1,)) + "\n"
-    + row("Model~1, beam 4", b[M]) + "\n"
+    + row("v0.1, greedy", g[M], bold=(1,)) + "\n"
+    + row("v0.1, beam 4", b[M]) + "\n"
     + r"\multicolumn{8}{|l|}{\cellcolor{sichead}\textbf{DAASI held-out (350 pairs, government and insurance text, out of domain)}} \\ \hline" + "\n"
     + f"Copy the input & {f2(da[C][ALL]['SARI'])} & {f2(da[C][ALL]['SARI'])} & --- & {f2(da[C][ALL]['BLEU'])} & {f2(da[C][ALL]['BERTScore'])} & {f2(da[C][ALL]['Readability drop'])} & {pct(da[C][ALL]['Copy rate'])} \\\\ \\hline\n"
-    + f"Model~1, greedy & {f2(da[M][ALL]['SARI'])} & {f2(da[M][ALL]['SARI'])} & --- & {f2(da[M][ALL]['BLEU'])} & {f2(da[M][ALL]['BERTScore'])} & {f2(da[M][ALL]['Readability drop'])} & {pct(da[M][ALL]['Copy rate'])} \\\\ \\hline\n"
+    + f"v0.1, greedy & {f2(da[M][ALL]['SARI'])} & {f2(da[M][ALL]['SARI'])} & --- & {f2(da[M][ALL]['BLEU'])} & {f2(da[M][ALL]['BERTScore'])} & {f2(da[M][ALL]['Readability drop'])} & {pct(da[M][ALL]['Copy rate'])} \\\\ \\hline\n"
     + r"""\end{tabularx}
 \end{table}}""")
 
 tex.append(r"""\newcommand{\barectable}{%
 \begin{table}[h]
 \small
-\caption{Model~1 on the locked BAREC test set (7,286 sentences, no reference
+\caption{BayanSimplify-v0.1 on the locked BAREC test set (7,286 sentences, no reference
 simplifications), greedy decoding. Stripped: tashkeel removed from the source
 before the model sees it, as the application does.}
 \label{tab:barec}
@@ -147,9 +147,9 @@ tex.append(r"""\newcommand{\figsari}{%
   \addplot[draw=figgrey, fill=figgrey!45] coordinates {""" + bars(g[C]) + r"""};
   \addlegendentry{copy the input}
   \addplot[draw=sicblue, fill=sicblue!75] coordinates {""" + bars(g[M]) + r"""};
-  \addlegendentry{model 1, greedy}
+  \addlegendentry{v0.1, greedy}
   \addplot[draw=figwarm, fill=figwarm!70] coordinates {""" + bars(b[M]) + r"""};
-  \addlegendentry{model 1, beam 4}
+  \addlegendentry{v0.1, beam 4}
 \end{axis}
 \end{tikzpicture}}""")
 
@@ -166,7 +166,7 @@ tex.append(r"""\newcommand{\figbehaviour}{%
   title={(a) SAMER test}, title style={font=\scriptsize\bfseries},
   grid=major, grid style={black!8}, axis x line*=bottom, axis y line*=left]
 """ + f"  \\addplot[draw=sicblue, fill=sicblue!75] coordinates {{({ag['copy_rate_pct']:.1f},rows returned unchanged) ({ag['untouched_on_changed_pct']:.1f},changed rows left untouched) ({ag['single_word_edit_pct']:.1f},single-word edits)}};\n"
-    + r"  \addlegendentry{model 1}" + "\n"
+    + r"  \addlegendentry{v0.1}" + "\n"
     + f"  \\addplot[draw=figgrey, fill=figgrey!45] coordinates {{({ah['copy_rate_pct']:.1f},rows returned unchanged) (0,changed rows left untouched) ({ah['single_word_edit_pct']:.1f},single-word edits)}};\n"
     + r"""  \addlegendentry{human}
 \end{axis}

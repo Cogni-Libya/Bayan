@@ -8,6 +8,11 @@
 \input{human}
 \input{model3}
 \input{human_m3}
+% the released model names (Hugging Face, Congi-libya/<name>)
+\newcommand{\vOne}{BayanSimplify-v0.1}
+\newcommand{\vTwo}{BayanSimplify-v0.2}
+\newcommand{\vTwoFast}{BayanSimplify-v0.2-Fast}
+\newcommand{\vThree}{BayanSimplify-v0.3}
 
 \begin{document}
 
@@ -49,9 +54,9 @@ clause and keeps the meaning in \bvHTfiveKept\% of outputs. A second corpus writ
 by Gemma~4 31B (14,975 rows) trains a third model that, decoded with four beams,
 outperforms every earlier model: on the test split it keeps the meaning in
 \mBeamTKept\% of outputs (earlier models at most \bvHmaxKept\%) and cuts \mBeamTClause{}
-words from the longest clause (model~2 in the app \bvHAppTfiveClause{}); even against model~2
+words from the longest clause (\vTwo{} in the app \bvHAppTfiveClause{}); even against \vTwo{}
 behind the app's newest checks it is no worse on meaning and cuts about three times as
-many words. Model~3 with four beams is the app's large model. A small meaning judge catches 95.5\% of planted errors. On a
+many words. \vThree{} with four beams is the app's large model. A small meaning judge catches 95.5\% of planted errors. On a
 Snapdragon 870 phone the first word of a rewrite appears 82--172\,ms after the
 request with the int8 AraBART bundle (222\,MB, the default) and 177--318\,ms with
 the optional AraT5v2 bundles (471\,MB).\vspace{2pt}}}
@@ -71,19 +76,24 @@ app and chooses \ar{تبسيط} (\emph{Simplify}); a simpler version appears ove
 written entirely on the phone and offline. Bayan can also add tashkeel (the short
 vowels) and read the text aloud.
 
+\lead{The models.} Released on Hugging Face (\texttt{huggingface.co/Congi-libya}) as \textbf{BayanSimplify}: \vOne{} (AraT5v2 on
+SAMER), \vTwo{} and its compact \vTwoFast{} (AraT5v2 and AraBART on a 22,733-pair mix),
+and \vThree{} (AraT5v2 on our own corpus, the best). The app downloads \vTwoFast{} by
+default and offers \vThree{} as its large model.
+
 \lead{What it achieves.}
 
 \vspace{2pt}\noindent{\small
 \begin{tabularx}{\linewidth}{|p{0.27\linewidth}|X|}
 \hline
 \head{Question} & \head{Answer} \\ \hline
-Does the best model keep the meaning? & Model~3 with four beams, the app's large
+Does the best model keep the meaning? & \vThree{} with four beams, the app's large
   model, keeps it in \mBeamTKept\% of test outputs; every earlier model, at most
   \bvHmaxKept\% \\ \hline
 Is the text simpler? & Its longest clause is \mBeamTClause{} words shorter; the
   app's model before it managed \bvHAppTfiveClause{} \\ \hline
-Do people agree? & Team raters found model~3 easier on \hmThreeChEasier\% of the
-  outputs it changed (model~2: \hmTwoChEasier\%) and chose it over model~2 in
+Do people agree? & Team raters found \vThree{} easier on \hmThreeChEasier\% of the
+  outputs it changed (\vTwo{}: \hmTwoChEasier\%) and chose it over \vTwo{} in
   \hmPThreeTwoFirst{} of \hmPThreeTwoTotal{} comparisons; the reader with dyslexia chose it in every
   comparison that included it \\ \hline
 Is it safe? & Every number is kept and no negation is flipped; a sentence that
@@ -215,7 +225,7 @@ we claim is a measured reduction of linguistic load and the means to measure it.
       its 31B teacher (\autoref{sec:judge}).
 \item \textbf{An honest meaning/simplification trade-off.} Models that lower
       linguistic load change meaning in a measurable share of outputs; we report
-      that share, and the changes (strength tag, corpus v1, model~3 and the app's
+      that share, and the changes (strength tag, corpus v1, \vThree{} and the app's
       code guards) that reduce it (\autoref{sec:modeling}, \autoref{sec:model3}).
 \item \textbf{An on-device system}, with int8 encoder--decoder bundles decoded
       token by token, or with beam search, inside an Android app and measured on a phone
@@ -241,7 +251,7 @@ pull requests and issues that hold it (\#).
 \head{Member} & \head{Role} & \head{Delivered (evidence)} \\ \hline
 Marwan Elamami & Team lead; integration; on-device model &
   Product-form decision (\#9); evaluation protocol and fixes (\#16, \#18);
-  model~1 diagnosis; data acquisition and leakage filtering; model-2 recipe,
+  \vOne{} diagnosis; data acquisition and leakage filtering; v0.2 recipe,
   data and task specifications (\#27--\#34); on-device engine and app; phone
   test; beam search and tashkeel in the app (\#62, \#66, \#67); BayanBench and its v2 package (\#48);
   rating site and analysis; Action Plan (\#25); this report \\ \hline
@@ -249,16 +259,17 @@ Abdulrahman Khengari & Data lead &
   Validators for generated pairs (\#10, \#11); CAMeL readability check (\#17,
   \#20); synthetic corpus v0 of 13,072 pairs, split and published (\#8, \#38,
   \#39); corpus v1 with the Gemma generator and Qwen judge, and its calibration
-  (\#44, \#45); the meaning judge (\#47, \#49); model~3: training, preference
+  (\#44, \#45); the meaning judge (\#47, \#49); \vThree{}: training, preference
   tuning and the int8 bundle (\#48, \#53); BayanBench v2 design and the open
   meaning scorer runs (\#48); the beam-search proposal (\#61); the benchmark
-  report of 35 systems (\#57, \#58); pitch decks (\#50) \\ \hline
+  report of 35 systems (\#57, \#58); the pitch deck (\#50) \\ \hline
 Ahmed Alaeb & Model training &
-  SAMER conversion; model~1 trained and documented (\#5, \#22); model~2 on
-  AraT5v2 trained (\#28, \#40); human ratings (\#48) \\ \hline
-Sanad Ali & Diacritization; co-training &
+  SAMER conversion; \vOne{} trained and documented (\#5, \#22); \vTwo{}
+  (AraT5v2) trained (\#28, \#40); human ratings (\#48) \\ \hline
+Sanad Ali & Diacritization; co-training; presenter &
   Four-system diacritization benchmark; Libtashkeel selected (\#6, \#23);
-  model~2 on AraBART and the speed benchmark (\#29, \#35); human ratings (\#48) \\ \hline
+  \vTwoFast{} (AraBART) and the speed benchmark (\#29, \#35); human ratings (\#48); presents the
+  pitch \\ \hline
 Mohammed Thabet & Android application &
   \texttt{PROCESS\_TEXT} plugin, result sheet and 41 tests (\#14, \#21); model
   download pipeline, sheet states and typography settings (\#31, \#37); human
@@ -273,13 +284,13 @@ Abdul Majid Mraied & Evaluation &
 
 The work reported here ran from 13 September to 4 October 2026, ahead of
 submission on 5 October and the pitch on 6 October. It went through three
-build-and-measure cycles. Model~1 was trained, scored on locked test sets and
-diagnosed. Model~2 was designed from that diagnosis, trained on two
-architectures, exported to the phone, tested on a device, and scored on a
+build-and-measure cycles. \vOne{} was trained, scored on locked test sets and
+diagnosed. The v0.2 models were designed from that diagnosis, trained on two
+architectures (\vTwo{} and \vTwoFast{}), exported to the phone, tested on a device, and scored on a
 benchmark built for the task. The last week replaced the benchmark's closed
 meaning judge with an open scorer and checked that scorer against human ratings;
-model~3, trained on a second corpus, was then gated against the shipped model in
-the app's own pipeline. With beam search in the app and complete scores, model~3
+\vThree{}, trained on a second corpus, was then gated against the shipped model in
+the app's own pipeline. With beam search in the app and complete scores, \vThree{}
 outperforms every earlier model, and on 5 October it became the app's large model. \autoref{fig:schedule} shows the timeline;
 \autoref{tab:milestones} compares target and actual dates.
 
@@ -302,16 +313,16 @@ Evaluation scripts ready (\#7)                        & Mon 21 Sep & Mon 21 Sep 
 Diacritizer selected (\#6)                            & Mon 21 Sep & Mon 21 Sep \\ \hline
 Android plugin shell (\#14)                           & ---        & Mon 21 Sep \\ \hline
 Action Plan submitted                                 & Tue 22 Sep & Tue 22 Sep \\ \hline
-Model~1 scored on the locked test sets                & Wed 23 Sep & Wed 23 Sep \\ \hline
-Model-2 data built; tasks issued (\#28--\#32)         & ---        & Thu 24 Sep \\ \hline
-Model~2 trained, both architectures (\#28, \#29)      & Fri 25 Sep & Fri 25 Sep \\ \hline
+\vOne{} scored on the locked test sets                & Wed 23 Sep & Wed 23 Sep \\ \hline
+v0.2 data built; tasks issued (\#28--\#32)         & ---        & Thu 24 Sep \\ \hline
+v0.2 models trained, both architectures (\#28, \#29)  & Fri 25 Sep & Fri 25 Sep \\ \hline
 Synthetic corpus exported (\#8, \#38)                 & Fri 25 Sep & Sat 26 Sep \\ \hline
 Model running on a phone, latency measured            & Fri 2 Oct  & Sat 26 Sep \\ \hline
-BayanBench built; model~2 scored on its test split    & ---        & Mon 28 Sep \\ \hline
+BayanBench built; v0.2 scored on its test split    & ---        & Mon 28 Sep \\ \hline
 BayanBench v2: open meaning scorer; all systems scored (\#48) & ---  & Wed 30 Sep \\ \hline
 Human rating round complete, six raters (\#48)        & Fri 2 Oct  & Sat 3 Oct \\ \hline
-Model~3 ship decision (\autoref{sec:model3})           & Sun 4 Oct  & Mon 5 Oct: large model \\ \hline
-Beam search in the app, a setting for model~3 (\#61, \#62, \#66) & --- & Mon 5 Oct \\ \hline
+\vThree{} ship decision (\autoref{sec:model3})           & Sun 4 Oct  & Mon 5 Oct: large model \\ \hline
+Beam search in the app, a setting for \vThree{} (\#61, \#62, \#66) & --- & Mon 5 Oct \\ \hline
 Tashkeel in the app (Libtashkeel, a setting)        & ---        & Mon 5 Oct \\ \hline
 \end{tabularx}
 \end{table}
@@ -364,23 +375,23 @@ before any training.
 
 \begin{table}[h]
 \small
-\caption{Corpora. Sizes are rows in the files we hold. Public means on the Hugging Face Hub; the model-2 and model-3 weights are private.}
+\caption{Corpora. Sizes are rows in the files we hold. Public means on the Hugging Face Hub, where the BayanSimplify models and their on-device bundles are public too (CC BY-NC 4.0).}
 \label{tab:corpora}
 \begin{tabularx}{\linewidth}{|p{22mm}|p{33mm}|p{22mm}|L|}
 \hline
 \head{Corpus} & \head{Size} & \head{Licence} & \head{Used for} \\ \hline
 SAMER \cite{samer} & 14,343 / 2,983 / 3,277 pairs (train / dev / test) &
-  research; written approval & models~1 and~2; locked test set \\ \hline
+  research; written approval & \vOne{} and the v0.2 models; locked test set \\ \hline
 BAREC \cite{barec} & 54,845 / 7,310 / 7,286 sentences & CC BY-SA 4.0 &
   locked test set; BayanBench core items; generation sources \\ \hline
 Baseet \cite{baseet} & 34,294 sources, three LLM-written levels each &
-  with permission & model~2 (6,888 meaning-filtered pairs) \\ \hline
+  with permission & the v0.2 models (6,888 meaning-filtered pairs) \\ \hline
 DAASI \cite{daasi} & 1,509 pairs + 350 held out & CC0 &
-  model~2 (1,502 pairs); out-of-domain test \\ \hline
+  the v0.2 models (1,502 pairs); out-of-domain test \\ \hline
 Tashkeela \cite{tashkeela} & 743 test sentences & open &
   diacritization benchmark \\ \hline
 Bayan synthetic v1 & 14,975 rows; Gemma~4 31B generator, Qwen judge &
-  CC BY-SA 4.0, public on the Hub & current corpus; trains model~3 \\ \hline
+  CC BY-SA 4.0, public on the Hub & current corpus; trains \vThree{} \\ \hline
 Bayan synthetic v0 & 13,072 pairs (12,419 generated, 563 identity, 90 scripture); DeepSeek generator &
   CC BY-SA 4.0, public (Hub tag \texttt{v0}) & superseded; not used to train any model \\ \hline
 \end{tabularx}
@@ -392,7 +403,7 @@ accepted one only if an LLM equivalence validator and the CAMeL BAREC readabilit
 model both passed it. The export was split by a salted hash of the normalised
 source, so that a sentence repeated under several BAREC identifiers never
 straddles two splits; BAREC test was never used. The corpus was completed after
-model~2 had been trained, so no result in this report depends on it. Its data card
+the v0.2 models had been trained, so no result in this report depends on it. Its data card
 and the audit that followed list what was wrong with it: tashkeel in 56.5\% of
 rows; 63.4\% of cut-off sources ``completed'' by the generator; 11.1\% of short
 sources rewritten that should have been left alone; and only 42.9\% of pairs at
@@ -407,7 +418,7 @@ branch. Gemma~4 31B writes the targets from a stricter prompt, a calibrated Qwen
 checks meaning at a threshold of 0.75, and a
 target must lead its source by at least two readability levels. The 14,975 rows
 have no violation of the rule checks, and an audit of 1,039 pairs found 1.7\% with
-a changed meaning. It trains model~3.
+a changed meaning. It trains \vThree{}.
 
 \subsection{Training Methodology}
 \label{sec:method}
@@ -415,13 +426,13 @@ a changed meaning. It trains model~3.
 \lead{Task.} Given a source sentence $x$ and a strength tag $t$, the model
 produces a rewrite $\hat y = f(t \oplus x)$ that should keep the meaning of $x$ and
 be easier to read. Training minimises token-level cross-entropy on pairs
-$(t \oplus x, y)$; decoding is greedy, the setting the app runs for model~2 (model~3
+$(t \oplus x, y)$; decoding is greedy, the setting the app runs for \vTwo{} and \vTwoFast{} (\vThree{}
 decodes with beam search in the app, \autoref{sec:design}).
 
 \lead{Base models.} Simplification is a sequence-to-sequence task, so every
 candidate is a pretrained encoder--decoder transformer (\autoref{tab:basemodels}).
 AraT5v2 came first because it beat AraBART at all three levels in the published
-baselines of the corpus we add to model~2 \cite{baseet}; AraBART is the on-device candidate because it is 2.6
+baselines of the corpus we add to the v0.2 training set \cite{baseet}; AraBART is the on-device candidate because it is 2.6
 times smaller.
 
 \begin{table}[h]
@@ -448,7 +459,7 @@ Tashkeel & 1.6\% of pieces; 2.57$\times$ tokens &
   0 pieces; every mark becomes \texttt{<unk>}; 4.53$\times$ tokens &
   0 pieces; 1.81$\times$ tokens \\ \hline
 Licence & none stated on the model card & Apache-2.0 & Apache-2.0 \\ \hline
-Used in & models~1 and~2 & model~2 & not trained \\ \hline
+Used in & \vOne{} and the v0.2 models & \vTwoFast{} & not trained \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -458,7 +469,7 @@ AraBART cannot represent one at all. Every model therefore receives its source
 with tashkeel and tatweel removed, in training and in the app; \autoref{sec:modeling}
 measures what happens otherwise.
 
-\lead{Model~1.} We fine-tuned AraT5v2 to rewrite SAMER's level-5 sentences into
+\lead{\vOne{}.} We fine-tuned AraT5v2 to rewrite SAMER's level-5 sentences into
 their level-3 simplifications with the prefix \ar{بسّط:}\ (\emph{simplify:}):
 AdamW at learning rate $10^{-4}$ with weight decay 0.01 and 100 warm-up steps, an
 effective batch of 16, mixed precision, 10 epochs (3,250 steps) and seed 42.
@@ -466,15 +477,15 @@ Pairs whose simplification equals the source (42\% of SAMER train) were capped a
 20\% of training, and the checkpoint with the best SARI on a 500-row dev subset
 was kept.
 
-\lead{Model~2.} The diagnosis of model~1 (\autoref{sec:modeling}) identified three
-problems, and the model-2 recipe changes one thing for each:
+\lead{\vTwo{} and \vTwoFast{}.} The diagnosis of \vOne{} (\autoref{sec:modeling}) identified three
+problems, and the v0.2 recipe changes one thing for each:
 \begin{enumerate}[label=(\alph*)]
 \item \emph{Inaction was rewarded for the wrong reason.} Capping unchanged pairs
       at 20\% while choosing the checkpoint on a dev sample that is 43\% unchanged
-      pulls the model both ways. Model~2 keeps all 6,033 unchanged SAMER pairs,
+      pulls the model both ways. The v0.2 recipe keeps all 6,033 unchanged SAMER pairs,
       so it learns when not to edit, and selects its checkpoint on SARI over dev
       rows a human changed.
-\item \emph{SAMER is novels, and it teaches word substitution.} Model~2 adds
+\item \emph{SAMER is novels, and it teaches word substitution.} The v0.2 recipe adds
       DAASI's everyday and administrative text and an external corpus of
       educational text. The external targets are LLM-written, and many are
       summaries that drop facts, delete answer options or invent a speaker. An
@@ -492,7 +503,7 @@ problems, and the model-2 recipe changes one thing for each:
 
 \begin{table}[h]
 \small
-\caption{Model-2 training set (22,733 pairs). For each Baseet source, the mildest
+\caption{The v0.2 training set (22,733 pairs). For each Baseet source, the mildest
 level whose target is shorter per sentence or has fewer rare or long words is
 used. No source overlaps any test set.}
 \label{tab:m2data}
@@ -507,7 +518,7 @@ used. No source overlaps any test set.}
 \end{tabularx}
 \end{table}
 
-\lead{Model-2 training.} Both architectures were trained on the same data with
+\lead{v0.2 training.} Both architectures were trained on the same data with
 one shared script, so that the architecture is the only difference: 10 epochs,
 batch 8 with 2 gradient-accumulation steps, fp16, maximum length 256, seed 42,
 evaluation twice per epoch with patience 3, and the checkpoint chosen on SARI over
@@ -519,9 +530,9 @@ also shuffles the evaluation set and would score each prediction against another
 row's reference; it stops if predictions and references ever fall out of order,
 and the logs show full alignment at all 40 evaluations.
 
-\lead{Model~3.} The measurements of model~2 (\autoref{sec:modeling}) named
+\lead{\vThree{}.} The measurements of the v0.2 models (\autoref{sec:modeling}) named
 restraint, and protection of text that must not change, as the open problems.
-Model~3 retrains AraT5v2 on corpus v1 instead of the model-2 mix. In the app it
+\vThree{} retrains AraT5v2 on corpus v1 instead of the v0.2 mix. In the app it
 runs behind the text step's code guards (\autoref{sec:design}), which keep the
 source sentence when a rewrite loses a number or flips a negation and pass
 protected text through untouched. It ships as the app's large model, decoding
@@ -558,7 +569,7 @@ SHA-256 in a committed manifest and re-verified before every test run.
 \centering
 \figpipeline
 \caption{Data and evaluation workflow. Orange boxes are the gates that can reject
-data. The generated corpus (right) is a public artefact that feeds model~3.}
+data. The generated corpus (right) is a public artefact that feeds \vThree{}.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -575,8 +586,8 @@ require it, keeps reading while the reader returns to the page.
 \lead{Inference.} The simplifier ships as an int8 ONNX bundle (encoder, decoder
 with a key--value cache, and tokenizer), downloaded once, verified by SHA-256, and
 run by ONNX Runtime with a decoding loop written in Kotlin that blocks repeated
-3-grams and stops at 256 tokens. The fast model and model~2 decode greedily and
-stream each token to the screen as it is produced. Model~3, the large model, decodes
+3-grams and stops at 256 tokens. \vTwoFast{} (the fast model) and \vTwo{} decode greedily and
+stream each token to the screen as it is produced. \vThree{}, the large model, decodes
 with four beams (the setting \emph{More faithful, slower}, on by default; \#61, \#62,
 \#66) and shows each sentence when it is finished: a port
 of transformers' beam search that runs the beams as one batch and reorders the
@@ -598,7 +609,7 @@ model}: they come back exactly as selected. After the model, a sentence keeps it
 source wording when the rewrite keeps less than 35\% of its content words, drops
 or changes a number, drops a Latin-script word, or changes the count of negations
 or of limits (\emph{at least}, \emph{only}, \dots); since \#66 it also checks
-condition words and counts Latin-script words one by one, the checks model~3's
+condition words and counts Latin-script words one by one, the checks \vThree{}'s
 benchmarked safety net used (\#61). Digits return in the source's
 own style, and a selection cut mid-sentence keeps its open ending. On the
 BayanBench dev core items these guards raise numbers kept from 72\% to 100\% and
@@ -717,7 +728,7 @@ benchmark used pass/fail verdicts from a closed model, Gemini~3.1~Pro, with a
 fixed checklist; the open scorer replaces it because anyone can rerun it, it
 costs about \$0.12 for 2,700 pairs, and it gives a graded score whose threshold
 can be checked against people. The 0.5 threshold was set before the human
-ratings and kept after them (\autoref{sec:human}). Model~2's training data
+ratings and kept after them (\autoref{sec:human}). The v0.2 training data
 contains nothing a Gemma model wrote or approved, and the written items come from
 a different model family, which limits preference leakage \cite{li2026}.
 
@@ -736,7 +747,7 @@ dataset, so any team member can score a model on a laptop, on Kaggle or on Linux
 An automatic scorer is only useful if it agrees with people, so we rated a sample
 of model outputs before trusting it. The rating set holds \hSingles{} single
 outputs and \hPairs{} side-by-side comparisons from the dev split (core and outside
-items, \hDocs{} documents), drawn from the six model-2 systems of
+items, \hDocs{} documents), drawn from the six v0.2 systems of
 \autoref{tab:benchhead}. Copies of the input were not rated, because there is
 nothing to judge, and protected and constructed items (F, E1, E2) were left out.
 \hEven{} outputs were drawn evenly, 35 per system; \hNear{} more were drawn where the
@@ -882,7 +893,7 @@ selection were complete.
 \lead{RQ1: the reference-based view.} Because half of SAMER needs no change,
 copying scores SARI \copytestall{} on the full test set but only \copytestchanged{}
 on the \testchangedn{} rows a human changed, and the second number is the bar a
-model must clear. \autoref{tab:test} and \autoref{fig:sari} report model~1, with
+model must clear. \autoref{tab:test} and \autoref{fig:sari} report \vOne{}, with
 the harness validated first: it reproduced the training run's 2,983 dev
 predictions row for row.
 
@@ -891,13 +902,13 @@ predictions row for row.
 \begin{figure}[h]
 \centering
 \figsari
-\caption{SARI on the locked SAMER test set by reference bucket. Model~1 clears the
+\caption{SARI on the locked SAMER test set by reference bucket. \vOne{} clears the
 copy baseline where a human simplified and loses to it where a human left the
 sentence alone.}
 \label{fig:sari}
 \end{figure}
 
-\finding{\textbf{Model~1 simplifies where it should and over-edits where it should
+\finding{\textbf{\vOne{} simplifies where it should and over-edits where it should
 not.} On the \testchangedn{} test rows a human simplified, greedy decoding scores
 \greedychanged{} against the copy baseline's \copytestchanged{} (\greedygain{} SARI).
 On the \testunchangedn{} rows a human left alone it scores \greedyunchanged{}
@@ -906,7 +917,7 @@ no change. The two effects net to \greedyallgap{} overall, so the headline numbe
 would report a working model as worse than doing nothing. Beam search changes
 little (\beamchanged{} on changed rows).}
 
-\lead{What model~1 learned.} The model returns \greedycopy\% of test rows unchanged
+\lead{What \vOne{} learned.} The model returns \greedycopy\% of test rows unchanged
 where the editors left \humancopy\%, and leaves \greedyuntouched\% of the rows an
 editor rewrote untouched. When it edits, \greedysingle\% of its edits change one
 word (editors: \humansingle\%), and its median output-to-input length ratio is
@@ -918,7 +929,7 @@ step 1,800, while the copy rate was still falling.
 \begin{figure}[h]
 \centering
 \resizebox{\linewidth}{!}{\figtraining}
-\caption{Model~1 training. The checkpoint was selected on a 0.18-point SARI
+\caption{\vOne{} training. The checkpoint was selected on a 0.18-point SARI
 difference while the model's copying behaviour was still changing.}
 \label{fig:training}
 \end{figure}
@@ -928,7 +939,7 @@ that carry tashkeel, raw input keeps \diacrawkept\% of the source words and
 \diacrawlost\% of outputs lose more than half the sentence; with tashkeel stripped
 the same sentences keep \diacstrippedkept\% and \diacstrippedlost\% lose more than
 half (\autoref{tab:barec}, \autoref{fig:behaviour}b). On DAASI's held-out
-government and insurance text, model~1 scores \daasisari{} against a copy baseline
+government and insurance text, \vOne{} scores \daasisari{} against a copy baseline
 of \daasicopysari{} (\daasigain{}) and returns \daasicopy{} of sentences
 unchanged: from SAMER's novels it learned when not to edit, not how to simplify
 administrative prose.
@@ -938,20 +949,20 @@ administrative prose.
 \begin{figure}[h]
 \centering
 \resizebox{\linewidth}{!}{\figbehaviour}
-\caption{Model~1 behaviour. (a) SAMER test, greedy, against the editors'
+\caption{\vOne{} behaviour. (a) SAMER test, greedy, against the editors'
 references. (b) BAREC test, the \diacn{} sentences that carry tashkeel, greedy,
 with and without tashkeel stripped.}
 \label{fig:behaviour}
 \end{figure}
 
-\lead{Meaning errors.} On dev, 832 of model~1's substitutions disagree with the
+\lead{Meaning errors.} On dev, 832 of \vOne{}'s substitutions disagree with the
 editor, 347 of them on words the editor deliberately kept, and some reverse the
 meaning: \ar{عزلة} (isolation) became \ar{استعباد} (enslavement), \ar{ملجم}
 (bridled) became \ar{مسلح} (armed). SARI and BLEU are blind to this class of
 error, which is why BayanBench scores meaning separately from ease.
 
-\lead{Model-2 training.} Both runs clear model~1's selection score
-(\autoref{tab:m2train}, \autoref{fig:training2}); for reference, model~1 scored
+\lead{v0.2 training.} Both runs clear \vOne{}'s selection score
+(\autoref{tab:m2train}, \autoref{fig:training2}); for reference, \vOne{} scored
 63.66 SARI on SAMER dev's changed rows (all 1,754 of them, a superset of the 600
 used here). AraT5v2 was still improving at its last evaluation; AraBART peaked at
 epoch 9 and had been flat since epoch 6. Copying falls from 80--91\% of rows to
@@ -961,7 +972,7 @@ the 600 changed rows unchanged.
 
 \begin{table}[h]
 \small
-\caption{Model-2 runs, one T4 GPU each. SARI and copy rate on the 900-row selection
+\caption{The v0.2 runs, one T4 GPU each. SARI and copy rate on the 900-row selection
 sample (600 changed, 300 unchanged SAMER dev rows, tag \texttt{[S0]}). Speed:
 sentences per second on SAMER test sources, fp16, batch 64, greedy.}
 \label{tab:m2train}
@@ -975,14 +986,14 @@ SARI, 600 changed rows & \textbf{66.58} & 64.71 \\ \hline
 SARI, all 900 rows & 75.64 & 73.62 \\ \hline
 Copy rate, 900 rows (editors: 33.3\%) & 51.0\% & 51.4\% \\ \hline
 Generation speed (sentences/s) & 80.8$^{\dagger}$ & \textbf{292.8} \\ \hline
-\multicolumn{3}{|l|}{\footnotesize $^{\dagger}$ measured on model~1, the same architecture and size, in the same run.} \\ \hline
+\multicolumn{3}{|l|}{\footnotesize $^{\dagger}$ measured on \vOne{}, the same architecture and size, in the same run.} \\ \hline
 \end{tabularx}
 \end{table}
 
 \begin{figure}[h]
 \centering
 \figtrainingtwo
-\caption{Model-2 training, from the committed notebooks: (a) the selection metric
+\caption{The v0.2 training, from the committed notebooks: (a) the selection metric
 at each of the 20 evaluations; (b) the share of outputs identical to the input,
 with the editors' rate as a dashed line.}
 \label{fig:training2}
@@ -1067,27 +1078,27 @@ most votes; the other contrasts hold too few votes to separate the systems.
 
 \pairstable
 
-\lead{The model~3 round.} A second round (4--5 October) rated the app's three models
-as the reader gets them: the fast model (AraBART int8), model~2 AraT5v2 int8 and
-model~3 int8 with four beams, all through the app's text step. It used 18 BayanBench
-test sentences (core and outside sets; no held-out item, so none of model~3's
+\lead{The \vThree{} round.} A second round (4--5 October) rated the app's three models
+as the reader gets them: the fast model (AraBART int8), \vTwo{} int8 and
+\vThree{} int8 with four beams, all through the app's text step. It used 18 BayanBench
+test sentences (core and outside sets; no held-out item, so none of \vThree{}'s
 training text) and was blind. A Latin square gave each of the \hmRaters{} team raters
 every sentence once and each model on six, so each model has \hmThreeN{} team
 ratings on the same sentences; six comparisons, two per pair of models, were rated
-by everyone. Model~3 was rated best. It kept the meaning as often as any model
-(\hmThreeSame\% of ratings, \hmThreeMajor\% major changes; model~2 \hmTwoSame\%, the
+by everyone. \vThree{} was rated best. It kept the meaning as often as any model
+(\hmThreeSame\% of ratings, \hmThreeMajor\% major changes; \vTwo{} \hmTwoSame\%, the
 fast model \hmBartSame\%) and was the most often found easier: \hmThreeEasier\% of
-its ratings [\hmThreeEasierCi] against \hmTwoEasier\% for model~2 and
+its ratings [\hmThreeEasierCi] against \hmTwoEasier\% for \vTwo{} and
 \hmBartEasier\% for the fast model, and on the outputs it changed, \hmThreeChEasier\%
 against \hmTwoChEasier\% and \hmBartChEasier\%, with none rated harder. In the
-side-by-side comparisons every team vote between model~3 and model~2 chose model~3
-(\hmPThreeTwoFirst{} of \hmPThreeTwoTotal{}), and model~3 won \hmPThreeBartFirst{} of
+side-by-side comparisons every team vote between \vThree{} and \vTwo{} chose \vThree{}
+(\hmPThreeTwoFirst{} of \hmPThreeTwoTotal{}), and \vThree{} won \hmPThreeBartFirst{} of
 the \hmPThreeBartTotal{} votes against the fast model (\hmPThreeBartSecond{} for the fast model, \hmPThreeBartSame{} equal). The
-reader with dyslexia, who rated all \hmReaderTotal{} tasks, chose model~3 in every
+reader with dyslexia, who rated all \hmReaderTotal{} tasks, chose \vThree{} in every
 comparison that included it (\hmPThreeTwoRFirst{} of \hmPThreeTwoRTotal{} against
-model~2, \hmPThreeBartRFirst{} of \hmPThreeBartRTotal{} against the fast model); on single
-outputs he found \hmThreeREasier{} of model~3's \hmThreeRN{} easier and none harder,
-against \hmTwoREasier{} of \hmTwoRN{} for model~2 and \hmBartREasier{} of \hmBartRN{}
+\vTwo{}, \hmPThreeBartRFirst{} of \hmPThreeBartRTotal{} against the fast model); on single
+outputs he found \hmThreeREasier{} of \vThree{}'s \hmThreeRN{} easier and none harder,
+against \hmTwoREasier{} of \hmTwoRN{} for \vTwo{} and \hmBartREasier{} of \hmBartRN{}
 for the fast model. The round is
 small, 18 sentences, so it confirms the direction of the benchmark rather than
 measuring a size.
@@ -1096,8 +1107,8 @@ measuring a size.
 \subsection{BayanBench Results}
 \label{sec:benchres}
 
-\lead{RQ2: model~2 on BayanBench.} Each of the seven systems was run once on the
-BayanBench splits: model~2 on both architectures in the medium setting
+\lead{RQ2: the v0.2 models on BayanBench.} Each of the seven systems was run once on the
+BayanBench splits: the v0.2 models on both architectures in the medium setting
 (\texttt{[S2]}) and without a tag, the two int8 bundles exactly as the app calls
 them, and copying the input. \autoref{tab:benchhead} reports the \benchheadsplit{}
 split on core items; \autoref{tab:benchfx} isolates one change at a time, and
@@ -1136,7 +1147,7 @@ split on core items; \autoref{tab:benchfx} isolates one change at a time, and
       contains protected or cut-off text. Numbers survive in
       \bvHminNum--\bvHmaxNum\% of the core items that contain one. The app's
       text step now handles protected text, numbers and cut-off endings in code
-      (\autoref{sec:design}), and model~3 improves restraint (\autoref{sec:model3}).
+      (\autoref{sec:design}), and \vThree{} improves restraint (\autoref{sec:model3}).
 \item \textbf{The deployed format buys meaning with ease.} The bundles the app
       ships send no strength tag (\autoref{tab:benchfx}). Dropping the tag raises
       meaning kept by \bfxHTfiveNvsTfiveKept{} (AraT5v2) and \bfxHBartNvsBartKept{}
@@ -1207,17 +1218,17 @@ A2 & \ar{… بنتيجة (۱/۳) في المباراة …} & \ar{… بنتي�
 
 \benchothertable
 
-\lead{Model~3.}\label{sec:model3} Model~3 is AraT5v2 trained on corpus v1. Compared
-with model~2 (AraT5v2, medium setting), as float models on the behaviours model~2
+\lead{\vThree{}.}\label{sec:model3} \vThree{} is AraT5v2 trained on corpus v1. Compared
+with \vTwo{} (medium setting), as float models on the behaviours \vTwo{}
 got wrong, it leaves easy text unchanged in 55\% of cases against 14\%, keeps
 protected text intact in 97.8\% against 4.4\%, and keeps numbers in 93\% of cases.
-Because int8 had changed most of model~2's outputs, model~3 was gated as it
+Because int8 had changed most of \vTwo{}'s outputs, \vThree{} was gated as it
 would ship: its int8 bundle, run through the app's current text step
-(\autoref{sec:design}), against the app's large model at the time (model~2 AraT5v2, int8)
+(\autoref{sec:design}), against the app's large model at the time (\vTwo{}, int8)
 through the same step, on the BayanBench core items. The rule, set before the run,
 was that meaning kept must not be significantly lower, the longest clause must
 shrink by more than the app's, and no check may be significantly worse. On dev,
-model~3 passes: meaning kept differs by \mThreeKeptDiff{} points [\mThreeKeptCi] (\mThreeScored{}
+\vThree{} passes: meaning kept differs by \mThreeKeptDiff{} points [\mThreeKeptCi] (\mThreeScored{}
 of \mThreeCore{} items scored), \mThreeClauseAbs{} more words are cut from the longest
 clause [\mThreeClauseCi], the reading level falls \mThreeLevelAbs{} more
 [\mThreeLevelCi], easy text is left unchanged \mThreeEasyAbs{} points more often,
@@ -1228,15 +1239,15 @@ and every number is kept. On test, run once to confirm, the simplification holds
 [\mThreeTKeptCi], a significant loss (\mThreeTPaired{} of \mThreeTCore{} items
 scored for both).
 
-Beam search makes model~3 the best model we have measured. \#61 (Khengari) showed on
-model~3's int8 bundle that four beams keep the meaning 4--8 points more often than
+Beam search makes \vThree{} the best model we have measured. \#61 (Khengari) showed on
+\vThree{}'s int8 bundle that four beams keep the meaning 4--8 points more often than
 greedy decoding, and the app gained beam search with transformers' exact tokens
 (\#62) as a setting, \emph{More faithful, slower} (\#66). Run with four beams by the
 app's own engine and through the app's text step, with every core item scored,
-model~3 outperforms every model in \autoref{tab:benchhead}: it keeps the meaning in
+\vThree{} outperforms every model in \autoref{tab:benchhead}: it keeps the meaning in
 \mBeamTKept\% of test outputs, against at most \bvHmaxKept\%, and cuts \mBeamTClause{}
 words from the longest clause, more than any of them except the tagged settings, which
-keep the meaning in at most \bvHTfiveKept\%. Even against model~2 run behind the same
+keep the meaning in at most \bvHTfiveKept\%. Even against \vTwo{} run behind the same
 newest checks it is no worse on meaning (\mBeamTKeptDiff{} points on test
 [\mBeamTKeptCi], \mBeamKeptDiff{} on dev [\mBeamKeptCi]) and simplifies far more:
 \mBeamTClauseAbs{} more words cut from the longest clause on test [\mBeamTClauseCi]
@@ -1248,8 +1259,8 @@ significant cost in clause length [\mBGTClauseCi].
 
 Khengari's benchmark report (\#57, \#58), which scores 35 systems with every number
 generated from the bench's own scorecards, reaches the same verdict and recommends
-model~3 app int8 with four beams and the safety net as the system to ship. On the test
-core items, against model~2 in the app as benchmarked in \autoref{tab:benchhead}, it
+\vThree{} app int8 with four beams and the safety net as the system to ship. On the test
+core items, against \vTwo{} in the app as benchmarked in \autoref{tab:benchhead}, it
 keeps every number (100\% against 84\%), changes no negation, limit or condition word,
 leaves easy text unchanged in 74\% of cases against 48\%, and cuts 3.5 more words from
 the longest clause [+2.5, +4.5], while meaning kept rises by 4 points [+0, +8].\footnote{His report puts the system at 83\% meaning kept and 5.4 words cut on
@@ -1259,14 +1270,14 @@ CPU, where int8 rounding differs slightly, while ours runs the app's own decoder
 full text step (sentence pieces, the guards, punctuation repair). The comparisons
 they support point the same way.} The
 same report shows where the remaining headroom lies. The phone version simplifies
-less than the float model: float model~3 with the net cuts 7.7 words from the longest clause and
+less than the float model: float \vThree{} with the net cuts 7.7 words from the longest clause and
 lowers the reading level by 0.38, the int8 bundle with four beams and the net 5.4
-words and 0.20 levels. Model~3 also leaves 47\% of items unchanged against the app's 19\%, and on the
+words and 0.20 levels. \vThree{} also leaves 47\% of items unchanged against the app's 19\%, and on the
 outputs it does change, P(same) is 0.67 against the app's 0.74: it rewrites less often,
-but harder. Model~3 with four beams is
+but harder. \vThree{} with four beams is
 therefore the app's large model (5 October). Its four beams take about three times
 as long per sentence as greedy decoding (\autoref{tab:device}); a reader who prefers
-word-by-word streaming can turn the setting off, and model~2 stays available as the
+word-by-word streaming can turn the setting off, and \vTwo{} stays available as the
 earlier large model.
 
 \subsection{User Interface}
@@ -1306,11 +1317,11 @@ app tested on the phone unit-tests its text pipeline (sentence splitting,
 punctuation repair, clitic normalisation and the retention fallback), and its
 download pipeline checks every file by SHA-256. The leakage checker is tested against a
 planted duplicate and must exit non-zero. The benchmark package has 12 tests on
-a built-in toy dataset, and its prediction command reproduces our model-2
+a built-in toy dataset, and its prediction command reproduces our v0.2
 outputs on all 731 dev items, as an independent rerun by a teammate confirmed.
 Running the pipeline end to end on real data, not fixtures, exposed four harness
 faults: the scoring script put every BAREC row in the ``unchanged'' bucket; the
-shared prediction script omitted model~1's training prefix, which alone cost
+shared prediction script omitted \vOne{}'s training prefix, which alone cost
 twelve SARI points; length-grouped batching shuffled the evaluation set; and
 under \texttt{transformers}~5 the same models produced garbled outputs, because
 AraT5v2's tied embeddings and AraBART's sentence markers are handled
@@ -1329,10 +1340,10 @@ in \autoref{sec:future}.
 \hline
 \head{Finding} & \head{Change} \\ \hline
 Copying scores SARI 77.5 on SAMER test & Copy baseline and changed/unchanged split reported with every score \\ \hline
-Model~1 collapses on diacritized input & Tashkeel stripped before the simplifier, in training and in the app \\ \hline
-Model~1 chosen on SARI noise over a copy-heavy dev set & Model~2 selects on changed-row SARI only \\ \hline
-Model~1 over-edits unchanged rows yet copies 65\% of all rows & All unchanged pairs kept in model-2 training \\ \hline
-SAMER teaches word substitution; model~1 below copying on DAASI & DAASI and meaning-filtered external pairs added, each under its own tag \\ \hline
+\vOne{} collapses on diacritized input & Tashkeel stripped before the simplifier, in training and in the app \\ \hline
+\vOne{} chosen on SARI noise over a copy-heavy dev set & The v0.2 models select on changed-row SARI only \\ \hline
+\vOne{} over-edits unchanged rows yet copies 65\% of all rows & All unchanged pairs kept in v0.2 training \\ \hline
+SAMER teaches word substitution; \vOne{} below copying on DAASI & DAASI and meaning-filtered external pairs added, each under its own tag \\ \hline
 LLM-written external targets often summarise & Meaning filter calibrated on human rewrites \\ \hline
 Prediction script omitted the training prefix & Prefix a required setting of every model and bundle \\ \hline
 Length grouping shuffled the evaluation set & Grouping off; alignment check stops the run \\ \hline
@@ -1340,7 +1351,7 @@ SARI is blind to meaning errors & BayanBench: meaning scored separately from eas
 The closed judge was quota-bound, pass/fail and not rerunnable & Open meaning scorer, continuous, rerun by anyone, checked against six raters \\ \hline
 Some BayanBench v1 measures did not track human labels & Dropped; v2 keeps only validated measures \\ \hline
 Under \texttt{transformers}~5 the models' outputs changed silently & Prediction refuses to run under version~5 \\ \hline
-Model~2 over-edits easy text and protected text & Corpus v1 and model~3; the app never sends scripture or set poetry to the model \\ \hline
+The v0.2 models over-edit easy text and protected text & Corpus v1 and \vThree{}; the app never sends scripture or set poetry to the model \\ \hline
 The model drops numbers and flips negations & The app keeps the source sentence when a rewrite loses a number, a Latin word, a negation or a limit \\ \hline
 The model invents text around headings and fragments & Sentences under six words pass through unchanged in the app \\ \hline
 \end{tabularx}
@@ -1361,7 +1372,7 @@ each. Because output streams, the reader waits for the first token, not the whol
 sentence: with AraBART 82--172\,ms for a paragraph's first sentence and 28--30\,ms
 for each later one, with AraT5v2 177--318\,ms and 55--85\,ms. AraBART loads in
 1.0--1.7\,s against 2.6--7.3\,s, and finishes a sentence about twice as fast, the
-same ratio as on the laptop. Model~3 has the same architecture and bundle size as
+same ratio as on the laptop. \vThree{} has the same architecture and bundle size as
 the AraT5v2 bundle measured here. With the beam setting on it decodes with four
 beams, which runs the decoder on four rows at a time and gives up streaming: over 120 BayanBench dev
 sentences it takes 1.19\,s per sentence (median; 90th percentile 2.43\,s) on the
@@ -1388,7 +1399,7 @@ Phone: model load, cold & \textbf{1.0--1.7\,s} & 2.6--7.3\,s \\ \hline
 Phone: first token, first sentence & \textbf{82--172\,ms} & 177--318\,ms \\ \hline
 Phone: first token, later sentences & \textbf{28--30\,ms} & 55--85\,ms \\ \hline
 Phone: whole sentence & \textbf{0.23--1.10\,s} & 0.48--2.24\,s \\ \hline
-Phone: model~3 per sentence, greedy / 4 beams (median, 120 dev sentences) & --- & 0.41 / 1.19\,s \\ \hline
+Phone: \vThree{} per sentence, greedy / 4 beams (median, 120 dev sentences) & --- & 0.41 / 1.19\,s \\ \hline
 Read-aloud voice (Nabra-7M-Distill, int8) & \multicolumn{2}{c|}{8.7\,MB} \\ \hline
 \end{tabularx}
 \end{table}
@@ -1436,10 +1447,10 @@ Mishkal \cite{mishkal}            & 12.74\% & 10.12\% & 39.33\% & 0\% & 4.3\,MB 
 \hline
 \head{Objective} & \head{Evidence} & \head{Outcome} \\ \hline
 O1 Beat copying on changed rows; lower linguistic load without losing meaning &
-  Model~1: \greedychanged{} vs \copytestchanged{} on SAMER test (\greedygain{}). Model~2
-  lowers clause length and hard words, but keeps the meaning in
+  \vOne{}: \greedychanged{} vs \copytestchanged{} on SAMER test (\greedygain{}). The v0.2
+  models lower clause length and hard words, but keep the meaning in
   \bvHminKept--\bvHmaxKept\% of outputs, and raters kept the meaning of
-  \hBartSameMin--\hAppTfiveSame\% of changed outputs. Model~3 with four beams
+  \hBartSameMin--\hAppTfiveSame\% of changed outputs. \vThree{} with four beams
   outperforms them: \mBeamTKept\% meaning kept on test, \mBeamTClause{} words cut from
   the longest clause & partly met \\ \hline
 O2 Diacritize without changing letters & Libtashkeel in the app (a setting): DER
@@ -1447,7 +1458,7 @@ O2 Diacritize without changing letters & Libtashkeel in the app (a setting): DER
   met \\ \hline
 O3 Run on a phone; default within 250\,MB & Both bundles run on a Snapdragon 870
   phone, first token in 28--318\,ms; the default AraBART int8 is 222\,MB; the
-  optional AraT5v2 int8 bundles (model~3, the large model, and model~2) are 471\,MB, kept whole for
+  optional AraT5v2 int8 bundles (\vThree{}, the large model, and \vTwo{}) are 471\,MB, kept whole for
   quality & met \\ \hline
 O4 Evidence from readers & A reader with dyslexia rated \rN{} rewrites for ease, with
   informed consent: \rEasier{} easier, \rHarder{} harder. No one with dyslexia has
@@ -1465,12 +1476,12 @@ linguistic load, but not for free: every setting trades meaning for
 simplification, the safest one simplifies least, and AraT5v2 keeps the meaning
 of \bvHTfiveKept--\bvHAppTfiveKept\% of outputs, more than AraBART. Removing the
 strength tag helps meaning, so the untagged bundles the app ships are safer than
-the tagged settings. Model~3 with four beams moves the trade-off: it keeps the meaning more often than
-any earlier model and simplifies more than model~2 in the app. \textbf{RQ3:} yes for AraBART, in part for AraT5v2. Streamed output
+the tagged settings. \vThree{} with four beams moves the trade-off: it keeps the meaning more often than
+any earlier model and simplifies more than \vTwo{} in the app. \textbf{RQ3:} yes for AraBART, in part for AraT5v2. Streamed output
 reaches the reader in under a third of a second on a mid-range phone with either
-bundle (model~3 with the beam setting on shows a whole sentence in about
+bundle (\vThree{} with the beam setting on shows a whole sentence in about
 1.2\,s); the default int8 AraBART bundle fits the 250\,MB budget, the optional
-AraT5v2 bundles, model~3's included, take 471\,MB, and int8 changes most of
+AraT5v2 bundles, \vThree{}'s included, take 471\,MB, and int8 changes most of
 AraT5v2's outputs against the float model.
 
 \lead{Benefits.} For readers: a tool that offers a simpler version where and when
@@ -1490,8 +1501,8 @@ The evaluation points to specific next steps. The central one is to move the
 trade-off of F1: a model that simplifies as much as the tagged setting while
 keeping meaning as often as the shipped bundle. The meaning scorer, now checked
 against people, can rank candidate rewrites and select checkpoints, so that
-training is steered by the behaviours readers need rather than by SARI. Model~3 with four
-beams is the first step: it keeps model~2's meaning rate in the app while cutting
+training is steered by the behaviours readers need rather than by SARI. \vThree{} with four
+beams is the first step: it keeps \vTwo{}'s meaning rate in the app while cutting
 \mBeamTClause{} words from the longest clause, short of the tagged setting's
 \bvHTfiveClause{}. Making that quality the default needs faster beam decoding on the
 phone, since four beams take about three times as long per sentence as greedy. The AraT5v2 bundles could be made
@@ -1512,7 +1523,7 @@ comprehension, would turn ratings into evidence about reading.
 \item \textbf{The meaning scorer is a model.} It agrees with people at AUC
       \hAucSame{} but is stricter than them, failing \hWrongFail{} of the \hKept{}
       outputs they kept, so ``meaning kept'' is a conservative rate. It was
-      checked on dev outputs of the six model-2 systems, from \hDocs{} documents; a
+      checked on dev outputs of the six v0.2 systems, from \hDocs{} documents; a
       very different system could be judged differently.
 \item \textbf{Ease and Arabic are weakly agreed.} Raters agreed on ease and on
       correct Arabic with $\alpha$ of only \hAlphaEase{} and \hAlphaArabic{}, so
@@ -1521,7 +1532,7 @@ comprehension, would turn ratings into evidence about reading.
 \item \textbf{The clause measure credits commas.} A rewrite can shorten its
       longest clause by adding commas as well as by splitting sentences, which is
       why it is always read next to meaning.
-\item \textbf{No reference-based test score for model~2.} Model~2 is compared
+\item \textbf{No reference-based test score for the v0.2 models.} They are compared
       with published work only through its dev selection score; its test
       evaluation is BayanBench, which has no human references.
 \item \textbf{Some tracks are small.} E3 and E4 hold 64 and 40 test items, and
@@ -1529,10 +1540,10 @@ comprehension, would turn ratings into evidence about reading.
       differences.
 \item \textbf{One phone.} On-device figures come from one mid-range phone; the
       optional AraT5v2 bundles (471\,MB) need more storage than the default.
-\item \textbf{Model~3's meaning rests on the judge.} With four beams every test
+\item \textbf{\vThree{}'s meaning rests on the judge.} With four beams every test
       core item is scored, but no significant difference is not proof of none: the
       interval on test runs from \mBeamTKeptCi{} points. The human rating of
-      model~3 covers 18 sentences.
+      \vThree{} covers 18 sentences.
 \item \textbf{One run per configuration.} Each model was trained once, with one
       seed, so the comparison between architectures carries no estimate of
       training variance.
@@ -1626,18 +1637,18 @@ boldest setting while keeping meaning as well as the safest.
 \head{NAME} & \head{REVIEW and COMMENT} \\ \hline
 Marwan Elamami & Leading Bayan taught me that the hard part of an AI product is knowing
   whether it works. I am proudest that we built a benchmark for the task, checked it
-  against people, and let the numbers change our decisions, which is how model~3 with
+  against people, and let the numbers change our decisions, which is how \vThree{} with
   four beams became the app's large model. Next, I want readers with dyslexia to use
   the app and to measure their reading itself. \\ \hline
 Abdulrahman Khengari & I built the data side, from the first synthetic corpus to corpus v1,
-  the meaning judge and model~3, and the benchmark report that compared 35 systems
-  on the same rules. Measuring every variant the same way is what showed that model~3
+  the meaning judge and \vThree{}, and the benchmark report that compared 35 systems
+  on the same rules. Measuring every variant the same way is what showed that \vThree{}
   with four beams is our best model. \\ \hline
-Ahmed Alaeb & Training models 1 and 2 showed me how much the data decides: SAMER taught
+Ahmed Alaeb & Training \vOne{} and the v0.2 models showed me how much the data decides: SAMER taught
   word swaps, while the corpora we built taught the model to restructure. I am glad the
   model work ended in an app that runs offline on an ordinary phone. \\ \hline
 Sanad Ali & I benchmarked the diacritizers and chose Libtashkeel, which now adds
-  tashkeel in the app without changing a letter, and trained model~2 on AraBART, whose
+  tashkeel in the app without changing a letter, and trained \vTwoFast{} (AraBART), whose
   speed made it the fast default. \\ \hline
 Mohammed Thabet & Building the Android side, from the selection menu and the result sheet
   to model downloads and typography settings, showed me how much a reading tool depends
