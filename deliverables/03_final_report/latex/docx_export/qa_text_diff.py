@@ -74,8 +74,10 @@ def main() -> int:
     print(f"tokens          gt={len(gt_toks)} wv={len(wv_toks)} ratio={ratio:.3f}")
     print(f"jaccard         {jaccard:.3f}")
     print(f"8-gram          {hits}/{hits+miss} = {hits/(hits+miss):.1%}")
-    print(f"raw TeX cmds    {len(re.findall(r'\\\\[a-zA-Z]+', wv_text))}")
-    print(f"raw labels      {len(re.findall(r'\\b(sec|tab|fig):', wv_text))}")
+    tex_cmds = re.findall(r"\\[a-zA-Z]+|\^\{|[{}]", wv_text)
+    labels = re.findall(r"\b(?:sec|tab|fig):", wv_text)
+    print(f"raw TeX cmds    {len(tex_cmds)} {sorted(set(tex_cmds))[:10]}")
+    print(f"raw labels      {len(labels)}")
     only_gt = sorted(gw - ww)[:20]
     only_wv = sorted(ww - gw)[:20]
     print("only-GT sample  ", only_gt)

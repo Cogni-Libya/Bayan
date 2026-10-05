@@ -213,8 +213,8 @@ def el(tag: str, **attrs):
 
 
 def run(text: str, *, font=FONT, size=21, bold=False, italic=False,
-        color=BODY_COLOR, rtl=False) -> etree.Element:
-    """size in half-points."""
+        color=BODY_COLOR, rtl=False, vert=None) -> etree.Element:
+    """size in half-points; vert is "superscript"/"subscript" or None."""
     r = el("r")
     rPr = el("rPr")
     fonts = el("rFonts")
@@ -236,13 +236,18 @@ def run(text: str, *, font=FONT, size=21, bold=False, italic=False,
         s = el(tag)
         s.set(W + "val", str(size))
         rPr.append(s)
+    if vert:
+        va = el("vertAlign")
+        va.set(W + "val", vert)
+        rPr.append(va)
     if rtl:
+        # CT_RPr order: rtl, cs, ..., lang (there is no w:rtlCs element)
+        rPr.append(el("rtl"))
+        rPr.append(el("cs"))
         lang = el("lang")
         lang.set(W + "val", "ar-SA")
         lang.set(W + "bidi", "ar-SA")
         rPr.append(lang)
-        rPr.append(el("rtl"))
-        rPr.append(el("rtlCs"))
     r.append(rPr)
     # last-ditch cleanup of TeX crumbs
     text = text.replace("\\rightarrow", "→").replace("\\leftarrow", "←")
@@ -302,34 +307,52 @@ def page_break() -> etree.Element:
     return p
 
 
-def set_cell_shading(tc, fill: str):
+# CT_TcPr child order; Word rejects out-of-order or repeated children
+TCPR_ORDER = ["cnfStyle", "tcW", "gridSpan", "hMerge", "vMerge", "tcBorders",
+              "shd", "noWrap", "tcMar", "textDirection", "tcFitText", "vAlign",
+              "hideMark"]
+
+
+def _tcpr_put(tc, child):
+    """Set a tcPr child, replacing any existing one, in schema order."""
     tcPr = tc.find(W + "tcPr")
     if tcPr is None:
         tcPr = el("tcPr")
         tc.insert(0, tcPr)
+    name = etree.QName(child).localname
+    old = tcPr.find(W + name)
+    if old is not None:
+        tcPr.remove(old)
+    rank = TCPR_ORDER.index(name)
+    for i, c in enumerate(tcPr):
+        if TCPR_ORDER.index(etree.QName(c).localname) > rank:
+            tcPr.insert(i, child)
+            return
+    tcPr.append(child)
+
+
+def set_cell_shading(tc, fill: str):
     shd = el("shd")
     shd.set(W + "val", "clear")
     shd.set(W + "color", "auto")
     shd.set(W + "fill", fill)
-    tcPr.append(shd)
+    _tcpr_put(tc, shd)
 
 
 def set_tc_width(tc, dxa: int):
-    tcPr = tc.find(W + "tcPr")
-    if tcPr is None:
-        tcPr = el("tcPr")
-        tc.insert(0, tcPr)
     tcW = el("tcW")
     tcW.set(W + "w", str(dxa))
     tcW.set(W + "type", "dxa")
-    tcPr.append(tcW)
+    _tcpr_put(tc, tcW)
+
+
+def set_tc_span(tc, n: int):
+    span = el("gridSpan")
+    span.set(W + "val", str(n))
+    _tcpr_put(tc, span)
 
 
 def set_tc_borders(tc, color=SIC_RULE, sz="4"):
-    tcPr = tc.find(W + "tcPr")
-    if tcPr is None:
-        tcPr = el("tcPr")
-        tc.insert(0, tcPr)
     borders = el("tcBorders")
     for edge in ("top", "left", "bottom", "right"):
         b = el(edge)
@@ -337,12 +360,15 @@ def set_tc_borders(tc, color=SIC_RULE, sz="4"):
         b.set(W + "sz", sz)
         b.set(W + "color", color)
         borders.append(b)
-    tcPr.append(borders)
+    _tcpr_put(tc, borders)
 
 
-def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
-    """rows_of_cells: list of list of paragraph elements (or list of runs)."""
+def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None,
+               spans=None):
+    """rows_of_cells: list of list of paragraph elements (or list of runs).
+    spans: {row index: [grid columns per cell]} for partial \\multicolumn rows."""
     band_rows = set(band_rows or [])
+    spans = spans or {}
     tbl = el("tbl")
     tblPr = el("tblPr")
     tblW = el("tblW")
@@ -370,7 +396,8 @@ def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
     tblPr.append(mar)
     tbl.append(tblPr)
 
-    ncols = max(len(r) for r in rows_of_cells) if rows_of_cells else 1
+    ncols = max((sum(spans[i]) if i in spans else len(r))
+                for i, r in enumerate(rows_of_cells)) if rows_of_cells else 1
     if not col_dxa:
         col_dxa = [9010 // ncols] * ncols
         col_dxa[-1] += 9010 - sum(col_dxa)
@@ -386,11 +413,8 @@ def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
         # band = explicitly marked multicolumn/header band only
         if ri in band_rows:
             tc = el("tc")
-            tcPr = el("tcPr")
-            span = el("gridSpan")
-            span.set(W + "val", str(ncols))
-            tcPr.append(span)
-            tc.append(tcPr)
+            set_tc_width(tc, sum(col_dxa))
+            set_tc_span(tc, ncols)
             set_cell_shading(tc, SIC_HEAD)
             set_tc_borders(tc)
             content = cells[0]
@@ -407,9 +431,16 @@ def make_table(rows_of_cells, col_dxa=None, header_rows=1, band_rows=None):
             tr.append(tc)
             tbl.append(tr)
             continue
-        for ci in range(ncols):
+        row_spans = spans.get(ri) or [1] * ncols
+        col = 0
+        for ci, span in enumerate(row_spans):
+            if col >= ncols:
+                break
             tc = el("tc")
-            set_tc_width(tc, col_dxa[ci] if ci < len(col_dxa) else 2000)
+            set_tc_width(tc, sum(col_dxa[col:col + span]))
+            if span > 1:
+                set_tc_span(tc, span)
+            col += span
             set_tc_borders(tc)
             if ri < header_rows:
                 set_cell_shading(tc, SIC_HEAD)
@@ -468,7 +499,8 @@ def _read_cmd(text: str, i: int):
         while k < len(text) and text[k].isalpha():
             k += 1
         cmd = text[j:k]
-    elif j < len(text) and text[j] in "$%&#_~":
+    elif j < len(text) and text[j] in "$%&#_~,;! \n":
+        # escaped char, thin/medium space, or control space "\ "
         return (text[j], text[j], j + 1)
     else:
         return None
@@ -481,12 +513,47 @@ def _read_cmd(text: str, i: int):
     return cmd, None, k
 
 
+MATH_MAP = [
+    ("\\times", "×"), ("\\geq", "≥"), ("\\ge", "≥"),
+    ("\\approx", "≈"), ("\\alpha", "α"), ("\\hat y", "ŷ"),
+    ("\\oplus", "⊕"), ("\\leq", "≤"), ("\\le", "≤"),
+    ("\\cdot", "·"), ("\\dagger", "†"), ("\\rightarrow", "→"),
+    ("\\leftarrow", "←"), ("\\to", "→"), ("\\,", " "),
+]
+
+
+def math_text(s: str) -> str:
+    for a, b in MATH_MAP:
+        s = s.replace(a, b)
+    return s.replace("*", "∗").replace("{", "").replace("}", "")
+
+
+def math_runs(inner: str, size, bold, color) -> list:
+    """$...$ → base runs plus real superscript/subscript runs for ^{..}/_{..}."""
+    out = []
+    pos = 0
+    for m in re.finditer(r"([\^_])(\{[^{}]*\}|\\[A-Za-z]+|.)", inner):
+        if m.start() > pos:
+            base = math_text(inner[pos:m.start()])
+            if base:
+                out.append(run(base, size=size, bold=bold, color=color))
+        out.append(run(math_text(m.group(2)), size=size, bold=bold, color=color,
+                       vert="superscript" if m.group(1) == "^" else "subscript"))
+        pos = m.end()
+    tail = math_text(inner[pos:])
+    if tail:
+        out.append(run(tail, size=size, bold=bold, color=color))
+    return out
+
+
 def rich_runs(text: str, size=21, bold=False, italic=False, color=BODY_COLOR) -> list:
     """Scanner-based rich text (handles nested braces)."""
     text = re.sub(r"(?<!\\)%.*", "", text)
     text = re.sub(r"\\color\{[^{}]*\}", "", text)
     text = re.sub(r"\\textcolor\{[^{}]*\}\{([^{}]*)\}", r"\1", text)
-    text = text.replace("\\%", "%").replace("\\&", "&").replace("\\#", "#").replace("\\_", "_")
+    # leave \% escaped: nested calls (\textbf{..\%}) strip comments again, so a
+    # bare % here would eat the rest of the group; the cmd branch emits it
+    text = text.replace("\\&", "&").replace("\\#", "#").replace("\\_", "_")
     text = text.replace("\\-", "")
     text = re.sub(r"\\[=`'\"^~.]\s*\{?([A-Za-z])\}?", r"\1", text)
     text = re.sub(r"\\[dHctvb]\{([A-Za-z])\}", r"\1", text)
@@ -504,16 +571,11 @@ def rich_runs(text: str, size=21, bold=False, italic=False, color=BODY_COLOR) ->
 
     while i < n:
         ch = text[i]
-        if ch == "^" and i + 1 < n and text[i+1] == "{":
+        if ch in "^_" and i + 1 < n and text[i+1] == "{":
             inner, end = grab_braced(text, i + 1)
             flush()
-            out.append(run(inner, size=size - 2, bold=bold, italic=True, color=color))
-            i = end
-            continue
-        if ch == "_" and i + 1 < n and text[i+1] == "{":
-            inner, end = grab_braced(text, i + 1)
-            flush()
-            out.append(run(inner, size=size - 2, bold=bold, italic=True, color=color))
+            out.append(run(math_text(inner), size=size, bold=bold, color=color,
+                           vert="superscript" if ch == "^" else "subscript"))
             i = end
             continue
         if ch == "$":
@@ -521,15 +583,7 @@ def rich_runs(text: str, size=21, bold=False, italic=False, color=BODY_COLOR) ->
             if j < 0:
                 plain.append(ch); i += 1; continue
             flush()
-            inner = text[i+1:j]
-            for a, b in [
-                ("\\times", "×"), ("\\geq", "≥"), ("\\ge", "≥"),
-                ("\\approx", "≈"), ("\\alpha", "α"), ("\\hat y", "ŷ"),
-                ("\\oplus", "⊕"), ("\\leq", "≤"), ("\\le", "≤"),
-                ("\\cdot", "·"),
-            ]:
-                inner = inner.replace(a, b)
-            out.append(run(inner, size=size, bold=bold, italic=True, color=color))
+            out.extend(math_runs(text[i+1:j], size, bold, color))
             i = j + 1
             continue
         if ch == "\\":
@@ -568,9 +622,9 @@ def rich_runs(text: str, size=21, bold=False, italic=False, color=BODY_COLOR) ->
             elif cmd == "footnote":
                 flush()
                 out.append(run("†", size=size - 2, bold=bold, color=color))
-            elif cmd in ("enspace", ",", ";", "!", "quad", "qquad"):
+            elif cmd in ("enspace", ",", ";", "!", " ", "\n", "quad", "qquad"):
                 plain.append(" ")
-            elif cmd in ("%", "&", "#", "_", "~"):
+            elif cmd in ("%", "&", "#", "_", "~", "$"):
                 plain.append(cmd)
             elif cmd in ("textminus",):
                 plain.append("−")
@@ -644,8 +698,8 @@ def parse_cells(line: str) -> list[str]:
     return cells
 
 
-def clean_cell(text: str, size=18) -> list:
-    is_head = "\\head{" in text
+def clean_cell(text: str, size=18, bold=False) -> list:
+    is_head = bold or "\\head{" in text
     t = text
     # brace-aware \head{...}
     while "\\head{" in t:
@@ -678,7 +732,7 @@ def clean_cell(text: str, size=18) -> list:
         inner, end = grab_braced(t, i + 9)
         inner = re.sub(r"\\tiny|\\small|\\scriptsize|\\footnotesize", "", inner)
         inner = re.sub(r"\[-\d+(?:\.\d+)?pt\]", "", inner)
-        inner = inner.replace("\\%", "%").replace("\\-", "")
+        inner = inner.replace("\\-", "")  # keep \% for rich_runs (see there)
         while True:
             m = re.search(r"\{([^{}]*)\}", inner)
             if not m:
@@ -911,23 +965,25 @@ def emit_table(body: str, caption: str | None):
         col_dxa = [int(w * 9010 / s) for w in col_dxa]
         col_dxa[-1] += 9010 - sum(col_dxa)
 
+    def span_of(cell: str) -> int:
+        m = re.match(r"\s*\\multicolumn\{(\d+)\}", cell)
+        return int(m.group(1)) if m else 1
+
     processed = []
     band_rows = []
+    spans = {}
     for i, cells in enumerate(rows):
-        joined = " ".join(cells)
-        # true category band: \multicolumn spanning the row
-        if "\\multicolumn" in joined:
+        row_spans = [span_of(c) for c in cells]
+        # true category band: one \multicolumn spanning the whole row
+        if len(cells) == 1 and row_spans[0] > 1:
             band_rows.append(i)
-            t = re.sub(r"\\multicolumn\{\d+\}\{[^{}]*\}", "", joined)
-            t = t.replace("\\cellcolor{sichead}", "").replace("\\bfseries", "")
-            t = t.replace("\\%", "%").replace("\\&", "&").replace("\\#", "#").replace("\\-", "")
-            t = re.sub(r"\\[a-zA-Z]+\{([^{}]*)\}", r"\1", t)
-            t = re.sub(r"\\[a-zA-Z]+", " ", t)
-            t = t.replace("{", "").replace("}", "")
-            processed.append([run(re.sub(r"\s+", " ", t).strip(), size=18, bold=True)])
+            processed.append([clean_cell(cells[0], size=18, bold=True)])
             continue
+        if any(s > 1 for s in row_spans):
+            spans[i] = row_spans
         processed.append([clean_cell(c, size=17) for c in cells])
-    out.append(make_table(processed, col_dxa, header_rows=1, band_rows=band_rows))
+    out.append(make_table(processed, col_dxa, header_rows=1, band_rows=band_rows,
+                          spans=spans))
     return out
 
 
@@ -1024,8 +1080,9 @@ def banner_para(title: str, numbered: str | None, docPr_id: int) -> etree.Elemen
     return p
 
 
-def add_image_para(p_el, path: Path, width_emu: int, height_emu: int):
-    """Append a DrawingML inline image to paragraph."""
+def add_image_para(p_el, path: Path, width_emu: int, height_emu: int, shape_id: int):
+    """Append a DrawingML inline image to paragraph. shape_id must be unique
+    across the document (wp:docPr/@id); Word reports duplicates as corrupt."""
     rid = p_el.attrib.get("img-rid")
     drawing_xml = f'''<w:drawing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -1035,7 +1092,7 @@ def add_image_para(p_el, path: Path, width_emu: int, height_emu: int):
   <wp:inline distT="0" distB="0" distL="0" distR="0">
     <wp:extent cx="{width_emu}" cy="{height_emu}"/>
     <wp:effectExtent l="0" t="0" r="0" b="0"/>
-    <wp:docPr id="1000" name="Figure"/>
+    <wp:docPr id="{shape_id}" name="Figure {shape_id}"/>
     <wp:cNvGraphicFramePr>
       <a:graphicFrameLocks noChangeAspect="1"/>
     </wp:cNvGraphicFramePr>
@@ -1043,7 +1100,7 @@ def add_image_para(p_el, path: Path, width_emu: int, height_emu: int):
       <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
         <pic:pic>
           <pic:nvPicPr>
-            <pic:cNvPr id="1000" name="fig"/>
+            <pic:cNvPr id="{shape_id}" name="fig{shape_id}.png"/>
             <pic:cNvPicPr/>
           </pic:nvPicPr>
           <pic:blipFill>
@@ -1068,6 +1125,24 @@ def add_image_para(p_el, path: Path, width_emu: int, height_emu: int):
     p_el.append(r)
 
 
+def drop_unbalanced_braces(s: str) -> str:
+    """Remove braces whose partner is in another paragraph chunk (e.g. the
+    "{\\small ... \\par}" wrappers), keeping balanced \\cmd{...} groups intact."""
+    keep = [True] * len(s)
+    stack = []
+    for i, ch in enumerate(s):
+        if ch == "{" and (i == 0 or s[i - 1] != "\\"):
+            stack.append(i)
+        elif ch == "}" and (i == 0 or s[i - 1] != "\\"):
+            if stack:
+                stack.pop()
+            else:
+                keep[i] = False
+    for i in stack:
+        keep[i] = False
+    return "".join(c for c, k in zip(s, keep) if k)
+
+
 def collect_body_nodes(tex: str) -> list:
     """Return list of body nodes (etree Elements or ('IMAGE', path, cap))."""
     tex = strip_comments(tex)
@@ -1077,6 +1152,7 @@ def collect_body_nodes(tex: str) -> list:
 
     # cleanup
     tex = re.sub(r"\\label\{[^}]*\}", "", tex)
+    tex = re.sub(r"\\addcontentsline\{[^}]*\}\{[^}]*\}\{[^}]*\}", "", tex)
     tex = re.sub(r"\\begin\{document\}|\\end\{document\}", "", tex)
     tex = re.sub(r"\\begin\{fullwidth\}|\\end\{fullwidth\}", "", tex)
     tex = re.sub(
@@ -1126,12 +1202,16 @@ def collect_body_nodes(tex: str) -> list:
             tex = tex[m.end():]
             continue
 
-        m = re.match(r"\\subsection\*?\{([^{}]*)\}", tex)
+        m = re.match(r"\\subsection(\*?)\{([^{}]*)\}", tex)
         if m:
-            title = m.group(1)
-            globals()["SUB_NO"] = globals().get("SUB_NO", 0) + 1
+            title = m.group(2)
+            number = []
+            if not m.group(1):  # \subsection* (References) is unnumbered
+                globals()["SUB_NO"] = globals().get("SUB_NO", 0) + 1
+                number = [run(f"{globals().get('SEC_NO', 0)}.{globals()['SUB_NO']}. ",
+                              size=22, bold=True)]
             p = paragraph(
-                run(f"{globals().get('SEC_NO', 0)}.{globals()['SUB_NO']}. ", size=22, bold=True),
+                *number,
                 *rich_runs(title, size=22, bold=True),
                 before=220, after=60, line=280,
             )
@@ -1245,7 +1325,7 @@ def collect_body_nodes(tex: str) -> list:
             tex, re.S,
         )
         if m:
-            add_banner("References", None)
+            # heading comes from the \subsection*{References} before it
             body = m.group(1)
             bibn = 0
             for bm in re.finditer(r"\\bibitem\{([^}]*)\}(.*?)(?=\\bibitem|\Z)", body, re.S):
@@ -1302,9 +1382,10 @@ def collect_body_nodes(tex: str) -> list:
                 tex = tex[end:]
                 continue
 
-        # paragraph: stop at next block command
+        # paragraph: stop at a blank line (TeX paragraph break) or next block
         stop = re.search(
-            r"\n\s*(\\section|\\subsection|\\begin\{|\\finding\{|\\bibitem|\\PAGEBREAK)",
+            r"\n[ \t]*\n"
+            r"|\n\s*(\\section|\\subsection|\\begin\{|\\finding\{|\\bibitem|\\PAGEBREAK)",
             tex,
         )
         if stop:
@@ -1317,7 +1398,7 @@ def collect_body_nodes(tex: str) -> list:
         para = re.sub(r"^\{\s*\\(small|footnotesize|normalsize)\s*", "", para)
         para = re.sub(r"^\{\s*", "", para)
         para = re.sub(r"\\par\s*\}?\s*$", "", para)
-        para = para.strip().strip("{}").strip()
+        para = drop_unbalanced_braces(para.strip()).strip()
         if para:
             nodes.append(paragraph(*rich_runs(para, size=21), after=100, line=284))
     return nodes
@@ -1510,6 +1591,7 @@ def main():
         return out
 
     # body content (toc_nodes already ends with a page break)
+    shape_id = 1000
     for n in nodes:
         if isinstance(n, tuple) and n[0] == "IMAGE":
             _, path, caption = n
@@ -1522,9 +1604,10 @@ def main():
                 height_emu = int(width_emu * h / w)
             except Exception:
                 height_emu = int(width_emu * 0.55)
-            rid = f"rIdImg{FIG_SEQ}"
+            rid = f"rIdImg{shape_id + 1}"  # placeholder, renumbered on write
             p.set("img-rid", rid)
-            add_image_para(p, path, width_emu, height_emu)
+            shape_id += 1
+            add_image_para(p, path, width_emu, height_emu, shape_id)
             del p.attrib["img-rid"]
             new_kids.append(p)
             new_kids.append(paragraph(
@@ -1635,9 +1718,12 @@ def main():
 def _write_with_images(out_path, template_path, doc_root, img_paths, footer_xml):
     """Write final docx with image relationships."""
     # find rIds referenced in document
-    embeds = []
-    for blip in doc_root.iter("{http://schemas.openxmlformats.org/drawingml/2006/main}blip"):
-        embeds.append(blip)
+    # only our figure placeholders — never template images
+    embeds = [
+        blip for blip in doc_root.iter(A + "blip")
+        if (blip.get(R + "embed") or "").startswith("rIdImg")
+    ]
+    assert len(embeds) == len(img_paths), (len(embeds), len(img_paths))
 
     zin = zipfile.ZipFile(template_path)
     rels_name = "word/_rels/document.xml.rels"

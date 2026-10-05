@@ -112,7 +112,7 @@ def main():
         found += 1
         print(f"Figure {n:2d} page={pno+1:2d} crop=({crop.x0:.0f},{crop.y0:.0f})-({crop.x1:.0f},{crop.y1:.0f}) -> {out.name} {pix.width}x{pix.height}")
 
-    print(f"extracted {found}/14 figures")
+    print(f"extracted {found}/{len(FIGURE_NAMES)} figures")
 
 
 if __name__ == "__main__":
