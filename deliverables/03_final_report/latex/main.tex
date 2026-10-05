@@ -1170,7 +1170,21 @@ every system in \autoref{tab:benchhead} (\mBeamTKept\% on test against at most
 \bvHmaxKept\%) and cuts \mBeamTClause{} words from the longest clause, more than any of
 them except the tagged settings, which keep the meaning in at most \bvHTfiveKept\%.
 Only model~2 behind the same newest checks keeps the meaning as often, and it cuts
-\mBeamTClauseAbs{} fewer words. The app keeps model~2 as
+\mBeamTClauseAbs{} fewer words.
+
+Khengari's benchmark report (\#57, \#58), which scores 35 systems with every number
+generated from the bench's own scorecards, reaches the same verdict and recommends
+model~3 app int8 with four beams and the safety net as the system to ship. On the test
+core items, against the app's large model as benchmarked in \autoref{tab:benchhead}, it
+keeps every number (100\% against 84\%), changes no negation, limit or condition word,
+leaves easy text unchanged in 74\% of cases against 48\%, and cuts 3.5 more words from
+the longest clause [+2.5, +4.5], while meaning kept rises by 4 points [+0, +8]. The
+same report records two costs. The phone version simplifies less than the
+float model: float model~3 with the net cuts 7.7 words from the longest clause and
+lowers the reading level by 0.38, the int8 bundle with four beams and the net 5.4
+words and 0.20 levels. Model~3 also leaves 47\% of items unchanged against the app's 19\%, and on the
+outputs it does change, P(same) is 0.67 against the app's 0.74: it rewrites less often,
+but harder. The app keeps model~2 as
 its large model because the match needs the beam setting, which is off by default
 and about three times slower per sentence (\autoref{tab:device}), and lists model~3
 as the option that simplifies more, with the setting to keep its meaning
