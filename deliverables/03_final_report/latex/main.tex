@@ -256,7 +256,7 @@ app's large model on 5 October (\autoref{fig:schedule}, \autoref{tab:milestones}
 \begin{figure}[p]
 \centering
 \resizebox{0.62\linewidth}{!}{\figschedule}
-\caption{Timeline as executed, 13 September to 3 October. AP = Action Plan; M1,
+\caption{Timeline as executed, 13 September to 5 October. AP = Action Plan; M1,
 M2 = mentoring sessions. Numbers after a task are its GitHub issues.}
 \label{fig:schedule}
 \end{figure}
@@ -370,7 +370,7 @@ Tashkeel & 1.6\% of pieces; 2.57$\times$ tokens &
   0 pieces; every mark becomes \texttt{<unk>}; 4.53$\times$ tokens &
   0 pieces; 1.81$\times$ tokens \\ \hline
 Licence & none stated on the model card & Apache-2.0 & Apache-2.0 \\ \hline
-Used in & \vOne{} and the v0.2 models & \vTwoFast{} & not trained \\ \hline
+Used in & \vOne{}, \vTwo{} and \vThree{} & \vTwoFast{} & not trained \\ \hline
 \end{tabularx}
 \end{table}
 
@@ -473,6 +473,8 @@ from UN News, WHO, new Wikipedia articles, UNHCR and Android help, published aft
 every corpus we use) and \emph{written} (50 medicine-leaflet sentences). Items are
 split by document (731 dev items from 129 documents, 1,250 test items from 197),
 and any BAREC document with a sentence in any training data was dropped whole.
+Corpus v1, written later, contains 33 held-out items, so \vThree{} is reported on
+core and outside items only.
 Meaning is scored by Gemma~4 31B \cite{gemma4} in vLLM \cite{vllm}, as a scorer
 rather than a writer: it sees the source and the output, never the system's name,
 and the probability of \emph{yes} to four questions (same meaning; a fact added;
@@ -779,7 +781,8 @@ P(same); rows are jittered vertically for legibility.}
 \lead{RQ2: the v0.2 models on BayanBench.} Each system was
 run once: the v0.2 models in the medium setting (\texttt{[S2]}), the two int8
 bundles exactly as the app calls them, and copying the input
-(\autoref{tab:benchhead}, \autoref{fig:tradeoff}).
+(\autoref{tab:benchhead}, \autoref{fig:tradeoff}); the table's last column and the
+figure's star are \vThree{}, discussed below.
 
 \benchheadtable
 
@@ -813,7 +816,7 @@ bundles exactly as the app calls them, and copying the input
 \figtradeoff{\tradeoffH}
 \caption{Meaning kept against simplification, \benchheadsplit{} split, core items,
 with 95\% document-bootstrap intervals. Copying the input sits at the top left by
-definition. Colour: the model; shape: the setting.}
+definition. Colour: the model; shape: the setting; star: \vThree{} with four beams.}
 \label{fig:tradeoff}
 \end{figure}
 
@@ -868,8 +871,8 @@ Beam search makes \vThree{} the best model we have measured. \#61 (Khengari)
 showed on \vThree{}'s int8 bundle that four beams keep the meaning 4--8 points more
 often than greedy decoding, and the app gained beam search with transformers'
 exact tokens (\#62, \#66). Run with four beams by the app's own engine, through its
-text step, with every core item scored, \vThree{} outperforms every model in
-\autoref{tab:benchhead}: it keeps the meaning in \mBeamTKept\% of test outputs,
+text step, with every core item scored, \vThree{} outperforms every other model in
+\autoref{tab:benchhead} (its last column) and sits apart in \autoref{fig:tradeoff}: it keeps the meaning in \mBeamTKept\% of test outputs,
 against at most \bvHmaxKept\%, and cuts \mBeamTClause{} words from the longest
 clause. Even against \vTwo{} behind the same newest checks it is no worse on
 meaning (\mBeamTKeptDiff{} points on test [\mBeamTKeptCi], \mBeamKeptDiff{} on dev
@@ -904,7 +907,6 @@ measuring a size. \vThree{} with four beams is therefore the app's
 large model (5 October); a reader who prefers word-by-word streaming can turn the
 setting off.
 
-\FloatBarrier
 \subsection{User Interface}
 
 \autoref{fig:ui} shows the interface on the phone. Selecting Arabic text in any
@@ -917,7 +919,10 @@ follows Android's Material~3 design, takes its colours from the phone's Material
 You palette, and sets Arabic right to left without justification, which in Arabic
 stretches words. Settings hold the reader's typeface, size, line height and word
 spacing, the background, tashkeel, the voice and its speed, and the model, with a
-sample sentence that shows each change as it is made.
+sample sentence that shows each change as it is made. Bayan 2.1.0 is released as
+signed, versioned APKs with a changelog on a download page
+(\texttt{bayan-android.vercel.app}), and the app fetches its model bundles from the
+public BayanSimplify-ONNX repository on Hugging Face.
 
 \begin{figure}[h]
 \centering
@@ -1044,7 +1049,8 @@ O1 Beat copying on changed rows; lower linguistic load without losing meaning &
   outperforms them: \mBeamTKept\% meaning kept on test, \mBeamTClause{} words cut from
   the longest clause & partly met \\ \hline
 O2 Diacritize without changing letters & Libtashkeel in the app (a setting): DER
-  6.91\% without case endings, no letter changed in 743 + 300 sentences, 4.8\,MB &
+  6.91\% without case endings, no letter changed in 743 test sentences and 305
+  BayanBench texts, 4.8\,MB &
   met \\ \hline
 O3 Run on a phone; default within 250\,MB & Both bundles run on a Snapdragon 870
   phone, first token in 28--318\,ms; the default AraBART int8 is 222\,MB; the
