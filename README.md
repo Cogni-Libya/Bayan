@@ -5,6 +5,10 @@
 Bayan simplifies complex Arabic text for readers with dyslexia while preserving its meaning, then adds
 diacritics and reads it aloud with synchronized word highlighting.
 
+**Download:** [Bayan 2.1.0 for Android](https://bayan-android.vercel.app) (Android 8 or newer; APKs and SHA-256 on
+[Hugging Face](https://huggingface.co/Congi-libya/Bayan-App)) · **Models:** [BayanSimplify](https://huggingface.co/Congi-libya)
+on Hugging Face · Changelog: [`app/CHANGELOG.md`](app/CHANGELOG.md)
+
 > This README replaces the original idea brief, which is kept for history in
 > [`references/00_project_brief/original_project_brief.md`](references/00_project_brief/original_project_brief.md).
 > Where the two disagree, this file and [`references/INDEX.md`](references/INDEX.md) are current.
