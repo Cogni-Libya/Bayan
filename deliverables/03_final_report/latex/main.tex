@@ -7,6 +7,7 @@
 \input{bench_v2}
 \input{human}
 \input{model3}
+\input{human_m3}
 
 \begin{document}
 
@@ -50,12 +51,63 @@ outperforms every earlier model: on the test split it keeps the meaning in
 \mBeamTKept\% of outputs (earlier models at most \bvHmaxKept\%) and cuts \mBeamTClause{}
 words from the longest clause (model~2 in the app \bvHAppTfiveClause{}); even against model~2
 behind the app's newest checks it is no worse on meaning and cuts about three times as
-many words. The app offers model~3 with four beams as a setting. A small meaning judge catches 95.5\% of planted errors. On a
+many words. Model~3 with four beams is the app's large model. A small meaning judge catches 95.5\% of planted errors. On a
 Snapdragon 870 phone the first word of a rewrite appears 82--172\,ms after the
 request with the int8 AraBART bundle (222\,MB, the default) and 177--318\,ms with
 the optional AraT5v2 bundles (471\,MB).\vspace{2pt}}}
 \end{fullwidth}
 
+% ============================================================== at a glance
+\clearpage
+\section*{Bayan at a Glance}
+\label{sec:glance}
+
+\lead{The problem.} Long clauses, rare words and missing short vowels make Arabic
+text hard for readers with dyslexia, and the tools that simplify text send it to a
+server.
+
+\lead{What we built.} Bayan is an Android app. A reader selects Arabic text in any
+app and chooses \ar{تبسيط} (\emph{Simplify}); a simpler version appears over the page,
+written entirely on the phone and offline. Bayan can also add tashkeel (the short
+vowels) and read the text aloud.
+
+\lead{What it achieves.}
+
+\vspace{2pt}\noindent{\small
+\begin{tabularx}{\linewidth}{|p{0.27\linewidth}|X|}
+\hline
+\head{Question} & \head{Answer} \\ \hline
+Does the best model keep the meaning? & Model~3 with four beams, the app's large
+  model, keeps it in \mBeamTKept\% of test outputs; every earlier model, at most
+  \bvHmaxKept\% \\ \hline
+Is the text simpler? & Its longest clause is \mBeamTClause{} words shorter; the
+  app's model before it managed \bvHAppTfiveClause{} \\ \hline
+Do people agree? & Team raters found model~3 easier on \hmThreeChEasier\% of the
+  outputs it changed (model~2: \hmTwoChEasier\%) and chose it over model~2 in
+  \hmPThreeTwoFirst{} of \hmPThreeTwoTotal{} comparisons; the reader with dyslexia found
+  \hmThreeREasier{} of its \hmThreeRN{} outputs easier and none harder \\ \hline
+Is it safe? & Every number is kept and no negation is flipped; a sentence that
+  would lose either is shown unchanged \\ \hline
+Does it run on a phone? & The fast model shows the first word in 82--172\,ms and
+  takes 222\,MB; the large model writes a sentence in about 1.2\,s and takes
+  471\,MB \\ \hline
+Tashkeel? & Added without changing a letter: 6.91\% of vowels wrong outside case
+  endings, from a 4.8\,MB model \\ \hline
+Can the numbers be trusted? & The meaning scorer agrees with human raters (AUC
+  \hAucSame{}), and every score comes from BayanBench, an open benchmark anyone on
+  the team can rerun \\ \hline
+\end{tabularx}}\vspace{4pt}
+
+\lead{Objectives.} Lower linguistic load without losing meaning: partly met. Add
+tashkeel without changing letters: met. Run on a phone with a default within
+250\,MB: met. Evidence from readers: started, with one reader with dyslexia
+(\autoref{sec:limits}).
+
+\lead{What comes next.} A reading study with more readers with dyslexia, measuring
+reading time and comprehension, and faster beam decoding, so the best model's
+quality also arrives word by word.
+
+\clearpage
 % ============================================================== 1 Introduction
 \section{Introduction}
 
@@ -227,9 +279,8 @@ architectures, exported to the phone, tested on a device, and scored on a
 benchmark built for the task. The last week replaced the benchmark's closed
 meaning judge with an open scorer and checked that scorer against human ratings;
 model~3, trained on a second corpus, was then gated against the shipped model in
-the app's own pipeline. Decoded greedily it lost meaning on test, so on 4 October
-it was added as an option and model~2 stayed the app's large model; with beam search
-in the app (5 October) and complete scores, model~3 outperforms every earlier model. \autoref{fig:schedule} shows the timeline;
+the app's own pipeline. With beam search in the app and complete scores, model~3
+outperforms every earlier model, and on 5 October it became the app's large model. \autoref{fig:schedule} shows the timeline;
 \autoref{tab:milestones} compares target and actual dates.
 
 \begin{figure}[h]
@@ -259,7 +310,7 @@ Model running on a phone, latency measured            & Fri 2 Oct  & Sat 26 Sep 
 BayanBench built; model~2 scored on its test split    & ---        & Mon 28 Sep \\ \hline
 BayanBench v2: open meaning scorer; all systems scored (\#48) & ---  & Wed 30 Sep \\ \hline
 Human rating round complete, six raters (\#48)        & Fri 2 Oct  & Sat 3 Oct \\ \hline
-Model~3 ship decision (\autoref{sec:model3})           & Sun 4 Oct  & Sun 4 Oct: option \\ \hline
+Model~3 ship decision (\autoref{sec:model3})           & Sun 4 Oct  & Mon 5 Oct: large model \\ \hline
 Beam search in the app, a setting for model~3 (\#61, \#62, \#66) & --- & Mon 5 Oct \\ \hline
 Tashkeel in the app (Libtashkeel, a setting)        & ---        & Mon 5 Oct \\ \hline
 \end{tabularx}
@@ -473,8 +524,8 @@ restraint, and protection of text that must not change, as the open problems.
 Model~3 retrains AraT5v2 on corpus v1 instead of the model-2 mix. In the app it
 runs behind the text step's code guards (\autoref{sec:design}), which keep the
 source sentence when a rewrite loses a number or flips a negation and pass
-protected text through untouched. It ships in the app as an option next to
-model~2 (\autoref{sec:model3}).
+protected text through untouched. It ships as the app's large model, decoding
+with four beams (\autoref{sec:model3}).
 
 \autoref{fig:evolution} summarises how the training pipeline changed. Each step
 was driven by a measured problem in the one before it.
@@ -524,9 +575,10 @@ require it, keeps reading while the reader returns to the page.
 \lead{Inference.} The simplifier ships as an int8 ONNX bundle (encoder, decoder
 with a key--value cache, and tokenizer), downloaded once, verified by SHA-256, and
 run by ONNX Runtime with a decoding loop written in Kotlin that blocks repeated
-3-grams and stops at 256 tokens. By default it decodes greedily and streams each
-token to the screen as it is produced. For model~3 a setting, \emph{More faithful,
-slower} (off by default; \#61, \#62, \#66), decodes with four beams instead: a port
+3-grams and stops at 256 tokens. The fast model and model~2 decode greedily and
+stream each token to the screen as it is produced. Model~3, the large model, decodes
+with four beams (the setting \emph{More faithful, slower}, on by default; \#61, \#62,
+\#66) and shows each sentence when it is finished: a port
 of transformers' beam search that runs the beams as one batch and reorders the
 decoder's cache when a beam continues another.
 On the same CPU the app's engine gives transformers' exact tokens on 120 of 120
@@ -1015,6 +1067,28 @@ most votes; the other contrasts hold too few votes to separate the systems.
 
 \pairstable
 
+\lead{The model~3 round.} A second round (4--5 October) rated the app's three models
+as the reader gets them: the fast model (AraBART int8), model~2 AraT5v2 int8 and
+model~3 int8 with four beams, all through the app's text step. It used 18 BayanBench
+test sentences (core and outside sets; no held-out item, so none of model~3's
+training text) and was blind. A Latin square gave each of the \hmRaters{} team raters
+every sentence once and each model on six, so each model has \hmThreeN{} team
+ratings on the same sentences; six comparisons, two per pair of models, were rated
+by everyone. Model~3 was rated best. It kept the meaning as often as any model
+(\hmThreeSame\% of ratings, \hmThreeMajor\% major changes; model~2 \hmTwoSame\%, the
+fast model \hmBartSame\%) and was the most often found easier: \hmThreeEasier\% of
+its ratings [\hmThreeEasierCi] against \hmTwoEasier\% for model~2 and
+\hmBartEasier\% for the fast model, and on the outputs it changed, \hmThreeChEasier\%
+against \hmTwoChEasier\% and \hmBartChEasier\%, with none rated harder. In the
+side-by-side comparisons every team vote between model~3 and model~2 chose model~3
+(\hmPThreeTwoFirst{} of \hmPThreeTwoTotal{}), and model~3 won \hmPThreeBartFirst{} of
+the \hmPThreeBartTotal{} votes against the fast model (\hmPThreeBartSecond{} for the fast model, \hmPThreeBartSame{} equal). The
+reader with dyslexia, who had rated \hmReaderDone{} of \hmReaderTotal{} tasks at
+submission, found \hmThreeREasier{} of model~3's \hmThreeRN{} outputs easier and
+none harder, and chose model~3 in both comparisons that included it. The round is
+small, 18 sentences, so it confirms the direction of the benchmark rather than
+measuring a size.
+
 \FloatBarrier
 \subsection{BayanBench Results}
 \label{sec:benchres}
@@ -1136,7 +1210,7 @@ got wrong, it leaves easy text unchanged in 55\% of cases against 14\%, keeps
 protected text intact in 97.8\% against 4.4\%, and keeps numbers in 93\% of cases.
 Because int8 had changed most of model~2's outputs, model~3 was gated as it
 would ship: its int8 bundle, run through the app's current text step
-(\autoref{sec:design}), against the app's large model (model~2 AraT5v2, int8)
+(\autoref{sec:design}), against the app's large model at the time (model~2 AraT5v2, int8)
 through the same step, on the BayanBench core items. The rule, set before the run,
 was that meaning kept must not be significantly lower, the longest clause must
 shrink by more than the app's, and no check may be significantly worse. On dev,
@@ -1172,19 +1246,25 @@ significant cost in clause length [\mBGTClauseCi].
 Khengari's benchmark report (\#57, \#58), which scores 35 systems with every number
 generated from the bench's own scorecards, reaches the same verdict and recommends
 model~3 app int8 with four beams and the safety net as the system to ship. On the test
-core items, against the app's large model as benchmarked in \autoref{tab:benchhead}, it
+core items, against model~2 in the app as benchmarked in \autoref{tab:benchhead}, it
 keeps every number (100\% against 84\%), changes no negation, limit or condition word,
 leaves easy text unchanged in 74\% of cases against 48\%, and cuts 3.5 more words from
-the longest clause [+2.5, +4.5], while meaning kept rises by 4 points [+0, +8]. The
+the longest clause [+2.5, +4.5], while meaning kept rises by 4 points [+0, +8].\footnote{His report puts the system at 83\% meaning kept and 5.4 words cut on
+test; this section's run gives \mBeamTKept\% and \mBeamTClause{}. Both decode the same int8
+bundle with four beams; his applies the safety net to transformers' outputs on another
+CPU, where int8 rounding differs slightly, while ours runs the app's own decoder and its
+full text step (sentence pieces, the guards, punctuation repair). The comparisons
+they support point the same way.} The
 same report shows where the remaining headroom lies. The phone version simplifies
 less than the float model: float model~3 with the net cuts 7.7 words from the longest clause and
 lowers the reading level by 0.38, the int8 bundle with four beams and the net 5.4
 words and 0.20 levels. Model~3 also leaves 47\% of items unchanged against the app's 19\%, and on the
 outputs it does change, P(same) is 0.67 against the app's 0.74: it rewrites less often,
-but harder. Model~2 remains the app's
-default large model only because model~3's best results need the beam setting,
-which is off by default and about three times slower per sentence
-(\autoref{tab:device}); model~3 is offered next to it with that setting.
+but harder. Model~3 with four beams is
+therefore the app's large model (5 October). Its four beams take about three times
+as long per sentence as greedy decoding (\autoref{tab:device}); a reader who prefers
+word-by-word streaming can turn the setting off, and model~2 stays available as the
+earlier large model.
 
 \subsection{User Interface}
 
@@ -1364,7 +1444,7 @@ O2 Diacritize without changing letters & Libtashkeel in the app (a setting): DER
   met \\ \hline
 O3 Run on a phone; default within 250\,MB & Both bundles run on a Snapdragon 870
   phone, first token in 28--318\,ms; the default AraBART int8 is 222\,MB; the
-  optional AraT5v2 int8 bundles (model~2 large, model~3) are 471\,MB, kept whole for
+  optional AraT5v2 int8 bundles (model~3, the large model, and model~2) are 471\,MB, kept whole for
   quality & met \\ \hline
 O4 Evidence from readers & A reader with dyslexia rated \rN{} rewrites for ease, with
   informed consent: \rEasier{} easier, \rHarder{} harder. No one with dyslexia has
@@ -1448,8 +1528,8 @@ comprehension, would turn ratings into evidence about reading.
       optional AraT5v2 bundles (471\,MB) need more storage than the default.
 \item \textbf{Model~3's meaning rests on the judge.} With four beams every test
       core item is scored, but no significant difference is not proof of none: the
-      interval on test runs from \mBeamTKeptCi{} points. The human rating round on
-      model~3's outputs was still open at submission.
+      interval on test runs from \mBeamTKeptCi{} points. The human rating of
+      model~3 covers 18 sentences.
 \item \textbf{One run per configuration.} Each model was trained once, with one
       seed, so the comparison between architectures carries no estimate of
       training variance.

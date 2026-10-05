@@ -92,6 +92,10 @@
     \parbox[c][5.4mm][c]{\dimexpr\textwidth+\sicinset-2\fboxsep\relax}{%
       \hspace*{2.5mm}\fontsize{14}{16}\selectfont\bfseries\color{white}%
       \thesection.\ #1}}}
+\titleformat{name=\section,numberless}{\normalfont}{}{0pt}{%
+  \hspace*{-\sicinset}\colorbox{sicblue}{%
+    \parbox[c][5.4mm][c]{\dimexpr\textwidth+\sicinset-2\fboxsep\relax}{%
+      \hspace*{2.5mm}\fontsize{14}{16}\selectfont\bfseries\color{white}#1}}}
 \titlespacing*{\section}{0pt}{16pt plus 3pt minus 2pt}{8pt}
 
 \titleformat{\subsection}{\normalfont\fontsize{11}{14}\selectfont}
