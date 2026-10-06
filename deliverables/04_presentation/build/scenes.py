@@ -497,17 +497,27 @@ class S7Phone(Deck):
     NUM, KICKER, TITLE, TOTAL = 7, "06 · On a phone", "", TOTAL
 
     def build(self):
-        # One step. When the recording exists, pass it to `step(src=...)` and manim-slides
-        # will play it as this slide's video (see the Deck.step docstring in common.py).
-        head = T("What the app does", 26, INK, SEMIBOLD).move_to([0, 2.0, 0])
-        body = RoundedRectangle(width=2.75, height=4.3, corner_radius=0.3, fill_color=NIGHT,
-                                fill_opacity=1, stroke_color=INK4, stroke_width=2).move_to([0, -0.5, 0])
-        scr = RoundedRectangle(width=2.5, height=3.9, corner_radius=0.18, fill_color=PAPER2,
-                               fill_opacity=1, stroke_width=0).move_to(body)
-        icon = T("▶", 44, INK3).move_to(scr)
-        cap = T("recording goes here", 13, INK3).next_to(icon, DOWN, buff=0.25)
-        self.play(FadeIn(head), run_time=0.5)
-        self.play(FadeIn(body), FadeIn(scr), FadeIn(icon), FadeIn(cap), run_time=0.8)
+        # left: the statement; right: phone frame with the demo poster.
+        # Clicking plays the recording full-screen via manim-slides `src=`.
+        head = T("What the app does", 30, INK, SEMIBOLD)
+        body = T("Select Arabic text in any app.\nTap tabseet. Bayan simplifies it\nand reads it aloud.",
+                 18, INK2, line_spacing=1.15)
+        left = VGroup(head, body).arrange(DOWN, buff=0.35, aligned_edge=LEFT)
+        left.move_to([-2.6, 0.1, 0], aligned_edge=LEFT)
+
+        bez = 0.12
+        vh = 5.0
+        vw = vh * (1080 / 2400)
+        phone = RoundedRectangle(width=vw + 2 * bez, height=vh + 2 * bez, corner_radius=0.18,
+                                 fill_color=NIGHT, fill_opacity=1, stroke_color=INK4, stroke_width=3)
+        phone.move_to([3.3, 0.1, 0])
+        poster = ImageMobject(str(ASSETS / "demo-poster.jpg"))
+        poster.scale_to_fit_width(vw)
+        poster.move_to(phone)
+
+        self.play(FadeIn(left, shift=RIGHT * 0.2), run_time=0.7)
+        self.play(FadeIn(phone), FadeIn(poster), run_time=0.6)
+        self.step(src=str(ASSETS / "demo.mp4"))
 
 
 # ---------------------------------------------------------------- 8. close

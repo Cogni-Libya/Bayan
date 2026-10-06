@@ -53,6 +53,16 @@ That constrains every model choice: ONNX Runtime Mobile only, nothing that needs
 and a total download budget of roughly 250 MB. Full reasoning in
 [`docs/decisions/0001-product-form.md`](docs/decisions/0001-product-form.md).
 
+### Demo
+
+Recorded on a phone over an Arabic Wikipedia paragraph: select the text → **تبسيط** in the selection menu →
+the simplified version in the bottom sheet, with read-aloud.
+
+<video src="deliverables/05_demo/bayan_demo.mp4" controls width="320"></video>
+
+Local copy: [`deliverables/05_demo/bayan_demo.mp4`](deliverables/05_demo/bayan_demo.mp4) — the same clip
+runs in the pitch decks (`deliverables/04_presentation/`).
+
 ## 3. Data — we build our own simplification corpus
 
 No large, open, parallel Arabic simplification corpus exists, so Bayan builds one:

@@ -630,14 +630,23 @@ def s6c(prs, layout):
 def s7(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 7, "06 · On a phone", "")
-    c.text(ML, 1.75, CW, 0.45, "What the app does", 22, INK, True, "c")
-    bw, bh = 2.85, 4.15
-    x = (SW - bw) / 2
-    y = 2.35
+    # left: the statement; right: the 9:20 demo in a phone frame
+    bez = 0.12
+    bh = 5.3
+    vw = (bh - 2 * bez) * (1080 / 2400)
+    bw = vw + 2 * bez
+    x = SW - MR - bw
+    y = 1.62
     c.rect(x, y, bw, bh, NIGHT, INK4, 2, 0.26)
-    c.rect(x + 0.12, y + 0.12, bw - 0.24, bh - 0.24, PAPER2, radius=0.16)
-    c.text(x, y + bh / 2 - 0.55, bw, 0.85, "▶", 36, INK3, align="c")
-    c.text(x, y + bh / 2 + 0.45, bw, 0.3, "recording goes here", 12, INK3, align="c")
+    c.add_movie(ASSETS / "demo.mp4", x + bez, y + bez, vw, bh - 2 * bez,
+                alt="Bayan demo: select Arabic text, tap Simplify, read aloud",
+                name="Demo video")
+
+    left_w = x - ML - 0.5
+    c.text(ML, 2.7, left_w, 0.55, "What the app does", 30, INK, True)
+    c.text(ML, 3.45, left_w, 1.6,
+           "Select Arabic text in any app.\nTap تبسيط. Bayan simplifies it\nand reads it aloud.",
+           18, INK2, line_spacing=1.25)
     c.finish(slide_notes("S7Phone"))
 
 
