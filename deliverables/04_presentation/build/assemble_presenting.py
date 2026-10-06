@@ -30,6 +30,7 @@ SLIDES = [  # (scene, alt text, notes: None = taken from script_data)
     ("S2Problem", "11% of Arab primary-school children have developmental dyslexia; the word كتب has three readings; shorter clauses help, and Bayan's scope", None),
     ("S3Data", "Corpus v1 pipeline: BAREC, strip tashkeel, route, Gemma 4 31B, code, readability and meaning gates, 14,975 rows", None),
     ("S4Models", "Three model lanes: model 1 (SAMER), model 2 (more data and tags), model 3 (corpus v1); dropped branches", None),
+    ("SPipeline", "The pipeline: source corpora, leakage check, meaning gate at 0.85, fine-tune, BayanBench v2; the loop carries the v0.1, v0.2 and v0.3 findings back into the data", None),
     ("S5Measure", "BayanBench: copy trap, three kinds of measure, the scorer checked against six raters (AUC 0.85), one reader with dyslexia", None),
     ("S6Results", "Trade-off scatter; model 3 minus the shipped large model with intervals: simplifies more, keeps less meaning, copies more", None),
     ("S7Phone", "Phone recording slot; what the app does; AraBART default 222 MB and AraT5v2 optional 471 MB on a Xiaomi Mi 11X", None),
@@ -47,6 +48,8 @@ TIMING = (
 
 def last_frame(mp4: Path, png: Path):
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-sseof", "-0.05", "-i", str(mp4), "-vframes", "1", str(png)], check=True)
+    if not png.exists():  # -sseof can seek past the last packet on short clips and write nothing
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(mp4), "-vframes", "1", str(png)], check=True)
 
 
 P14 = "http://schemas.microsoft.com/office/powerpoint/2010/main"

@@ -60,6 +60,16 @@ SPEECH = [{'scene': 'S1Cover',
              'v0.2, no tag)',
              'v0.3 is AraT5v2 on corpus v1, no tag. As trained, it cuts twice the words of v0.2 and keeps '
              'about the same meaning.')]},
+ {'scene': 'SPipeline',
+  'speaker': 1,
+  'title': 'The pipeline: build, measure, learn',
+  'steps': [('Five connected stages: sources, leakage check, meaning gate, fine-tune, measure',
+             'Those three versions came out of one pipeline. Sources pass a leakage check, then a meaning '
+             'gate set at point eight five, then fine-tuning, then BayanBench.'),
+            ('A feedback loop closes back on the sources, carrying the three version findings',
+             'And the loop is the point. v0.1 taught us that copying wins. v0.2 taught us that meaning '
+             'breaks first. Each finding became the next version\'s data, and v0.3 keeps meaning in '
+             'eighty-two percent of outputs. Next: how we trust that measurement.')]},
  {'scene': 'S5Measure',
   'speaker': 1,
   'title': 'Measuring it, and the people check',
@@ -213,7 +223,7 @@ CHECKLIST = [
     "figures are flagged UNVERIFIED: confirm them on issue #65 or #58.",
     "Open `Bayan_Presenting.html` in Chrome on the presenting laptop once, and click through every step. "
     "Every step waits for a click.",
-    "Or run `manim-slides present S1Cover S2Problem S3Data S4Models S5Measure S6Results S7Phone S8Close` "
+    "Or run `manim-slides present S1Cover S2Problem S3Data S4Models SPipeline S5Measure S6Results S7Phone S8Close` "
     "from build/ as the live player.",
     "Record the 30 s phone video and drop it into the S7Phone slot (see README); play it once, audio off.",
     "Print this script or keep it on a second screen; both decks carry the same text in their notes.",
@@ -250,6 +260,7 @@ def slide_notes(scene):
 def step_notes(scene, k):
     """Notes for one step of the presenting deck (one slide per step)."""
     s = next(x for x in SPEECH if x["scene"] == scene)
-    cue, text = s["steps"][k - 1]
+    kk = min(k, len(s["steps"]))
+    cue, text = s["steps"][kk - 1]
     head = f"[{SPEAKERS[s['speaker']]}] " if k == 1 else ""
-    return f"{head}Step {k} of {len(s['steps'])} ({cue})\n{text}"
+    return f"{head}Step {k} ({cue})\n{text}"

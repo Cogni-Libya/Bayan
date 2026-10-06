@@ -16,7 +16,7 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 OUT = HERE.parent / "Bayan_Presenting.html"
-SCENES = "S1Cover S2Problem S3Data S4Models S5Measure S6Results S7Phone S8Close S9End".split()
+SCENES = "S1Cover S2Problem S3Data S4Models SPipeline S5Measure S6Results S7Phone S8Close S9End".split()
 
 PAGE = """<!DOCTYPE html>
 <html lang="en">
@@ -84,7 +84,7 @@ def main():
                 "scene": scene,
                 "bg": data["background_color"],
                 "auto": auto and bool(st["auto_next"]),
-                "b64": base64.b64encode((HERE / st["file"]).read_bytes()).decode(),
+                "b64": base64.b64encode((HERE / (st.get("src") or st["file"])).read_bytes()).decode(),
             })
     OUT.write_text(PAGE.replace("__STEPS__", json.dumps(steps)))
     print(f"{OUT.name}: {len(steps)} steps, {OUT.stat().st_size / 1e6:.1f} MB")

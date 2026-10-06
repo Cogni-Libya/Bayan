@@ -6,7 +6,7 @@ verified by `check_numbers.py` before rendering.
 | | Presenting (Manim + HTML) | Submission (`../Bayan_Submission.pptx`) |
 |---|---|---|
 | Made of | Manim scenes played live or exported to a self-contained HTML file | Native PowerPoint shapes and text, PowerPoint's own animations |
-| Beats | 8 scenes (cover, problem, data, models, measuring, results, phone, close) | 20 slides — one per presenting step, so a static render matches the HTML click-through |
+| Beats | 10 scenes (cover, problem, data, pipeline, models, measuring, results, phone, close, end card) | 22 slides — one per presenting step, so a static render matches the HTML click-through |
 | Editable | No (re-render) | Yes |
 | Fonts | baked into the video | must be installed: Readex Pro, Noto Naskh Arabic, Amiri |
 | Source | `scenes.py`, `common.py` | `nativekit.py`, `build_native.py` |
@@ -31,7 +31,7 @@ uv run python check_numbers.py
 ./render_videos.sh
 
 # 3. live player (Qt window)
-uv run manim-slides present S1Cover S2Problem S3Data S4Models S5Measure S6Results S7Phone S8Close
+uv run manim-slides present S1Cover S2Problem S3Data S4Models SPipeline S5Measure S6Results S7Phone S8Close
 
 # 4. portable HTML export (single file, no install needed; one click per step)
 uv run python make_html.py            # -> ../Bayan_Presenting.html
