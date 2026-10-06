@@ -630,10 +630,10 @@ def s6c(prs, layout):
 def s7(prs, layout):
     c = Canvas(prs, layout, PAPER)
     chrome(c, 7, "06 · On a phone", "")
-    # left: the statement; right: the 9:20 demo in a phone frame
+    # left: the statement; right: the demo in a phone frame
     bez = 0.12
     bh = 5.3
-    vw = (bh - 2 * bez) * (1080 / 2400)
+    vw = (bh - 2 * bez) * (1080 / 2316)
     bw = vw + 2 * bez
     x = SW - MR - bw
     y = 1.62

@@ -507,7 +507,7 @@ class S7Phone(Deck):
 
         bez = 0.12
         vh = 5.0
-        vw = vh * (1080 / 2400)
+        vw = vh * (1080 / 2316)
         phone = RoundedRectangle(width=vw + 2 * bez, height=vh + 2 * bez, corner_radius=0.18,
                                  fill_color=NIGHT, fill_opacity=1, stroke_color=INK4, stroke_width=3)
         phone.move_to([3.3, 0.1, 0])
