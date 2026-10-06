@@ -68,6 +68,16 @@ Constraints: ONNX Runtime Mobile only, no Python or GPU at runtime, and a defaul
 (BayanSimplify-v0.2-Fast, 222 MB); the AraT5v2 bundles (471 MB) are optional downloads, kept whole for quality. Reasoning: [`docs/decisions/0001-product-form.md`](docs/decisions/0001-product-form.md);
 app build and layout: [`app/`](app/); brand, logo, colours and reading rules: [`app/design-system/`](app/design-system/readme.md).
 
+### Demo
+
+Recorded on a phone over an Arabic Wikipedia paragraph: select the text → **تبسيط** in the selection menu →
+the simplified version in the bottom sheet, with read-aloud.
+
+<video src="deliverables/05_demo/bayan_demo.mp4" controls width="320"></video>
+
+Local copy: [`deliverables/05_demo/bayan_demo.mp4`](deliverables/05_demo/bayan_demo.mp4) — the same clip
+runs in the pitch decks (`deliverables/04_presentation/`).
+
 ## 3. Data
 
 No large, open, parallel Arabic simplification corpus fits the task, so Bayan builds its own:
