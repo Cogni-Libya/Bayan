@@ -35,7 +35,7 @@ class ModelDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
             var done = 0L
             for (file in model.files) {
                 val dest = File(staging, file.name)
-                download(file.url ?: "${BuildConfig.MODEL_BASE_URL}/${model.id}/${file.name}", dest, file) { bytes ->
+                download(file.url ?: "${BuildConfig.MODEL_BASE_URL}/${model.folder}/${file.name}", dest, file) { bytes ->
                     val total = done + bytes
                     val progress = total.toFloat() / model.bytes
                     setProgress(workDataOf(KEY_PROGRESS to progress, KEY_BYTES to total))

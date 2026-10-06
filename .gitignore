@@ -48,8 +48,14 @@ models/
 .agents/
 ORIGINAL_REQUEST.md
 
+# Hermes local project context (private to this machine; never commit)
+.hermes.md
+
 # Benchmark outputs (raw model predictions; regenerable)
 results/
 
 # Converter output for the locked test sets (regenerable)
 data/eval_inputs/
+
+# Cogni bot generated artifacts
+.cogni-output/

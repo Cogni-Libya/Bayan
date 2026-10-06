@@ -29,7 +29,7 @@ for f in train dev test; do
 done
 ```
 
-## Model 2 data (private Kaggle datasets)
+## BayanSimplify-v0.2 data (private Kaggle datasets)
 
 Both hold SAMER text, so they stay private and never enter the repo (SAMER's licence forbids
 redistribution). Ask Marwan for access.

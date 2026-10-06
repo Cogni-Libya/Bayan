@@ -1,0 +1,98 @@
+BayanBench 1.0, test: /home/marwanelamami/MyProjects/Bayan/data/processed/bench/preds/test/app-arat5.jsonl  (rate % or mean [95% interval])
+  note: thresholds set on the command line: your own analysis, not the official score
+
+== core items (749) ==
+  meaning (open scorer)
+    meaning kept                                                    78.6 [ 75- 82]  n=659
+    P(same meaning)                                                 +0.79 [+0.75, +0.82]  n=659
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +1.92 [+1.05, +2.86]  n=212
+    reading level: levels lower                                     +0.14 [+0.08, +0.20]  n=543
+    hard words: fewer                                               +0.31 [+0.22, +0.44]  n=328
+  checks (deterministic)
+    numbers kept                                                    84.0 [ 70- 94]  n=75
+    no house-rule break                                            100.0 [100-100]  n=659
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     48.1 [ 36- 61]  n=77
+    F: letters unchanged                                            47.8 [ 30- 70]  n=90
+    F: exactly unchanged                                             0.0 [  0-  0]  n=90
+    E1: end mark kept                                               38.8 [ 28- 49]  n=85
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                 7.1 [  4- 11]  n=141
+    limit changed                                                   13.3 [  5- 24]  n=45
+    condition changed                                               12.2 [  4- 21]  n=49
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              99.7 [ 99-100]  n=582
+    no clause over 15 words                                         35.4 [ 29- 43]  n=209
+    negations kept                                                  94.2 [ 90- 98]  n=139
+    mid-sentence full stop added                                     1.2 [  0-  2]  n=659
+    B: not left as copy                                             84.1 [ 77- 91]  n=107
+
+== held-out items (274) ==
+  meaning (open scorer)
+    meaning kept                                                    77.0 [ 63- 90]  n=274
+    P(same meaning)                                                 +0.84 [+0.80, +0.90]  n=274
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.33 [+1.14, +3.49]  n=58
+    reading level: levels lower                                     +0.19 [+0.02, +0.30]  n=163
+    hard words: fewer                                               +0.33 [+0.16, +0.50]  n=129
+  checks (deterministic)
+    numbers kept                                                    52.8 [ 20-100]  n=53
+    no house-rule break                                            100.0 [100-100]  n=274
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     22.8 [ 14- 33]  n=92
+    E1: end mark kept                                               22.2 [  0- 67]  n=9
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                14.3 [  5- 22]  n=56
+    limit changed                                                    5.9 [  0- 21]  n=17
+    condition changed                                                0.0 [  0-  0]  n=6
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              96.7 [ 93- 99]  n=182
+    no clause over 15 words                                         42.5 [ 30- 55]  n=40
+    negations kept                                                  90.6 [ 85- 97]  n=53
+    mid-sentence full stop added                                     0.4 [  0-  1]  n=274
+    B: not left as copy                                             95.7 [ 87-100]  n=23
+
+== outside items (204) ==
+  meaning (open scorer)
+    meaning kept                                                    75.5 [ 69- 81]  n=204
+    P(same meaning)                                                 +0.76 [+0.70, +0.82]  n=204
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   +2.09 [+0.75, +3.55]  n=65
+    reading level: levels lower                                     +0.07 [-0.04, +0.16]  n=167
+    hard words: fewer                                               +0.20 [+0.12, +0.29]  n=123
+  checks (deterministic)
+    numbers kept                                                    89.7 [ 81- 97]  n=39
+    no house-rule break                                            100.0 [100-100]  n=204
+  behaviour tests (outside the headline)
+    C: easy text left unchanged                                     27.3 [ 12- 41]  n=33
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                20.6 [  6- 35]  n=34
+    limit changed                                                   22.2 [  0- 57]  n=9
+    condition changed                                               25.9 [ 14- 37]  n=27
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                              95.9 [ 93- 99]  n=171
+    no clause over 15 words                                         23.9 [ 15- 33]  n=67
+    negations kept                                                  87.1 [ 75- 97]  n=31
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=204
+    B: not left as copy                                             82.5 [ 72- 91]  n=57
+
+== written items (23) ==
+  meaning (open scorer)
+    meaning kept                                                    82.6 [ 65- 96]  n=23
+    P(same meaning)                                                 +0.83 [+0.65, +0.96]  n=23
+  simpler (change from selection to output, mean)
+    longest clause: words shorter                                   -1.00 [-1.00, -1.00]  n=1
+    reading level: levels lower                                     +0.00 [-0.17, +0.17]  n=23
+    hard words: fewer                                               +0.62 [+0.25, +1.00]  n=8
+  checks (deterministic)
+    numbers kept                                                   100.0 [100-100]  n=2
+    no house-rule break                                            100.0 [100-100]  n=23
+  flags (sent to the scorer's contradict question; not failures)
+    negation changed                                                13.3 [  0- 33]  n=15
+    limit changed                                                   16.7 [  0- 50]  n=6
+    condition changed                                               11.1 [  0- 33]  n=9
+  diagnostics (v1 measures under test)
+    kept 60%+ of words                                             100.0 [100-100]  n=23
+    negations kept                                                  92.9 [ 79-100]  n=14
+    mid-sentence full stop added                                     0.0 [  0-  0]  n=23

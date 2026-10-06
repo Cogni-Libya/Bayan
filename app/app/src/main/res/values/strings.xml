@@ -63,8 +63,10 @@
     <!-- Models -->
     <string name="model_arabart_title">النموذج السريع</string>
     <string name="model_arabart_summary">الأنسب لمعظم الهواتف: حجمه صغير، ويبسّط النص بسرعة جملةً جملة.</string>
-    <string name="model_arat5_title">النموذج الكبير</string>
-    <string name="model_arat5_summary">حصل على درجة أعلى في اختباراتنا، لكنه أبطأ ويحتاج إلى مساحة أكبر.</string>
+    <string name="model_arat5_title">النموذج الكبير السابق</string>
+    <string name="model_arat5_summary">يُظهر النص كلمةً كلمة، لكنه يبسّط أقل من النموذج الكبير. بالحجم نفسه.</string>
+    <string name="model_model3_summary">أفضل نماذجنا: يحافظ على المعنى ويبسّط أكثر من غيره. أبطأ ويحتاج إلى مساحة أكبر، وتظهر كل جملة حين تكتمل.</string>
+    <string name="model_model3_title">النموذج الكبير</string>
     <string name="models_title">نماذج التبسيط</string>
     <string name="models_privacy">تعمل النماذج على هاتفك بالكامل، فلا يغادر نصك جهازك أبدًا.</string>
     <string name="models_download">تنزيل (%1$s)</string>
@@ -107,6 +109,10 @@
     <string name="settings_speech_sample">مرحبًا، هذه سرعة القراءة التي اخترتها.</string>
     <string name="settings_highlight">تمييز الكلمة المقروءة</string>
     <string name="settings_highlight_body">تُظلَّل كل كلمة أثناء قراءتها بصوت لتتابعها بعينك</string>
+    <string name="settings_more_faithful">أدق في المعنى، وأبطأ</string>
+    <string name="settings_more_faithful_body">يوازن بين عدة صياغات قبل أن يختار، فيحافظ على المعنى أكثر. تظهر كل جملة حين تكتمل.</string>
+    <string name="settings_tashkeel">إظهار التشكيل</string>
+    <string name="settings_tashkeel_body">يضيف الحركات إلى النص المبسط، فتُقرأ كل كلمة بوجه واحد. مطفأ افتراضيا، لأن التشكيل الكامل قد يزحم السطر على بعض القراء.</string>
     <string name="settings_voice">محرك الصوت</string>
     <string name="settings_voice_body">اختر الصوت العربي من إعدادات تحويل النص إلى كلام</string>
     <string name="settings_model">نموذج التبسيط</string>
@@ -119,7 +125,9 @@
     <string name="settings_privacy">خصوصيتك</string>
     <string name="settings_privacy_body">يجري التبسيط على هاتفك، ولا يُرسَل أي نص إلى الإنترنت.</string>
     <string name="settings_fonts">الخطوط</string>
-    <string name="settings_fonts_body">Noto Sans Arabic وNoto Naskh Arabic، برخصة SIL Open Font License</string>
+    <string name="settings_fonts_body">⁨Readex Pro⁩ و⁨Noto Sans Arabic⁩ و⁨Noto Naskh Arabic⁩، برخصة ⁨SIL Open Font License⁩</string>
+    <string name="settings_tashkeel_credit">التشكيل</string>
+    <string name="settings_tashkeel_credit_body">⁨Libtashkeel⁩ من ⁨Musharraf Omer⁩، برخصة ⁨MIT⁩</string>
 
     <!-- Onboarding -->
     <string name="onboarding_skip">تخطي</string>
@@ -145,11 +153,20 @@
     <string name="notification_channel_downloads">تنزيل النماذج</string>
     <string name="notification_downloading">جارٍ تنزيل %1$s</string>
     <string name="models_section">النماذج المتاحة</string>
-    <string name="models_facts">%1$s · %2$s · SARI %3$.1f</string>
+    <string name="models_facts">%1$s · %2$s</string>
     <string name="history_today">اليوم</string>
     <string name="history_yesterday">أمس</string>
     <string name="surface_default">تلقائي</string>
     <string name="font_system">خط النظام</string>
+    <string name="font_readex">Readex Pro</string>
+    <string name="settings_style">الشكل</string>
+    <string name="style_bayan">بيان</string>
+    <string name="style_bayan_body">ورق دافئ وخطّ صُمّم للقراءة</string>
+    <string name="style_system">ألوان هاتفك</string>
+    <string name="style_system_body">من خلفية شاشتك وخط النظام</string>
+    <string name="onboarding_style_title">اختر شكل بيان</string>
+    <string name="onboarding_style_body">يمكنك تغييره متى شئت من الإعدادات.</string>
+    <string name="language_follows_phone">%1$s (لغة الهاتف)</string>
     <string name="settings_version_title">الإصدار</string>
     <string name="sheet_working">جارٍ التبسيط…</string>
     <string name="voices_title">صوت القراءة</string>

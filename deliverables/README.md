@@ -6,10 +6,10 @@ template (templates are copyrighted by Samsung — keep this repository **privat
 | Folder | Deliverable | SIC template | Status |
 |---|---|---|---|
 | [`01_action_plan/`](01_action_plan/) | Action Plan | `SIC_AI_Capstone Project_Action Plan.docx` | Done — final draft merged in #25 |
-| [`02_work_breakdown_structure/`](02_work_breakdown_structure/) | WBS workbook — detailed tasks, owners, daily status | `SIC_AI_Capstone Project_Work Breakdown Structure.xlsx` | In progress — 8 phases, 38 work packages |
-| [`03_final_report/`](03_final_report/) | Final Report | `SIC_AI_Capstone Project_Final Report.docx` | Draft in progress on branch `docs/final-report-draft` (no PR yet) |
-| [`04_presentation/`](04_presentation/) | Presentation slides | `SIC_AI_Capstone Project_Presentation Slide Template.pptx` | Not started — **no owner yet** |
-| [`05_demo/`](05_demo/) | Demo video / screenshots of the working prototype | — | Not started |
+| [`02_work_breakdown_structure/`](02_work_breakdown_structure/) | WBS workbook — detailed tasks, owners, daily status | `SIC_AI_Capstone Project_Work Breakdown Structure.xlsx` | Done — `Bayan_WBS.xlsx`: 8 phases, 62 work packages through 5 Oct (the pitch and demo still to come) |
+| [`03_final_report/`](03_final_report/) | Final Report | `SIC_AI_Capstone Project_Final Report.docx` | Done — `Bayan_Final_Report.pdf` (40 pages), built from `latex/` |
+| [`04_presentation/`](04_presentation/) | Presentation slides | `SIC_AI_Capstone Project_Presentation Slide Template.pptx` | In progress — the pitch deck by Abdulrahman Khengari (#50); Sanad Ali presents the pitch |
+| [`05_demo/`](05_demo/) | Demo video / screenshots of the working prototype | — | To be recorded |
 
 **Deadlines:** Action Plan Tue 22 Sep · mentoring Wed 23 and Wed 30 Sep · **final submission Mon 5 Oct 2026** ·
 **final pitch Tue 6 Oct 2026**.
@@ -26,7 +26,7 @@ template (templates are copyrighted by Samsung — keep this repository **privat
 
 ## Conventions
 
-- File names: `Bayan_<Deliverable>.<ext>` (e.g. `Bayan_Final_Report.docx`); export a PDF next to each document.
+- File names: `Bayan_<Deliverable>.<ext>` (e.g. `Bayan_Final_Report.pdf`, `Bayan_WBS.xlsx`).
 - Replace files in place — git keeps the history, so don't add `_v2`, `_final` copies.
 - Cite primary sources from [`../references/INDEX.md`](../references/INDEX.md), not the notes themselves.
 - Never include SAMER data or real API keys in any deliverable.

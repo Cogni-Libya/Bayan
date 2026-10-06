@@ -1,5 +1,10 @@
 package ai.bayan.android.ui.home
 
+import androidx.compose.ui.unit.lerp
+import ai.bayan.android.ui.process.ThinkingLines
+import androidx.compose.foundation.layout.height
+import ai.bayan.android.ui.components.LogoLockup
+import ai.bayan.android.ui.components.BayanLogo
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -92,6 +97,7 @@ import ai.bayan.android.ui.components.OriginalToggle
 import ai.bayan.android.ui.components.ReaderActions
 import ai.bayan.android.ui.components.ReaderText
 import ai.bayan.android.ui.components.UnchangedNote
+import ai.bayan.android.ui.components.isUnchanged
 import ai.bayan.android.ui.components.spokenRange
 import ai.bayan.android.ui.isBusy
 import ai.bayan.android.ui.theme.ContentDirection
@@ -134,7 +140,9 @@ fun HomeScreen(
         modifier = Modifier.nestedScroll(appBar.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
+                // The logo (book and بيان) in place of the name; it reads as the name to screen readers.
+                // it shrinks with the bar as the page scrolls
+                title = { BayanLogo(LogoLockup.Mark, Modifier.height(lerp(44.dp, 30.dp, appBar.state.collapsedFraction))) },
                 subtitle = active?.let { { Text(stringResource(it.info.title)) } },
                 scrollBehavior = appBar,
             )
@@ -270,6 +278,10 @@ private fun InputArea(vm: HomeViewModel, enabled: Boolean, compact: Boolean) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ResultArea(state: SimplifyState, settings: Settings, onCopied: () -> Unit) {
+    // Text that streamed in has been revealed already: when it is done it is shown, not revealed a second time.
+    var streamed by remember { mutableStateOf(false) }
+    if (state is SimplifyState.Running && state.partial.isNotEmpty()) streamed = true
+    if (state is SimplifyState.Idle) streamed = false
     when (state) {
         SimplifyState.Idle, is SimplifyState.NeedsModel -> Unit
         SimplifyState.LoadingModel -> Row(
@@ -293,17 +305,17 @@ private fun ResultArea(state: SimplifyState, settings: Settings, onCopied: () ->
             )
             val key = "home:${state.run}:s"
             val committed = state.partial.take(state.committed)
-            ReaderText(
+            if (state.partial.isEmpty()) ThinkingLines(Modifier.padding(horizontal = 8.dp, vertical = 12.dp))
+            else ReaderText(
                 state.partial,
                 settings.reader,
-                placeholder = stringResource(R.string.home_result_placeholder),
                 reveal = true,
                 highlight = if (settings.highlightWhileReading) spokenRange(key) else null,
             )
             AutoRead(settings.autoRead, key, committed, settings.speechRate)
             if (committed.isNotEmpty()) ReaderActions(committed, key, settings.speechRate, complete = false)
         }
-        is SimplifyState.Done -> DoneResult(state, settings, onCopied)
+        is SimplifyState.Done -> DoneResult(state, settings, onCopied, reveal = !streamed)
         is SimplifyState.Failed -> NoticeCard(
             icon = Icons.Rounded.ErrorOutline,
             title = stringResource(R.string.home_failed_title),
@@ -314,11 +326,11 @@ private fun ResultArea(state: SimplifyState, settings: Settings, onCopied: () ->
 }
 
 @Composable
-private fun DoneResult(state: SimplifyState.Done, settings: Settings, onCopied: () -> Unit) {
+private fun DoneResult(state: SimplifyState.Done, settings: Settings, onCopied: () -> Unit, reveal: Boolean = true) {
     var showOriginal by rememberSaveable(state.result) { mutableStateOf(false) }
     val key = "home:${state.run}:${if (showOriginal) "o" else "s"}"
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OriginalToggle(showOriginal, { showOriginal = it }, Modifier.fillMaxWidth())
+        if (!isUnchanged(state.source, state.result)) OriginalToggle(showOriginal, { showOriginal = it }, Modifier.fillMaxWidth())
         // Actions come first, as in Translate: visible without scrolling however long the text is.
         ReaderActions(if (showOriginal) state.source else state.result, key, settings.speechRate, onCopied = onCopied)
         AnimatedContent(showOriginal, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "result") { original ->
@@ -326,7 +338,7 @@ private fun DoneResult(state: SimplifyState.Done, settings: Settings, onCopied: 
                 if (original) state.source else state.result,
                 settings.reader,
                 highlight = if (settings.highlightWhileReading) spokenRange(key) else null,
-                reveal = !original,
+                reveal = reveal && !original,
                 follow = true,
             )
         }

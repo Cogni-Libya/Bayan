@@ -1,0 +1,7 @@
+# Samsung's fonts, extracted from the SIC template by extract_template_assets.py
+fonts/
+# tectonic build intermediates
+*.log
+*.aux
+*.toc
+*.out

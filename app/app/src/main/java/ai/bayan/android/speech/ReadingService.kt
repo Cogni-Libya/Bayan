@@ -54,6 +54,7 @@ class ReadingService : Service() {
                 panel.show { move ->
                     FloatingReader(container, move, onExpand = ::openFullPanel, onClose = { container.overlay.close(); stopSelf() })
                 }
+                container.overlay.floatingShown.value = true
             }
         }
         show(playing = true)
@@ -81,6 +82,7 @@ class ReadingService : Service() {
     override fun onDestroy() {
         floating?.remove()
         floating = null
+        container.overlay.floatingShown.value = false
         scope.cancel()
         media.release()
         stopForeground(STOP_FOREGROUND_REMOVE)

@@ -1,5 +1,6 @@
 package ai.bayan.android.ui
 
+import ai.bayan.android.model.ModelCatalog
 import ai.bayan.android.AppContainer
 import ai.bayan.android.engine.ModelNotInstalledException
 import ai.bayan.android.engine.SimplifyEvent
@@ -40,9 +41,11 @@ class SimplifySession(private val app: AppContainer, private val scope: Coroutin
         job?.cancel()
         val run = ++runs
         job = scope.launch {
-            val modelId = app.settings.settings.first().activeModel
+            val settings = app.settings.settings.first()
+            val modelId = settings.activeModel
+            val beams = if (settings.moreFaithful) ModelCatalog.get(modelId).beams else 1
             try {
-                app.simplifier.simplify(source, modelId).collect { event ->
+                app.simplifier.simplify(source, modelId, beams, settings.tashkeel).collect { event ->
                     _state.value = when (event) {
                         SimplifyEvent.LoadingModel -> SimplifyState.LoadingModel
                         is SimplifyEvent.Progress -> SimplifyState.Running(source, event.text, event.committed, event.done, event.total, run)

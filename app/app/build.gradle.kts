@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -12,27 +14,53 @@ android {
         applicationId = "ai.bayan.android"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "2.0.0"
+        versionCode = 3
+        versionName = "2.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // ONNX Runtime ships ~35 MB of native code per ABI; 32-bit x86 has no current devices.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
         // Where the app downloads the on-device model bundles from (one folder per model id).
-        buildConfigField("String", "MODEL_BASE_URL", "\"https://huggingface.co/Congi-libya/bayan-onnx/resolve/main\"")
+        buildConfigField("String", "MODEL_BASE_URL", "\"https://huggingface.co/Congi-libya/BayanSimplify-ONNX/resolve/main\"")
     }
 
     androidResources {
         generateLocaleConfig = true
     }
 
+    // Release signing: app/keystore.properties (never committed) names the keystore and its passwords:
+    //   storeFile=/path/to/bayan-release.jks  storePassword=…  keyAlias=bayan  keyPassword=…
+    // Without it the release build is signed with the debug key, which installs but cannot update a signed release.
+    val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }?.let { f -> Properties().apply { f.inputStream().use(::load) } }
+    signingConfigs {
+        if (keystore != null) create("release") {
+            storeFile = file(keystore.getProperty("storeFile"))
+            storePassword = keystore.getProperty("storePassword")
+            keyAlias = keystore.getProperty("keyAlias")
+            keyPassword = keystore.getProperty("keyPassword")
+        }
+    }
+
+    // One APK per architecture (most phones: arm64-v8a) plus a universal one, as on the download page.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
+    // Unit tests that run the engine (EngineParityTest) need android.util.Log to be a no-op on the JVM.
+    testOptions.unitTests.isReturnDefaultValues = true
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -91,6 +119,7 @@ dependencies {
     implementation(libs.sherpa.onnx) { artifact { type = "aar" } }
 
     testImplementation(libs.junit)
+    testImplementation(libs.onnxruntime.jvm)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
@@ -98,4 +127,9 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.espresso.core)
+}
+
+// On the JVM, unit tests use ONNX Runtime's desktop build (same version) instead of the Android one.
+configurations.matching { it.name.endsWith("UnitTestRuntimeClasspath") }.configureEach {
+    exclude(group = "com.microsoft.onnxruntime", module = "onnxruntime-android")
 }

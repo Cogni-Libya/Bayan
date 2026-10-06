@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayan for Android</title>
+<meta name="description" content="Bayan simplifies Arabic text for readers with dyslexia, entirely on your Android phone. Download Bayan 2.1.0.">
+<link rel="icon" href="assets/favicon-light.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-light-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/app-icon-light-180.png">
+<meta name="theme-color" content="#F6F2E6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1A14" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600&family=Noto+Naskh+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper-0:#FBF8F0;--paper-1:#F6F2E6;--paper-2:#EFE9D9;--paper-3:#E6DFCC;--paper-4:#DCD4BF;
+  --ink-1:#282824;--ink-2:#4A4842;--ink-3:#6F6B5E;
+  --ochre-50:#F6EDE1;--ochre-500:#C6986B;--ochre-600:#A87A4D;--ochre-700:#8A5E35;
+}
+@media (prefers-color-scheme: dark){
+  :root{--paper-0:#212119;--paper-1:#1A1A14;--paper-2:#26261E;--paper-3:#302F27;--paper-4:#3D3C33;
+        --ink-1:#F2EFE2;--ink-2:#D2CEBF;--ink-3:#A19D8E;--ochre-50:#2A2419;--ochre-700:#DDBB95;}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper-1);color:var(--ink-1);font:400 17px/1.75 "Readex Pro",system-ui,sans-serif}
+html[lang=ar] body{font-family:"Readex Pro","Noto Naskh Arabic",system-ui,sans-serif}
+/* one language at a time */
+html[lang=ar] [data-l=en], html[lang=en] [data-l=ar]{display:none !important}
+a{color:var(--ochre-700);text-underline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+
+.top{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.logo{height:56px;width:auto;display:block}
+.logo.dark{display:none}
+@media (prefers-color-scheme: dark){.logo.light{display:none}.logo.dark{display:block}}
+.lang{font:500 14px/1 "Readex Pro",system-ui,sans-serif;color:var(--ink-2);background:var(--paper-0);
+      border:1px solid var(--paper-4);border-radius:999px;padding:9px 16px;cursor:pointer}
+.lang:hover{border-color:var(--ochre-500)}
+
+.hero{text-align:center;padding:36px 0 30px}
+h1{font-weight:500;font-size:clamp(32px,5.6vw,52px);line-height:1.25;margin:0 0 16px;letter-spacing:-.01em}
+html[lang=ar] h1{font-family:"Noto Naskh Arabic","Readex Pro",serif;letter-spacing:0;line-height:1.45}
+.lead{font-size:19px;color:var(--ink-2);max-width:620px;margin:0 auto}
+.btn{display:inline-flex;align-items:center;gap:12px;background:var(--ochre-500);color:#282824;text-decoration:none;
+     font-weight:500;font-size:18px;padding:15px 30px;border-radius:999px;margin-top:28px;transition:background .15s,transform .15s}
+.btn:hover{background:var(--ochre-600)}
+.btn:active{transform:scale(.98)}
+.btn svg{width:22px;height:22px;flex:none}
+.meta{font-size:14px;color:var(--ink-3);margin:12px 0 0}
+
+.example{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;margin:34px 0 8px}
+.pane{background:var(--paper-0);border:1px solid var(--paper-3);border-radius:22px;padding:18px 20px}
+.pane .label{font-size:13px;color:var(--ink-3);margin-bottom:8px}
+.pane p{margin:0;font-family:"Noto Naskh Arabic",serif;font-size:21px;line-height:2;direction:rtl;text-align:right}
+.pane.after{border-color:var(--ochre-500);box-shadow:0 10px 30px rgba(198,152,107,.15)}
+.arrow{display:grid;place-items:center;color:var(--ochre-500)}
+.arrow svg{width:28px;height:28px}
+html[lang=ar] .arrow svg{transform:scaleX(-1)}
+
+section{padding:40px 0 8px}
+h2{font-weight:500;font-size:26px;line-height:1.4;margin:0 0 18px}
+html[lang=ar] h2{font-family:"Noto Naskh Arabic","Readex Pro",serif}
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+ol.steps li{counter-increment:s;background:var(--paper-0);border:1px solid var(--paper-3);border-radius:20px;padding:18px 20px}
+ol.steps li::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+           background:var(--ochre-50);color:var(--ochre-700);font-weight:600;margin-bottom:10px}
+html[lang=ar] ol.steps li::before{content:counter(s,arabic-indic)}
+ol.steps p{margin:0}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--paper-0);border:1px solid var(--paper-3);border-radius:20px;padding:18px 20px}
+.card h3{margin:0 0 6px;font-size:16px;font-weight:600}
+.card p{margin:0;color:var(--ink-2);font-size:15.5px}
+.tag{display:inline-block;font-size:12px;font-weight:500;padding:2px 10px;border-radius:999px;background:var(--ochre-50);color:var(--ochre-700);margin-bottom:8px}
+ul.news{margin:0;padding-inline-start:22px;color:var(--ink-2)}
+ul.news li{margin:8px 0}
+ul.news b{color:var(--ink-1);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:11px 8px;border-bottom:1px solid var(--paper-3);text-align:start}
+th{font-weight:500;color:var(--ink-3);font-size:13px}
+td.size{white-space:nowrap;color:var(--ink-3)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;direction:ltr;unicode-bidi:isolate;word-break:break-all}
+.scroll{overflow-x:auto}
+footer{margin-top:44px;padding:26px 0 44px;border-top:1px solid var(--paper-3);color:var(--ink-3);font-size:14px}
+@media (max-width:720px){
+  body{font-size:16px}
+  .example{grid-template-columns:1fr}
+  .arrow svg{transform:rotate(90deg) !important}
+  ol.steps,.cards{grid-template-columns:1fr}
+  .logo{height:46px}
+  .hero{padding-top:20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <img class="logo light" src="assets/bayan-stacked-light.svg" alt="Bayan">
+  <img class="logo dark" src="assets/bayan-stacked-dark.svg" alt="Bayan">
+  <button class="lang" id="lang" type="button"><span data-l="ar">English</span><span data-l="en">العربية</span></button>
+</div>
+
+<div class="hero">
+  <h1><span data-l="ar">نصٌّ عربيٌّ أسهل، على هاتفك</span><span data-l="en">Easier Arabic, on your phone</span></h1>
+  <p class="lead" data-l="ar">حدِّد أي نص عربي في أي تطبيق واختر «تبسيط»، فتظهر نسخة أسهل فوق الصفحة: جمل أقصر وكلمات مألوفة والمعنى نفسه. صُمِّم بيان لقراء عُسر القراءة، ويعمل كله على الهاتف دون إنترنت.</p>
+  <p class="lead" data-l="en">Select Arabic text in any app and choose “Simplify”: a simpler version appears over the page, with shorter sentences, familiar words and the same meaning. Built for readers with dyslexia, and it all runs on the phone, offline.</p>
+  <a class="btn" href="https://huggingface.co/Congi-libya/Bayan-App/resolve/main/releases/2.1.0/Bayan-2.1.0-arm64-v8a.apk?download=true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    <span data-l="ar">تنزيل بيان لأندرويد</span><span data-l="en">Download for Android</span>
+  </a>
+  <p class="meta"><span data-l="ar">الإصدار 2.1.0 · 65 ميغابايت · أندرويد 8 فأحدث · <a href="#files">ملفات أخرى</a></span><span data-l="en">Version 2.1.0 · 65 MB · Android 8 or newer · <a href="#files">other files</a></span></p>
+
+  <div class="example">
+    <div class="pane"><div class="label"><span data-l="ar">النص الأصلي</span><span data-l="en">Original</span></div>
+      <p>وقد أدى التوسع العمراني السريع الذي شهدته المدينة خلال العقدين الماضيين، والذي لم يرافقه تخطيط كاف للبنية التحتية، إلى ازدحام مروري خانق في ساعات الذروة.</p></div>
+    <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></div>
+    <div class="pane after"><div class="label"><span data-l="ar">بعد التبسيط في بيان</span><span data-l="en">Simplified by Bayan</span></div>
+      <p>كان هناك توسع كبير في المدينة في العقدين الماضيين، لم يكن هناك تخطيط كاف للبنية التحتية، وهذا أدى إلى ازدحام مروري خانق في ساعات الذروة.</p></div>
+  </div>
+</div>
+
+<section>
+  <h2><span data-l="ar">التثبيت</span><span data-l="en">Install</span></h2>
+  <ol class="steps">
+    <li><p data-l="ar">نزِّل الملف من الزر أعلاه وافتحه من الإشعارات أو من مجلد التنزيلات.</p>
+        <p data-l="en">Download the file with the button above and open it from the notification or your Downloads.</p></li>
+    <li><p data-l="ar">إن سألك الهاتف، اسمح للمتصفح أو مدير الملفات «بتثبيت التطبيقات غير المعروفة»، ثم اضغط «تثبيت».</p>
+        <p data-l="en">If asked, allow your browser or file manager to “install unknown apps”, then tap Install.</p></li>
+    <li><p data-l="ar">افتح بيان ونزِّل نموذج التبسيط مرة واحدة (السريع 222 ميغابايت، ويُفضَّل عبر <bdi>Wi‑Fi</bdi>). بعدها يعمل دون إنترنت.</p>
+        <p data-l="en">Open Bayan and download a simplification model once (the fast model is 222 MB; Wi‑Fi recommended). After that it works offline.</p></li>
+    <li><p data-l="ar">في أي تطبيق، حدِّد نصًّا عربيًّا واختر «تبسيط» من القائمة. ويمكنك أيضًا لصق النص داخل بيان.</p>
+        <p data-l="en">In any app, select Arabic text and choose “Simplify” from the menu. You can also paste text into Bayan itself.</p></li>
+  </ol>
+</section>
+
+<section>
+  <h2><span data-l="ar">على هاتفك</span><span data-l="en">On your phone</span></h2>
+  <div class="cards">
+    <div class="card"><span class="tag"><span data-l="ar">الافتراضي</span><span data-l="en">Default</span></span>
+      <h3>BayanSimplify-v0.2-Fast</h3>
+      <p data-l="ar">222 ميغابايت، وتظهر الكلمة الأولى خلال أقل من خُمس ثانية.</p>
+      <p data-l="en">222 MB; the first word appears in under a fifth of a second.</p></div>
+    <div class="card"><span class="tag"><span data-l="ar">الأفضل</span><span data-l="en">Best</span></span>
+      <h3>BayanSimplify-v0.3</h3>
+      <p data-l="ar">471 ميغابايت، نحو ثانية للجملة، ويحافظ على المعنى في 82٪ من مخرجاته في اختبارنا.</p>
+      <p data-l="en">471 MB; about a second per sentence; keeps the meaning in 82% of outputs on our test set.</p></div>
+    <div class="card"><span class="tag"><span data-l="ar">الخصوصية</span><span data-l="en">Privacy</span></span>
+      <h3><span data-l="ar">على الجهاز فقط</span><span data-l="en">On the device only</span></h3>
+      <p data-l="ar">لا حساب ولا خادم: النص لا يغادر هاتفك.</p>
+      <p data-l="en">No account and no server: your text never leaves the phone.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span data-l="ar">الجديد في 2.1.0</span><span data-l="en">What’s new in 2.1.0</span></h2>
+  <ul class="news" data-l="ar">
+    <li><b>BayanSimplify-v0.3</b> هو «النموذج الكبير» الآن، وهو أفضل نماذجنا: يحافظ على المعنى أكثر من كل النماذج السابقة ويبسِّط أكثر.</li>
+    <li><b>أدق في المعنى، وأبطأ</b> (مفعَّل افتراضيًّا): يوازن بين عدة صياغات قبل أن يختار.</li>
+    <li><b>إظهار التشكيل</b>: يضيف الحركات إلى النص المبسَّط دون أن يغيِّر حرفًا.</li>
+    <li><b>فحوص أمان أوسع</b>: الجملة التي يُسقَط منها رقم أو يتغيَّر فيها نفي أو شرط تبقى كما في الأصل.</li>
+  </ul>
+  <ul class="news" data-l="en">
+    <li><b>BayanSimplify-v0.3</b> is now the large model, and our best: it keeps the meaning more often than every earlier model and simplifies more.</li>
+    <li><b>More faithful, slower</b> (on by default): weighs several wordings before choosing one.</li>
+    <li><b>Show tashkeel</b>: adds the short vowels to the simplified text without changing a letter.</li>
+    <li><b>Wider safety checks</b>: a sentence that would lose a number or change a negation or condition stays as in the original.</li>
+  </ul>
+  <p class="meta"><a href="https://huggingface.co/Congi-libya/Bayan-App/blob/main/releases/2.1.0/CHANGELOG.md"><span data-l="ar">سجل التغييرات الكامل</span><span data-l="en">Full changelog</span></a></p>
+</section>
+
+<section id="files">
+  <h2><span data-l="ar">كل الملفات</span><span data-l="en">All files</span></h2>
+  <div class="scroll">
+  <table>
+    <tr><th><span data-l="ar">الملف</span><span data-l="en">File</span></th><th><span data-l="ar">لمن</span><span data-l="en">For</span></th><th><span data-l="ar">الحجم</span><span data-l="en">Size</span></th></tr>
+    <tr><td><a href="https://huggingface.co/Congi-libya/Bayan-App/resolve/main/releases/2.1.0/Bayan-2.1.0-arm64-v8a.apk?download=true">arm64-v8a</a></td><td><span data-l="ar">معظم الهواتف</span><span data-l="en">Most phones</span></td><td class="size">65 MB</td></tr>
+    <tr><td><a href="https://huggingface.co/Congi-libya/Bayan-App/resolve/main/releases/2.1.0/Bayan-2.1.0-armeabi-v7a.apk?download=true">armeabi-v7a</a></td><td><span data-l="ar">الهواتف القديمة (32 بت)</span><span data-l="en">Older 32-bit phones</span></td><td class="size">47 MB</td></tr>
+    <tr><td><a href="https://huggingface.co/Congi-libya/Bayan-App/resolve/main/releases/2.1.0/Bayan-2.1.0-universal.apk?download=true">universal</a></td><td><span data-l="ar">إن لم تكن متأكدًا</span><span data-l="en">If unsure</span></td><td class="size">172 MB</td></tr>
+    <tr><td><a href="https://huggingface.co/Congi-libya/Bayan-App/resolve/main/releases/2.1.0/Bayan-2.1.0-x86_64.apk?download=true">x86_64</a></td><td><span data-l="ar">المحاكيات وأجهزة Chromebook</span><span data-l="en">Emulators and Chromebooks</span></td><td class="size">74 MB</td></tr>
+  </table>
+  </div>
+  <p class="meta"><a href="https://huggingface.co/Congi-libya/Bayan-App/resolve/main/releases/2.1.0/SHA256SUMS.txt">SHA256SUMS.txt</a> ·
+    <span data-l="ar">بصمة شهادة التوقيع</span><span data-l="en">Signing certificate</span> <span class="mono">cd76d2fe8ff9a527b9b0dabb6889d160f9b5e678a3c3bc9c44f3c4e004725dde</span></p>
+  <p class="meta"><span data-l="ar">النماذج منشورة على <a href="https://huggingface.co/Congi-libya">Hugging Face</a> بترخيص <bdi>CC BY-NC 4.0</bdi> (غير تجاري).</span><span data-l="en">The models are on <a href="https://huggingface.co/Congi-libya">Hugging Face</a> under CC BY-NC 4.0 (non-commercial).</span></p>
+</section>
+
+<footer>
+  <span data-l="ar">بيان مشروع تخرج لفريق Cogni ضمن برنامج Samsung Innovation Campus للذكاء الاصطناعي، 2026. تجريبي وغير تجاري.</span>
+  <span data-l="en">Bayan is a capstone project by Team Cogni, Samsung Innovation Campus AI course, 2026. Experimental and non-commercial.</span>
+</footer>
+
+</div>
+<script>
+(function () {
+  var root = document.documentElement;
+  function set(l) {
+    root.lang = l; root.dir = l === "ar" ? "rtl" : "ltr";
+    document.title = l === "ar" ? "بيان لأندرويد" : "Bayan for Android";
+    try { localStorage.setItem("bayan-lang", l); } catch (e) {}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem("bayan-lang"); } catch (e) {}
+  var l = new URLSearchParams(location.search).get("lang") || saved ||
+          ((navigator.language || "ar").toLowerCase().indexOf("ar") === 0 ? "ar" : "en");
+  set(l === "en" ? "en" : "ar");
+  document.getElementById("lang").addEventListener("click", function () { set(root.lang === "ar" ? "en" : "ar"); });
+})();
+</script>
+</body>
+</html>

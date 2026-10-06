@@ -38,6 +38,8 @@ import androidx.compose.material.icons.rounded.SpaceBar
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Texture
+import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -83,6 +85,9 @@ import ai.bayan.android.data.ReaderFont
 import ai.bayan.android.data.ReaderStyle
 import ai.bayan.android.data.ReaderSurface
 import ai.bayan.android.data.ThemeMode
+import ai.bayan.android.ui.theme.isDark
+import ai.bayan.android.ui.components.StylePicker
+import ai.bayan.android.data.AppStyle
 import ai.bayan.android.model.ModelCatalog
 import ai.bayan.android.speech.VoiceCatalog
 import ai.bayan.android.ui.appViewModel
@@ -106,7 +111,10 @@ class SettingsViewModel(private val app: AppContainer) : ViewModel() {
     fun surface(v: ReaderSurface) = set { repo.setSurface(v) }
     fun speechRate(v: Float) = set { repo.setSpeechRate(v) }
     fun highlight(v: Boolean) = set { repo.setHighlight(v) }
+    fun moreFaithful(v: Boolean) = set { repo.setMoreFaithful(v) }
+    fun tashkeel(v: Boolean) = set { repo.setTashkeel(v) }
     fun theme(v: ThemeMode) = set { repo.setThemeMode(v) }
+    fun style(v: AppStyle) = set { repo.setStyle(v) }
     fun resetReader() = set {
         val d = ReaderStyle()
         repo.setReaderFont(d.font); repo.setReaderSize(d.sizeSp); repo.setLineHeight(d.lineHeight)
@@ -146,20 +154,28 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
                 ReaderText(stringResource(R.string.settings_preview_text), preview, Modifier.padding(bottom = 8.dp))
 
                 SectionHeader(stringResource(R.string.settings_section_reading))
-                Item(0, 6, Icons.Rounded.FontDownload, R.string.settings_font, stringResource(fontLabel(settings.reader.font)), onClick = { choice = Choice.Font })
-                SliderItem(1, 6, Icons.Rounded.TextFields, R.string.settings_size, "${size.roundToInt()}", size, 16f..34f, 8, { size = it }) { vm.size(size) }
-                SliderItem(2, 6, Icons.Rounded.FormatLineSpacing, R.string.settings_line_height, "%.1f×".format(line), line, 1.4f..2.4f, 9, { line = it }) { vm.lineHeight(line) }
+                Item(0, 7, Icons.Rounded.FontDownload, R.string.settings_font, stringResource(fontLabel(settings.reader.font)), onClick = { choice = Choice.Font })
+                SliderItem(1, 7, Icons.Rounded.TextFields, R.string.settings_size, "${size.roundToInt()}", size, 16f..34f, 8, { size = it }) { vm.size(size) }
+                SliderItem(2, 7, Icons.Rounded.FormatLineSpacing, R.string.settings_line_height, "%.1f×".format(line), line, 1.4f..2.4f, 9, { line = it }) { vm.lineHeight(line) }
                 SliderItem(
-                    3, 6, Icons.Rounded.SpaceBar, R.string.settings_word_spacing,
+                    3, 7, Icons.Rounded.SpaceBar, R.string.settings_word_spacing,
                     if (words < 0.01f) stringResource(R.string.spacing_normal) else stringResource(R.string.spacing_wider, (words * 100).roundToInt()),
                     words, 0f..0.3f, 9, { words = it },
                 ) { vm.wordSpacing(words) }
                 SegmentedListItem(
-                    shapes = shapes(4, 6),
+                    shapes = shapes(4, 7),
                     leadingContent = { Icon(Icons.Rounded.Texture, null) },
                     supportingContent = { SurfacePicker(settings.reader.surface, vm::surface) },
                 ) { Text(stringResource(R.string.settings_surface)) }
-                Item(5, 6, Icons.Rounded.RestartAlt, R.string.settings_reset_reading, null, onClick = vm::resetReader)
+                SegmentedListItem(
+                    checked = settings.tashkeel,
+                    onCheckedChange = vm::tashkeel,
+                    shapes = shapes(5, 7),
+                    leadingContent = { Icon(Icons.Rounded.Translate, null) },
+                    supportingContent = { Text(stringResource(R.string.settings_tashkeel_body)) },
+                    trailingContent = { Switch(checked = settings.tashkeel, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_tashkeel)) }
+                Item(6, 7, Icons.Rounded.RestartAlt, R.string.settings_reset_reading, null, onClick = vm::resetReader)
 
                 SectionHeader(stringResource(R.string.settings_section_listening))
                 SliderItem(0, 3, Icons.Rounded.Speed, R.string.settings_speech_rate, "%.1f×".format(rate), rate, 0.5f..1.5f, 9, { rate = it }) {
@@ -177,22 +193,37 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
                 Item(2, 3, Icons.Rounded.RecordVoiceOver, R.string.voices_title, stringResource(VoiceCatalog.get(settings.voice).title), onClick = onOpenVoices)
 
                 SectionHeader(stringResource(R.string.settings_section_model))
-                Item(0, 1, Icons.Rounded.Memory, R.string.settings_model, stringResource(ModelCatalog.get(settings.activeModel).title), onClick = onOpenModels)
+                // The "more faithful" switch only for models whose beam search was benchmarked (ModelInfo.beams).
+                val offersBeams = ModelCatalog.get(settings.activeModel).beams > 1
+                Item(0, if (offersBeams) 2 else 1, Icons.Rounded.Memory, R.string.settings_model, stringResource(ModelCatalog.get(settings.activeModel).title), onClick = onOpenModels)
+                if (offersBeams) SegmentedListItem(
+                    checked = settings.moreFaithful,
+                    onCheckedChange = vm::moreFaithful,
+                    shapes = shapes(1, 2),
+                    leadingContent = { Icon(Icons.Rounded.Verified, null) },
+                    supportingContent = { Text(stringResource(R.string.settings_more_faithful_body)) },
+                    trailingContent = { Switch(checked = settings.moreFaithful, onCheckedChange = null) },
+                ) { Text(stringResource(R.string.settings_more_faithful)) }
 
                 SectionHeader(stringResource(R.string.settings_section_appearance))
+                StylePicker(
+                    settings.style, settings.themeMode.isDark(), onSelect = { vm.style(it) },
+                    Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+                )
                 val languages = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
                 val count = if (languages) 2 else 1
                 Item(0, count, Icons.Rounded.DarkMode, R.string.settings_theme, stringResource(themeLabel(settings.themeMode)), onClick = { choice = Choice.Theme })
                 if (languages) {
-                    Item(1, count, Icons.Rounded.Language, R.string.settings_language, stringResource(R.string.settings_language_body), onClick = {
+                    Item(1, count, Icons.Rounded.Language, R.string.settings_language, currentLanguage(), onClick = {
                         context.startActivity(Intent(SystemSettings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null)))
                     })
                 }
 
                 SectionHeader(stringResource(R.string.settings_section_about))
-                Item(0, 3, Icons.Rounded.Lock, R.string.settings_privacy, stringResource(R.string.settings_privacy_body))
-                Item(1, 3, Icons.Rounded.Info, R.string.settings_version_title, BuildConfig.VERSION_NAME)
-                Item(2, 3, Icons.Rounded.FontDownload, R.string.settings_fonts, stringResource(R.string.settings_fonts_body))
+                Item(0, 4, Icons.Rounded.Lock, R.string.settings_privacy, stringResource(R.string.settings_privacy_body))
+                Item(1, 4, Icons.Rounded.Info, R.string.settings_version_title, BuildConfig.VERSION_NAME)
+                Item(2, 4, Icons.Rounded.FontDownload, R.string.settings_fonts, stringResource(R.string.settings_fonts_body))
+                Item(3, 4, Icons.Rounded.Translate, R.string.settings_tashkeel_credit, stringResource(R.string.settings_tashkeel_credit_body))
             }
         }
     }
@@ -216,7 +247,23 @@ fun SettingsScreen(onOpenModels: () -> Unit, onOpenVoices: () -> Unit, vm: Setti
     }
 }
 
-@StringRes private fun fontLabel(f: ReaderFont) = if (f == ReaderFont.System) R.string.font_system else R.string.font_naskh
+@StringRes private fun fontLabel(f: ReaderFont) = when (f) {
+    ReaderFont.Readex -> R.string.font_readex
+    ReaderFont.Naskh -> R.string.font_naskh
+    ReaderFont.System -> R.string.font_system
+}
+
+/** The app's language as it is now, named in itself (Android 13+ per-app languages). */
+@Composable
+private fun currentLanguage(): String {
+    val context = LocalContext.current
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return stringResource(R.string.settings_language_body)
+    val chosen = context.getSystemService(android.app.LocaleManager::class.java).applicationLocales
+    return if (chosen.isEmpty) {
+        val phone = java.util.Locale.getDefault()
+        stringResource(R.string.language_follows_phone, phone.getDisplayLanguage(phone))
+    } else chosen[0].let { it.getDisplayLanguage(it) }
+}
 
 @StringRes private fun themeLabel(m: ThemeMode) = when (m) {
     ThemeMode.System -> R.string.theme_system

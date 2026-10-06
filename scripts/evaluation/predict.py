@@ -8,9 +8,9 @@ Pipeline:
 Only the model name / checkpoint path and the input prefix change between runs.
 
 The prefix must match the one the model was trained with, or the scores are meaningless:
-  model 1 (SAMER):          --prefix "بسّط: "            (the default)
-  model 2, AraT5v2:         --prefix "بسّط: [SAMER] "    (swap the tag for the test set)
-  model 2, AraBART:         --prefix "بسط: [SAMER] "     (AraBART's tokenizer turns the shadda into <unk>)
+  BayanSimplify-v0.1:       --prefix "بسّط: "            (the default)
+  BayanSimplify-v0.2:       --prefix "بسّط: [SAMER] "    (swap the tag for the test set)
+  BayanSimplify-v0.2-Fast:  --prefix "بسط: [SAMER] "     (AraBART's tokenizer turns the shadda into <unk>)
   an untrained checkpoint:  --prefix ""
 """
 

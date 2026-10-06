@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+.kotlin/
+
+# Release signing (keystore and passwords stay on the release machine)
+keystore.properties
+*.jks
+*.keystore

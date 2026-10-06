@@ -1,5 +1,7 @@
 package ai.bayan.android.ui.onboarding
 
+import ai.bayan.android.ui.components.LogoLockup
+import ai.bayan.android.ui.components.BayanLogo
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
@@ -18,6 +20,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
+import ai.bayan.android.ui.theme.isDark
+import ai.bayan.android.ui.components.LocalAppContainer
+import ai.bayan.android.ui.components.StylePicker
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -58,7 +63,7 @@ import ai.bayan.android.ui.models.ModelsViewModel
 import ai.bayan.android.ui.theme.ContentDirection
 import kotlinx.coroutines.launch
 
-private const val PAGES = 3
+private const val PAGES = 4
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -77,7 +82,8 @@ fun OnboardingScreen(onFinish: () -> Unit, vm: ModelsViewModel = appViewModel { 
                     ) {
                         when (page) {
                             0 -> WelcomePage()
-                            1 -> AnywherePage()
+                            1 -> StylePage()
+                            2 -> AnywherePage()
                             else -> ModelPage(vm)
                         }
                     }
@@ -113,17 +119,8 @@ private fun PageTitle(title: String, body: String) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun WelcomePage() {
-    Box(
-        Modifier.size(128.dp).clip(MaterialShapes.Cookie9Sided.toShape()).background(MaterialTheme.colorScheme.primaryContainer),
-        contentAlignment = Alignment.Center,
-    ) {
-        Image(
-            painterResource(R.drawable.ic_launcher_foreground),
-            null,
-            Modifier.size(168.dp),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
-        )
-    }
+    // The stacked logo (book and بيان), with its clear space: the sun's diameter all round.
+    BayanLogo(LogoLockup.Stacked, Modifier.padding(top = 24.dp).height(112.dp), sunrise = true)
     PageTitle(stringResource(R.string.onboarding_welcome_title), stringResource(R.string.onboarding_welcome_body))
     Spacer(Modifier.height(24.dp))
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -137,6 +134,17 @@ private fun WelcomePage() {
         Text(stringResource(R.string.result_simplified), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
         ReaderText(stringResource(R.string.onboarding_example_after), ReaderStyle(sizeSp = 20f))
     }
+}
+
+/** Bayan's own look or the phone's, chosen once here and changeable in Settings; the screen takes it on at once. */
+@Composable
+private fun StylePage() {
+    val app = LocalAppContainer.current
+    val settings by app.settings.settings.collectAsStateWithLifecycle(null)
+    val scope = rememberCoroutineScope()
+    PageTitle(stringResource(R.string.onboarding_style_title), stringResource(R.string.onboarding_style_body))
+    val s = settings ?: return
+    StylePicker(s.style, s.themeMode.isDark(), onSelect = { scope.launch { app.settings.setStyle(it) } }, Modifier.padding(top = 8.dp))
 }
 
 @Composable

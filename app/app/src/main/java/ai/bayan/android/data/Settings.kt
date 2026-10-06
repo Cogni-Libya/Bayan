@@ -14,8 +14,14 @@ import kotlinx.coroutines.flow.map
 
 enum class ThemeMode { System, Light, Dark }
 
-/** [System] is the phone's own Arabic font; Naskh is the bundled book style. */
-enum class ReaderFont { System, Naskh }
+/**
+ * The app's look: [Bayan] is Bayan's own design system (warm paper and ink, the ochre of the logo's sun, Readex Pro);
+ * [System] takes the phone's Material You colours from the wallpaper and the system font.
+ */
+enum class AppStyle { Bayan, System }
+
+/** [Readex] is Readex Pro (Lexend's reading-fluency design, for Arabic); [Naskh] the bundled book style; [System] the phone's own font. */
+enum class ReaderFont { Readex, Naskh, System }
 
 /**
  * Where simplified text is shown. [Default] follows the system theme; the others are tinted, low-glare
@@ -24,7 +30,7 @@ enum class ReaderFont { System, Naskh }
 enum class ReaderSurface { Default, Cream, Mint, Paper, Night }
 
 data class ReaderStyle(
-    val font: ReaderFont = ReaderFont.System,
+    val font: ReaderFont = ReaderFont.Readex,
     val sizeSp: Float = 22f,
     val lineHeight: Float = 1.8f,
     val wordSpacing: Float = 0.12f,
@@ -34,6 +40,7 @@ data class ReaderStyle(
 data class Settings(
     val onboardingDone: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.System,
+    val style: AppStyle = AppStyle.Bayan,
     val activeModel: String = ModelCatalog.DEFAULT_ID,
     val reader: ReaderStyle = ReaderStyle(),
     val speechRate: Float = 0.9f,
@@ -41,6 +48,11 @@ data class Settings(
     /** Start reading aloud as soon as the first simplified sentence is ready. */
     val autoRead: Boolean = false,
     val highlightWhileReading: Boolean = true,
+    /** Beam search for models that offer it (ModelInfo.beams): keeps the meaning more often, slower, not streamed. On by
+     *  default, so the large model (BayanSimplify-v0.3) runs as it was benchmarked. */
+    val moreFaithful: Boolean = true,
+    /** Short vowels (tashkeel) on the simplified text. Off by default: full marks can crowd a line for some readers. */
+    val tashkeel: Boolean = false,
     val wifiOnly: Boolean = true,
 )
 
@@ -50,6 +62,7 @@ class SettingsRepository(private val context: Context) {
     private object Keys {
         val onboarding = booleanPreferencesKey("onboarding_done")
         val theme = stringPreferencesKey("theme_mode")
+        val style = stringPreferencesKey("app_style")
         val model = stringPreferencesKey("active_model")
         val font = stringPreferencesKey("reader_font")
         val size = floatPreferencesKey("reader_size")
@@ -60,6 +73,8 @@ class SettingsRepository(private val context: Context) {
         val voice = stringPreferencesKey("voice")
         val autoRead = booleanPreferencesKey("auto_read")
         val highlight = booleanPreferencesKey("highlight_reading")
+        val faithful = booleanPreferencesKey("more_faithful")
+        val tashkeel = booleanPreferencesKey("tashkeel")
         val wifi = booleanPreferencesKey("wifi_only")
     }
 
@@ -68,6 +83,7 @@ class SettingsRepository(private val context: Context) {
         Settings(
             onboardingDone = p[Keys.onboarding] ?: d.onboardingDone,
             themeMode = p[Keys.theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: d.themeMode,
+            style = p[Keys.style]?.let { runCatching { AppStyle.valueOf(it) }.getOrNull() } ?: d.style,
             activeModel = p[Keys.model] ?: d.activeModel,
             reader = ReaderStyle(
                 font = p[Keys.font]?.let { runCatching { ReaderFont.valueOf(it) }.getOrNull() } ?: d.reader.font,
@@ -80,12 +96,15 @@ class SettingsRepository(private val context: Context) {
             voice = p[Keys.voice] ?: d.voice,
             autoRead = p[Keys.autoRead] ?: d.autoRead,
             highlightWhileReading = p[Keys.highlight] ?: d.highlightWhileReading,
+            moreFaithful = p[Keys.faithful] ?: d.moreFaithful,
+            tashkeel = p[Keys.tashkeel] ?: d.tashkeel,
             wifiOnly = p[Keys.wifi] ?: d.wifiOnly,
         )
     }
 
     suspend fun setOnboardingDone() = context.dataStore.edit { it[Keys.onboarding] = true }
     suspend fun setThemeMode(v: ThemeMode) = context.dataStore.edit { it[Keys.theme] = v.name }
+    suspend fun setStyle(v: AppStyle) = context.dataStore.edit { it[Keys.style] = v.name }
     suspend fun setActiveModel(id: String) = context.dataStore.edit { it[Keys.model] = id }
     suspend fun setReaderFont(v: ReaderFont) = context.dataStore.edit { it[Keys.font] = v.name }
     suspend fun setReaderSize(v: Float) = context.dataStore.edit { it[Keys.size] = v }
@@ -96,5 +115,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setVoice(id: String) = context.dataStore.edit { it[Keys.voice] = id }
     suspend fun setAutoRead(v: Boolean) = context.dataStore.edit { it[Keys.autoRead] = v }
     suspend fun setHighlight(v: Boolean) = context.dataStore.edit { it[Keys.highlight] = v }
+    suspend fun setMoreFaithful(v: Boolean) = context.dataStore.edit { it[Keys.faithful] = v }
+    suspend fun setTashkeel(v: Boolean) = context.dataStore.edit { it[Keys.tashkeel] = v }
     suspend fun setWifiOnly(v: Boolean) = context.dataStore.edit { it[Keys.wifi] = v }
 }

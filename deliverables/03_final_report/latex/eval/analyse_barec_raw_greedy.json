@@ -1,0 +1,8 @@
+{
+ "copy_rate_pct": 37.52401866593467,
+ "single_word_edit_pct": 27.10896309314587,
+ "median_len_ratio": 1.0,
+ "source_words_kept_pct": 78.23781193360158,
+ "rows_losing_half_pct": 17.54048860828987,
+ "empty_outputs": 0
+}
