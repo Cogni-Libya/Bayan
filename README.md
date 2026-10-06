@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/banners/bayan-banner-editorial-dark.png">
+    <img src="docs/brand/banners/bayan-banner-editorial-light.png" alt="Bayan (بيان): اقرأ بوضوح. An AI Reading Assistant for Arabic Readers with Dyslexia" width="100%">
+  </picture>
+</p>
+
 # Bayan (بيان) — An AI Reading Assistant for Arabic Readers with Dyslexia
 
 **Team Cogni** · Samsung Innovation Campus (SIC) AI Course — Capstone Project
@@ -174,6 +181,7 @@ Bayan/
 ├── bayanbench/                    # BayanBench v2.0: the task benchmark (package, tests, README)
 ├── deliverables/                  # SIC capstone deliverables (action plan, WBS, report, slides, demo)
 ├── docs/                          # Model results, the diacritization comparison
+│   ├── brand/                 # Rendered banners (README, social); source in app/design-system
 │   └── decisions/                 # Decision records — what we chose, and why
 ├── references/                    # Literature review, benchmarks, and the project's reference architecture
 │   ├── INDEX.md                   # Start here
