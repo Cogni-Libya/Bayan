@@ -90,7 +90,7 @@ def chrome(c, num, kicker=None, title=None, dark=False):
         c.text(ML, 0.88, CW, 0.55, title, 26, fg, True)
     sam = c.pic(ASSETS / ("samsung-white.png" if dark else "samsung-blue.png"), ML, 6.93, 1.12, "Samsung", "Samsung logo")
     c.text(ML + 1.28, 6.98, 4.2, 0.28, "Samsung Innovation Campus  ·  AI Course", 10, CREAM if dark else INK3)
-    c.text(SW - MR - 1.0, 6.98, 1.0, 0.28, f"{num} / 8", 10, CREAM if dark else INK3, align="r")
+    c.text(SW - MR - 1.0, 6.98, 1.0, 0.28, f"{num} / 9", 10, CREAM if dark else INK3, align="r")
     return sam
 
 

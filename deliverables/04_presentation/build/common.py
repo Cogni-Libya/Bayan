@@ -166,7 +166,7 @@ class Deck(Slide):
     """
     NUM, KICKER, TITLE = 0, "", ""
     DARK = False
-    TOTAL = 9
+    TOTAL = 10
 
     def begin_beat(self):
         """Let the first step of this beat advance on its own once it has played."""

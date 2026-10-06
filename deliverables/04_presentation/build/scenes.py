@@ -20,7 +20,7 @@ def R(x):
     return int(x + 0.5)
 
 
-TOTAL = 9
+TOTAL = 10
 
 
 # ---------------------------------------------------------------- 1. cover
@@ -540,27 +540,22 @@ class S7Phone(Deck):
     NUM, KICKER, TITLE, TOTAL = 8, "07 · On a phone", "", TOTAL
 
     def build(self):
-        # left: the statement; right: phone frame with the demo poster.
-        # Clicking plays the recording full-screen via manim-slides `src=`.
+        # left: the statement; centre: the demo in an Android bezel on the beige (assets/demo_bezel.mp4,
+        # built by build_bezel.py). The statement fades before the click so the recording replaces a clean slide.
         head = T("What the app does", 30, INK, SEMIBOLD)
         body = T("Select Arabic text in any app.\nTap tabseet. Bayan simplifies it\nand reads it aloud.",
                  18, INK2, line_spacing=1.15)
         left = VGroup(head, body).arrange(DOWN, buff=0.35, aligned_edge=LEFT)
-        left.move_to([-2.6, 0.1, 0], aligned_edge=LEFT)
+        left.move_to([-6.4, 0.1, 0], aligned_edge=LEFT)
 
-        bez = 0.12
-        vh = 5.0
-        vw = vh * (1080 / 2316)
-        phone = RoundedRectangle(width=vw + 2 * bez, height=vh + 2 * bez, corner_radius=0.18,
-                                 fill_color=NIGHT, fill_opacity=1, stroke_color=INK4, stroke_width=3)
-        phone.move_to([3.3, 0.1, 0])
-        poster = ImageMobject(str(ASSETS / "demo-poster.jpg"))
-        poster.scale_to_fit_width(vw)
-        poster.move_to(phone)
+        poster = ImageMobject(str(ASSETS / "demo_bezel-poster.jpg"))
+        poster.scale_to_fit_width(W + 0.02).move_to(ORIGIN)
 
+        self.play(FadeIn(poster), run_time=0.6)
         self.play(FadeIn(left, shift=RIGHT * 0.2), run_time=0.7)
-        self.play(FadeIn(phone), FadeIn(poster), run_time=0.6)
-        self.step(src=str(ASSETS / "demo.mp4"))
+        self.wait(1.5)
+        self.play(FadeOut(left), run_time=0.5)
+        self.step(src=str(ASSETS / "demo_bezel.mp4"))
 
 
 # ---------------------------------------------------------------- 8. close
