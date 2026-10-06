@@ -45,6 +45,17 @@ SPEECH = [{'scene': 'S1Cover',
             ('14,975 rows lock in; audit badge: 1.7% meaning changed',
              'Fourteen thousand nine hundred seventy-five pairs survived. A blind audit found one point '
              "seven percent with changed meaning. We'll take it.")]},
+ {'scene': 'SPipeline',
+  'speaker': 1,
+  'title': 'The pipeline: build, measure, learn',
+  'steps': [('Five connected stages: sources, leakage check, meaning gate, fine-tune, measure',
+             'One pipeline carried every version. The sources pass a leakage check, then a meaning gate '
+             'set at point eight five, then fine-tuning, then measuring on BayanBench.'),
+            ('A feedback loop closes back on the sources, carrying the three version findings',
+             'And the loop is the point: every measurement came back as the next version\'s data. v0.1 '
+             'taught us that copying wins and the model only swaps words. v0.2 taught us that meaning '
+             'breaks first. v0.3 rebuilt the data around those two findings, and it keeps meaning in '
+             'eighty-two percent of outputs.')]},
  {'scene': 'S4Models',
   'speaker': 1,
   'title': 'BayanSimplify versions',
@@ -213,7 +224,7 @@ CHECKLIST = [
     "figures are flagged UNVERIFIED: confirm them on issue #65 or #58.",
     "Open `Bayan_Presenting.html` in Chrome on the presenting laptop once, and click through every step. "
     "Every step waits for a click.",
-    "Or run `manim-slides present S1Cover S2Problem S3Data S4Models S5Measure S6Results S7Phone S8Close` "
+    "Or run `manim-slides present S1Cover S2Problem S3Data SPipeline S4Models S5Measure S6Results S7Phone S8Close` "
     "from build/ as the live player.",
     "Record the 30 s phone video and drop it into the S7Phone slot (see README); play it once, audio off.",
     "Print this script or keep it on a second screen; both decks carry the same text in their notes.",
@@ -250,6 +261,7 @@ def slide_notes(scene):
 def step_notes(scene, k):
     """Notes for one step of the presenting deck (one slide per step)."""
     s = next(x for x in SPEECH if x["scene"] == scene)
-    cue, text = s["steps"][k - 1]
+    kk = min(k, len(s["steps"]))
+    cue, text = s["steps"][kk - 1]
     head = f"[{SPEAKERS[s['speaker']]}] " if k == 1 else ""
-    return f"{head}Step {k} of {len(s['steps'])} ({cue})\n{text}"
+    return f"{head}Step {k} ({cue})\n{text}"

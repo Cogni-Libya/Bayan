@@ -307,6 +307,58 @@ MODELS = [
 ]
 
 
+# =============================================================================
+# Beat 4 · The pipeline — 2 slides
+# =============================================================================
+
+def _pipeline_row(c, y=2.35):
+    w, gap = 1.62, 0.45
+    x0 = ML + (CW - 5 * w - 4 * gap) / 2
+    nodes = [
+        ("Source corpora", "SAMER · DAASI ·\nother datasets · BAREC", False),
+        ("Leakage check", "exact + 5-gram ·\ngrouped split", True),
+        ("Meaning gate", f"Qwen judge ≥ {F('meaning_gate')}\nstrength tags [S0]–[SA]", True),
+        ("Fine-tune", "AraT5v2 · AraBART ·\nint8 bundle → the phone", False),
+        ("Measure", f"BayanBench v2 ·\n{F('bench_items'):,} items, one scorer", False),
+    ]
+    for i, (t, s, gate) in enumerate(nodes):
+        x = x0 + i * (w + gap)
+        c.card(x, y, w, 1.25, WARN_LT if gate else PAPER2, WARN if gate else PAPER3, 0.1)
+        c.text(x + 0.07, y + 0.12, w - 0.14, 0.3, t, 12, WARN if gate else INK, True, "c")
+        c.text(x + 0.07, y + 0.5, w - 0.14, 0.68, s, 10.5, INK2, False, "c", line_spacing=1.12)
+        if i:
+            c.line(x - gap + 0.05, y + 0.62, x - 0.05, y + 0.62, SUN, 2.5, arrow=True)
+    return x0 + w / 2, x0 + 4 * (w + gap) + w / 2
+
+
+def s3e1(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 4, "03 · The pipeline", "Build, measure, learn")
+    _pipeline_row(c)
+    c.finish(slide_notes("SPipeline"))
+
+
+def s3e2(prs, layout):
+    c = Canvas(prs, layout, PAPER)
+    chrome(c, 4, "03 · The pipeline", "Build, measure, learn")
+    x_left, x_right = _pipeline_row(c)
+    loop_y = 5.2
+    c.line(x_right, 3.6, x_right, loop_y, SUN_DK, 2.5)
+    c.line(x_right, loop_y, x_left, loop_y, SUN_DK, 2.5)
+    c.line(x_left, loop_y, x_left, 3.6, SUN_DK, 2.5, arrow=True)
+    texts = [f"v0.1 · copying wins: {R(F('m1_copy_pct'))}% unchanged",
+             f"v0.2 · meaning kept {R(F('t5_tag_kept'))}% / {R(F('bart_tag_kept'))}%",
+             f"v0.3 · kept {R(F('v03_kept'))}% (was {R(F('v02_app_kept'))}%)"]
+    gapc = 0.35
+    widths = [text_w(t, 12) + 0.75 for t in texts]
+    x = ML + (CW - sum(widths) - gapc * (len(texts) - 1)) / 2
+    for t, wd in zip(texts, widths):
+        chip(c, x, loop_y - 0.15, t, size=12, fill=SUN_LT, color=SUN_DK, bold=True)
+        x += wd + gapc
+    c.text(ML, 5.85, CW, 0.3, "learn · each finding became the next version's data", 12, SUN_DK, True, "c")
+    c.finish(slide_notes("SPipeline"))
+
+
 def _model_col(c, x, y, w, i, show=True):
     name, what, data, found = MODELS[i]
     if not show:
@@ -321,7 +373,7 @@ def _model_col(c, x, y, w, i, show=True):
 
 def s4a(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
+    chrome(c, 5, "04 · BayanSimplify models", "Each version answered the last failure")
     w = 3.05
     x = ML + (CW - 3 * w - 2 * 0.55) / 2
     _model_col(c, x, 2.05, w, 0)
@@ -330,7 +382,7 @@ def s4a(prs, layout):
 
 def s4b(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
+    chrome(c, 5, "04 · BayanSimplify models", "Each version answered the last failure")
     w, gap = 3.05, 0.55
     x0 = ML + (CW - 3 * w - 2 * gap) / 2
     _model_col(c, x0, 2.05, w, 0)
@@ -341,7 +393,7 @@ def s4b(prs, layout):
 
 def s4c(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
+    chrome(c, 5, "04 · BayanSimplify models", "Each version answered the last failure")
     w, gap = 3.05, 0.55
     x0 = ML + (CW - 3 * w - 2 * gap) / 2
     for i in range(3):
@@ -362,7 +414,7 @@ def s4c(prs, layout):
 # =============================================================================
 def s5a(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
+    chrome(c, 6, "05 · BayanBench", "We checked our own yardstick")
     c.text(ML, 1.62, 6.6, 0.42, "Copying is the baseline to beat", 20, INK, True)
     rows_def = [
         ("Copy the input", 100, 0.0, True),
@@ -396,7 +448,7 @@ def s5a(prs, layout):
 
 def s5b(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
+    chrome(c, 6, "05 · BayanBench", "We checked our own yardstick")
     # flow row — positions from the hand-tuned deck (slide 12): wider spread, higher on the slide
     src_x, src_y, src_w, src_h = 0.33, 1.815, 2.42, 0.435
     gem_x, gem_y, gem_w, gem_h = 3.571, 1.575, 2.90, 0.95
@@ -442,7 +494,7 @@ def s5b(prs, layout):
 
 def s5c(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
+    chrome(c, 6, "05 · BayanBench", "We checked our own yardstick")
     measures = [
         ("Meaning", "Does it still say the same thing?\nSame meaning, every number intact."),
         ("Simpler", "Are long clauses shorter?\nWords cut from the longest clause."),
@@ -462,7 +514,7 @@ def s5c(prs, layout):
 
 def s5d(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "04 · BayanBench", "We checked our own yardstick")
+    chrome(c, 6, "05 · BayanBench", "We checked our own yardstick")
     # left: AUC + notes
     c.text(ML, 2.0, 3.2, 0.95, f"{F('judge_auc_human')}", 60, SUN, False, "c")
     c.text(ML, 3.05, 3.2, 0.3, "scorer vs human raters (AUC)", 13, INK2, align="c")
@@ -498,7 +550,7 @@ def s5d(prs, layout):
 # =============================================================================
 def s6a(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 6, "05 · Results", "v0.3 is our best model")
+    chrome(c, 7, "06 · Results", "v0.3 is our best model")
     # scatter — same points as S6Results in scenes.py, with labels clear of each other
     ox, oy, pw, ph = 2.55, 1.95, 4.85, 3.55  # plot box top-left + size
     c.line(ox, oy + ph, ox + pw, oy + ph, INK4, 1.75)  # x axis
@@ -566,7 +618,7 @@ def s6a(prs, layout):
 
 def s6b(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 6, "05 · Results", "v0.3 is our best model")
+    chrome(c, 7, "06 · Results", "v0.3 is our best model")
     c.text(ML, 1.62, CW, 0.28,
            "In the app: v0.3 minus v0.2, same text step · 95% intervals", 12, INK3, align="c")
 
@@ -600,7 +652,7 @@ def s6b(prs, layout):
 
 def s6c(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 6, "05 · Results", "v0.3 is our best model")
+    chrome(c, 7, "06 · Results", "v0.3 is our best model")
     c.text(ML, 1.62, CW, 0.36, f"Blind rating by the team: {F('hm_sentences')} sentences", 17, INK, True, "c")
     c.text(ML, 2.05, CW, 0.28, "outputs the system changed, rated easier to read", 12, INK3, align="c")
     for i, (name, pct, col) in enumerate([("v0.3", F("hm_v03_easier"), SUN), ("v0.2", F("hm_v02_easier"), PAPER3),
@@ -629,7 +681,7 @@ def s6c(prs, layout):
 # =============================================================================
 def s7(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 7, "06 · On a phone", "")
+    chrome(c, 8, "07 · On a phone", "")
     # left: the statement; right: the demo in a phone frame
     bez = 0.12
     bh = 5.3
@@ -655,7 +707,7 @@ def s7(prs, layout):
 # =============================================================================
 def s8a(prs, layout):
     c = Canvas(prs, layout, NIGHT)
-    chrome(c, 8, dark=True)
+    chrome(c, 9, dark=True)
     c.pic(ASSETS / "bayan-mark-dark.png", (SW - 2.5) / 2, 1.75, 2.5, "Bayan logo", "Bayan logo")
     c.text(0, 4.35, SW, 0.65, "Simplify where you read.", 30, CREAM, True, "c")
     c.finish(slide_notes("S8Close"))
@@ -663,7 +715,7 @@ def s8a(prs, layout):
 
 def s8b(prs, layout):
     c = Canvas(prs, layout, NIGHT)
-    chrome(c, 8, dark=True)
+    chrome(c, 9, dark=True)
     c.text(0, 1.85, SW, 0.55, "Simplify where you read.", 28, CREAM, True, "c")
     for i, t in enumerate([
         "no reader has used Bayan; one reader rated 30 outputs",
@@ -682,7 +734,7 @@ def s9end(prs):
     prs.slides.add_slide(layout)
 
 
-STEPS = [s1, s2a, s2b, s3a, s3b, s3c, s3d, s4a, s4b, s4c, s5a, s5b, s5c, s5d, s6a, s6b, s6c, s7, s8a, s8b]
+STEPS = [s1, s2a, s2b, s3a, s3b, s3c, s3d, s3e1, s3e2, s4a, s4b, s4c, s5a, s5b, s5c, s5d, s6a, s6b, s6c, s7, s8a, s8b]
 
 
 def main():

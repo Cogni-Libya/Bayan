@@ -20,7 +20,7 @@ def R(x):
     return int(x + 0.5)
 
 
-TOTAL = 8
+TOTAL = 9
 
 
 # ---------------------------------------------------------------- 1. cover
@@ -207,9 +207,52 @@ class S3Data(Deck):
         return out
 
 
+# --------------------------------------------- 4. the pipeline (build · measure · learn)
+class SPipeline(Deck):
+    NUM, KICKER, TITLE, TOTAL = 4, "03 · The pipeline", "Build, measure, learn", TOTAL
+
+    def build(self):
+        self.begin_beat()
+
+        def node(x, title, sub, gate=False):
+            c = card(1.8, 1.3, fill=WARN_LT if gate else PAPER2, stroke=WARN if gate else PAPER3)
+            c.move_to([x, 1.1, 0])
+            t = fit(T(title, 13, WARN if gate else INK, SEMIBOLD), 1.6).move_to(c.get_top() + DOWN * 0.28)
+            s = fit(T(sub, 11, INK2, line_spacing=0.95), 1.5).move_to(c.get_center() + DOWN * 0.18)
+            return VGroup(c, t, s)
+
+        nodes = VGroup(
+            node(-4.41, "Source corpora", "SAMER · DAASI ·\nother datasets · BAREC"),
+            node(-2.205, "Leakage check", "exact + 5-gram ·\ngrouped split", gate=True),
+            node(0, "Meaning gate", f"Qwen judge ≥ {F('meaning_gate')}\nstrength tags [S0]–[SA]", gate=True),
+            node(2.205, "Fine-tune", "AraT5v2 · AraBART ·\nint8 bundle → the phone"),
+            node(4.41, "Measure", f"BayanBench v2 ·\n{F('bench_items'):,} items, one scorer"),
+        )
+        arrows = VGroup(*[Arrow(nodes[i].get_right(), nodes[i + 1].get_left(), buff=0.07, color=SUN,
+                                stroke_width=3, max_tip_length_to_length_ratio=0.5) for i in range(4)])
+        self.play(LaggedStart(*[FadeIn(n, shift=UP * 0.12) for n in nodes], lag_ratio=0.25), run_time=1.2)
+        self.play(LaggedStart(*[GrowArrow(a) for a in arrows], lag_ratio=0.3), run_time=0.9)
+        self.step()
+
+        # the loop: what measuring found became the next version's data
+        drop = Line(nodes[4].get_bottom(), [4.41, -1.35, 0], color=SUN_DK, stroke_width=3)
+        back = Line([4.41, -1.35, 0], [-4.41, -1.35, 0], color=SUN_DK, stroke_width=3)
+        up = Arrow([-4.41, -1.35, 0], nodes[0].get_bottom(), buff=0, color=SUN_DK,
+                   stroke_width=3, max_tip_length_to_length_ratio=0.12)
+        chips = VGroup(
+            chip(f"v0.1 · copying wins: {R(F('m1_copy_pct'))}% unchanged", fill=SUN_LT, color=SUN_DK, size=13),
+            chip(f"v0.2 · meaning kept {R(F('t5_tag_kept'))}% / {R(F('bart_tag_kept'))}%", fill=SUN_LT, color=SUN_DK, size=13),
+            chip(f"v0.3 · kept {R(F('v03_kept'))}% (was {R(F('v02_app_kept'))}%)", fill=SUN_LT, color=SUN_DK, size=13),
+        ).arrange(RIGHT, buff=0.3).move_to([0, -1.35, 0])
+        cap = T("learn · each finding became the next version's data", 13, SUN_DK, MEDIUM).move_to([0, -2.15, 0])
+        self.play(Create(drop), Create(back), GrowArrow(up), run_time=0.9)
+        self.play(FadeIn(chips, shift=UP * 0.1), FadeIn(cap), run_time=0.8)
+        self.hold()
+
+
 # ---------------------------------------------------------------- 4. the three models
 class S4Models(Deck):
-    NUM, KICKER, TITLE, TOTAL = 4, "03 · BayanSimplify models", "Each version answered the last failure", TOTAL
+    NUM, KICKER, TITLE, TOTAL = 5, "04 · BayanSimplify models", "Each version answered the last failure", TOTAL
 
     def build(self):
         self.begin_beat()
@@ -259,7 +302,7 @@ class S4Models(Deck):
 
 # ---------------------------------------------------------------- 5. measuring it
 class S5Measure(Deck):
-    NUM, KICKER, TITLE, TOTAL = 5, "04 · BayanBench", "We checked our own yardstick", TOTAL
+    NUM, KICKER, TITLE, TOTAL = 6, "05 · BayanBench", "We checked our own yardstick", TOTAL
 
     def build(self):
         self.begin_beat()
@@ -402,7 +445,7 @@ def _forest_row(label, est, lo, hi, scale, fmt, good, y, axis_x=1.2, half=2.6):
 
 
 class S6Results(Deck):
-    NUM, KICKER, TITLE, TOTAL = 6, "05 · Results", "v0.3 is our best model", TOTAL
+    NUM, KICKER, TITLE, TOTAL = 7, "06 · Results", "v0.3 is our best model", TOTAL
 
     def build(self):
         self.begin_beat()
@@ -494,7 +537,7 @@ class S6Results(Deck):
 
 # ---------------------------------------------------------------- 7. on a phone
 class S7Phone(Deck):
-    NUM, KICKER, TITLE, TOTAL = 7, "06 · On a phone", "", TOTAL
+    NUM, KICKER, TITLE, TOTAL = 8, "07 · On a phone", "", TOTAL
 
     def build(self):
         # left: the statement; right: phone frame with the demo poster.
@@ -522,7 +565,7 @@ class S7Phone(Deck):
 
 # ---------------------------------------------------------------- 8. close
 class S8Close(Deck):
-    NUM, DARK, TOTAL = 8, True, TOTAL
+    NUM, DARK, TOTAL = 9, True, TOTAL
 
     def build(self):
         self.begin_beat()
@@ -547,7 +590,7 @@ class S8Close(Deck):
 class S9End(Deck):
     """The SIC template's closing slide: photo + blue overlay + Enabling People lockup + copyright."""
 
-    NUM, DARK, TOTAL = 9, True, TOTAL
+    NUM, DARK, TOTAL = 10, True, TOTAL
 
     def build(self):
         bg = ImageMobject(str(ASSETS / "sic-close-bg.jpg")).scale_to_fit_width(W + 0.02)
