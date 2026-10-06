@@ -1,7 +1,7 @@
 # Bayan pitch: presenter script
 
-Four minutes, one speaker (Sanad), problem → data → models → measuring → results → phone → close. **525 words, about 4:02 at 130 words a minute**
-(one speaker), which leaves about -1:57 of the four minutes for clicks, the demo video and breathing.
+Four minutes, one speaker (Sanad), problem → data → models → measuring → results → phone → close. **597 words, about 4:35 at 130 words a minute**
+(one speaker), which leaves about -1:24 of the four minutes for clicks, the demo video and breathing.
 Generated from `build/script_data.py`; the same text is in the speaker notes of both decks.
 
 ## Run sheet
@@ -9,13 +9,14 @@ Generated from `build/script_data.py`; the same text is in the speaker notes of 
 | # | Beat | Who | Steps | Words | Time | Clock |
 |---|---|---|---|---|---|---|
 | 1 | Cover | Sanad | 1 | 26 | 12 s | 0:12 |
-| 2 | The problem | Sanad | 2 | 54 | 25 s | 0:36 |
-| 3 | Data: how we got to corpus v1 | Sanad | 4 | 109 | 50 s | 1:27 |
-| 4 | BayanSimplify versions | Sanad | 3 | 77 | 36 s | 2:02 |
-| 5 | Measuring it, and the people check | Sanad | 4 | 110 | 51 s | 2:53 |
-| 6 | Results: v0.3 is our best | Sanad | 3 | 95 | 44 s | 3:37 |
-| 7 | On a phone | Sanad | 1 | 21 | 10 s | 3:47 |
-| 8 | Close | Sanad | 2 | 33 | 15 s | 4:02 |
+| 2 | The problem | Sanad | 2 | 59 | 27 s | 0:39 |
+| 3 | Data: how we got to corpus v1 | Sanad | 4 | 109 | 50 s | 1:29 |
+| 4 | BayanSimplify versions | Sanad | 3 | 77 | 36 s | 2:05 |
+| 5 | The pipeline: build, measure, learn | Sanad | 2 | 67 | 31 s | 2:36 |
+| 6 | Measuring it, and the people check | Sanad | 4 | 110 | 51 s | 3:26 |
+| 7 | Results: v0.3 is our best | Sanad | 3 | 95 | 44 s | 4:10 |
+| 8 | On a phone | Sanad | 1 | 21 | 10 s | 4:20 |
+| 9 | Close | Sanad | 2 | 33 | 15 s | 4:35 |
 
 ## How the beats work
 
@@ -33,7 +34,7 @@ Generated from `build/script_data.py`; the same text is in the speaker notes of 
 
 > This is Bayan: an Android tool that simplifies hard Arabic where you read, on your phone. Building it was fine. Checking it was the hard part.
 
-### 2 · The problem  ·  Sanad  ·  0:12 to 0:36
+### 2 · The problem  ·  Sanad  ·  0:12 to 0:39
 
 **Step 1** (on arrival) · *on screen: 11% counts up; كتب splits into kataba, kutiba, kutub*
 
@@ -41,9 +42,9 @@ Generated from `build/script_data.py`; the same text is in the speaker notes of 
 
 **Step 2** (click 1) · *on screen: Left: shorter clauses help the weakest readers most. Right: our scope*
 
-> Shorter clauses help the weakest readers most. So Bayan reduces reading load: long clauses, hard words. Not decoding, and we don't yet claim it helps readers with dyslexia.
+> Shorter clauses help the weakest readers most. So Bayan reduces reading load: long clauses, hard words. Tashkeel is a setting in the app, and we don't yet claim it helps readers with dyslexia.
 
-### 3 · Data: how we got to corpus v1  ·  Sanad  ·  0:36 to 1:27
+### 3 · Data: how we got to corpus v1  ·  Sanad  ·  0:39 to 1:29
 
 **Step 1** (on arrival) · *on screen: Two cards: SAMER (novels, half unchanged, word swaps) and other LLM-written sources (summaries)*
 
@@ -61,7 +62,7 @@ Generated from `build/script_data.py`; the same text is in the speaker notes of 
 
 > Fourteen thousand nine hundred seventy-five pairs survived. A blind audit found one point seven percent with changed meaning. We'll take it.
 
-### 4 · BayanSimplify versions  ·  Sanad  ·  1:27 to 2:02
+### 4 · BayanSimplify versions  ·  Sanad  ·  1:29 to 2:05
 
 **Step 1** (on arrival) · *on screen: Lane v0.1: AraT5v2 on SAMER. Found: returned 65% of rows unchanged, swapped single words*
 
@@ -75,7 +76,17 @@ Generated from `build/script_data.py`; the same text is in the speaker notes of 
 
 > v0.3 is AraT5v2 on corpus v1, no tag. As trained, it cuts twice the words of v0.2 and keeps about the same meaning.
 
-### 5 · Measuring it, and the people check  ·  Sanad  ·  2:02 to 2:53
+### 5 · The pipeline: build, measure, learn  ·  Sanad  ·  2:05 to 2:36
+
+**Step 1** (on arrival) · *on screen: Five connected stages: sources, leakage check, meaning gate, fine-tune, measure*
+
+> Those three versions came out of one pipeline. Sources pass a leakage check, then a meaning gate set at point eight five, then fine-tuning, then BayanBench.
+
+**Step 2** (click 1) · *on screen: A feedback loop closes back on the sources, carrying the three version findings*
+
+> And the loop is the point. v0.1 taught us that copying wins. v0.2 taught us that meaning breaks first. Each finding became the next version's data, and v0.3 keeps meaning in eighty-two percent of outputs. Next: how we trust that measurement.
+
+### 6 · Measuring it, and the people check  ·  Sanad  ·  2:36 to 3:26
 
 **Step 1** (on arrival) · *on screen: Copy baseline table: copy 100% / 0; v0.1 76% / 0; v0.2 68% / 4.5 and v0.2-Fast 51% / 4.9; v0.3 69% / 9.5*
 
@@ -93,7 +104,7 @@ Generated from `build/script_data.py`; the same text is in the speaker notes of 
 
 > Do people agree with the scorer? Six raters, two hundred ninety tasks: zero point eight five. One reader with dyslexia rated thirty outputs too: seventeen easier, four harder.
 
-### 6 · Results: v0.3 is our best  ·  Sanad  ·  2:53 to 3:37
+### 7 · Results: v0.3 is our best  ·  Sanad  ·  3:26 to 4:10
 
 **Step 1** (on arrival) · *on screen: Scatter: v0.3 in the app keeps the most meaning (82%) and cuts 5.2 words*
 
@@ -107,13 +118,13 @@ Generated from `build/script_data.py`; the same text is in the speaker notes of 
 
 > People agree. In a blind rating, the team found v0.3's changed outputs easier eighty-six percent of the time, against sixty for v0.2, and the reader with dyslexia chose v0.3 in every comparison it was in.
 
-### 7 · On a phone  ·  Sanad  ·  3:37 to 3:47
+### 8 · On a phone  ·  Sanad  ·  4:10 to 4:20
 
 **Step 1** (on arrival) · *on screen: Heading 'What the app does' and the video recording under it*
 
 > On a phone: select, tap tabseet, and it reads aloud. Scripture never reaches the model, and code checks that numbers survive.
 
-### 8 · Close  ·  Sanad  ·  3:47 to 4:02
+### 9 · Close  ·  Sanad  ·  4:20 to 4:35
 
 **Step 1** (on arrival) · *on screen: Logo and 'Simplify where you read.'*
 
@@ -190,7 +201,7 @@ Short answers, each about 20 seconds. The last column says where to look if aske
 
 - [ ] Run `python check_numbers.py` in build/. It must say all numbers sourced before you render. Peer-session figures are flagged UNVERIFIED: confirm them on issue #65 or #58.
 - [ ] Open `Bayan_Presenting.html` in Chrome on the presenting laptop once, and click through every step. Every step waits for a click.
-- [ ] Or run `manim-slides present S1Cover S2Problem S3Data S4Models S5Measure S6Results S7Phone S8Close` from build/ as the live player.
+- [ ] Or run `manim-slides present S1Cover S2Problem S3Data S4Models SPipeline S5Measure S6Results S7Phone S8Close` from build/ as the live player.
 - [ ] Record the 30 s phone video and drop it into the S7Phone slot (see README); play it once, audio off.
 - [ ] Print this script or keep it on a second screen; both decks carry the same text in their notes.
 - [ ] Time yourself out loud once. Target 3:45 to 4:00.

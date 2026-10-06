@@ -31,7 +31,7 @@ uv run python check_numbers.py
 ./render_videos.sh
 
 # 3. live player (Qt window)
-uv run manim-slides present S1Cover S2Problem S3Data SPipeline S4Models S5Measure S6Results S7Phone S8Close
+uv run manim-slides present S1Cover S2Problem S3Data S4Models SPipeline S5Measure S6Results S7Phone S8Close
 
 # 4. portable HTML export (single file, no install needed; one click per step)
 uv run python make_html.py            # -> ../Bayan_Presenting.html

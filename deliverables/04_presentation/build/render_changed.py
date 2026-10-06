@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-SCENES = "S1Cover S2Problem S3Data SPipeline S4Models S5Measure S6Results S7Phone S8Close S9End".split()
+SCENES = "S1Cover S2Problem S3Data S4Models SPipeline S5Measure S6Results S7Phone S8Close S9End".split()
 STAMPS = HERE / "out" / "stamps"
 SHARED = ["common.py", "facts.py", "build_bezel.py", "uv.lock"]
 

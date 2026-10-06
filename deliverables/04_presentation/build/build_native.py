@@ -308,7 +308,7 @@ MODELS = [
 
 
 # =============================================================================
-# Beat 4 · The pipeline — 2 slides
+# Beat 5 · The pipeline — 2 slides
 # =============================================================================
 
 def _pipeline_row(c, y=2.35):
@@ -331,16 +331,16 @@ def _pipeline_row(c, y=2.35):
     return x0 + w / 2, x0 + 4 * (w + gap) + w / 2
 
 
-def s3e1(prs, layout):
+def pipe1(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 4, "03 · The pipeline", "Build, measure, learn")
+    chrome(c, 5, "04 · The pipeline", "Build, measure, learn")
     _pipeline_row(c)
     c.finish(slide_notes("SPipeline"))
 
 
-def s3e2(prs, layout):
+def pipe2(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 4, "03 · The pipeline", "Build, measure, learn")
+    chrome(c, 5, "04 · The pipeline", "Build, measure, learn")
     x_left, x_right = _pipeline_row(c)
     loop_y = 5.2
     c.line(x_right, 3.6, x_right, loop_y, SUN_DK, 2.5)
@@ -373,7 +373,7 @@ def _model_col(c, x, y, w, i, show=True):
 
 def s4a(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "04 · BayanSimplify models", "Each version answered the last failure")
+    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
     w = 3.05
     x = ML + (CW - 3 * w - 2 * 0.55) / 2
     _model_col(c, x, 2.05, w, 0)
@@ -382,7 +382,7 @@ def s4a(prs, layout):
 
 def s4b(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "04 · BayanSimplify models", "Each version answered the last failure")
+    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
     w, gap = 3.05, 0.55
     x0 = ML + (CW - 3 * w - 2 * gap) / 2
     _model_col(c, x0, 2.05, w, 0)
@@ -393,7 +393,7 @@ def s4b(prs, layout):
 
 def s4c(prs, layout):
     c = Canvas(prs, layout, PAPER)
-    chrome(c, 5, "04 · BayanSimplify models", "Each version answered the last failure")
+    chrome(c, 4, "03 · BayanSimplify models", "Each version answered the last failure")
     w, gap = 3.05, 0.55
     x0 = ML + (CW - 3 * w - 2 * gap) / 2
     for i in range(3):
@@ -734,7 +734,7 @@ def s9end(prs):
     prs.slides.add_slide(layout)
 
 
-STEPS = [s1, s2a, s2b, s3a, s3b, s3c, s3d, s3e1, s3e2, s4a, s4b, s4c, s5a, s5b, s5c, s5d, s6a, s6b, s6c, s7, s8a, s8b]
+STEPS = [s1, s2a, s2b, s3a, s3b, s3c, s3d, s4a, s4b, s4c, pipe1, pipe2, s5a, s5b, s5c, s5d, s6a, s6b, s6c, s7, s8a, s8b]
 
 
 def main():

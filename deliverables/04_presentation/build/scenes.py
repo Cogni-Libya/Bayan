@@ -209,24 +209,24 @@ class S3Data(Deck):
 
 # --------------------------------------------- 4. the pipeline (build · measure · learn)
 class SPipeline(Deck):
-    NUM, KICKER, TITLE, TOTAL = 4, "03 · The pipeline", "Build, measure, learn", TOTAL
+    NUM, KICKER, TITLE, TOTAL = 5, "04 · The pipeline", "Build, measure, learn", TOTAL
 
     def build(self):
         self.begin_beat()
 
         def node(x, title, sub, gate=False):
-            c = card(1.8, 1.3, fill=WARN_LT if gate else PAPER2, stroke=WARN if gate else PAPER3)
+            c = card(1.7, 1.3, fill=WARN_LT if gate else PAPER2, stroke=WARN if gate else PAPER3)
             c.move_to([x, 1.1, 0])
-            t = fit(T(title, 13, WARN if gate else INK, SEMIBOLD), 1.6).move_to(c.get_top() + DOWN * 0.28)
-            s = fit(T(sub, 11, INK2, line_spacing=0.95), 1.5).move_to(c.get_center() + DOWN * 0.18)
+            t = fit(T(title, 13, WARN if gate else INK, SEMIBOLD), 1.5).move_to(c.get_top() + DOWN * 0.28)
+            s = fit(T(sub, 11, INK2, line_spacing=0.95), 1.45).move_to(c.get_center() + DOWN * 0.18)
             return VGroup(c, t, s)
 
         nodes = VGroup(
-            node(-4.41, "Source corpora", "SAMER · DAASI ·\nother datasets · BAREC"),
-            node(-2.205, "Leakage check", "exact + 5-gram ·\ngrouped split", gate=True),
+            node(-4.2, "Source corpora", "SAMER · DAASI ·\nother datasets · BAREC"),
+            node(-2.1, "Leakage check", "exact + 5-gram ·\ngrouped split", gate=True),
             node(0, "Meaning gate", f"Qwen judge ≥ {F('meaning_gate')}\nstrength tags [S0]–[SA]", gate=True),
-            node(2.205, "Fine-tune", "AraT5v2 · AraBART ·\nint8 bundle → the phone"),
-            node(4.41, "Measure", f"BayanBench v2 ·\n{F('bench_items'):,} items, one scorer"),
+            node(2.1, "Fine-tune", "AraT5v2 · AraBART ·\nint8 bundle → the phone"),
+            node(4.2, "Measure", f"BayanBench v2 ·\n{F('bench_items'):,} items, one scorer"),
         )
         arrows = VGroup(*[Arrow(nodes[i].get_right(), nodes[i + 1].get_left(), buff=0.07, color=SUN,
                                 stroke_width=3, max_tip_length_to_length_ratio=0.5) for i in range(4)])
@@ -235,9 +235,9 @@ class SPipeline(Deck):
         self.step()
 
         # the loop: what measuring found became the next version's data
-        drop = Line(nodes[4].get_bottom(), [4.41, -1.35, 0], color=SUN_DK, stroke_width=3)
-        back = Line([4.41, -1.35, 0], [-4.41, -1.35, 0], color=SUN_DK, stroke_width=3)
-        up = Arrow([-4.41, -1.35, 0], nodes[0].get_bottom(), buff=0, color=SUN_DK,
+        drop = Line(nodes[4].get_bottom(), [4.2, -1.35, 0], color=SUN_DK, stroke_width=3)
+        back = Line([4.2, -1.35, 0], [-4.2, -1.35, 0], color=SUN_DK, stroke_width=3)
+        up = Arrow([-4.2, -1.35, 0], nodes[0].get_bottom(), buff=0, color=SUN_DK,
                    stroke_width=3, max_tip_length_to_length_ratio=0.12)
         chips = VGroup(
             chip(f"v0.1 · copying wins: {R(F('m1_copy_pct'))}% unchanged", fill=SUN_LT, color=SUN_DK, size=13),
@@ -252,7 +252,7 @@ class SPipeline(Deck):
 
 # ---------------------------------------------------------------- 4. the three models
 class S4Models(Deck):
-    NUM, KICKER, TITLE, TOTAL = 5, "04 · BayanSimplify models", "Each version answered the last failure", TOTAL
+    NUM, KICKER, TITLE, TOTAL = 4, "03 · BayanSimplify models", "Each version answered the last failure", TOTAL
 
     def build(self):
         self.begin_beat()

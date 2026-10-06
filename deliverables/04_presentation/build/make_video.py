@@ -15,7 +15,7 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 OUT = HERE.parent / "Bayan_Presenting.mp4"
-SCENES = "S1Cover S2Problem S3Data SPipeline S4Models S5Measure S6Results S7Phone S8Close S9End".split()
+SCENES = "S1Cover S2Problem S3Data S4Models SPipeline S5Measure S6Results S7Phone S8Close S9End".split()
 FPS = 30
 SEG = HERE / "out" / "video_segments"
 
